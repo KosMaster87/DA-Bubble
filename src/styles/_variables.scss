@@ -175,11 +175,14 @@
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Z-Index Layers (BEM Framework) */
+  --z-base: 0;
+  --z-sidebar: 10;
+  --z-sidebar-toggle: 20;
+  --z-header: 30;
   --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-fixed: 300;
+  --z-popup: 200;
+  --z-popup-stacked: 300;
   --z-modal-backdrop: 400;
   --z-modal: 500;
-  --z-popover: 600;
-  --z-tooltip: 700;
+  --z-tooltip: 600;
 }

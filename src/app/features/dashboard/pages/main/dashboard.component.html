@@ -1,19 +1,23 @@
 <div class="dashboard">
   <app-workspace-menu-toggle />
 
-  <app-dashboard-header class="dashboard__header" />
+  <app-dashboard-header class="dashboard__header" (mailboxRequested)="showMailbox()" />
 
   <div class="dashboard__main" [class.dashboard__main--no-sidebar]="sidebarService.isHidden()">
     <app-channels-sidebar
       class="dashboard__sidebar"
-      [isNewMessageActive]="currentView() === 'new-message'"
+      [isNewMessageActive]="currentView() === 'chat-new-msg'"
+      [isMailboxActive]="currentView() === 'mailbox'"
       (newMessageRequested)="showNewMessage()"
+      (mailboxRequested)="showMailbox()"
     />
 
     @if (currentView() === 'welcome') {
-    <app-welcome-channel class="dashboard__content" />
-    } @else if (currentView() === 'new-message') {
-    <app-new-message class="dashboard__content" />
+    <app-channal-welcome class="dashboard__content" />
+    } @else if (currentView() === 'chat-new-msg') {
+    <app-chat-new-msg class="dashboard__content" />
+    } @else if (currentView() === 'mailbox') {
+    <app-chat-mailbox class="dashboard__content" />
     }
   </div>
 </div>

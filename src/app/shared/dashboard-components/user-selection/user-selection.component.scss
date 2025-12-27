@@ -1,0 +1,51 @@
+@use '../../../../styles/mixins' as mix;
+
+.user-selection {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: transparent;
+    cursor: default;
+    z-index: -1;
+  }
+
+  &__content {
+    position: relative;
+    background-color: var(--container-bg, #fff);
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 300px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    cursor: default;
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    @include mix.custom-scrollbar(6px, transparent, var(--border-color));
+  }
+
+  &__empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--text-secondary, #999);
+    font-size: 0.875rem;
+  }
+}

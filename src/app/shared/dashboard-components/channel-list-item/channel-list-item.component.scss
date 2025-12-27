@@ -1,0 +1,66 @@
+@use '../../../../styles/mixins' as mix;
+
+.channel-list-item {
+  @include mix.flex(row, flex-start, center);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+
+  &--active {
+    .channel-list-item__content {
+      background-color: #eceefe;
+    }
+
+    .channel-list-item__name {
+      color: #535af1;
+    }
+  }
+
+  &__content {
+    @include mix.flex(row, flex-start, center);
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+    border-radius: 2rem;
+    transition: background-color 0.2s;
+
+    .channel-list-item:hover & {
+      background-color: #eceefe;
+    }
+
+    .channel-list-item--active & {
+      background-color: #eceefe;
+    }
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    transition: filter 0.2s;
+
+    .channel-list-item:hover &,
+    .channel-list-item--active & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+  }
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary, #000);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    transition: color 0.2s;
+
+    .channel-list-item:hover &,
+    .channel-list-item--active & {
+      color: #535af1;
+    }
+  }
+}

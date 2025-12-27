@@ -1,6 +1,6 @@
 @use '../../../../../styles/mixins' as mix;
 
-.welcome-channel {
+.channal-welcome {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -8,7 +8,7 @@
   overflow: hidden;
 
   &__header {
-    @include mix.flex(row, space-between, flex-start);
+    @include mix.flex(row, space-between, center);
     padding: var(--space-4) var(--space-6);
     box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
@@ -28,6 +28,7 @@
     &-actions {
       @include mix.flex(row, flex-end, center);
       gap: 0.5rem;
+      position: relative;
     }
   }
 
@@ -35,7 +36,6 @@
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary, #000);
-    margin: 0 0 0.5rem 0;
 
     @include mix.tablet-landscape {
       font-size: 1.35rem;

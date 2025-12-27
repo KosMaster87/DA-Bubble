@@ -6,11 +6,10 @@
 
 import { Component, input, output } from '@angular/core';
 import { UserListItemComponent, UserListItem } from '../user-list-item/user-list-item.component';
-import { AddMemberButtonComponent } from '../add-member-button/add-member-button.component';
 
 @Component({
   selector: 'app-members-options-menu',
-  imports: [UserListItemComponent, AddMemberButtonComponent],
+  imports: [UserListItemComponent],
   templateUrl: './members-options-menu.component.html',
   styleUrl: './members-options-menu.component.scss',
 })

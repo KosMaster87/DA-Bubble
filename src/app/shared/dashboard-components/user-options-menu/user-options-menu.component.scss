@@ -4,14 +4,29 @@
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
-  min-width: 200px;
-  background: var(--container-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px 0 12px 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: var(--space-2);
-  z-index: 1000;
-  animation: slideDown 0.2s ease-out;
+  z-index: var(--z-dropdown);
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    z-index: -1;
+  }
+
+  &__content {
+    position: relative;
+    min-width: 200px;
+    background: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem 0 1.5rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: var(--space-2);
+    animation: slideDown 0.2s ease-out;
+  }
 
   @keyframes slideDown {
     from {
@@ -31,7 +46,7 @@
     padding: var(--space-3) var(--space-4);
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: 1.5rem;
     cursor: pointer;
     transition: background-color 0.2s;
     color: var(--text-primary);
@@ -57,7 +72,24 @@
   }
 
   &__icon {
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
-    color: var(--text-secondary);
+    transition: filter 0.2s;
+
+    .user-options-menu__item:hover & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+
+    .user-options-menu__item--danger & {
+      filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(3042%) hue-rotate(347deg)
+        brightness(95%) contrast(88%);
+    }
+
+    .user-options-menu__item--danger:hover & {
+      filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(3042%) hue-rotate(347deg)
+        brightness(95%) contrast(88%);
+    }
   }
 }

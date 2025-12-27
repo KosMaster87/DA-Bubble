@@ -1,14 +1,14 @@
-<div class="new-message">
-  <div class="new-message__header">
-    <h1 class="new-message__title">New message</h1>
+<div class="chat-new-msg">
+  <div class="chat-new-msg__header">
+    <h1 class="chat-new-msg__title">New message</h1>
   </div>
 
-  <div class="new-message__search">
-    <div class="new-message__search-wrapper">
-      <!-- <img src="/img/icon/search-default.svg" alt="Search" class="new-message__search-icon" /> -->
+  <div class="chat-new-msg__search">
+    <div class="chat-new-msg__search-wrapper">
+      <!-- <img src="/img/icon/search-default.svg" alt="Search" class="chat-new-msg__search-icon" /> -->
       <input
         type="text"
-        class="new-message__search-input"
+        class="chat-new-msg__search-input"
         placeholder="An: #channel, oder @someone or E-Mail adress"
         [(ngModel)]="searchQuery"
         (input)="onSearch()"
@@ -16,15 +16,15 @@
     </div>
   </div>
 
-  <div class="new-message__content">
+  <div class="chat-new-msg__content">
     <!-- Empty state or recipient list will go here -->
     <!-- Hier wird eine leere Status- oder Empfängerliste eingefügt. -->
-    <div class="new-message__empty">
+    <div class="chat-new-msg__empty">
       <p>Search for users or channels to start a conversation</p>
     </div>
   </div>
 
-  <div class="new-message__footer">
+  <div class="chat-new-msg__footer">
     <app-message-box (messageSent)="onMessageSent($event)" />
   </div>
 </div>

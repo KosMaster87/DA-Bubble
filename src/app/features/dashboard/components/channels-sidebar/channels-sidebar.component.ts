@@ -4,39 +4,47 @@
  * @module features/dashboard/components/channels-sidebar
  */
 
-import { Component, inject, output, input, signal } from '@angular/core';
+import { Component, inject, output, input, signal, computed } from '@angular/core';
 import { ChannelStore } from '@stores/channel.store';
 import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
+import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
+import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-components/add-member-after-add-channel/add-member-after-add-channel.component';
+import { DummyChannelsService } from '../../services/dummy-channels.service';
+import { DummyChatDmService } from '../../services/dummy-chat-dm.service';
+import { DummyUsersService } from '../../services/dummy-users.service';
 
 @Component({
   selector: 'app-channels-sidebar',
-  imports: [CommonModule],
+  imports: [CommonModule, CreateChannelComponent, AddMemberAfterAddChannelComponent],
   templateUrl: './channels-sidebar.component.html',
   styleUrl: './channels-sidebar.component.scss',
 })
 export class ChannelsSidebarComponent {
   protected channelStore = inject(ChannelStore);
   protected sidebarService = inject(WorkspaceSidebarService);
+  protected channelsService = inject(DummyChannelsService);
+  protected chatDmService = inject(DummyChatDmService);
+  protected usersService = inject(DummyUsersService);
   isNewMessageActive = input<boolean>(false);
+  isMailboxActive = input<boolean>(false);
   newMessageRequested = output<void>();
+  mailboxRequested = output<void>();
   protected isChannelsOpen = signal(true);
   protected isDirectMessagesOpen = signal(true);
   protected isAddChannelActive = signal(false);
+  protected isCreateChannelOpen = signal(false);
+  protected isAddMemberAfterChannelOpen = signal(false);
 
   /**
-   * Dummy channels data
+   * Channels from service
    */
-  protected dummyChannels = signal([
-    {
-      id: '1',
-      name: 'Entwicklung',
-    },
-    {
-      id: '2',
-      name: 'Marketing',
-    },
-  ]);
+  protected dummyChannels = computed(() =>
+    this.channelsService.channels().map((ch) => ({
+      id: ch.id,
+      name: ch.name,
+    }))
+  );
 
   /**
    * Selected channel ID
@@ -44,22 +52,16 @@ export class ChannelsSidebarComponent {
   protected selectedChannelId = signal<string | null>(null);
 
   /**
-   * Dummy direct messages data
+   * Direct messages from service mapped to template interface
    */
-  protected directMessages = signal([
-    {
-      id: '1',
-      name: 'Sofia Müller',
-      avatar: '/img/profile/profile-1.png',
-      isOnline: true,
-    },
-    {
-      id: '2',
-      name: 'Noah Braun',
-      avatar: '/img/profile/profile-2.png',
-      isOnline: false,
-    },
-  ]);
+  protected directMessages = computed(() =>
+    this.chatDmService.directMessages().map((dm) => ({
+      id: dm.id,
+      name: dm.userName,
+      avatar: dm.userAvatar,
+      isOnline: dm.isOnline,
+    }))
+  );
 
   /**
    * Selected direct message ID
@@ -71,6 +73,13 @@ export class ChannelsSidebarComponent {
    */
   openNewMessage(): void {
     this.newMessageRequested.emit();
+  }
+
+  /**
+   * Open mailbox view
+   */
+  openMailbox(): void {
+    this.mailboxRequested.emit();
   }
 
   /**
@@ -109,8 +118,49 @@ export class ChannelsSidebarComponent {
    */
   addChannel(): void {
     this.isAddChannelActive.update((v) => !v);
-    console.log('Add channel clicked');
-    // TODO: Implement add channel logic
+    this.isCreateChannelOpen.set(true);
+  }
+
+  /**
+   * Handle create channel close
+   */
+  onCreateChannelClose(): void {
+    this.isCreateChannelOpen.set(false);
+  }
+
+  /**
+   * Handle create channel submit
+   */
+  onCreateChannel(data: { name: string; description: string }): void {
+    console.log('Create channel:', data);
+    this.isCreateChannelOpen.set(false);
+    this.isAddMemberAfterChannelOpen.set(true);
+    // TODO: Implement create channel logic
+  }
+
+  /**
+   * Handle add member after channel close
+   */
+  onClose(): void {
+    this.isAddMemberAfterChannelOpen.set(false);
+  }
+
+  /**
+   * Handle add member after channel cancel
+   */
+  onCancel(): void {
+    console.log('Create channel without member');
+    this.isAddMemberAfterChannelOpen.set(false);
+    // TODO: Implement create channel without member logic
+  }
+
+  /**
+   * Handle add member after channel create
+   */
+  onCreate(data: { type: 'all' | 'specific'; searchValue?: string }): void {
+    console.log('Create channel with members:', data);
+    this.isAddMemberAfterChannelOpen.set(false);
+    // TODO: Implement create channel with members logic
   }
 
   /**

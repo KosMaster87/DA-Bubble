@@ -1,0 +1,76 @@
+<div class="chat-channel">
+  <!-- Header -->
+  <div class="chat-channel__header">
+    <div class="chat-channel__header-info">
+      <h1 class="chat-channel__title">
+        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="chat-channel__title-icon" />
+        {{ channel().name }}
+      </h1>
+      <p class="chat-channel__description">{{ channel().description }}</p>
+    </div>
+    <div class="chat-channel__header-actions">
+      <button class="chat-channel__action-btn" (click)="viewMembers()">
+        <img src="/img/icon/channel-bar/account-circle-default.svg" alt="" />
+        <span>{{ channel().memberCount }} members</span>
+      </button>
+      <button class="chat-channel__action-btn" (click)="viewChannelDetails()">
+        <img src="/img/icon/info-default.svg" alt="Details" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="chat-channel__messages">
+    @for (message of messages(); track message.id) {
+    <div
+      class="chat-channel__message"
+      [class.chat-channel__message--own]="message.isOwnMessage"
+      [class.chat-channel__message--other]="!message.isOwnMessage"
+    >
+      <div class="chat-channel__message-avatar">
+        <img [src]="message.senderAvatar" [alt]="message.senderName" />
+      </div>
+      <div class="chat-channel__message-content">
+        <div class="chat-channel__message-header">
+          <span class="chat-channel__message-sender">{{ message.senderName }}</span>
+          <span class="chat-channel__message-time">{{ message.timestamp | date : 'short' }}</span>
+        </div>
+        <p class="chat-channel__message-text">{{ message.content }}</p>
+
+        <!-- Reactions -->
+        @if (message.reactions && message.reactions.length > 0) {
+        <div class="chat-channel__reactions">
+          @for (reaction of message.reactions; track $index) {
+          <button class="chat-channel__reaction" (click)="addReaction(message.id, reaction.emoji)">
+            <span class="chat-channel__reaction-emoji">{{ reaction.emoji }}</span>
+            <span class="chat-channel__reaction-count">{{ reaction.count }}</span>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-channel__input-area">
+    <div class="chat-channel__input-wrapper">
+      <input
+        type="text"
+        class="chat-channel__input"
+        [placeholder]="'Message #' + channel().name"
+        [value]="messageInput()"
+        (input)="onMessageInputChange($event)"
+        (keydown)="onKeyDown($event)"
+      />
+      <button
+        class="chat-channel__send-btn"
+        [disabled]="!messageInput().trim()"
+        (click)="sendMessage()"
+      >
+        <img src="/img/icon/send-default.svg" alt="Send" class="chat-channel__send-icon" />
+      </button>
+    </div>
+  </div>
+</div>

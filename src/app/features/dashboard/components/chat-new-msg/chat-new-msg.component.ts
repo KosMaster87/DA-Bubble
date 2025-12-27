@@ -1,7 +1,7 @@
 /**
- * @fileoverview New Message Component
+ * @fileoverview Chat New Msg Component
  * @description Component for composing new messages with search and message box
- * @module features/dashboard/components/new-message
+ * @module features/dashboard/components/chat-new-msg
  */
 
 import { Component } from '@angular/core';
@@ -9,12 +9,12 @@ import { FormsModule } from '@angular/forms';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 
 @Component({
-  selector: 'app-new-message',
+  selector: 'app-chat-new-msg',
   imports: [FormsModule, MessageBoxComponent],
-  templateUrl: './new-message.component.html',
-  styleUrl: './new-message.component.scss',
+  templateUrl: './chat-new-msg.component.html',
+  styleUrl: './chat-new-msg.component.scss',
 })
-export class NewMessageComponent {
+export class ChatNewMsgComponent {
   protected searchQuery = '';
 
   /**

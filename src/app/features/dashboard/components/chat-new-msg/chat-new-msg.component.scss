@@ -1,6 +1,6 @@
 @use '../../../../../styles/mixins' as mix;
 
-.new-message {
+.chat-new-msg {
   @include mix.flex(column, flex-start, stretch);
   height: 100%;
   background: var(--container-bg);

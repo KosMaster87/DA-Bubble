@@ -1,0 +1,56 @@
+@if (isVisible()) {
+<div class="create-channel">
+  <div class="create-channel__overlay" (click)="onClose()"></div>
+  <div class="create-channel__content">
+    <!-- Header -->
+    <div class="create-channel__header">
+      <h2 class="create-channel__title">Create channel</h2>
+      <button
+        class="create-channel__close-btn"
+        (click)="onClose()"
+        [attr.aria-label]="'Close create channel'"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="create-channel__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="create-channel__body">
+      <!-- Info Text -->
+      <p class="create-channel__info">
+        Channels are for your team to communicate with each other. Ideally, they should be
+        topic-related, for example, #marketing.
+      </p>
+
+      <!-- Channel Name -->
+      <div class="create-channel__field">
+        <label class="create-channel__label">Channel-name</label>
+        <app-input-field-channel
+          placeholder="Your channel name"
+          iconSrc="/img/icon/channel-bar/tag-default.svg"
+          [value]="channelName()"
+          (valueChange)="onChannelNameChange($event)"
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="create-channel__field">
+        <div class="create-channel__label-row">
+          <label class="create-channel__label">Description</label>
+          <span class="create-channel__optional">(optional)</span>
+        </div>
+        <app-input-field-basic
+          placeholder="e.g., Discussion about marketing strategies"
+          [value]="channelDescription()"
+          (valueChange)="onDescriptionChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="create-channel__footer">
+      <app-btn-action label="Create" [disabled]="isCreateDisabled()" (clicked)="onCreate()" />
+    </div>
+  </div>
+</div>
+}

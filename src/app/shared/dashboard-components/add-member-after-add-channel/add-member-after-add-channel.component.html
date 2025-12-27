@@ -1,0 +1,171 @@
+<div class="add-member-after-channel">
+  <!-- Overlay -->
+  <div class="add-member-after-channel__overlay" (click)="onOverlayClick()"></div>
+
+  <!-- Content -->
+  <div class="add-member-after-channel__content">
+    <!-- Header -->
+    <div class="add-member-after-channel__header">
+      <h2 class="add-member-after-channel__title">Add member</h2>
+      <button class="add-member-after-channel__close-btn" (click)="onClose()" aria-label="Close">
+        <img
+          src="/img/icon/window/close-default.svg"
+          alt=""
+          class="add-member-after-channel__close-icon"
+        />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="add-member-after-channel__body">
+      <!-- Radio Option 1: Invite all members of the following channel -->
+      <div class="add-member-after-channel__radio-row">
+        <button
+          class="add-member-after-channel__radio-btn"
+          (click)="selectOption('all')"
+          [attr.aria-checked]="selectedOption() === 'all'"
+        >
+          <img
+            [src]="
+              selectedOption() === 'all'
+                ? '/img/icon/channel-bar/radio-btn-checked.svg'
+                : '/img/icon/channel-bar/radio-btn-default.svg'
+            "
+            alt=""
+            class="add-member-after-channel__radio-icon"
+          />
+        </button>
+        <label class="add-member-after-channel__radio-label">
+          Invite all members of the following channel
+        </label>
+      </div>
+
+      <!-- Selected Channels Display (always visible if channels selected) -->
+      @if (selectedChannels().length > 0) {
+      <div class="add-member-after-channel__selected-channels-container">
+        <div class="add-member-after-channel__selected-channels">
+          @for (channel of selectedChannels(); track channel.id) {
+          <div class="add-member-after-channel__channel-chip-wrapper">
+            <div class="add-member-after-channel__channel-chip">
+              <span class="add-member-after-channel__channel-chip-name">#{{ channel.name }}</span>
+              <button
+                class="add-member-after-channel__channel-chip-remove"
+                (click)="removeSelectedChannel(channel.id)"
+                aria-label="Remove"
+              >
+                <img
+                  src="/img/icon/window/close-default.svg"
+                  alt=""
+                  class="add-member-after-channel__channel-chip-remove-icon"
+                />
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Conditional Channel Selection Input (only when "all" is selected) -->
+      @if (selectedOption() === 'all') {
+      <div class="add-member-after-channel__input-wrapper">
+        <app-input-field-basic
+          placeholder="Search channel"
+          [value]="channelSearchValue()"
+          (valueChange)="onChannelSearchValueChange($event)"
+          (focused)="openChannelSelection()"
+        />
+
+        <!-- Channel Selection Dropdown -->
+        @if (isChannelSelectionOpen()) {
+        <app-channel-selection
+          [channels]="channels()"
+          [searchValue]="channelSearchValue()"
+          (closed)="onChannelSelectionClose()"
+          (channelSelected)="onChannelSelected($event)"
+        />
+        }
+      </div>
+      }
+
+      <!-- Radio Option 2: Add specific people -->
+      <div class="add-member-after-channel__radio-row">
+        <button
+          class="add-member-after-channel__radio-btn"
+          (click)="selectOption('specific')"
+          [attr.aria-checked]="selectedOption() === 'specific'"
+        >
+          <img
+            [src]="
+              selectedOption() === 'specific'
+                ? '/img/icon/channel-bar/radio-btn-checked.svg'
+                : '/img/icon/channel-bar/radio-btn-default.svg'
+            "
+            alt=""
+            class="add-member-after-channel__radio-icon"
+          />
+        </button>
+        <label class="add-member-after-channel__radio-label"> Add specific people </label>
+      </div>
+
+      <!-- Selected Users Display (always visible if users selected) -->
+      @if (selectedUsers().length > 0) {
+      <div class="add-member-after-channel__selected-users-container">
+        <div class="add-member-after-channel__selected-users">
+          @for (user of selectedUsers(); track user.id) {
+          <div class="add-member-after-channel__user-chip-wrapper">
+            <div class="add-member-after-channel__user-chip">
+              <img
+                [src]="user.avatar"
+                [alt]="user.name"
+                class="add-member-after-channel__user-chip-avatar"
+              />
+              <span class="add-member-after-channel__user-chip-name">{{ user.name }}</span>
+              <button
+                class="add-member-after-channel__user-chip-remove"
+                (click)="removeSelectedUser(user.id)"
+                aria-label="Remove"
+              >
+                <img
+                  src="/img/icon/window/close-default.svg"
+                  alt=""
+                  class="add-member-after-channel__user-chip-remove-icon"
+                />
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Conditional Input Field (only when "specific" is selected) -->
+      @if (selectedOption() === 'specific') {
+      <div class="add-member-after-channel__input-wrapper">
+        <app-input-field-basic
+          placeholder="Enter name"
+          [value]="searchValue()"
+          (valueChange)="onSearchValueChange($event)"
+          (focused)="openUserSelection()"
+        />
+
+        <!-- User Selection Dropdown -->
+        @if (showUserDropdown()) {
+        <app-user-selection
+          [users]="users()"
+          [searchValue]="searchValue()"
+          (userSelected)="onUserSelected($event)"
+          (closed)="isUserSelectionOpen.set(false)"
+        />
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="add-member-after-channel__footer">
+      <app-btn-cancel label="Create channel without member" (clicked)="onCancel()" />
+      <app-btn-action label="Create channel" (clicked)="onCreate()" />
+    </div>
+  </div>
+</div>

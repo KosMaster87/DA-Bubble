@@ -1,0 +1,13 @@
+<div class="input-field-channel">
+  @if (iconSrc()) {
+  <img [src]="iconSrc()" alt="" class="input-field-channel__icon" />
+  }
+  <input
+    type="text"
+    class="input-field-channel__input"
+    [placeholder]="placeholder()"
+    [value]="inputValue()"
+    [disabled]="disabled()"
+    (input)="onInput($event)"
+  />
+</div>

@@ -1,0 +1,16 @@
+<div class="user-selection">
+  <!-- Overlay -->
+  <div class="user-selection__overlay" (click)="onOverlayClick()"></div>
+
+  <!-- Content -->
+  <div class="user-selection__content" (click)="$event.stopPropagation()">
+    <!-- Body -->
+    <div class="user-selection__body">
+      @if (filteredUsers().length === 0) {
+      <p class="user-selection__empty">No users found</p>
+      } @else { @for (user of filteredUsers(); track user.id) {
+      <app-user-list-item [user]="user" (itemClicked)="onUserClick($event)" />
+      } }
+    </div>
+  </div>
+</div>

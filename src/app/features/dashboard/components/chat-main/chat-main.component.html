@@ -1,0 +1,52 @@
+<div class="chat-main">
+  <!-- Header -->
+  <div class="chat-main__header">
+    <div class="chat-main__header-info">
+      <h1 class="chat-main__title">{{ chatTitle() }}</h1>
+      <p class="chat-main__description">{{ chatDescription() }}</p>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="chat-main__messages">
+    @for (message of messages(); track message.id) {
+    <div
+      class="chat-main__message"
+      [class.chat-main__message--own]="message.isOwnMessage"
+      [class.chat-main__message--other]="!message.isOwnMessage"
+    >
+      <div class="chat-main__message-avatar">
+        <img [src]="message.senderAvatar" [alt]="message.senderName" />
+      </div>
+      <div class="chat-main__message-content">
+        <div class="chat-main__message-header">
+          <span class="chat-main__message-sender">{{ message.senderName }}</span>
+          <span class="chat-main__message-time">{{ message.timestamp | date : 'short' }}</span>
+        </div>
+        <p class="chat-main__message-text">{{ message.content }}</p>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-main__input-area">
+    <div class="chat-main__input-wrapper">
+      <input
+        type="text"
+        class="chat-main__input"
+        placeholder="Type a message..."
+        [value]="messageInput()"
+        (input)="onMessageInputChange($event)"
+        (keydown)="onKeyDown($event)"
+      />
+      <button
+        class="chat-main__send-btn"
+        [disabled]="!messageInput().trim()"
+        (click)="sendMessage()"
+      >
+        <img src="/img/icon/send-default.svg" alt="Send" class="chat-main__send-icon" />
+      </button>
+    </div>
+  </div>
+</div>

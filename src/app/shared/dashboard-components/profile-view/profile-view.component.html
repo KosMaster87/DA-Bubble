@@ -1,0 +1,70 @@
+@if (isVisible()) {
+<div class="profile-view">
+  <div class="profile-view__overlay" (click)="onClose()"></div>
+  <div class="profile-view__content">
+    <!-- Header -->
+    <div class="profile-view__header">
+      <h2 class="profile-view__title">Profil</h2>
+      <button
+        class="profile-view__close-btn"
+        (click)="onClose()"
+        [attr.aria-label]="'Close profile view'"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="profile-view__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="profile-view__body">
+      <!-- Avatar -->
+      <div class="profile-view__avatar-wrapper">
+        @if (user().photoURL) {
+        <img [src]="user().photoURL" [alt]="user().displayName" class="profile-view__avatar-img" />
+        } @else {
+        <div class="profile-view__avatar-placeholder">
+          {{ user().displayName.charAt(0).toUpperCase() }}
+        </div>
+        }
+      </div>
+
+      <!-- Name with Edit -->
+      <div class="profile-view__row">
+        <span class="profile-view__name">{{ user().displayName }}</span>
+        @if (isOwnProfile()) {
+        <button class="profile-view__edit-btn" (click)="onEdit()">
+          <img src="/img/icon/profile/edit-default.svg" alt="" class="profile-view__icon" />
+          <span class="profile-view__edit-text">Edit</span>
+        </button>
+        }
+      </div>
+
+      <!-- Status -->
+      <div class="profile-view__row profile-view__row--info">
+        <img [src]="getStatusIcon()" alt="" class="profile-view__icon" />
+        <span class="profile-view__text">{{ getStatusText() }}</span>
+      </div>
+
+      <!-- Email Label -->
+      <div class="profile-view__row profile-view__row--info">
+        <img src="/img/icon/profile/mail-default.svg" alt="" class="profile-view__icon" />
+        <span class="profile-view__text">E-Mail-Adresse</span>
+      </div>
+
+      <!-- Email Address -->
+      <div class="profile-view__row profile-view__row--email">
+        <span class="profile-view__email">{{ user().email }}</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="profile-view__footer">
+      @if (!isOwnProfile()) {
+      <button class="profile-view__message-btn" (click)="onMessage()">
+        <img src="/img/icon/profile/msg-default.svg" alt="" class="profile-view__icon" />
+        <span class="profile-view__message-text">Nachricht</span>
+      </button>
+      }
+    </div>
+  </div>
+</div>
+}

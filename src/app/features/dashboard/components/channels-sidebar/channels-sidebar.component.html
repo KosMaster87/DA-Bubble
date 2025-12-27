@@ -6,7 +6,7 @@
         alt="Workspace Logo"
         class="channels-sidebar__logo"
       />
-      <span class="channels-sidebar__workspace-name">Devspace</span>
+      <span class="channels-sidebar__workspace-name">My workspace</span>
     </div>
     <button
       class="channels-sidebar__multi-edit-btn"
@@ -70,12 +70,17 @@
         <button
           class="channels-sidebar__item"
           [class.channels-sidebar__item--active]="selectedChannelId() === channel.id"
+          [class.channels-sidebar__item--mailbox]="channel.id === 'mailbox'"
           (click)="selectDummyChannel(channel.id)"
         >
           <span class="channels-sidebar__item-content">
             <span class="channels-sidebar__item-icon-wrapper">
               <img
-                src="/img/icon/channel-bar/tag-default.svg"
+                [src]="
+                  channel.id === 'mailbox'
+                    ? '/img/icon/profile/mail-default.svg'
+                    : '/img/icon/channel-bar/tag-default.svg'
+                "
                 alt=""
                 class="channels-sidebar__item-icon"
               />
@@ -153,4 +158,23 @@
       }
     </div>
   </div>
+
+  <!-- Create Channel Popup -->
+  <app-create-channel
+    [isVisible]="isCreateChannelOpen()"
+    (closeClicked)="onCreateChannelClose()"
+    (createClicked)="onCreateChannel($event)"
+  />
+
+  <!-- Add Members Popup -->
+  @if (isAddMemberAfterChannelOpen()) {
+  <app-add-member-after-add-channel
+    channelName="channel for selection"
+    [channels]="dummyChannels()"
+    [users]="directMessages()"
+    (closed)="onClose()"
+    (cancelled)="onCancel()"
+    (created)="onCreate($event)"
+  />
+  }
 </aside>

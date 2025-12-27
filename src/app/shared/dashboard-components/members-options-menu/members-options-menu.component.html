@@ -1,5 +1,5 @@
 @if (isOpen()) {
-<div class="members-options-menu">
+<div class="members-options-menu" [attr.data-open]="isOpen()">
   <div class="members-options-menu__overlay" (click)="onClose()"></div>
   <div class="members-options-menu__content">
     <!-- Header -->

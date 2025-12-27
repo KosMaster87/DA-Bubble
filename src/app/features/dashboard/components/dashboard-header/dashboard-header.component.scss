@@ -56,19 +56,48 @@
       right: 1rem;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--text-secondary, #999);
+      width: 24px;
+      height: 24px;
       pointer-events: none;
+      transition: filter 0.2s;
+    }
+
+    &-input:focus ~ &-icon {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
     }
   }
 
+  &__profile-wrapper {
+    position: relative;
+  }
+
   &__profile {
-    @include mix.flex(row, flex-end, center);
-    gap: 1rem;
-    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    &-content {
+      @include mix.flex(row, flex-end, center);
+      gap: 1rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 100px;
+    }
 
     &-name {
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 1.4rem;
       color: var(--text-primary, #000);
+      transition: color 0.2s;
+    }
+
+    &:hover &-name {
+      color: #535af1;
+    }
+
+    &--active &-name {
+      color: #535af1;
     }
 
     &-avatar {
@@ -97,48 +126,24 @@
     }
   }
 
-  &__options-wrapper {
-    position: relative;
-  }
-
-  &__options-btn {
-    @include mix.flex(row, center, center);
-    width: 40px;
-    height: 40px;
-    border: none;
-    background: transparent;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-
-    &:hover {
-      background-color: var(--input-bg);
-    }
-
-    &--active {
-      background-color: var(--input-bg);
-    }
-  }
-
   &__options-icon {
     width: 14.4px;
     height: 14.4px;
     transition: transform 0.2s, filter 0.2s;
 
     // Hover state
-    .dashboard-header__options-btn:hover & {
+    .dashboard-header__profile:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
 
     // Active state (rotated 180deg)
-    .dashboard-header__options-btn--active & {
+    .dashboard-header__profile--active & {
       transform: rotate(180deg);
     }
 
     // Active + Hover
-    .dashboard-header__options-btn--active:hover & {
+    .dashboard-header__profile--active:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }

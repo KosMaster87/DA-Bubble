@@ -1,0 +1,49 @@
+<div class="chat-mailbox">
+  <div class="chat-mailbox__header">
+    <div class="chat-mailbox__header-info">
+      <h1 class="chat-mailbox__title">
+        <img src="/img/icon/profile/mail-default.svg" alt="" class="chat-mailbox__title-icon" />
+        Mailbox
+      </h1>
+      <p class="chat-mailbox__description">
+        Messages from contacts, admins, and system notifications
+      </p>
+    </div>
+  </div>
+
+  <div class="chat-mailbox__content">
+    @if (messages().length === 0) {
+    <div class="chat-mailbox__empty">
+      <img src="/img/icon/profile/mail-default.svg" alt="" class="chat-mailbox__empty-icon" />
+      <p class="chat-mailbox__empty-text">No messages yet</p>
+    </div>
+    } @else {
+    <div class="chat-mailbox__messages">
+      @for (message of messages(); track message.id) {
+      <div
+        class="chat-mailbox__message"
+        [class.chat-mailbox__message--unread]="!message.isRead"
+        [class.chat-mailbox__message--admin]="message.type === 'admin'"
+        [class.chat-mailbox__message--system]="message.type === 'system'"
+        (click)="onMessageClick(message.id)"
+      >
+        <div class="chat-mailbox__message-avatar">
+          <img [src]="message.fromAvatar" [alt]="message.from" />
+        </div>
+        <div class="chat-mailbox__message-content">
+          <div class="chat-mailbox__message-header">
+            <span class="chat-mailbox__message-from">{{ message.from }}</span>
+            <span class="chat-mailbox__message-time">{{ message.timestamp | date : 'short' }}</span>
+          </div>
+          <h3 class="chat-mailbox__message-subject">{{ message.subject }}</h3>
+          <p class="chat-mailbox__message-preview">{{ message.preview }}</p>
+        </div>
+        @if (!message.isRead) {
+        <div class="chat-mailbox__message-badge"></div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

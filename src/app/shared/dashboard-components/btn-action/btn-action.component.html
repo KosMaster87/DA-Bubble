@@ -1,0 +1,8 @@
+<button
+  class="btn-action"
+  [class.btn-action--disabled]="disabled()"
+  [disabled]="disabled()"
+  (click)="onClick()"
+>
+  {{ label() }}
+</button>

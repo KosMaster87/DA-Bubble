@@ -1,0 +1,113 @@
+@use '../../../../styles/mixins' as mix;
+
+.add-members {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-popup);
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    z-index: -1;
+  }
+
+  &__content {
+    position: relative;
+    min-width: 400px;
+    background: var(--container-bg);
+    border-radius: 1.5rem 0 1.5rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &__header {
+    @include mix.flex(row, space-between, center);
+    padding: var(--space-4);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0 var(--space-4);
+  }
+
+  &__close-btn {
+    @include mix.flex(row, center, center);
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    margin: 0 var(--space-4) 0 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #eceefe;
+    }
+  }
+
+  &__close-icon {
+    width: 12px;
+    height: 12px;
+    transition: filter 0.2s;
+
+    .add-members__close-btn:hover & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+  }
+
+  &__body {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-4);
+    padding: var(--space-8);
+  }
+
+  &__channel-row {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-3);
+  }
+
+  &__channel-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(55%) sepia(72%) saturate(2738%) hue-rotate(226deg)
+      brightness(97%) contrast(93%);
+  }
+
+  &__channel-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #797ef3;
+  }
+
+  &__input-wrapper {
+    width: 100%;
+  }
+
+  &__footer {
+    @include mix.flex(row, center, center);
+    padding: var(--space-4);
+  }
+}

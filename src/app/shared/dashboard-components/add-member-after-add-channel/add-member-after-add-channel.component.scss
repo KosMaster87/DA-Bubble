@@ -1,0 +1,311 @@
+@use '../../../../styles/mixins' as mix;
+
+.add-member-after-channel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--z-modal);
+  @include mix.flex(row, center, center);
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+  }
+
+  &__content {
+    position: relative;
+    background: var(--container-bg);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.2s ease-out;
+    z-index: 1;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &__header {
+    @include mix.flex(row, space-between, center);
+    padding: var(--space-6);
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__close-btn {
+    @include mix.flex(row, center, center);
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #eceefe;
+    }
+  }
+
+  &__close-icon {
+    width: 14px;
+    height: 14px;
+    transition: filter 0.2s;
+
+    .add-member-after-channel__close-btn:hover & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+  }
+
+  &__body {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-4);
+    padding: 0 var(--space-6) var(--space-6);
+  }
+
+  &__radio-row {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-3);
+  }
+
+  &__radio-btn {
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    @include mix.flex(row, center, center);
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  &__radio-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+
+  &__radio-label {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    user-select: none;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+
+    & > span {
+      cursor: pointer;
+    }
+  }
+
+  &__channel-btn {
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+  }
+
+  &__channel-content {
+    @include mix.flex(row, center, center);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: 2rem;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s, border-color 0.2s;
+
+    .add-member-after-channel__channel-btn:hover &,
+    .add-member-after-channel__channel-btn--open & {
+      background-color: #eceefe;
+      border-color: #535af1;
+    }
+  }
+
+  &__channel-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: color 0.2s;
+
+    .add-member-after-channel__channel-btn:hover &,
+    .add-member-after-channel__channel-btn--open & {
+      color: #535af1;
+    }
+  }
+
+  &__channel-arrow {
+    width: 16px;
+    height: 16px;
+    transition: filter 0.2s, transform 0.2s;
+    transform: rotate(90deg);
+
+    &--open {
+      transform: rotate(0deg);
+    }
+
+    .add-member-after-channel__channel-btn:hover & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+  }
+
+  &__input-wrapper {
+    margin-left: calc(24px + var(--space-3));
+    position: relative;
+    width: 80%;
+  }
+
+  &__selected-channels-container {
+    width: 80%;
+    margin-left: calc(24px + var(--space-3));
+  }
+
+  &__selected-channels {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-2);
+    max-height: calc(3 * (18px + var(--space-2) + var(--space-1) * 2 + 2px));
+    overflow-y: auto;
+    @include mix.custom-scrollbar(4px, transparent, var(--border-color));
+  }
+
+  &__channel-chip-wrapper {
+    @include mix.flex(row, flex-start, flex-start);
+  }
+
+  &__channel-chip {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background-color: #eceefe;
+    border-radius: 1.5rem;
+    border: 1px solid #535af1;
+  }
+
+  &__channel-chip-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__channel-chip-remove {
+    @include mix.flex(row, center, center);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__channel-chip-remove-icon {
+    width: 10px;
+    height: 10px;
+    transition: filter 0.2s;
+
+    .add-member-after-channel__channel-chip-remove:hover & {
+      filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(3042%) hue-rotate(347deg)
+        brightness(95%) contrast(88%);
+    }
+  }
+
+  &__selected-users-container {
+    width: 80%;
+    margin-left: calc(24px + var(--space-3));
+  }
+
+  &__selected-users {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-2);
+    max-height: calc(3 * (22px + var(--space-2) + var(--space-1) * 2 + 2px));
+    overflow-y: auto;
+    @include mix.custom-scrollbar(4px, transparent, var(--border-color));
+  }
+
+  &__user-chip-wrapper {
+    @include mix.flex(row, flex-start, flex-start);
+  }
+
+  &__user-chip {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background-color: #eceefe;
+    border-radius: 1.5rem;
+    border: 1px solid #535af1;
+  }
+
+  &__user-chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__user-chip-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__user-chip-remove {
+    @include mix.flex(row, center, center);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__user-chip-remove-icon {
+    width: 10px;
+    height: 10px;
+    transition: filter 0.2s;
+
+    .add-member-after-channel__user-chip-remove:hover & {
+      filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(3042%) hue-rotate(347deg)
+        brightness(95%) contrast(88%);
+    }
+  }
+  &__footer {
+    @include mix.flex(row, flex-end, center);
+    gap: var(--space-4);
+    padding: var(--space-6);
+  }
+}

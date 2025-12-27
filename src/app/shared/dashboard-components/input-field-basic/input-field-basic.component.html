@@ -1,0 +1,10 @@
+<input
+  type="text"
+  class="input-field-basic"
+  [placeholder]="placeholder()"
+  [value]="inputValue()"
+  [disabled]="disabled()"
+  [readonly]="readonly()"
+  (input)="onInput($event)"
+  (focus)="focused.emit()"
+/>

@@ -15,7 +15,7 @@
   border-radius: 0 12px 12px 0;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 1000;
+  z-index: var(--z-sidebar-toggle);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 
   &:hover {

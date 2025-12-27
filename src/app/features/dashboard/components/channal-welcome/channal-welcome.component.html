@@ -1,27 +1,56 @@
-<div class="welcome-channel">
-  <div class="welcome-channel__header">
-    <div class="welcome-channel__header-info">
-      <h1 class="welcome-channel__title"># dabubble-welcome</h1>
-      <!-- <p class="welcome-channel__description">
+<div class="channal-welcome">
+  <div class="channal-welcome__header">
+    <div class="channal-welcome__header-info">
+      <h1 class="channal-welcome__title"># DABubble-welcome</h1>
+      <!-- <p class="channal-welcome__description">
         Willkommen beim DABubble Welcome Channel! Hier findest du alle wichtigen Informationen.
       </p> -->
     </div>
 
-    <div class="welcome-channel__header-actions">
+    <div class="channal-welcome__header-actions">
       <app-members-miniatures
         [members]="members()"
         [totalCount]="totalMemberCount()"
         (memberClicked)="onViewMembers()"
       />
       <app-add-member-button (addMemberClicked)="onAddMember()" />
+
+      <!-- Members Options Menu -->
+      <app-members-options-menu
+        [isOpen]="isMembersMenuOpen()"
+        [members]="members()"
+        (closeClicked)="onCloseMembersMenu()"
+        (addMemberClicked)="onAddMember()"
+        (memberSelected)="onMemberSelected($event)"
+      />
+
+      <!-- Profile View -->
+      @if (selectedMember()) {
+      <app-profile-view
+        [user]="selectedMember()!"
+        [isVisible]="isProfileViewOpen()"
+        [isOwnProfile]="false"
+        (closeClicked)="onProfileViewClose()"
+        (editClicked)="onProfileEdit()"
+        (messageClicked)="onProfileMessage()"
+      />
+      }
+
+      <!-- Add Members -->
+      <app-add-members
+        [isVisible]="isAddMembersOpen()"
+        [channelName]="channelName()"
+        (closeClicked)="onAddMembersClose()"
+        (addMemberClicked)="onAddMemberSubmit($event)"
+      />
     </div>
   </div>
 
-  <div class="welcome-channel__content">
-    <div class="welcome-channel__messages">
+  <div class="channal-welcome__content">
+    <div class="channal-welcome__messages">
       <!-- Welcome Message -->
-      <div class="welcome-channel__welcome-card">
-        <div class="welcome-channel__welcome-icon">
+      <div class="channal-welcome__welcome-card">
+        <div class="channal-welcome__welcome-icon">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
             <path
               d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
@@ -54,46 +83,37 @@
           </svg>
         </div>
 
-        <h2 class="welcome-channel__welcome-title">Willkommen bei DABubble!</h2>
-        <p class="welcome-channel__welcome-text">
+        <h2 class="channal-welcome__welcome-title">Willkommen bei DABubble!</h2>
+        <p class="channal-welcome__welcome-text">
           Dies ist der Anfang des <strong>#dabubble-welcome</strong> Channels. Hier kannst du dich
           mit deinem Team austauschen und zusammenarbeiten.
         </p>
 
-        <div class="welcome-channel__welcome-features">
-          <div class="welcome-channel__feature">
-            <span class="welcome-channel__feature-icon">💬</span>
+        <div class="channal-welcome__welcome-features">
+          <div class="channal-welcome__feature">
+            <span class="channal-welcome__feature-icon">💬</span>
             <span>Nachrichten senden und empfangen</span>
           </div>
-          <div class="welcome-channel__feature">
-            <span class="welcome-channel__feature-icon">📎</span>
+          <div class="channal-welcome__feature">
+            <span class="channal-welcome__feature-icon">📎</span>
             <span>Dateien teilen</span>
           </div>
-          <div class="welcome-channel__feature">
-            <span class="welcome-channel__feature-icon">🔔</span>
+          <div class="channal-welcome__feature">
+            <span class="channal-welcome__feature-icon">🔔</span>
             <span>Benachrichtigungen erhalten</span>
           </div>
         </div>
       </div>
 
       <!-- Placeholder for future messages -->
-      <div class="welcome-channel__message-placeholder">
+      <div class="channal-welcome__message-placeholder">
         <p>Keine Nachrichten vorhanden. Starte eine Unterhaltung!</p>
       </div>
     </div>
   </div>
 
   <!-- Message Input -->
-  <div class="welcome-channel__footer">
+  <div class="channal-welcome__footer">
     <app-message-box (messageSent)="onMessageSent($event)" />
   </div>
-
-  <!-- Members Options Menu -->
-  <app-members-options-menu
-    [isOpen]="isMembersMenuOpen()"
-    [members]="members()"
-    (closeClicked)="onCloseMembersMenu()"
-    (addMemberClicked)="onAddMember()"
-    (memberSelected)="onMemberSelected($event)"
-  />
 </div>

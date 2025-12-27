@@ -16,13 +16,29 @@ import { CommonModule } from '@angular/common';
 export class UserOptionsMenuComponent {
   isVisible = input.required<boolean>();
   profileClicked = output<void>();
+  mailboxClicked = output<void>();
   logoutClicked = output<void>();
+  closeClicked = output<void>();
+
+  /**
+   * Handle close click (overlay)
+   */
+  onClose(): void {
+    this.closeClicked.emit();
+  }
 
   /**
    * Handle profile click
    */
   onProfileClick(): void {
     this.profileClicked.emit();
+  }
+
+  /**
+   * Handle mailbox click
+   */
+  onMailboxClick(): void {
+    this.mailboxClicked.emit();
   }
 
   /**

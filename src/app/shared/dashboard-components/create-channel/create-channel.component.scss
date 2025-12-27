@@ -1,0 +1,122 @@
+@use '../../../../styles/mixins' as mix;
+
+.create-channel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--z-modal);
+  @include mix.flex(row, center, center);
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+  }
+
+  &__content {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    background: var(--container-bg);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.2s ease-out;
+    z-index: 1;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &__header {
+    @include mix.flex(row, space-between, center);
+    padding: var(--space-6);
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__close-btn {
+    @include mix.flex(row, center, center);
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #eceefe;
+    }
+  }
+
+  &__close-icon {
+    width: 14px;
+    height: 14px;
+    transition: filter 0.2s;
+
+    .create-channel__close-btn:hover & {
+      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+        brightness(98%) contrast(92%);
+    }
+  }
+
+  &__body {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+
+  &__info {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__field {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-2);
+  }
+
+  &__label-row {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+  }
+
+  &__label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__optional {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+  }
+
+  &__footer {
+    @include mix.flex(row, flex-end, center);
+    padding: var(--space-6);
+  }
+}

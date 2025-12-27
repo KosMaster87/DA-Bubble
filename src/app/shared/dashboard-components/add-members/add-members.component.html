@@ -1,0 +1,41 @@
+@if (isVisible()) {
+<div class="add-members">
+  <div class="add-members__overlay" (click)="onClose()"></div>
+  <div class="add-members__content">
+    <!-- Header -->
+    <div class="add-members__header">
+      <h2 class="add-members__title">Add members</h2>
+      <button
+        class="add-members__close-btn"
+        (click)="onClose()"
+        [attr.aria-label]="'Close add members'"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="add-members__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="add-members__body">
+      <!-- Channel Name -->
+      <div class="add-members__channel-row">
+        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="add-members__channel-icon" />
+        <span class="add-members__channel-name">{{ channelName() }}</span>
+      </div>
+
+      <!-- Search Input -->
+      <div class="add-members__input-wrapper">
+        <app-input-field-basic
+          placeholder="Enter name"
+          [value]="searchQuery()"
+          (valueChange)="onSearchChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="add-members__footer">
+      <app-btn-action label="Add member" [disabled]="isAddDisabled()" (clicked)="onAddMember()" />
+    </div>
+  </div>
+</div>
+}

@@ -7,20 +7,22 @@
 import { Component, inject, signal } from '@angular/core';
 import { DashboardHeaderComponent } from '../../components/dashboard-header/dashboard-header.component';
 import { ChannelsSidebarComponent } from '../../components/channels-sidebar/channels-sidebar.component';
-import { WelcomeChannelComponent } from '../../components/welcome-channel/welcome-channel.component';
-import { NewMessageComponent } from '../../components/new-message/new-message.component';
+import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
+import { ChatMailboxComponent } from '../../components/chat-mailbox/chat-mailbox.component';
+import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 
-type DashboardView = 'welcome' | 'new-message';
+type DashboardView = 'welcome' | 'chat-new-msg' | 'mailbox';
 
 @Component({
   selector: 'app-dashboard',
   imports: [
     DashboardHeaderComponent,
     ChannelsSidebarComponent,
-    WelcomeChannelComponent,
-    NewMessageComponent,
+    ChannalWelcomeComponent,
+    ChatMailboxComponent,
+    ChatNewMsgComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -34,7 +36,7 @@ export class DashboardComponent {
    * Switch to new message view
    */
   showNewMessage(): void {
-    this.currentView.set('new-message');
+    this.currentView.set('chat-new-msg');
   }
 
   /**
@@ -42,5 +44,12 @@ export class DashboardComponent {
    */
   showWelcome(): void {
     this.currentView.set('welcome');
+  }
+
+  /**
+   * Switch to mailbox view
+   */
+  showMailbox(): void {
+    this.currentView.set('mailbox');
   }
 }

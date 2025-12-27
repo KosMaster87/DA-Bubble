@@ -1,0 +1,171 @@
+@use '../../../../../styles/mixins' as mix;
+
+.chat-mailbox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--container-bg);
+
+  &__header {
+    @include mix.flex(row, space-between, flex-start);
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+
+  &__header-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__title {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-3);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__title-icon {
+    width: 32px;
+    height: 32px;
+    filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+      brightness(98%) contrast(92%);
+  }
+
+  &__description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4);
+    @include mix.custom-scrollbar(6px, transparent, var(--border-color));
+  }
+
+  &__empty {
+    @include mix.flex(column, center, center);
+    height: 100%;
+    gap: var(--space-4);
+    padding: var(--space-8);
+  }
+
+  &__empty-icon {
+    width: 80px;
+    height: 80px;
+    opacity: 0.3;
+  }
+
+  &__empty-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  &__messages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  &__message {
+    position: relative;
+    @include mix.flex(row, flex-start, flex-start);
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #f8f8f8;
+      border-color: #535af1;
+    }
+
+    &--unread {
+      background-color: #f0f0ff;
+      border-color: #535af1;
+
+      &:hover {
+        background-color: #e8e8ff;
+      }
+    }
+
+    &--admin {
+      border-left: 4px solid #535af1;
+    }
+
+    &--system {
+      border-left: 4px solid #ff6b6b;
+    }
+  }
+
+  &__message-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__message-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  &__message-header {
+    @include mix.flex(row, space-between, center);
+  }
+
+  &__message-from {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__message-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  &__message-subject {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__message-preview {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__message-badge {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    width: 10px;
+    height: 10px;
+    background-color: #535af1;
+    border-radius: 50%;
+  }
+}

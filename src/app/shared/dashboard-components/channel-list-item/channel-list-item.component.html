@@ -1,0 +1,10 @@
+<button
+  class="channel-list-item"
+  [class.channel-list-item--active]="isActive()"
+  (click)="onClick()"
+>
+  <span class="channel-list-item__content">
+    <!-- <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="channel-list-item__icon" /> -->
+    <span class="channel-list-item__name">#{{ channel().name }}</span>
+  </span>
+</button>
