@@ -5,7 +5,6 @@
  */
 
 import { Component, signal, computed, inject } from '@angular/core';
-import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { DummyUsersService } from '../../services/dummy-users.service';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { CurrentUserService } from '../../services/current-user.service';
@@ -27,7 +26,6 @@ import {
 @Component({
   selector: 'app-channal-welcome',
   imports: [
-    MessageBoxComponent,
     MembersMiniatureComponent,
     MembersOptionsMenuComponent,
     ProfileViewComponent,
@@ -140,14 +138,6 @@ export class ChannalWelcomeComponent {
       isAdmin: user.isAdmin,
     };
   });
-
-  /**
-   * Handle message sent event
-   */
-  onMessageSent(message: string): void {
-    console.log('Message sent in welcome channel:', message);
-    // TODO: Implement message sending logic
-  }
 
   /**
    * Handle view members click
