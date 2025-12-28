@@ -3,11 +3,9 @@
     <div class="chat-mailbox__header-info">
       <h1 class="chat-mailbox__title">
         <img src="/img/icon/profile/mail-default.svg" alt="" class="chat-mailbox__title-icon" />
-        Mailbox
+        {{ mailboxTitle() }}
       </h1>
-      <p class="chat-mailbox__description">
-        Messages from contacts, admins, and system notifications
-      </p>
+      <p class="chat-mailbox__description">{{ mailboxDescription() }}</p>
     </div>
   </div>
 

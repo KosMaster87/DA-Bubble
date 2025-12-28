@@ -4,19 +4,10 @@
  * @module features/dashboard/components/chat-mailbox
  */
 
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-
-export interface MailboxMessage {
-  id: string;
-  from: string;
-  fromAvatar: string;
-  subject: string;
-  preview: string;
-  timestamp: Date;
-  isRead: boolean;
-  type: 'user' | 'admin' | 'system';
-}
+import { DummyChannelsService } from '../../services/dummy-channels.service';
+import { DummyMailboxService } from '../../services/dummy-mailbox.service';
 
 @Component({
   selector: 'app-chat-mailbox',
@@ -25,46 +16,35 @@ export interface MailboxMessage {
   styleUrl: './chat-mailbox.component.scss',
 })
 export class ChatMailboxComponent {
+  protected channelsService = inject(DummyChannelsService);
+  protected mailboxService = inject(DummyMailboxService);
+
   /**
-   * Dummy mailbox messages
+   * Mailbox title from service
    */
-  protected messages = signal<MailboxMessage[]>([
-    {
-      id: '1',
-      from: 'System Admin',
-      fromAvatar: '/img/profile/profile-1.png',
-      subject: 'Welcome to DABubble',
-      preview: 'Welcome to DABubble! Here are some tips to get started...',
-      timestamp: new Date('2024-12-27T10:00:00'),
-      isRead: false,
-      type: 'admin',
-    },
-    {
-      id: '2',
-      from: 'Sofia Müller',
-      fromAvatar: '/img/profile/profile-2.png',
-      subject: 'Project Update',
-      preview: 'Hey! I wanted to give you an update on the project...',
-      timestamp: new Date('2024-12-26T15:30:00'),
-      isRead: true,
-      type: 'user',
-    },
-    {
-      id: '3',
-      from: 'System',
-      fromAvatar: '/img/icon/profile/mail-default.svg',
-      subject: 'Security Alert',
-      preview: 'Your password will expire in 7 days. Please update it...',
-      timestamp: new Date('2024-12-25T09:15:00'),
-      isRead: false,
-      type: 'system',
-    },
-  ]);
+  protected mailboxTitle = computed(() => {
+    const channel = this.channelsService.getChannelById('mailbox');
+    return channel?.name || 'Mailbox';
+  });
+
+  /**
+   * Mailbox description from service
+   */
+  protected mailboxDescription = computed(() => {
+    const channel = this.channelsService.getChannelById('mailbox');
+    return channel?.description || 'Messages from contacts, admins, and system notifications';
+  });
+
+  /**
+   * Messages from mailbox service
+   */
+  protected messages = computed(() => this.mailboxService.messages());
 
   /**
    * Handle message click
    */
   onMessageClick(messageId: string): void {
+    this.mailboxService.markAsRead(messageId);
     console.log('Message clicked:', messageId);
     // TODO: Open chat window with this message
   }

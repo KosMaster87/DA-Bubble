@@ -1,0 +1,24 @@
+@use '../../../../styles/mixins' as mix;
+
+.btn-delete {
+  @include mix.flex(row, center, center);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover:not(&--disabled) {
+    background-color: #c82333;
+  }
+
+  &--disabled {
+    background-color: #686868;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}

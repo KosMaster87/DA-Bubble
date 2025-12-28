@@ -4,7 +4,7 @@
  * @module features/dashboard/components/dashboard-header
  */
 
-import { Component, inject, signal, output } from '@angular/core';
+import { Component, inject, signal, output, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
@@ -17,6 +17,8 @@ import {
   EditProfileComponent,
   EditProfileUser,
 } from '@shared/dashboard-components/edit-profile/edit-profile.component';
+import { DummyUsersService } from '../../services/dummy-users.service';
+import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
   selector: 'app-dashboard-header',
@@ -32,11 +34,20 @@ import {
 export class DashboardHeaderComponent {
   private router = inject(Router);
   protected authStore = inject(AuthStore);
+  protected usersService = inject(DummyUsersService);
+  protected currentUserService = inject(CurrentUserService);
   protected isOptionsOpen = signal(false);
   protected isProfileViewOpen = signal(false);
   protected isEditProfileOpen = signal(false);
 
   mailboxRequested = output<void>();
+
+  /**
+   * Get current dummy user
+   */
+  protected currentDummyUser = computed(() => {
+    return this.usersService.getUserById(this.currentUserService.currentUserId());
+  });
 
   /**
    * Get current user
@@ -104,23 +115,28 @@ export class DashboardHeaderComponent {
   /**
    * Handle profile save
    */
-  async onProfileSave(data: { displayName: string }): Promise<void> {
+  async onProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
     this.isEditProfileOpen.set(false);
+    const userId = this.currentUserService.currentUserId();
+    this.usersService.updateUser(userId, {
+      name: data.displayName,
+      isAdmin: data.isAdmin,
+    });
     console.log('Save profile:', data);
-    // TODO: Update user profile in Firebase
   }
 
   /**
    * Get current user as EditProfileUser
    */
   get editProfileUser(): EditProfileUser | null {
-    const user = this.currentUser;
+    const user = this.currentDummyUser();
     if (!user) return null;
     return {
-      id: user.uid,
-      displayName: user.displayName || 'User',
-      email: user.email || '',
-      photoURL: user.photoURL || undefined,
+      id: user.id,
+      displayName: user.name,
+      email: user.email,
+      photoURL: user.avatar,
+      isAdmin: user.isAdmin,
     };
   }
 
@@ -137,14 +153,15 @@ export class DashboardHeaderComponent {
    * Get current user as ProfileUser
    */
   get profileUser(): ProfileUser | null {
-    const user = this.currentUser;
+    const user = this.currentDummyUser();
     if (!user) return null;
     return {
-      id: user.uid,
-      displayName: user.displayName || 'User',
-      email: user.email || '',
-      photoURL: user.photoURL || undefined,
-      status: 'online',
+      id: user.id,
+      displayName: user.name,
+      email: user.email,
+      photoURL: user.avatar,
+      status: user.isOnline ? 'online' : 'offline',
+      isAdmin: user.isAdmin,
     };
   }
 

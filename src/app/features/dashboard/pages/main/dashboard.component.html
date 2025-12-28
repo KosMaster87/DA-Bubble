@@ -10,6 +10,8 @@
       [isMailboxActive]="currentView() === 'mailbox'"
       (newMessageRequested)="showNewMessage()"
       (mailboxRequested)="showMailbox()"
+      (channelSelected)="showChannel($event)"
+      (directMessageSelected)="showDirectMessage($event)"
     />
 
     @if (currentView() === 'welcome') {
@@ -18,6 +20,10 @@
     <app-chat-new-msg class="dashboard__content" />
     } @else if (currentView() === 'mailbox') {
     <app-chat-mailbox class="dashboard__content" />
+    } @else if (currentView() === 'channel' && selectedChannel()) {
+    <app-chat-channel class="dashboard__content" [channel]="selectedChannel()!" />
+    } @else if (currentView() === 'direct-message' && selectedDM()) {
+    <app-chat-main class="dashboard__content" [conversationId]="selectedDM()!.conversationId" />
     }
   </div>
 </div>

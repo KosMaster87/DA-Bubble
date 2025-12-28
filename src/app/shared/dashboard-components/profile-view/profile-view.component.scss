@@ -178,6 +178,7 @@
 
   &__footer {
     @include mix.flex(row, center, center);
+    gap: var(--space-3);
     padding: var(--space-4);
   }
 

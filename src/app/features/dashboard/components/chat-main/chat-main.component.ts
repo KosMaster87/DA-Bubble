@@ -4,8 +4,10 @@
  * @module features/dashboard/components/chat-main
  */
 
-import { Component, signal } from '@angular/core';
+import { Component, signal, input, inject, computed, effect } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { DummyChatDmService } from '../../services/dummy-chat-dm.service';
+import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 
 export interface ChatMessage {
   id: string;
@@ -19,95 +21,72 @@ export interface ChatMessage {
 
 @Component({
   selector: 'app-chat-main',
-  imports: [DatePipe],
+  imports: [DatePipe, MessageBoxComponent],
   templateUrl: './chat-main.component.html',
   styleUrl: './chat-main.component.scss',
 })
 export class ChatMainComponent {
+  protected chatDmService = inject(DummyChatDmService);
+
   /**
-   * Chat title (channel name or user name)
+   * Conversation ID input
    */
-  protected chatTitle = signal<string>('General Chat');
+  conversationId = input.required<string>();
+
+  /**
+   * Chat title (user name from conversation)
+   */
+  protected chatTitle = computed(() => {
+    const dm = this.chatDmService.directMessages().find((d) => d.id === this.conversationId());
+    return dm?.userName || 'Direct Message';
+  });
 
   /**
    * Chat description
    */
-  protected chatDescription = signal<string>('Main conversation area');
+  protected chatDescription = computed(() => {
+    const dm = this.chatDmService.directMessages().find((d) => d.id === this.conversationId());
+    return dm?.isOnline ? 'Online' : 'Offline';
+  });
 
   /**
-   * Message input value
+   * Messages from service for this conversation
    */
-  protected messageInput = signal<string>('');
+  protected messages = computed<ChatMessage[]>(() => {
+    const conversationMessages = this.chatDmService.getMessagesForConversation(
+      this.conversationId()
+    );
+    // Assuming current user ID is '2' (You)
+    const currentUserId = '2';
 
-  /**
-   * Dummy messages
-   */
-  protected messages = signal<ChatMessage[]>([
-    {
-      id: '1',
-      senderId: '1',
-      senderName: 'Sofia Müller',
-      senderAvatar: '/img/profile/profile-1.png',
-      content: 'Hey everyone! How is the project going?',
-      timestamp: new Date('2024-12-27T09:00:00'),
-      isOwnMessage: false,
-    },
-    {
-      id: '2',
-      senderId: '2',
-      senderName: 'You',
-      senderAvatar: '/img/profile/profile-2.png',
-      content: 'Great! We are making good progress on the dashboard.',
-      timestamp: new Date('2024-12-27T09:05:00'),
-      isOwnMessage: true,
-    },
-    {
-      id: '3',
-      senderId: '3',
-      senderName: 'Noah Braun',
-      senderAvatar: '/img/profile/profile-3.png',
-      content: 'I finished the authentication module yesterday.',
-      timestamp: new Date('2024-12-27T09:10:00'),
-      isOwnMessage: false,
-    },
-  ]);
-
-  /**
-   * Handle message input change
-   */
-  onMessageInputChange(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.messageInput.set(value);
-  }
+    return conversationMessages.map((msg) => ({
+      id: msg.id,
+      senderId: msg.senderId,
+      senderName: msg.senderName,
+      senderAvatar: msg.senderAvatar,
+      content: msg.content,
+      timestamp: msg.timestamp,
+      isOwnMessage: msg.senderId === currentUserId,
+    }));
+  });
 
   /**
    * Send message
    */
-  sendMessage(): void {
-    const content = this.messageInput().trim();
-    if (!content) return;
+  sendMessage(content: string): void {
+    if (!content.trim()) return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      senderId: '2',
-      senderName: 'You',
-      senderAvatar: '/img/profile/profile-2.png',
-      content,
-      timestamp: new Date(),
-      isOwnMessage: true,
-    };
+    // Get current user info (hardcoded for now, should come from auth service)
+    const currentUserId = '2';
+    const currentUserName = 'You';
+    const currentUserAvatar = '/img/profile/profile-2.png';
 
-    this.messages.update((msgs) => [...msgs, newMessage]);
-    this.messageInput.set('');
-  }
-
-  /**
-   * Handle enter key in input
-   */
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
-    }
+    this.chatDmService.sendMessage(
+      this.conversationId(),
+      currentUserId,
+      currentUserName,
+      currentUserAvatar,
+      content.trim()
+    );
   }
 }

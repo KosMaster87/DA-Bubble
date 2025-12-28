@@ -14,6 +14,7 @@ export interface EditProfileUser {
   displayName: string;
   email: string;
   photoURL?: string;
+  isAdmin?: boolean;
 }
 
 @Component({
@@ -26,11 +27,13 @@ export class EditProfileComponent {
   user = input.required<EditProfileUser>();
   isVisible = input<boolean>(false);
   closeClicked = output<void>();
-  saveClicked = output<{ displayName: string }>();
+  saveClicked = output<{ displayName: string; isAdmin: boolean }>();
   displayName = signal<string>('');
+  isAdmin = signal<boolean>(false);
 
   ngOnInit() {
     this.displayName.set(this.user().displayName);
+    this.isAdmin.set(this.user().isAdmin || false);
   }
 
   /**
@@ -45,6 +48,7 @@ export class EditProfileComponent {
    */
   onCancel(): void {
     this.displayName.set(this.user().displayName);
+    this.isAdmin.set(this.user().isAdmin || false);
     this.closeClicked.emit();
   }
 
@@ -54,6 +58,7 @@ export class EditProfileComponent {
   onSave(): void {
     this.saveClicked.emit({
       displayName: this.displayName(),
+      isAdmin: this.isAdmin(),
     });
   }
 

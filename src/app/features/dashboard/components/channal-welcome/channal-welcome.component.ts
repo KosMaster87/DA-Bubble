@@ -8,6 +8,7 @@ import { Component, signal, computed, inject } from '@angular/core';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { DummyUsersService } from '../../services/dummy-users.service';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
+import { CurrentUserService } from '../../services/current-user.service';
 import {
   MembersMiniatureComponent,
   type MemberMiniature,
@@ -19,6 +20,10 @@ import {
   ProfileViewComponent,
   ProfileUser,
 } from '@shared/dashboard-components/profile-view/profile-view.component';
+import {
+  EditProfileComponent,
+  EditProfileUser,
+} from '@shared/dashboard-components/edit-profile/edit-profile.component';
 import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
 
 @Component({
@@ -29,6 +34,7 @@ import { AddMembersComponent } from '@shared/dashboard-components/add-members/ad
     AddMemberButtonComponent,
     MembersOptionsMenuComponent,
     ProfileViewComponent,
+    EditProfileComponent,
     AddMembersComponent,
   ],
   templateUrl: './channal-welcome.component.html',
@@ -37,23 +43,100 @@ import { AddMembersComponent } from '@shared/dashboard-components/add-members/ad
 export class ChannalWelcomeComponent {
   protected usersService = inject(DummyUsersService);
   protected channelsService = inject(DummyChannelsService);
+  protected currentUserService = inject(CurrentUserService);
 
   protected isMembersMenuOpen = signal<boolean>(false);
   protected isProfileViewOpen = signal<boolean>(false);
+  protected isEditProfileOpen = signal<boolean>(false);
   protected selectedMemberId = signal<string | null>(null);
   protected isAddMembersOpen = signal<boolean>(false);
-  protected channelName = signal<string>('DABubble-welcome');
 
   /**
-   * Channel members from DummyUsersService
+   * Check if current user is admin
    */
-  protected members = computed<UserListItem[]>(() =>
-    this.usersService.users().map((user) => ({
+  protected isCurrentUserAdmin = computed(() => {
+    const currentUser = this.usersService.getUserById(this.currentUserService.currentUserId());
+    return currentUser?.isAdmin || false;
+  });
+
+  /**
+   * Check if viewing own profile
+   */
+  protected isOwnProfile = computed(() => {
+    return this.selectedMemberId() === this.currentUserService.currentUserId();
+  });
+
+  /**
+   * Selected member for edit profile
+   */
+  protected editProfileUser = computed<EditProfileUser | null>(() => {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return null;
+
+    const user = this.usersService.getUserById(memberId);
+    if (!user) return null;
+
+    return {
       id: user.id,
-      name: user.name,
-      avatar: user.avatar,
-    }))
-  );
+      displayName: user.name,
+      email: user.email,
+      photoURL: user.avatar,
+      isAdmin: user.isAdmin,
+    };
+  });
+
+  /**
+   * Channel name from service
+   */
+  protected channelName = computed(() => {
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    return channel?.name || 'DABubble-welcome';
+  });
+
+  /**
+   * Channel description from service
+   */
+  protected channelDescription = computed(() => {
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    return channel?.description || 'Welcome to DABubble! General announcements and introductions.';
+  });
+
+  /**
+   * Channel members from channel's memberIds
+   */
+  protected members = computed<UserListItem[]>(() => {
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    if (!channel || !channel.memberIds) return [];
+
+    return channel.memberIds
+      .map((memberId) => {
+        const user = this.usersService.getUserById(memberId);
+        if (!user) return null;
+        return {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar,
+        };
+      })
+      .filter((user): user is UserListItem => user !== null);
+  });
+
+  /**
+   * Available users that are NOT yet members of this channel
+   */
+  protected availableUsers = computed<UserListItem[]>(() => {
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    const currentMemberIds = channel?.memberIds || [];
+
+    return this.usersService
+      .users()
+      .filter((user) => !currentMemberIds.includes(user.id))
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+      }));
+  });
 
   /**
    * Total member count
@@ -76,6 +159,7 @@ export class ChannalWelcomeComponent {
       email: user.email,
       photoURL: user.avatar,
       status: user.isOnline ? 'online' : 'offline',
+      isAdmin: user.isAdmin,
     };
   });
 
@@ -104,12 +188,17 @@ export class ChannalWelcomeComponent {
   }
 
   /**
-   * Handle add member submit
+   * Handle members added
    */
-  onAddMemberSubmit(name: string): void {
-    console.log('Add member:', name);
+  onMembersAdded(userIds: string[]): void {
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    if (!channel) return;
+
+    userIds.forEach((userId) => {
+      this.channelsService.addMemberToChannel(channel.id, userId);
+    });
     this.isAddMembersOpen.set(false);
-    // TODO: Implement add member logic
+    console.log('Added members to channel:', userIds);
   }
 
   /**
@@ -146,12 +235,48 @@ export class ChannalWelcomeComponent {
   }
 
   /**
+   * Handle remove member from channel
+   */
+  onRemoveMember(): void {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return;
+
+    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    if (!channel) return;
+
+    this.channelsService.removeMemberFromChannel(channel.id, memberId);
+    this.isProfileViewOpen.set(false);
+    this.selectedMemberId.set(null);
+    console.log('Removed member from channel:', memberId);
+  }
+
+  /**
    * Handle profile edit
    */
   onProfileEdit(): void {
     this.isProfileViewOpen.set(false);
-    console.log('Edit profile for member:', this.selectedMemberId());
-    // TODO: Open edit profile for selected member
+    this.isEditProfileOpen.set(true);
+  }
+
+  /**
+   * Handle edit profile close
+   */
+  onEditProfileClose(): void {
+    this.isEditProfileOpen.set(false);
+  }
+
+  /**
+   * Handle edit profile save
+   */
+  onEditProfileSave(data: { displayName: string; isAdmin: boolean }): void {
+    const userId = this.selectedMemberId();
+    if (!userId) return;
+
+    this.usersService.updateUser(userId, {
+      name: data.displayName,
+      isAdmin: data.isAdmin,
+    });
+    this.isEditProfileOpen.set(false);
   }
 
   /**

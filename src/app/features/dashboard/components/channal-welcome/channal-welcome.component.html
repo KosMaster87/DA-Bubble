@@ -1,10 +1,15 @@
 <div class="channal-welcome">
   <div class="channal-welcome__header">
     <div class="channal-welcome__header-info">
-      <h1 class="channal-welcome__title"># DABubble-welcome</h1>
-      <!-- <p class="channal-welcome__description">
-        Willkommen beim DABubble Welcome Channel! Hier findest du alle wichtigen Informationen.
-      </p> -->
+      <h1 class="channal-welcome__title">
+        <img
+          src="/img/icon/channel-bar/tag-default.svg"
+          alt=""
+          class="channal-welcome__title-icon"
+        />
+        {{ channelName() }}
+      </h1>
+      <p class="channal-welcome__description">{{ channelDescription() }}</p>
     </div>
 
     <div class="channal-welcome__header-actions">
@@ -29,10 +34,22 @@
       <app-profile-view
         [user]="selectedMember()!"
         [isVisible]="isProfileViewOpen()"
-        [isOwnProfile]="false"
+        [isOwnProfile]="isOwnProfile()"
+        [isAdmin]="isCurrentUserAdmin()"
         (closeClicked)="onProfileViewClose()"
         (editClicked)="onProfileEdit()"
         (messageClicked)="onProfileMessage()"
+        (removeMemberClicked)="onRemoveMember()"
+      />
+      }
+
+      <!-- Edit Profile -->
+      @if (editProfileUser()) {
+      <app-edit-profile
+        [user]="editProfileUser()!"
+        [isVisible]="isEditProfileOpen()"
+        (closeClicked)="onEditProfileClose()"
+        (saveClicked)="onEditProfileSave($event)"
       />
       }
 
@@ -40,8 +57,9 @@
       <app-add-members
         [isVisible]="isAddMembersOpen()"
         [channelName]="channelName()"
+        [users]="availableUsers()"
         (closeClicked)="onAddMembersClose()"
-        (addMemberClicked)="onAddMemberSubmit($event)"
+        (membersAdded)="onMembersAdded($event)"
       />
     </div>
   </div>
@@ -50,39 +68,6 @@
     <div class="channal-welcome__messages">
       <!-- Welcome Message -->
       <div class="channal-welcome__welcome-card">
-        <div class="channal-welcome__welcome-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M8 14C8 14 9.5 16 12 16C14.5 16 16 14 16 14"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M9 9H9.01"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <path
-              d="M15 9H15.01"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
-
         <h2 class="channal-welcome__welcome-title">Willkommen bei DABubble!</h2>
         <p class="channal-welcome__welcome-text">
           Dies ist der Anfang des <strong>#dabubble-welcome</strong> Channels. Hier kannst du dich

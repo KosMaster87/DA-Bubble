@@ -102,8 +102,75 @@
     color: #797ef3;
   }
 
+  &__selected-users-container {
+    width: 100%;
+  }
+
+  &__selected-users {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-2);
+    max-height: calc(3 * (22px + var(--space-2) + var(--space-1) * 2 + 2px));
+    overflow-y: auto;
+    @include mix.custom-scrollbar(4px, transparent, var(--border-color));
+  }
+
+  &__user-chip-wrapper {
+    @include mix.flex(row, flex-start, flex-start);
+  }
+
+  &__user-chip {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    background-color: #eceefe;
+    border-radius: 1.5rem;
+    border: 1px solid #535af1;
+  }
+
+  &__user-chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__user-chip-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__user-chip-remove {
+    @include mix.flex(row, center, center);
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  &__user-chip-remove-icon {
+    width: 10px;
+    height: 10px;
+    transition: filter 0.2s;
+
+    .add-members__user-chip-remove:hover & {
+      filter: brightness(0) saturate(100%) invert(27%) sepia(96%) saturate(3042%) hue-rotate(347deg)
+        brightness(95%) contrast(88%);
+    }
+  }
+
   &__input-wrapper {
     width: 100%;
+    position: relative;
   }
 
   &__footer {

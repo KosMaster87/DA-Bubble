@@ -65,7 +65,7 @@
       </div>
 
       @if (isChannelsOpen()) {
-      <div class="channels-sidebar__section-content">
+      <div class="channels-sidebar__section-content channels-sidebar__section-content--channels">
         @if (dummyChannels().length > 0) { @for (channel of dummyChannels(); track channel.id) {
         <button
           class="channels-sidebar__item"
@@ -89,20 +89,20 @@
           </span>
         </button>
         } }
-
-        <button class="channels-sidebar__add-channel-btn" (click)="addChannel()">
-          <span class="channels-sidebar__add-channel-content">
-            <span class="channels-sidebar__add-channel-icon-wrapper">
-              <img
-                src="/img/icon/channel-bar/add-channel-circle-default.svg"
-                alt=""
-                class="channels-sidebar__add-channel-icon"
-              />
-            </span>
-            <span class="channels-sidebar__add-channel-text">Channel hinzufügen</span>
-          </span>
-        </button>
       </div>
+
+      <button class="channels-sidebar__add-channel-btn" (click)="addChannel()">
+        <span class="channels-sidebar__add-channel-content">
+          <span class="channels-sidebar__add-channel-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/add-channel-circle-default.svg"
+              alt=""
+              class="channels-sidebar__add-channel-icon"
+            />
+          </span>
+          <span class="channels-sidebar__add-channel-text">Channel hinzufügen</span>
+        </span>
+      </button>
       }
     </div>
 
@@ -137,7 +137,7 @@
       </div>
 
       @if (isDirectMessagesOpen()) {
-      <div class="channels-sidebar__section-content">
+      <div class="channels-sidebar__section-content channels-sidebar__section-content--dm">
         @if (directMessages().length > 0) { @for (dm of directMessages(); track dm.id) {
         <button
           class="channels-sidebar__item channels-sidebar__item--dm"

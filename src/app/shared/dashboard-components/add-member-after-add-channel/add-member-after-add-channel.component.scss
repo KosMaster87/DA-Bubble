@@ -303,6 +303,7 @@
         brightness(95%) contrast(88%);
     }
   }
+
   &__footer {
     @include mix.flex(row, flex-end, center);
     gap: var(--space-4);

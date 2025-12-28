@@ -4,8 +4,25 @@
  * @module features/dashboard/components/chat-channel
  */
 
-import { Component, signal, input } from '@angular/core';
+import { Component, signal, input, inject, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { MembersMiniatureComponent } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
+import { AddMemberButtonComponent } from '@shared/dashboard-components/add-member-button/add-member-button.component';
+import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
+import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
+import {
+  ProfileViewComponent,
+  ProfileUser,
+} from '@shared/dashboard-components/profile-view/profile-view.component';
+import {
+  EditProfileComponent,
+  EditProfileUser,
+} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
+import { DummyUsersService } from '../../services/dummy-users.service';
+import { DummyChannelsService } from '../../services/dummy-channels.service';
+import { CurrentUserService } from '../../services/current-user.service';
 
 export interface ChannelMessage {
   id: string;
@@ -27,11 +44,24 @@ export interface ChannelInfo {
 
 @Component({
   selector: 'app-chat-channel',
-  imports: [DatePipe],
+  imports: [
+    DatePipe,
+    MessageBoxComponent,
+    MembersMiniatureComponent,
+    AddMemberButtonComponent,
+    MembersOptionsMenuComponent,
+    ProfileViewComponent,
+    EditProfileComponent,
+    AddMembersComponent,
+  ],
   templateUrl: './chat-channel.component.html',
   styleUrl: './chat-channel.component.scss',
 })
 export class ChatChannelComponent {
+  protected usersService = inject(DummyUsersService);
+  protected channelsService = inject(DummyChannelsService);
+  protected currentUserService = inject(CurrentUserService);
+
   /**
    * Channel information
    */
@@ -42,10 +72,107 @@ export class ChatChannelComponent {
     memberCount: 5,
   });
 
+  protected isMembersMenuOpen = signal<boolean>(false);
+  protected isProfileViewOpen = signal<boolean>(false);
+  protected isEditProfileOpen = signal<boolean>(false);
+  protected selectedMemberId = signal<string | null>(null);
+  protected isAddMembersOpen = signal<boolean>(false);
+
   /**
-   * Message input value
+   * Check if current user is admin
    */
-  protected messageInput = signal<string>('');
+  protected isCurrentUserAdmin = computed(() => {
+    const currentUser = this.usersService.getUserById(this.currentUserService.currentUserId());
+    return currentUser?.isAdmin || false;
+  });
+
+  /**
+   * Check if viewing own profile
+   */
+  protected isOwnProfile = computed(() => {
+    return this.selectedMemberId() === this.currentUserService.currentUserId();
+  });
+
+  /**
+   * Selected member for edit profile
+   */
+  protected editProfileUser = computed<EditProfileUser | null>(() => {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return null;
+
+    const user = this.usersService.getUserById(memberId);
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      displayName: user.name,
+      email: user.email,
+      photoURL: user.avatar,
+      isAdmin: user.isAdmin,
+    };
+  });
+
+  /**
+   * Channel members from channel's memberIds
+   */
+  protected members = computed<UserListItem[]>(() => {
+    const channelData = this.channelsService.getChannelById(this.channel().id);
+    if (!channelData || !channelData.memberIds) return [];
+
+    return channelData.memberIds
+      .map((memberId) => {
+        const user = this.usersService.getUserById(memberId);
+        if (!user) return null;
+        return {
+          id: user.id,
+          name: user.name,
+          avatar: user.avatar,
+        };
+      })
+      .filter((user): user is UserListItem => user !== null);
+  });
+
+  /**
+   * Available users that are NOT yet members of this channel
+   */
+  protected availableUsers = computed<UserListItem[]>(() => {
+    const channelData = this.channelsService.getChannelById(this.channel().id);
+    const currentMemberIds = channelData?.memberIds || [];
+
+    return this.usersService
+      .users()
+      .filter((user) => !currentMemberIds.includes(user.id))
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+      }));
+  });
+
+  /**
+   * Total member count
+   */
+  protected totalMemberCount = computed(() => this.members().length);
+
+  /**
+   * Get selected member as ProfileUser
+   */
+  protected selectedMember = computed<ProfileUser | null>(() => {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return null;
+
+    const user = this.usersService.getUserById(memberId);
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      displayName: user.name,
+      email: user.email,
+      photoURL: user.avatar,
+      status: user.isOnline ? 'online' : 'offline',
+      isAdmin: user.isAdmin,
+    };
+  });
 
   /**
    * Dummy channel messages
@@ -85,42 +212,22 @@ export class ChatChannelComponent {
   ]);
 
   /**
-   * Handle message input change
-   */
-  onMessageInputChange(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.messageInput.set(value);
-  }
-
-  /**
    * Send message to channel
    */
-  sendMessage(): void {
-    const content = this.messageInput().trim();
-    if (!content) return;
+  sendMessage(content: string): void {
+    if (!content.trim()) return;
 
     const newMessage: ChannelMessage = {
       id: Date.now().toString(),
       senderId: '2',
       senderName: 'You',
       senderAvatar: '/img/profile/profile-2.png',
-      content,
+      content: content.trim(),
       timestamp: new Date(),
       isOwnMessage: true,
     };
 
     this.messages.update((msgs) => [...msgs, newMessage]);
-    this.messageInput.set('');
-  }
-
-  /**
-   * Handle enter key in input
-   */
-  onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.sendMessage();
-    }
   }
 
   /**
@@ -132,18 +239,115 @@ export class ChatChannelComponent {
   }
 
   /**
-   * View channel members
+   * Handle add member click
    */
-  viewMembers(): void {
-    console.log('View members');
-    // TODO: Open members list
+  onAddMember(): void {
+    console.log('Add member clicked');
+    this.isMembersMenuOpen.set(false);
+    this.isAddMembersOpen.set(true);
   }
 
   /**
-   * View channel details
+   * Handle add members close
    */
-  viewChannelDetails(): void {
-    console.log('View channel details');
-    // TODO: Open channel details
+  onAddMembersClose(): void {
+    this.isAddMembersOpen.set(false);
+  }
+
+  /**
+   * Handle members added
+   */
+  onMembersAdded(userIds: string[]): void {
+    const channelId = this.channel().id;
+    userIds.forEach((userId) => {
+      this.channelsService.addMemberToChannel(channelId, userId);
+    });
+    this.isAddMembersOpen.set(false);
+    console.log('Added members to channel:', userIds);
+  }
+
+  /**
+   * Handle view members click
+   */
+  onViewMembers(): void {
+    console.log('View members clicked');
+    this.isMembersMenuOpen.set(true);
+  }
+
+  /**
+   * Handle members menu close
+   */
+  onCloseMembersMenu(): void {
+    this.isMembersMenuOpen.set(false);
+  }
+
+  /**
+   * Handle member selection from menu
+   */
+  onMemberSelected(memberId: string): void {
+    console.log('Member selected:', memberId);
+    this.selectedMemberId.set(memberId);
+    this.isMembersMenuOpen.set(false);
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle profile view close
+   */
+  onProfileViewClose(): void {
+    this.isProfileViewOpen.set(false);
+    this.selectedMemberId.set(null);
+  }
+
+  /**
+   * Handle remove member from channel
+   */
+  onRemoveMember(): void {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return;
+
+    const channelId = this.channel().id;
+    this.channelsService.removeMemberFromChannel(channelId, memberId);
+    this.isProfileViewOpen.set(false);
+    this.selectedMemberId.set(null);
+    console.log('Removed member from channel:', memberId);
+  }
+
+  /**
+   * Handle profile edit
+   */
+  onProfileEdit(): void {
+    this.isProfileViewOpen.set(false);
+    this.isEditProfileOpen.set(true);
+  }
+
+  /**
+   * Handle edit profile close
+   */
+  onEditProfileClose(): void {
+    this.isEditProfileOpen.set(false);
+  }
+
+  /**
+   * Handle edit profile save
+   */
+  onEditProfileSave(data: { displayName: string; isAdmin: boolean }): void {
+    const userId = this.selectedMemberId();
+    if (!userId) return;
+
+    this.usersService.updateUser(userId, {
+      name: data.displayName,
+      isAdmin: data.isAdmin,
+    });
+    this.isEditProfileOpen.set(false);
+  }
+
+  /**
+   * Handle message click from profile
+   */
+  onProfileMessage(): void {
+    this.isProfileViewOpen.set(false);
+    console.log('Message member:', this.selectedMemberId());
+    // TODO: Open direct message with selected member
   }
 }

@@ -1,36 +1,51 @@
 @use '../../../../../styles/mixins' as mix;
 
 .chat-mailbox {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background-color: var(--container-bg);
+  overflow: hidden;
 
   &__header {
-    @include mix.flex(row, space-between, flex-start);
-    padding: var(--space-6);
-    border-bottom: 1px solid var(--border-color);
+    @include mix.flex(row, space-between, center);
+    padding: var(--space-4) var(--space-6);
+    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
-  }
 
-  &__header-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+    @include mix.tablet-landscape {
+      padding: var(--space-5) var(--space-6);
+    }
+
+    @include mix.laptop {
+      padding: var(--space-6) var(--space-8);
+    }
+
+    &-info {
+      flex: 1;
+    }
   }
 
   &__title {
     @include mix.flex(row, flex-start, center);
-    gap: var(--space-3);
+    gap: var(--space-2);
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+
+    @include mix.tablet-landscape {
+      font-size: 1.35rem;
+    }
+
+    @include mix.laptop {
+      font-size: 1.5rem;
+    }
   }
 
   &__title-icon {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
       brightness(98%) contrast(92%);
   }
@@ -45,7 +60,15 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-4);
-    @include mix.custom-scrollbar(6px, transparent, var(--border-color));
+    @include mix.custom-scrollbar(8px, transparent, var(--border-color));
+
+    @include mix.tablet-landscape {
+      padding: var(--space-6);
+    }
+
+    @include mix.laptop {
+      padding: var(--space-8);
+    }
   }
 
   &__empty {

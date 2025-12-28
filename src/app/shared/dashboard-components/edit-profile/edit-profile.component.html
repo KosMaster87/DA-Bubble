@@ -33,6 +33,28 @@
         </button>
       </div>
 
+      <!-- Admin Status -->
+      <div class="edit-profile__field">
+        <div class="edit-profile__radio-row">
+          <button
+            class="edit-profile__radio-btn"
+            (click)="isAdmin.set(!isAdmin())"
+            [attr.aria-checked]="isAdmin()"
+          >
+            <img
+              [src]="
+                isAdmin()
+                  ? '/img/icon/channel-bar/radio-btn-checked.svg'
+                  : '/img/icon/channel-bar/radio-btn-default.svg'
+              "
+              alt=""
+              class="edit-profile__radio-icon"
+            />
+          </button>
+          <label class="edit-profile__radio-label">Set as admin</label>
+        </div>
+      </div>
+
       <!-- Full Name -->
       <div class="edit-profile__field">
         <div class="edit-profile__field-label">

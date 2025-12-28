@@ -30,6 +30,8 @@ export class ChannelsSidebarComponent {
   isMailboxActive = input<boolean>(false);
   newMessageRequested = output<void>();
   mailboxRequested = output<void>();
+  channelSelected = output<string>();
+  directMessageSelected = output<string>();
   protected isChannelsOpen = signal(true);
   protected isDirectMessagesOpen = signal(true);
   protected isAddChannelActive = signal(false);
@@ -111,6 +113,7 @@ export class ChannelsSidebarComponent {
    */
   selectDummyChannel(channelId: string): void {
     this.selectedChannelId.set(channelId);
+    this.channelSelected.emit(channelId);
   }
 
   /**
@@ -168,5 +171,6 @@ export class ChannelsSidebarComponent {
    */
   selectDirectMessage(messageId: string): void {
     this.selectedDirectMessageId.set(messageId);
+    this.directMessageSelected.emit(messageId);
   }
 }

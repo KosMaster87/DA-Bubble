@@ -8,14 +8,56 @@
       </h1>
       <p class="chat-channel__description">{{ channel().description }}</p>
     </div>
+
     <div class="chat-channel__header-actions">
-      <button class="chat-channel__action-btn" (click)="viewMembers()">
-        <img src="/img/icon/channel-bar/account-circle-default.svg" alt="" />
-        <span>{{ channel().memberCount }} members</span>
-      </button>
-      <button class="chat-channel__action-btn" (click)="viewChannelDetails()">
-        <img src="/img/icon/info-default.svg" alt="Details" />
-      </button>
+      <app-members-miniatures
+        [members]="members()"
+        [totalCount]="totalMemberCount()"
+        (memberClicked)="onViewMembers()"
+      />
+      <app-add-member-button (addMemberClicked)="onAddMember()" />
+
+      <!-- Members Options Menu -->
+      <app-members-options-menu
+        [isOpen]="isMembersMenuOpen()"
+        [members]="members()"
+        (closeClicked)="onCloseMembersMenu()"
+        (addMemberClicked)="onAddMember()"
+        (memberSelected)="onMemberSelected($event)"
+      />
+
+      <!-- Profile View -->
+      @if (selectedMember()) {
+      <app-profile-view
+        [user]="selectedMember()!"
+        [isVisible]="isProfileViewOpen()"
+        [isOwnProfile]="isOwnProfile()"
+        [isAdmin]="isCurrentUserAdmin()"
+        (closeClicked)="onProfileViewClose()"
+        (editClicked)="onProfileEdit()"
+        (messageClicked)="onProfileMessage()"
+        (removeMemberClicked)="onRemoveMember()"
+      />
+      }
+
+      <!-- Edit Profile -->
+      @if (editProfileUser()) {
+      <app-edit-profile
+        [user]="editProfileUser()!"
+        [isVisible]="isEditProfileOpen()"
+        (closeClicked)="onEditProfileClose()"
+        (saveClicked)="onEditProfileSave($event)"
+      />
+      }
+
+      <!-- Add Members -->
+      <app-add-members
+        [isVisible]="isAddMembersOpen()"
+        [channelName]="channel().name"
+        [users]="availableUsers()"
+        (closeClicked)="onAddMembersClose()"
+        (membersAdded)="onMembersAdded($event)"
+      />
     </div>
   </div>
 
@@ -53,24 +95,8 @@
     }
   </div>
 
-  <!-- Input Area -->
-  <div class="chat-channel__input-area">
-    <div class="chat-channel__input-wrapper">
-      <input
-        type="text"
-        class="chat-channel__input"
-        [placeholder]="'Message #' + channel().name"
-        [value]="messageInput()"
-        (input)="onMessageInputChange($event)"
-        (keydown)="onKeyDown($event)"
-      />
-      <button
-        class="chat-channel__send-btn"
-        [disabled]="!messageInput().trim()"
-        (click)="sendMessage()"
-      >
-        <img src="/img/icon/send-default.svg" alt="Send" class="chat-channel__send-icon" />
-      </button>
-    </div>
+  <!-- Footer with Message Box -->
+  <div class="chat-channel__footer">
+    <app-message-box (messageSent)="sendMessage($event)" />
   </div>
 </div>

@@ -47,6 +47,36 @@
   }
 }
 
+/* Custom Scrollbar with hover-only visibility */
+@mixin custom-scrollbar-hover(
+  $width: 8px,
+  $track-color: transparent,
+  $thumb-color: var(--border-color),
+  $thumb-hover-color: var(--text-secondary)
+) {
+  // Webkit (Chrome, Safari, Edge)
+  &::-webkit-scrollbar {
+    width: $width;
+  }
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  // Show scrollbar on container hover
+  &:hover::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+  }
+
+  // Darker color on scrollbar thumb hover
+  &::-webkit-scrollbar-thumb:hover {
+    background: $thumb-hover-color;
+  }
+}
+
 /* Box Shadow (legacy) */
 @mixin shadow($level: 1) {
   @if $level == 1 {

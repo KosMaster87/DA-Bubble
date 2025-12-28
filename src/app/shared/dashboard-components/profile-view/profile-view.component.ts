@@ -5,6 +5,7 @@
  */
 
 import { Component, input, output } from '@angular/core';
+import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
 
 export interface ProfileUser {
   id: string;
@@ -12,10 +13,12 @@ export interface ProfileUser {
   email: string;
   photoURL?: string;
   status?: 'online' | 'offline' | 'away';
+  isAdmin?: boolean;
 }
 
 @Component({
   selector: 'app-profile-view',
+  imports: [BtnDeleteComponent],
   templateUrl: './profile-view.component.html',
   styleUrl: './profile-view.component.scss',
 })
@@ -23,9 +26,11 @@ export class ProfileViewComponent {
   user = input.required<ProfileUser>();
   isVisible = input<boolean>(false);
   isOwnProfile = input<boolean>(false);
+  isAdmin = input<boolean>(false);
   closeClicked = output<void>();
   editClicked = output<void>();
   messageClicked = output<void>();
+  removeMemberClicked = output<void>();
 
   /**
    * Handle close button click
@@ -46,6 +51,13 @@ export class ProfileViewComponent {
    */
   onMessage(): void {
     this.messageClicked.emit();
+  }
+
+  /**
+   * Handle remove member button click
+   */
+  onRemoveMember(): void {
+    this.removeMemberClicked.emit();
   }
 
   /**

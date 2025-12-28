@@ -29,24 +29,8 @@
     }
   </div>
 
-  <!-- Input Area -->
-  <div class="chat-main__input-area">
-    <div class="chat-main__input-wrapper">
-      <input
-        type="text"
-        class="chat-main__input"
-        placeholder="Type a message..."
-        [value]="messageInput()"
-        (input)="onMessageInputChange($event)"
-        (keydown)="onKeyDown($event)"
-      />
-      <button
-        class="chat-main__send-btn"
-        [disabled]="!messageInput().trim()"
-        (click)="sendMessage()"
-      >
-        <img src="/img/icon/send-default.svg" alt="Send" class="chat-main__send-icon" />
-      </button>
-    </div>
+  <!-- Footer with Message Box -->
+  <div class="chat-main__footer">
+    <app-message-box (messageSent)="sendMessage($event)" />
   </div>
 </div>

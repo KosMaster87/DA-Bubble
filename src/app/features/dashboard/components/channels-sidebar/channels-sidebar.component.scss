@@ -263,6 +263,28 @@
     flex-direction: column;
     padding-left: calc(var(--space-3) + 12px + var(--space-2));
     padding-right: var(--space-5);
+    overflow-y: auto;
+    @include mix.custom-scrollbar(6px, transparent, var(--border-color));
+
+    &--channels {
+      // Shows ~5 channels before scrolling
+      // Each item: ~48px (padding + content height)
+      max-height: calc(5 * 50px);
+
+      @include mix.laptop {
+        max-height: calc(5 * 50px);
+      }
+    }
+
+    &--dm {
+      // Shows ~8 DMs before scrolling
+      // Each DM item: ~56px (padding + avatar 40px + gaps)
+      max-height: calc(6 * 56px);
+
+      @include mix.laptop {
+        max-height: calc(6 * 56px);
+      }
+    }
   }
 
   &__item {
@@ -352,6 +374,7 @@
     width: auto;
     padding: 0;
     margin-top: var(--space-1);
+    padding-left: calc(var(--space-3) + 12px + var(--space-2));
     border: none;
     background: transparent;
     cursor: pointer;

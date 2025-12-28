@@ -22,19 +22,57 @@
         <span class="add-members__channel-name">{{ channelName() }}</span>
       </div>
 
+      <!-- Selected Users Display -->
+      @if (selectedUsers().length > 0) {
+      <div class="add-members__selected-users-container">
+        <div class="add-members__selected-users">
+          @for (user of selectedUsers(); track user.id) {
+          <div class="add-members__user-chip-wrapper">
+            <div class="add-members__user-chip">
+              <img [src]="user.avatar" [alt]="user.name" class="add-members__user-chip-avatar" />
+              <span class="add-members__user-chip-name">{{ user.name }}</span>
+              <button
+                class="add-members__user-chip-remove"
+                (click)="removeSelectedUser(user.id)"
+                aria-label="Remove"
+              >
+                <img
+                  src="/img/icon/window/close-default.svg"
+                  alt=""
+                  class="add-members__user-chip-remove-icon"
+                />
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
       <!-- Search Input -->
       <div class="add-members__input-wrapper">
         <app-input-field-basic
           placeholder="Enter name"
-          [value]="searchQuery()"
+          [value]="searchValue()"
           (valueChange)="onSearchChange($event)"
+          (focused)="onInputFocused()"
         />
+
+        <!-- User Selection Dropdown -->
+        @if (showUserDropdown()) {
+        <app-user-selection
+          [users]="availableUsers()"
+          [searchValue]="searchValue()"
+          (closed)="onUserSelectionClose()"
+          (userSelected)="onUserSelected($event)"
+        />
+        }
       </div>
     </div>
 
     <!-- Footer -->
     <div class="add-members__footer">
-      <app-btn-action label="Add member" [disabled]="isAddDisabled()" (clicked)="onAddMember()" />
+      <app-btn-action label="Add members" [disabled]="isAddDisabled()" (clicked)="onAddMember()" />
     </div>
   </div>
 </div>

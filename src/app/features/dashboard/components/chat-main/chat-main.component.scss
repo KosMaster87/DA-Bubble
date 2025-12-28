@@ -9,7 +9,7 @@
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-6);
-    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
   }
 
@@ -158,5 +158,9 @@
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1);
+  }
+
+  &__footer {
+    padding: var(--space-5) var(--space-16);
   }
 }

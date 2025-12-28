@@ -63,6 +63,7 @@
         [user]="profileUser"
         [isVisible]="isProfileViewOpen()"
         [isOwnProfile]="true"
+        [isAdmin]="currentDummyUser()?.isAdmin || false"
         (closeClicked)="onProfileViewClose()"
         (editClicked)="onProfileEdit()"
         (messageClicked)="onProfileMessage()"

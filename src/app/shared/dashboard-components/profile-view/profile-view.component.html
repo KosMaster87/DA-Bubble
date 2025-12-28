@@ -44,6 +44,14 @@
         <span class="profile-view__text">{{ getStatusText() }}</span>
       </div>
 
+      <!-- Admin Status -->
+      @if (user().isAdmin) {
+      <div class="profile-view__row profile-view__row--info">
+        <img src="/img/icon/profile/account-circle-default.svg" alt="" class="profile-view__icon" />
+        <span class="profile-view__text">Admin</span>
+      </div>
+      }
+
       <!-- Email Label -->
       <div class="profile-view__row profile-view__row--info">
         <img src="/img/icon/profile/mail-default.svg" alt="" class="profile-view__icon" />
@@ -58,7 +66,9 @@
 
     <!-- Footer -->
     <div class="profile-view__footer">
-      @if (!isOwnProfile()) {
+      @if (!isOwnProfile() && isAdmin()) {
+      <app-btn-delete label="Remove from room" (clicked)="onRemoveMember()" />
+      } @if (!isOwnProfile()) {
       <button class="profile-view__message-btn" (click)="onMessage()">
         <img src="/img/icon/profile/msg-default.svg" alt="" class="profile-view__icon" />
         <span class="profile-view__message-text">Nachricht</span>

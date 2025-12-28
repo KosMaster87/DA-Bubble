@@ -11,3 +11,4 @@ export {
   type DummyDirectMessage,
   type DummyDMMessage,
 } from './dummy-chat-dm.service';
+export { DummyMailboxService, type DummyMailboxMessage } from './dummy-mailbox.service';

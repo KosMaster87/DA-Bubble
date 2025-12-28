@@ -13,6 +13,7 @@ export interface DummyUser {
   avatar: string;
   isOnline: boolean;
   status?: 'online' | 'offline' | 'away';
+  isAdmin?: boolean;
 }
 
 const STORAGE_KEY = 'dabubble_dummy_users';
@@ -66,6 +67,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-1.png',
         isOnline: true,
         status: 'online',
+        isAdmin: true,
       },
       {
         id: '2',
@@ -74,6 +76,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-2.png',
         isOnline: false,
         status: 'offline',
+        isAdmin: true,
       },
       {
         id: '3',
@@ -82,6 +85,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-3.png',
         isOnline: false,
         status: 'offline',
+        isAdmin: false,
       },
       {
         id: '4',
@@ -90,6 +94,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-4.png',
         isOnline: true,
         status: 'online',
+        isAdmin: false,
       },
       {
         id: '5',
@@ -98,6 +103,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-1.png',
         isOnline: true,
         status: 'online',
+        isAdmin: false,
       },
       {
         id: '6',
@@ -106,6 +112,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-2.png',
         isOnline: false,
         status: 'offline',
+        isAdmin: false,
       },
       {
         id: '7',
@@ -114,6 +121,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-3.png',
         isOnline: false,
         status: 'offline',
+        isAdmin: false,
       },
       {
         id: '8',
@@ -122,6 +130,43 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-4.png',
         isOnline: true,
         status: 'online',
+        isAdmin: false,
+      },
+      {
+        id: '9',
+        name: 'Mia Wagner',
+        email: 'mia.wagner@dabubble.com',
+        avatar: '/img/profile/profile-1.png',
+        isOnline: true,
+        status: 'online',
+        isAdmin: false,
+      },
+      {
+        id: '10',
+        name: 'Finn Weber',
+        email: 'finn.weber@dabubble.com',
+        avatar: '/img/profile/profile-2.png',
+        isOnline: false,
+        status: 'offline',
+        isAdmin: false,
+      },
+      {
+        id: '11',
+        name: 'Konstantin Neumann',
+        email: 'konstantin.neumann@dabubble.com',
+        avatar: '/img/profile/profile-3.png',
+        isOnline: false,
+        status: 'offline',
+        isAdmin: false,
+      },
+      {
+        id: '12',
+        name: 'Anna Hoffmann',
+        email: 'anna.hoffmann@dabubble.com',
+        avatar: '/img/profile/profile-4.png',
+        isOnline: true,
+        status: 'online',
+        isAdmin: false,
       },
     ];
 
@@ -176,6 +221,13 @@ export class DummyUsersService {
       isOnline,
       status: isOnline ? 'online' : 'offline',
     });
+  }
+
+  /**
+   * Set user admin status
+   */
+  setUserAdminStatus(id: string, isAdmin: boolean): void {
+    this.updateUser(id, { isAdmin });
   }
 
   /**

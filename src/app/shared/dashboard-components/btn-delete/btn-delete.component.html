@@ -1,0 +1,8 @@
+<button
+  class="btn-delete"
+  [class.btn-delete--disabled]="disabled()"
+  [disabled]="disabled()"
+  (click)="onClick()"
+>
+  {{ label() }}
+</button>

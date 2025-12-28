@@ -117,6 +117,42 @@ export class DummyChannelsService {
         createdAt: new Date('2024-12-15'),
         createdBy: '4',
       },
+      {
+        id: '5',
+        name: 'HR',
+        description: 'Human Resources',
+        memberCount: 5,
+        memberIds: ['1', '2', '3', '4', '5'],
+        createdAt: new Date('2024-12-01'),
+        createdBy: '1',
+      },
+      {
+        id: '6',
+        name: 'Translation',
+        description: 'Translation',
+        memberCount: 3,
+        memberIds: ['1', '6', '7'],
+        createdAt: new Date('2024-12-05'),
+        createdBy: '1',
+      },
+      {
+        id: '7',
+        name: 'Transportation',
+        description: 'Transportation',
+        memberCount: 4,
+        memberIds: ['2', '3', '7', '8'],
+        createdAt: new Date('2024-12-10'),
+        createdBy: '2',
+      },
+      {
+        id: '8',
+        name: 'Level Design',
+        description: 'Level Design team collaboration',
+        memberCount: 3,
+        memberIds: ['4', '5', '8'],
+        createdAt: new Date('2024-12-15'),
+        createdBy: '4',
+      },
     ];
 
     this.channelsSignal.set(initialChannels);
