@@ -190,6 +190,40 @@ export class DummyChannelsService {
   }
 
   /**
+   * Create a new channel with UUID
+   * @param name Channel name
+   * @param description Channel description (optional)
+   * @param createdBy User ID of the creator
+   * @returns The newly created channel
+   */
+  createChannel(name: string, description: string, createdBy: string): DummyChannel {
+    const newChannel: DummyChannel = {
+      id: this.generateUUID(),
+      name,
+      description,
+      createdBy,
+      memberIds: [createdBy], // Creator is automatically a member
+      memberCount: 1,
+      createdAt: new Date(),
+    };
+
+    this.channelsSignal.update((channels) => [...channels, newChannel]);
+    this.saveToStorage();
+    return newChannel;
+  }
+
+  /**
+   * Generate a simple UUID v4
+   */
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  /**
    * Update channel
    */
   updateChannel(id: string, updates: Partial<DummyChannel>): void {

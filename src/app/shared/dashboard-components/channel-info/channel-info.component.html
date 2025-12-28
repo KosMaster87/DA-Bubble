@@ -1,0 +1,101 @@
+@if (isVisible()) {
+<div class="channel-info">
+  <div class="channel-info__overlay" (click)="onClose()"></div>
+  <div class="channel-info__content">
+    <!-- Header -->
+    <div class="channel-info__header">
+      <div class="channel-info__title-group">
+        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="channel-info__title-icon" />
+        <h2 class="channel-info__title">{{ channel().name }}</h2>
+      </div>
+      <button
+        class="channel-info__close-btn"
+        (click)="onClose()"
+        [attr.aria-label]="'Close channel info'"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="channel-info__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="channel-info__body">
+      <!-- Channel Name Section -->
+      <div class="channel-info__card" [class.channel-info__card--editing]="isEditingName()">
+        <div class="channel-info__card-header">
+          <label class="channel-info__label">Channel-name</label>
+          @if (!isEditingName()) {
+          <button class="channel-info__edit-btn" (click)="onEditName()">Edit</button>
+          } @else {
+          <button class="channel-info__save-btn" (click)="onSaveName()">Save</button>
+          }
+        </div>
+
+        @if (!isEditingName()) {
+        <!-- Display Mode -->
+        <div class="channel-info__channel-display">
+          <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="channel-info__hash-icon" />
+          <span class="channel-info__channel-name">{{ channel().name }}</span>
+        </div>
+        } @else {
+        <!-- Edit Mode -->
+        <div class="channel-info__input-wrapper">
+          <img
+            src="/img/icon/channel-bar/tag-default.svg"
+            alt=""
+            class="channel-info__input-icon"
+          />
+          <input
+            type="text"
+            class="channel-info__input"
+            [(ngModel)]="editedName"
+            [placeholder]="channel().name"
+            (keydown.enter)="onSaveName()"
+            (keydown.escape)="isEditingName.set(false)"
+          />
+        </div>
+        }
+      </div>
+
+      <!-- Description Section -->
+      <div class="channel-info__card" [class.channel-info__card--editing]="isEditingDescription()">
+        <div class="channel-info__card-header">
+          <label class="channel-info__label">Description</label>
+          @if (!isEditingDescription()) {
+          <button class="channel-info__edit-btn" (click)="onEditDescription()">Edit</button>
+          } @else {
+          <button class="channel-info__save-btn" (click)="onSaveDescription()">Save</button>
+          }
+        </div>
+
+        @if (!isEditingDescription()) {
+        <!-- Display Mode -->
+        <p class="channel-info__description">{{ channel().description }}</p>
+        } @else {
+        <!-- Edit Mode -->
+        <textarea
+          class="channel-info__textarea"
+          [(ngModel)]="editedDescription"
+          [placeholder]="channel().description"
+          rows="4"
+          (keydown.escape)="isEditingDescription.set(false)"
+        ></textarea>
+        }
+
+        <div class="channel-info__divider"></div>
+
+        <div class="channel-info__meta">
+          <label class="channel-info__meta-label">Created by</label>
+          <button class="channel-info__author-link" (click)="onCreatedByClick()">
+            {{ channel().createdByName }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="channel-info__footer">
+      <app-btn-action label="Leave channel" (clicked)="onLeaveChannel()" />
+    </div>
+  </div>
+</div>
+}

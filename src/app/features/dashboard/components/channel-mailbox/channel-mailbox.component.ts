@@ -1,7 +1,7 @@
 /**
- * @fileoverview Chat Mailbox Component
+ * @fileoverview Channel Mailbox Component
  * @description Mailbox for receiving messages from contacts, admins, system notifications
- * @module features/dashboard/components/chat-mailbox
+ * @module features/dashboard/components/channel-mailbox
  */
 
 import { Component, signal, computed, inject } from '@angular/core';
@@ -10,12 +10,12 @@ import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { DummyMailboxService } from '../../services/dummy-mailbox.service';
 
 @Component({
-  selector: 'app-chat-mailbox',
+  selector: 'app-channel-mailbox',
   imports: [DatePipe],
-  templateUrl: './chat-mailbox.component.html',
-  styleUrl: './chat-mailbox.component.scss',
+  templateUrl: './channel-mailbox.component.html',
+  styleUrl: './channel-mailbox.component.scss',
 })
-export class ChatMailboxComponent {
+export class ChannalMailboxComponent {
   protected channelsService = inject(DummyChannelsService);
   protected mailboxService = inject(DummyMailboxService);
 

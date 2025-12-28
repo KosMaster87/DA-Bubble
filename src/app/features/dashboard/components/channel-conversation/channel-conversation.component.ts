@@ -1,7 +1,7 @@
 /**
- * @fileoverview Chat Channel Component
+ * @fileoverview Channel Conversation Component
  * @description Chat interface for specific channels
- * @module features/dashboard/components/chat-channel
+ * @module features/dashboard/components/channel-conversation
  */
 
 import { Component, signal, input, inject, computed } from '@angular/core';
@@ -20,6 +20,10 @@ import {
   EditProfileUser,
 } from '@shared/dashboard-components/edit-profile/edit-profile.component';
 import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
+import {
+  ChannelInfoComponent,
+  ChannelInfoData,
+} from '@shared/dashboard-components/channel-info/channel-info.component';
 import { DummyUsersService } from '../../services/dummy-users.service';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { CurrentUserService } from '../../services/current-user.service';
@@ -43,7 +47,7 @@ export interface ChannelInfo {
 }
 
 @Component({
-  selector: 'app-chat-channel',
+  selector: 'app-channel-conversation',
   imports: [
     DatePipe,
     MessageBoxComponent,
@@ -53,11 +57,12 @@ export interface ChannelInfo {
     ProfileViewComponent,
     EditProfileComponent,
     AddMembersComponent,
+    ChannelInfoComponent,
   ],
-  templateUrl: './chat-channel.component.html',
-  styleUrl: './chat-channel.component.scss',
+  templateUrl: './channel-conversation.component.html',
+  styleUrl: './channel-conversation.component.scss',
 })
-export class ChatChannelComponent {
+export class ChannelConversationComponent {
   protected usersService = inject(DummyUsersService);
   protected channelsService = inject(DummyChannelsService);
   protected currentUserService = inject(CurrentUserService);
@@ -75,6 +80,7 @@ export class ChatChannelComponent {
   protected isMembersMenuOpen = signal<boolean>(false);
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);
+  protected isChannelInfoOpen = signal<boolean>(false);
   protected selectedMemberId = signal<string | null>(null);
   protected isAddMembersOpen = signal<boolean>(false);
 
@@ -109,6 +115,20 @@ export class ChatChannelComponent {
       email: user.email,
       photoURL: user.avatar,
       isAdmin: user.isAdmin,
+    };
+  });
+
+  /**
+   * Channel info data for channel-info component
+   */
+  protected channelInfo = computed<ChannelInfoData>(() => {
+    const ch = this.channel();
+    return {
+      id: ch.id,
+      name: ch.name,
+      description: ch.description,
+      createdBy: '1', // TODO: Get from channel data
+      createdByName: 'Sofia Müller', // TODO: Get from user service
     };
   });
 
@@ -349,5 +369,50 @@ export class ChatChannelComponent {
     this.isProfileViewOpen.set(false);
     console.log('Message member:', this.selectedMemberId());
     // TODO: Open direct message with selected member
+  }
+
+  /**
+   * Handle channel title click - opens channel info
+   */
+  onTitleClick(): void {
+    this.isChannelInfoOpen.set(true);
+  }
+
+  /**
+   * Handle channel info close
+   */
+  onChannelInfoClose(): void {
+    this.isChannelInfoOpen.set(false);
+  }
+
+  /**
+   * Handle channel info updated
+   */
+  onChannelUpdated(data: { name?: string; description?: string }): void {
+    const channelId = this.channel().id;
+
+    if (data.name) {
+      this.channelsService.updateChannel(channelId, { name: data.name });
+    }
+    if (data.description !== undefined) {
+      this.channelsService.updateChannel(channelId, { description: data.description });
+    }
+  }
+
+  /**
+   * Handle leave channel clicked
+   */
+  onLeaveChannel(): void {
+    console.log('Leave channel clicked');
+    // TODO: Implement leave channel logic
+  }
+
+  /**
+   * Handle created by user clicked
+   */
+  onCreatedByClick(userId: string): void {
+    this.selectedMemberId.set(userId);
+    this.isChannelInfoOpen.set(false);
+    this.isProfileViewOpen.set(true);
   }
 }

@@ -16,6 +16,7 @@ import { UserListItemComponent, UserListItem } from '../user-list-item/user-list
 export class MembersOptionsMenuComponent {
   members = input.required<UserListItem[]>();
   isOpen = input<boolean>(false);
+  showAddMember = input<boolean>(true);
   closeClicked = output<void>();
   addMemberClicked = output<void>();
   memberSelected = output<string>();

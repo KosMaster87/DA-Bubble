@@ -4,7 +4,7 @@
  * @module shared/dashboard-components/add-member-after-add-channel
  */
 
-import { Component, input, output, signal, computed } from '@angular/core';
+import { Component, input, output, signal, computed, inject } from '@angular/core';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
 import { BtnCancelComponent } from '../btn-cancel/btn-cancel.component';
 import { InputFieldBasicComponent } from '../input-field-basic/input-field-basic.component';
@@ -12,6 +12,7 @@ import { ChannelSelectionComponent } from '../channel-selection/channel-selectio
 import { ChannelListItem } from '../channel-list-item/channel-list-item.component';
 import { UserSelectionComponent } from '../user-selection/user-selection.component';
 import { UserListItem } from '../user-list-item/user-list-item.component';
+import { CurrentUserService } from '../../../features/dashboard/services/current-user.service';
 
 type MemberSelectionType = 'all' | 'specific';
 
@@ -28,6 +29,8 @@ type MemberSelectionType = 'all' | 'specific';
   styleUrl: './add-member-after-add-channel.component.scss',
 })
 export class AddMemberAfterAddChannelComponent {
+  protected currentUserService = inject(CurrentUserService);
+
   channelName = input<string>('');
   channels = input<ChannelListItem[]>([]);
   users = input<UserListItem[]>([]);
@@ -41,6 +44,28 @@ export class AddMemberAfterAddChannelComponent {
   selectedChannels = signal<ChannelListItem[]>([]);
   selectedUsers = signal<UserListItem[]>([]);
   isUserSelectionOpen = signal<boolean>(false);
+
+  /**
+   * Available channels that are NOT yet selected and NOT system channels
+   */
+  availableChannels = computed<ChannelListItem[]>(() => {
+    const selectedIds = this.selectedChannels().map((c) => c.id);
+    const systemChannels = ['Mailbox', 'DABubble-welcome'];
+    return this.channels().filter(
+      (channel) => !selectedIds.includes(channel.id) && !systemChannels.includes(channel.name)
+    );
+  });
+
+  /**
+   * Available users that are NOT yet selected and NOT the current user
+   */
+  availableUsers = computed<UserListItem[]>(() => {
+    const selectedIds = this.selectedUsers().map((u) => u.id);
+    const currentUserId = this.currentUserService.currentUserId();
+    return this.users().filter(
+      (user) => !selectedIds.includes(user.id) && user.id !== currentUserId
+    );
+  });
 
   /**
    * Show user dropdown when typing and specific option selected

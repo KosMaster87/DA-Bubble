@@ -1,6 +1,6 @@
 @use '../../../../../styles/mixins' as mix;
 
-.chat-channel {
+.channel-conversation {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -23,6 +23,7 @@
 
     &-info {
       flex: 1;
+      position: relative;
     }
 
     &-actions {
@@ -39,6 +40,12 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--primary-color);
+    }
 
     @include mix.tablet-landscape {
       font-size: 1.35rem;
@@ -52,6 +59,23 @@
   &__title-icon {
     width: 24px;
     height: 24px;
+    filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+      brightness(98%) contrast(92%);
+  }
+
+  &__title-arrow {
+    width: 14px;
+    height: 14px;
+    margin-left: var(--space-1);
+    transform: rotate(90deg);
+    transition: transform 0.3s ease, filter 0.2s;
+
+    &--open {
+      transform: rotate(0deg);
+    }
+  }
+
+  &__title:hover &__title-arrow {
     filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
       brightness(98%) contrast(92%);
   }
@@ -79,11 +103,11 @@
     &--own {
       flex-direction: row-reverse;
 
-      .chat-channel__message-content {
+      .channel-conversation__message-content {
         align-items: flex-end;
       }
 
-      .chat-channel__message-text {
+      .channel-conversation__message-text {
         background-color: #535af1;
         color: #fff;
       }

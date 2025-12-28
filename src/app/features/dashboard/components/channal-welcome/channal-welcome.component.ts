@@ -13,7 +13,6 @@ import {
   MembersMiniatureComponent,
   type MemberMiniature,
 } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
-import { AddMemberButtonComponent } from '@shared/dashboard-components/add-member-button/add-member-button.component';
 import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
 import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 import {
@@ -24,18 +23,15 @@ import {
   EditProfileComponent,
   EditProfileUser,
 } from '@shared/dashboard-components/edit-profile/edit-profile.component';
-import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
 
 @Component({
   selector: 'app-channal-welcome',
   imports: [
     MessageBoxComponent,
     MembersMiniatureComponent,
-    AddMemberButtonComponent,
     MembersOptionsMenuComponent,
     ProfileViewComponent,
     EditProfileComponent,
-    AddMembersComponent,
   ],
   templateUrl: './channal-welcome.component.html',
   styleUrl: './channal-welcome.component.scss',
@@ -49,7 +45,6 @@ export class ChannalWelcomeComponent {
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);
   protected selectedMemberId = signal<string | null>(null);
-  protected isAddMembersOpen = signal<boolean>(false);
 
   /**
    * Check if current user is admin
@@ -122,23 +117,6 @@ export class ChannalWelcomeComponent {
   });
 
   /**
-   * Available users that are NOT yet members of this channel
-   */
-  protected availableUsers = computed<UserListItem[]>(() => {
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
-    const currentMemberIds = channel?.memberIds || [];
-
-    return this.usersService
-      .users()
-      .filter((user) => !currentMemberIds.includes(user.id))
-      .map((user) => ({
-        id: user.id,
-        name: user.name,
-        avatar: user.avatar,
-      }));
-  });
-
-  /**
    * Total member count
    */
   protected totalMemberCount = computed(() => this.members().length);
@@ -169,36 +147,6 @@ export class ChannalWelcomeComponent {
   onMessageSent(message: string): void {
     console.log('Message sent in welcome channel:', message);
     // TODO: Implement message sending logic
-  }
-
-  /**
-   * Handle add member click
-   */
-  onAddMember(): void {
-    console.log('Add member clicked');
-    this.isMembersMenuOpen.set(false);
-    this.isAddMembersOpen.set(true);
-  }
-
-  /**
-   * Handle add members close
-   */
-  onAddMembersClose(): void {
-    this.isAddMembersOpen.set(false);
-  }
-
-  /**
-   * Handle members added
-   */
-  onMembersAdded(userIds: string[]): void {
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
-    if (!channel) return;
-
-    userIds.forEach((userId) => {
-      this.channelsService.addMemberToChannel(channel.id, userId);
-    });
-    this.isAddMembersOpen.set(false);
-    console.log('Added members to channel:', userIds);
   }
 
   /**

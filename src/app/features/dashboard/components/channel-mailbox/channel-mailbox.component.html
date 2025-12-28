@@ -1,0 +1,47 @@
+<div class="channel-mailbox">
+  <div class="channel-mailbox__header">
+    <div class="channel-mailbox__header-info">
+      <h1 class="channel-mailbox__title">
+        <img src="/img/icon/profile/mail-default.svg" alt="" class="channel-mailbox__title-icon" />
+        {{ mailboxTitle() }}
+      </h1>
+      <p class="channel-mailbox__description">{{ mailboxDescription() }}</p>
+    </div>
+  </div>
+
+  <div class="channel-mailbox__content">
+    @if (messages().length === 0) {
+    <div class="channel-mailbox__empty">
+      <img src="/img/icon/profile/mail-default.svg" alt="" class="channel-mailbox__empty-icon" />
+      <p class="channel-mailbox__empty-text">No messages yet</p>
+    </div>
+    } @else {
+    <div class="channel-mailbox__messages">
+      @for (message of messages(); track message.id) {
+      <div
+        class="channel-mailbox__message"
+        [class.channel-mailbox__message--unread]="!message.isRead"
+        [class.channel-mailbox__message--admin]="message.type === 'admin'"
+        [class.channel-mailbox__message--system]="message.type === 'system'"
+        (click)="onMessageClick(message.id)"
+      >
+        <div class="channel-mailbox__message-avatar">
+          <img [src]="message.fromAvatar" [alt]="message.from" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">{{ message.from }}</span>
+            <span class="channel-mailbox__message-time">{{ message.timestamp | date : 'short' }}</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">{{ message.subject }}</h3>
+          <p class="channel-mailbox__message-preview">{{ message.preview }}</p>
+        </div>
+        @if (!message.isRead) {
+        <div class="channel-mailbox__message-badge"></div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+</div>

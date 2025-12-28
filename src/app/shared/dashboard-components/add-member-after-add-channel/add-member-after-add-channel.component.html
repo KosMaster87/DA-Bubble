@@ -79,7 +79,7 @@
         <!-- Channel Selection Dropdown -->
         @if (isChannelSelectionOpen()) {
         <app-channel-selection
-          [channels]="channels()"
+          [channels]="availableChannels()"
           [searchValue]="channelSearchValue()"
           (closed)="onChannelSelectionClose()"
           (channelSelected)="onChannelSelected($event)"
@@ -152,7 +152,7 @@
         <!-- User Selection Dropdown -->
         @if (showUserDropdown()) {
         <app-user-selection
-          [users]="users()"
+          [users]="availableUsers()"
           [searchValue]="searchValue()"
           (userSelected)="onUserSelected($event)"
           (closed)="isUserSelectionOpen.set(false)"

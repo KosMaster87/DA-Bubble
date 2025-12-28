@@ -85,7 +85,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-3.png',
         isOnline: false,
         status: 'offline',
-        isAdmin: false,
+        isAdmin: true,
       },
       {
         id: '4',
@@ -94,7 +94,7 @@ export class DummyUsersService {
         avatar: '/img/profile/profile-4.png',
         isOnline: true,
         status: 'online',
-        isAdmin: false,
+        isAdmin: true,
       },
       {
         id: '5',

@@ -17,11 +17,6 @@
 
   &:focus {
     border-color: #535af1;
-
-    &::placeholder {
-      color: var(--text-primary);
-      opacity: 1;
-    }
   }
 
   &:disabled {

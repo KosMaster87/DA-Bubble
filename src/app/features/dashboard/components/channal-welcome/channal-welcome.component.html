@@ -9,6 +9,7 @@
         />
         {{ channelName() }}
       </h1>
+
       <p class="channal-welcome__description">{{ channelDescription() }}</p>
     </div>
 
@@ -18,14 +19,13 @@
         [totalCount]="totalMemberCount()"
         (memberClicked)="onViewMembers()"
       />
-      <app-add-member-button (addMemberClicked)="onAddMember()" />
 
       <!-- Members Options Menu -->
       <app-members-options-menu
         [isOpen]="isMembersMenuOpen()"
         [members]="members()"
+        [showAddMember]="false"
         (closeClicked)="onCloseMembersMenu()"
-        (addMemberClicked)="onAddMember()"
         (memberSelected)="onMemberSelected($event)"
       />
 
@@ -52,15 +52,6 @@
         (saveClicked)="onEditProfileSave($event)"
       />
       }
-
-      <!-- Add Members -->
-      <app-add-members
-        [isVisible]="isAddMembersOpen()"
-        [channelName]="channelName()"
-        [users]="availableUsers()"
-        (closeClicked)="onAddMembersClose()"
-        (membersAdded)="onMembersAdded($event)"
-      />
     </div>
   </div>
 

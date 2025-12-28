@@ -1,0 +1,127 @@
+<div class="channel-conversation">
+  <!-- Header -->
+  <div class="channel-conversation__header">
+    <div class="channel-conversation__header-info">
+      <h1 class="channel-conversation__title" (click)="onTitleClick()">
+        <img
+          src="/img/icon/channel-bar/tag-default.svg"
+          alt=""
+          class="channel-conversation__title-icon"
+        />
+        {{ channel().name }}
+        <img
+          src="/img/icon/arrow_default.svg"
+          alt=""
+          class="channel-conversation__title-arrow"
+          [class.channel-conversation__title-arrow--open]="isChannelInfoOpen()"
+        />
+      </h1>
+      <p class="channel-conversation__description">{{ channel().description }}</p>
+
+      <!-- Channel Info -->
+      <app-channel-info
+        [channel]="channelInfo()"
+        [isVisible]="isChannelInfoOpen()"
+        (closeClicked)="onChannelInfoClose()"
+        (channelUpdated)="onChannelUpdated($event)"
+        (leaveChannelClicked)="onLeaveChannel()"
+        (createdByClicked)="onCreatedByClick($event)"
+      />
+    </div>
+
+    <div class="channel-conversation__header-actions">
+      <app-members-miniatures
+        [members]="members()"
+        [totalCount]="totalMemberCount()"
+        (memberClicked)="onViewMembers()"
+      />
+      <app-add-member-button (addMemberClicked)="onAddMember()" />
+
+      <!-- Members Options Menu -->
+      <app-members-options-menu
+        [isOpen]="isMembersMenuOpen()"
+        [members]="members()"
+        (closeClicked)="onCloseMembersMenu()"
+        (addMemberClicked)="onAddMember()"
+        (memberSelected)="onMemberSelected($event)"
+      />
+
+      <!-- Profile View -->
+      @if (selectedMember()) {
+      <app-profile-view
+        [user]="selectedMember()!"
+        [isVisible]="isProfileViewOpen()"
+        [isOwnProfile]="isOwnProfile()"
+        [isAdmin]="isCurrentUserAdmin()"
+        (closeClicked)="onProfileViewClose()"
+        (editClicked)="onProfileEdit()"
+        (messageClicked)="onProfileMessage()"
+        (removeMemberClicked)="onRemoveMember()"
+      />
+      }
+
+      <!-- Edit Profile -->
+      @if (editProfileUser()) {
+      <app-edit-profile
+        [user]="editProfileUser()!"
+        [isVisible]="isEditProfileOpen()"
+        (closeClicked)="onEditProfileClose()"
+        (saveClicked)="onEditProfileSave($event)"
+      />
+      }
+
+      <!-- Add Members -->
+      <app-add-members
+        [isVisible]="isAddMembersOpen()"
+        [channelName]="channel().name"
+        [users]="availableUsers()"
+        (closeClicked)="onAddMembersClose()"
+        (membersAdded)="onMembersAdded($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="channel-conversation__messages">
+    @for (message of messages(); track message.id) {
+    <div
+      class="channel-conversation__message"
+      [class.channel-conversation__message--own]="message.isOwnMessage"
+      [class.channel-conversation__message--other]="!message.isOwnMessage"
+    >
+      <div class="channel-conversation__message-avatar">
+        <img [src]="message.senderAvatar" [alt]="message.senderName" />
+      </div>
+      <div class="channel-conversation__message-content">
+        <div class="channel-conversation__message-header">
+          <span class="channel-conversation__message-sender">{{ message.senderName }}</span>
+          <span class="channel-conversation__message-time">{{
+            message.timestamp | date : 'short'
+          }}</span>
+        </div>
+        <p class="channel-conversation__message-text">{{ message.content }}</p>
+
+        <!-- Reactions -->
+        @if (message.reactions && message.reactions.length > 0) {
+        <div class="channel-conversation__reactions">
+          @for (reaction of message.reactions; track $index) {
+          <button
+            class="channel-conversation__reaction"
+            (click)="addReaction(message.id, reaction.emoji)"
+          >
+            <span class="channel-conversation__reaction-emoji">{{ reaction.emoji }}</span>
+            <span class="channel-conversation__reaction-count">{{ reaction.count }}</span>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Footer with Message Box -->
+  <div class="channel-conversation__footer">
+    <app-message-box (messageSent)="sendMessage($event)" />
+  </div>
+</div>

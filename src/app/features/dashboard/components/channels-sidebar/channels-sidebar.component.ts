@@ -13,6 +13,7 @@ import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-compone
 import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { DummyChatDmService } from '../../services/dummy-chat-dm.service';
 import { DummyUsersService } from '../../services/dummy-users.service';
+import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
   selector: 'app-channels-sidebar',
@@ -26,6 +27,7 @@ export class ChannelsSidebarComponent {
   protected channelsService = inject(DummyChannelsService);
   protected chatDmService = inject(DummyChatDmService);
   protected usersService = inject(DummyUsersService);
+  protected currentUserService = inject(CurrentUserService);
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   newMessageRequested = output<void>();
@@ -37,6 +39,10 @@ export class ChannelsSidebarComponent {
   protected isAddChannelActive = signal(false);
   protected isCreateChannelOpen = signal(false);
   protected isAddMemberAfterChannelOpen = signal(false);
+
+  // Temporary storage for channel data between popups
+  protected pendingChannelName = signal<string>('');
+  protected pendingChannelDescription = signal<string>('');
 
   /**
    * Channels from service
@@ -62,6 +68,17 @@ export class ChannelsSidebarComponent {
       name: dm.userName,
       avatar: dm.userAvatar,
       isOnline: dm.isOnline,
+    }))
+  );
+
+  /**
+   * All users mapped to UserListItem for add-member popup
+   */
+  protected allUsers = computed(() =>
+    this.usersService.users().map((user) => ({
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
     }))
   );
 
@@ -135,10 +152,12 @@ export class ChannelsSidebarComponent {
    * Handle create channel submit
    */
   onCreateChannel(data: { name: string; description: string }): void {
-    console.log('Create channel:', data);
+    // Store channel data temporarily
+    this.pendingChannelName.set(data.name);
+    this.pendingChannelDescription.set(data.description);
+
     this.isCreateChannelOpen.set(false);
     this.isAddMemberAfterChannelOpen.set(true);
-    // TODO: Implement create channel logic
   }
 
   /**
@@ -146,24 +165,51 @@ export class ChannelsSidebarComponent {
    */
   onClose(): void {
     this.isAddMemberAfterChannelOpen.set(false);
+    this.pendingChannelName.set('');
+    this.pendingChannelDescription.set('');
   }
 
   /**
-   * Handle add member after channel cancel
+   * Handle add member after channel cancel - create channel without inviting members
    */
   onCancel(): void {
-    console.log('Create channel without member');
+    const currentUserId = this.currentUserService.currentUserId();
+    const newChannel = this.channelsService.createChannel(
+      this.pendingChannelName(),
+      this.pendingChannelDescription(),
+      currentUserId
+    );
+
     this.isAddMemberAfterChannelOpen.set(false);
-    // TODO: Implement create channel without member logic
+    this.pendingChannelName.set('');
+    this.pendingChannelDescription.set('');
+
+    // Select the newly created channel
+    this.selectDummyChannel(newChannel.id);
   }
 
   /**
-   * Handle add member after channel create
+   * Handle add member after channel create - create channel and send invitations
    */
   onCreate(data: { type: 'all' | 'specific'; searchValue?: string }): void {
-    console.log('Create channel with members:', data);
+    const currentUserId = this.currentUserService.currentUserId();
+    const newChannel = this.channelsService.createChannel(
+      this.pendingChannelName(),
+      this.pendingChannelDescription(),
+      currentUserId
+    );
+
+    // TODO: Implement invitations logic
+    // - If type === 'all': Get all members from selected channels and send invitations
+    // - If type === 'specific': Get selected users and send invitations
+    console.log('Create channel with invitations:', data);
+
     this.isAddMemberAfterChannelOpen.set(false);
-    // TODO: Implement create channel with members logic
+    this.pendingChannelName.set('');
+    this.pendingChannelDescription.set('');
+
+    // Select the newly created channel
+    this.selectDummyChannel(newChannel.id);
   }
 
   /**

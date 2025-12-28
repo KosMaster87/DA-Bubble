@@ -8,9 +8,9 @@ import { Component, inject, signal } from '@angular/core';
 import { DashboardHeaderComponent } from '../../components/dashboard-header/dashboard-header.component';
 import { ChannelsSidebarComponent } from '../../components/channels-sidebar/channels-sidebar.component';
 import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
-import { ChatMailboxComponent } from '../../components/chat-mailbox/chat-mailbox.component';
+import { ChannalMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
 import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
-import { ChatChannelComponent } from '../../components/chat-channel/chat-channel.component';
+import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
 import { ChatMainComponent } from '../../components/chat-main/chat-main.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
@@ -39,9 +39,9 @@ export interface DMInfo {
     DashboardHeaderComponent,
     ChannelsSidebarComponent,
     ChannalWelcomeComponent,
-    ChatMailboxComponent,
+    ChannalMailboxComponent,
     ChatNewMsgComponent,
-    ChatChannelComponent,
+    ChannelConversationComponent,
     ChatMainComponent,
     WorkspaceMenuToggleComponent,
   ],

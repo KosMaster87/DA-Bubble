@@ -17,6 +17,13 @@
     width: 16px;
     height: 16px;
     flex-shrink: 0;
+    filter: brightness(0) saturate(100%) invert(43%) sepia(0%) saturate(0%) hue-rotate(168deg)
+      brightness(94%) contrast(86%); // Gray #686868
+    transition: filter 0.2s;
+  }
+
+  &:focus-within &__icon {
+    filter: brightness(0) saturate(100%); // Black
   }
 
   &__input {

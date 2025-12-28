@@ -19,9 +19,9 @@
     } @else if (currentView() === 'chat-new-msg') {
     <app-chat-new-msg class="dashboard__content" />
     } @else if (currentView() === 'mailbox') {
-    <app-chat-mailbox class="dashboard__content" />
+    <app-channel-mailbox class="dashboard__content" />
     } @else if (currentView() === 'channel' && selectedChannel()) {
-    <app-chat-channel class="dashboard__content" [channel]="selectedChannel()!" />
+    <app-channel-conversation class="dashboard__content" [channel]="selectedChannel()!" />
     } @else if (currentView() === 'direct-message' && selectedDM()) {
     <app-chat-main class="dashboard__content" [conversationId]="selectedDM()!.conversationId" />
     }
