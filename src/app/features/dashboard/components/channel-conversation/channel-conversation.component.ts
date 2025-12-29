@@ -4,9 +4,13 @@
  * @module features/dashboard/components/channel-conversation
  */
 
-import { Component, signal, input, inject, computed } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, signal, input, inject, computed, output } from '@angular/core';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import {
+  ConversationMessagesComponent,
+  type Message,
+  type MessageGroup,
+} from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { MembersMiniatureComponent } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
 import { AddMemberButtonComponent } from '@shared/dashboard-components/add-member-button/add-member-button.component';
 import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
@@ -26,6 +30,7 @@ import {
 } from '@shared/dashboard-components/channel-info/channel-info.component';
 import { DummyUsersService } from '../../services/dummy-users.service';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
+import { DummyThreadService } from '../../services/dummy-thread.service';
 import { CurrentUserService } from '../../services/current-user.service';
 
 export interface ChannelMessage {
@@ -49,8 +54,8 @@ export interface ChannelInfo {
 @Component({
   selector: 'app-channel-conversation',
   imports: [
-    DatePipe,
     MessageBoxComponent,
+    ConversationMessagesComponent,
     MembersMiniatureComponent,
     AddMemberButtonComponent,
     MembersOptionsMenuComponent,
@@ -66,6 +71,8 @@ export class ChannelConversationComponent {
   protected usersService = inject(DummyUsersService);
   protected channelsService = inject(DummyChannelsService);
   protected currentUserService = inject(CurrentUserService);
+  protected threadService = inject(DummyThreadService);
+  threadRequested = output<{ messageId: string; parentMessage: Message }>();
 
   /**
    * Channel information
@@ -251,6 +258,78 @@ export class ChannelConversationComponent {
   }
 
   /**
+   * Group messages by date
+   */
+  protected messagesGroupedByDate = computed<MessageGroup[]>(() => {
+    const msgs = this.messages();
+    const groups = new Map<string, Message[]>();
+
+    msgs.forEach((msg) => {
+      const dateKey = this.getDateKey(msg.timestamp);
+      if (!groups.has(dateKey)) {
+        groups.set(dateKey, []);
+      }
+
+      // Add thread info to message
+      const threadCount = this.threadService.getThreadCount(msg.id);
+      const lastThreadTimestamp = this.threadService.getLastReplyTimestamp(msg.id);
+
+      groups.get(dateKey)!.push({
+        id: msg.id,
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        senderAvatar: msg.senderAvatar,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        isOwnMessage: msg.isOwnMessage,
+        reactions: msg.reactions,
+        threadCount: threadCount > 0 ? threadCount : undefined,
+        lastThreadTimestamp: lastThreadTimestamp || undefined,
+      });
+    });
+
+    return Array.from(groups.entries()).map(([dateKey, messages]) => ({
+      date: messages[0].timestamp,
+      label: this.getDateLabel(messages[0].timestamp),
+      messages,
+    }));
+  });
+
+  /**
+   * Get date key for grouping (YYYY-MM-DD)
+   */
+  private getDateKey(date: Date): string {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
+  }
+
+  /**
+   * Get date label ("Starting today" or formatted date)
+   */
+  private getDateLabel(date: Date): string {
+    const today = new Date();
+    const messageDate = new Date(date);
+
+    // Check if same day
+    if (
+      today.getFullYear() === messageDate.getFullYear() &&
+      today.getMonth() === messageDate.getMonth() &&
+      today.getDate() === messageDate.getDate()
+    ) {
+      return 'Starting today';
+    }
+
+    // Format date: "Monday, 28 December"
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).format(messageDate);
+  }
+
+  /**
    * Add reaction to message
    */
   addReaction(messageId: string, emoji: string): void {
@@ -414,5 +493,51 @@ export class ChannelConversationComponent {
     this.selectedMemberId.set(userId);
     this.isChannelInfoOpen.set(false);
     this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle message click
+   */
+  onMessageClick(messageId: string): void {
+    console.log('Message clicked:', messageId);
+    // TODO: Implement message actions (edit, delete, reply)
+  }
+
+  /**
+   * Handle avatar click
+   */
+  onAvatarClick(senderId: string): void {
+    this.selectedMemberId.set(senderId);
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle reaction added
+   */
+  onReactionAdded(data: { messageId: string; emoji: string }): void {
+    console.log('Reaction added:', data);
+    this.addReaction(data.messageId, data.emoji);
+  }
+
+  /**
+   * Handle thread click
+   */
+  onThreadClick(messageId: string): void {
+    // Find the parent message
+    const parentMessage = this.messages().find((m) => m.id === messageId);
+    if (parentMessage) {
+      // Convert to Message type
+      const message: Message = {
+        id: parentMessage.id,
+        senderId: parentMessage.senderId,
+        senderName: parentMessage.senderName,
+        senderAvatar: parentMessage.senderAvatar,
+        content: parentMessage.content,
+        timestamp: parentMessage.timestamp,
+        isOwnMessage: parentMessage.isOwnMessage,
+        reactions: parentMessage.reactions,
+      };
+      this.threadRequested.emit({ messageId, parentMessage: message });
+    }
   }
 }

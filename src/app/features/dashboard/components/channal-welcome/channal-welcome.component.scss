@@ -67,7 +67,11 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-4);
-    @include mix.custom-scrollbar(8px, transparent, var(--border-color));
+    scrollbar-width: none; // Firefox
+
+    &::-webkit-scrollbar {
+      display: none; // Chrome, Safari, Edge
+    }
 
     @include mix.tablet-landscape {
       padding: var(--space-6);
@@ -122,5 +126,244 @@
     padding: 3rem 1rem;
     color: var(--text-secondary, #999);
     font-size: 0.9rem;
+  }
+
+  // Info Card (Quick Start)
+  &__info-card {
+    background-color: #fff;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__info-header {
+    @include mix.flex(row, flex-start, center);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__info-icon {
+    font-size: 1.5rem;
+  }
+
+  &__info-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  &__info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    li {
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text-secondary);
+      line-height: 1.5;
+
+      &::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: #535af1;
+        font-weight: bold;
+      }
+    }
+  }
+
+  // Announcement
+  &__announcement {
+    background-color: #f8f9ff;
+    border-left: 4px solid #535af1;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__announcement-header {
+    @include mix.flex(row, flex-start, center);
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__announcement-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__announcement-author {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: 0.5rem;
+  }
+
+  &__announcement-badge {
+    background-color: #535af1;
+    color: #fff;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  &__announcement-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  &__announcement-text {
+    margin: 0;
+    line-height: 1.6;
+    color: var(--text-primary);
+  }
+
+  // Stats Card
+  &__stats-card {
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__stats-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1.25rem 0;
+    color: var(--text-primary);
+  }
+
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+  }
+
+  &__stat {
+    text-align: center;
+  }
+
+  &__stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #535af1;
+    margin-bottom: 0.25rem;
+  }
+
+  &__stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+
+  // Tips Card
+  &__tips-card {
+    background-color: #fffbf0;
+    border: 1px solid #ffd93d;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__tips-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+  }
+
+  &__tip {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 217, 61, 0.3);
+    line-height: 1.6;
+    color: var(--text-primary);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    strong {
+      color: #d97706;
+    }
+
+    kbd {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 0.125rem 0.375rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  // Call to Action Card
+  &__cta-card {
+    background: linear-gradient(135deg, #535af1 0%, #797ef3 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+
+  &__cta-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+  }
+
+  &__cta-text {
+    font-size: 1rem;
+    margin: 0 0 1.5rem 0;
+    opacity: 0.95;
+  }
+
+  &__cta-buttons {
+    @include mix.flex(row, center, center);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__cta-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9375rem;
+
+    &--primary {
+      background-color: #fff;
+      color: #535af1;
+
+      &:hover {
+        background-color: #f0f0f0;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    &--secondary {
+      background-color: transparent;
+      color: #fff;
+      border: 2px solid #fff;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+    }
   }
 }

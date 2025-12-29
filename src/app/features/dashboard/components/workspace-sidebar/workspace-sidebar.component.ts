@@ -1,7 +1,7 @@
 /**
- * @fileoverview Channels Sidebar Component
- * @description Collapsible sidebar showing channels list
- * @module features/dashboard/components/channels-sidebar
+ * @fileoverview Workspace Sidebar Component
+ * @description Collapsible sidebar showing channels, direct messages and workspace navigation
+ * @module features/dashboard/components/workspace-sidebar
  */
 
 import { Component, inject, output, input, signal, computed } from '@angular/core';
@@ -16,12 +16,12 @@ import { DummyUsersService } from '../../services/dummy-users.service';
 import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
-  selector: 'app-channels-sidebar',
+  selector: 'app-workspace-sidebar',
   imports: [CommonModule, CreateChannelComponent, AddMemberAfterAddChannelComponent],
-  templateUrl: './channels-sidebar.component.html',
-  styleUrl: './channels-sidebar.component.scss',
+  templateUrl: './workspace-sidebar.component.html',
+  styleUrl: './workspace-sidebar.component.scss',
 })
-export class ChannelsSidebarComponent {
+export class WorkspaceSidebarComponent {
   protected channelStore = inject(ChannelStore);
   protected sidebarService = inject(WorkspaceSidebarService);
   protected channelsService = inject(DummyChannelsService);

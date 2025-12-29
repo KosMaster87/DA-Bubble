@@ -10,38 +10,139 @@
   </div>
 
   <div class="channel-mailbox__content">
-    @if (messages().length === 0) {
-    <div class="channel-mailbox__empty">
-      <img src="/img/icon/profile/mail-default.svg" alt="" class="channel-mailbox__empty-icon" />
-      <p class="channel-mailbox__empty-text">No messages yet</p>
-    </div>
-    } @else {
     <div class="channel-mailbox__messages">
-      @for (message of messages(); track message.id) {
-      <div
-        class="channel-mailbox__message"
-        [class.channel-mailbox__message--unread]="!message.isRead"
-        [class.channel-mailbox__message--admin]="message.type === 'admin'"
-        [class.channel-mailbox__message--system]="message.type === 'system'"
-        (click)="onMessageClick(message.id)"
-      >
+      <!-- Channel Invitation -->
+      <div class="channel-mailbox__message channel-mailbox__message--unread">
         <div class="channel-mailbox__message-avatar">
-          <img [src]="message.fromAvatar" [alt]="message.from" />
+          <img src="/img/profile/profile-1.png" alt="Sofia Müller" />
         </div>
         <div class="channel-mailbox__message-content">
           <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">{{ message.from }}</span>
-            <span class="channel-mailbox__message-time">{{ message.timestamp | date : 'short' }}</span>
+            <span class="channel-mailbox__message-from">Sofia Müller</span>
+            <span class="channel-mailbox__message-time">vor 2 Stunden</span>
           </div>
-          <h3 class="channel-mailbox__message-subject">{{ message.subject }}</h3>
-          <p class="channel-mailbox__message-preview">{{ message.preview }}</p>
+          <h3 class="channel-mailbox__message-subject">📢 Einladung zum #entwicklung Channel</h3>
+          <p class="channel-mailbox__message-preview">
+            Du wurdest zum Channel #entwicklung eingeladen. Tritt bei, um an den Diskussionen
+            teilzunehmen!
+          </p>
+          <div class="channel-mailbox__message-actions">
+            <button class="channel-mailbox__action-btn channel-mailbox__action-btn--accept">
+              Annehmen
+            </button>
+            <button class="channel-mailbox__action-btn channel-mailbox__action-btn--decline">
+              Ablehnen
+            </button>
+          </div>
         </div>
-        @if (!message.isRead) {
         <div class="channel-mailbox__message-badge"></div>
-        }
       </div>
-      }
+
+      <!-- Direct Message Notification -->
+      <div class="channel-mailbox__message channel-mailbox__message--unread">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/profile/profile-3.png" alt="Noah Braun" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">Noah Braun</span>
+            <span class="channel-mailbox__message-time">vor 5 Stunden</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">💬 Neue Direktnachricht</h3>
+          <p class="channel-mailbox__message-preview">
+            Hey! Hast du kurz Zeit für ein Quick-Meeting zum neuen Feature?
+          </p>
+        </div>
+        <div class="channel-mailbox__message-badge"></div>
+      </div>
+
+      <!-- System Notification -->
+      <div class="channel-mailbox__message channel-mailbox__message--system">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/icon/channel-bar/tag-default.svg" alt="System" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">DABubble System</span>
+            <span class="channel-mailbox__message-time">gestern</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">🔔 Neue Funktion verfügbar</h3>
+          <p class="channel-mailbox__message-preview">
+            Thread-Antworten sind jetzt verfügbar! Klicke auf eine Nachricht, um in einem Thread zu
+            antworten.
+          </p>
+        </div>
+      </div>
+
+      <!-- Admin Message -->
+      <div class="channel-mailbox__message channel-mailbox__message--admin">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/profile/profile-1.png" alt="Admin" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">Sofia Müller</span>
+            <span class="channel-mailbox__message-badge-inline">Admin</span>
+            <span class="channel-mailbox__message-time">vor 2 Tagen</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">⚡ Wartungsarbeiten angekündigt</h3>
+          <p class="channel-mailbox__message-preview">
+            Am Sonntag, 5. Januar, werden zwischen 2:00 und 4:00 Uhr Wartungsarbeiten durchgeführt.
+          </p>
+        </div>
+      </div>
+
+      <!-- Mention Notification -->
+      <div class="channel-mailbox__message">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/profile/profile-4.png" alt="Elias Neumann" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">Elias Neumann</span>
+            <span class="channel-mailbox__message-time">vor 3 Tagen</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">@mention in #design</h3>
+          <p class="channel-mailbox__message-preview">
+            @du Kannst du dir bitte das neue Design-Konzept anschauen und Feedback geben?
+          </p>
+        </div>
+      </div>
+
+      <!-- Team Update -->
+      <div class="channel-mailbox__message">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/profile/profile-1.png" alt="Sofia Müller" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">Sofia Müller</span>
+            <span class="channel-mailbox__message-time">vor 1 Woche</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">📅 Team-Meeting nächsten Montag</h3>
+          <p class="channel-mailbox__message-preview">
+            Reminder: Unser wöchentliches Team-Meeting findet am Montag um 10:00 Uhr statt.
+          </p>
+        </div>
+      </div>
+
+      <!-- Welcome Message -->
+      <div class="channel-mailbox__message channel-mailbox__message--system">
+        <div class="channel-mailbox__message-avatar">
+          <img src="/img/logos/logo.png" alt="DABubble" />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">DABubble</span>
+            <span class="channel-mailbox__message-time">vor 2 Wochen</span>
+          </div>
+          <h3 class="channel-mailbox__message-subject">🎉 Willkommen bei DABubble!</h3>
+          <p class="channel-mailbox__message-preview">
+            Schön, dass du da bist! Hier erhältst du wichtige Benachrichtigungen, Einladungen und
+            Updates.
+          </p>
+        </div>
+      </div>
     </div>
-    }
   </div>
 </div>

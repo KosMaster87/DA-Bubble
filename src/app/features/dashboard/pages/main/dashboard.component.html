@@ -1,10 +1,14 @@
 <div class="dashboard">
   <app-workspace-menu-toggle />
 
-  <app-dashboard-header class="dashboard__header" (mailboxRequested)="showMailbox()" />
+  <app-workspace-header class="dashboard__header" (mailboxRequested)="showMailbox()" />
 
-  <div class="dashboard__main" [class.dashboard__main--no-sidebar]="sidebarService.isHidden()">
-    <app-channels-sidebar
+  <div
+    class="dashboard__main"
+    [class.dashboard__main--no-sidebar]="sidebarService.isHidden()"
+    [class.dashboard__main--thread-open]="isThreadOpen()"
+  >
+    <app-workspace-sidebar
       class="dashboard__sidebar"
       [isNewMessageActive]="currentView() === 'chat-new-msg'"
       [isMailboxActive]="currentView() === 'mailbox'"
@@ -21,9 +25,23 @@
     } @else if (currentView() === 'mailbox') {
     <app-channel-mailbox class="dashboard__content" />
     } @else if (currentView() === 'channel' && selectedChannel()) {
-    <app-channel-conversation class="dashboard__content" [channel]="selectedChannel()!" />
+    <app-channel-conversation
+      class="dashboard__content"
+      [channel]="selectedChannel()!"
+      (threadRequested)="openThread($event)"
+    />
     } @else if (currentView() === 'direct-message' && selectedDM()) {
-    <app-chat-main class="dashboard__content" [conversationId]="selectedDM()!.conversationId" />
+    <app-chat-private
+      class="dashboard__content"
+      [dmInfo]="selectedDM()!"
+      (threadRequested)="openThread($event)"
+    />
+    } @if (isThreadOpen() && threadInfo()) {
+    <app-thread
+      class="dashboard__thread"
+      [threadInfo]="threadInfo()!"
+      (closeRequested)="closeThread()"
+    />
     }
   </div>
 </div>

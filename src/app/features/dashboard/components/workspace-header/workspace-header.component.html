@@ -1,42 +1,42 @@
-<header class="dashboard-header">
-  <div class="dashboard-header__content">
+<header class="workspace-header">
+  <div class="workspace-header__content">
     <!-- Logo -->
-    <div class="dashboard-header__logo">
+    <div class="workspace-header__logo">
       <app-dabubble-logo />
     </div>
 
     <!-- Search Bar -->
-    <div class="dashboard-header__search">
+    <div class="workspace-header__search">
       <input
         type="text"
-        class="dashboard-header__search-input"
+        class="workspace-header__search-input"
         placeholder="Search DABubble..."
         (input)="onSearch($event)"
       />
-      <img src="/img/icon/search-default.svg" alt="Search" class="dashboard-header__search-icon" />
+      <img src="/img/icon/search-default.svg" alt="Search" class="workspace-header__search-icon" />
     </div>
 
     <!-- Profile Section -->
-    <div class="dashboard-header__profile-wrapper">
+    <div class="workspace-header__profile-wrapper">
       <button
-        class="dashboard-header__profile"
+        class="workspace-header__profile"
         (click)="toggleOptions()"
-        [class.dashboard-header__profile--active]="isOptionsOpen()"
+        [class.workspace-header__profile--active]="isOptionsOpen()"
       >
-        <span class="dashboard-header__profile-content">
-          <span class="dashboard-header__profile-name">
+        <span class="workspace-header__profile-content">
+          <span class="workspace-header__profile-name">
             {{ currentUser?.displayName || 'User' }}
           </span>
 
-          <div class="dashboard-header__profile-avatar">
+          <div class="workspace-header__profile-avatar">
             @if (currentUser?.photoURL) {
             <img
               [src]="currentUser?.photoURL"
               [alt]="currentUser?.displayName || 'User'"
-              class="dashboard-header__avatar-img"
+              class="workspace-header__avatar-img"
             />
             } @else {
-            <div class="dashboard-header__avatar-placeholder">
+            <div class="workspace-header__avatar-placeholder">
               {{ (currentUser?.displayName || 'U').charAt(0).toUpperCase() }}
             </div>
             }
@@ -45,7 +45,7 @@
           <img
             src="/img/icon/arrow_default.svg"
             alt="Options"
-            class="dashboard-header__options-icon"
+            class="workspace-header__options-icon"
           />
         </span>
       </button>

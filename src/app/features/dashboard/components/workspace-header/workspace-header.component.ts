@@ -1,7 +1,7 @@
 /**
- * @fileoverview Dashboard Header Component
- * @description Header for dashboard with logo, search and profile
- * @module features/dashboard/components/dashboard-header
+ * @fileoverview Workspace Header Component
+ * @description Header for workspace with search and user menu
+ * @module features/dashboard/components/workspace-header
  */
 
 import { Component, inject, signal, output, computed } from '@angular/core';
@@ -21,17 +21,17 @@ import { DummyUsersService } from '../../services/dummy-users.service';
 import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
-  selector: 'app-dashboard-header',
+  selector: 'app-workspace-header',
   imports: [
     DABubbleLogoComponent,
     UserOptionsMenuComponent,
     ProfileViewComponent,
     EditProfileComponent,
   ],
-  templateUrl: './dashboard-header.component.html',
-  styleUrl: './dashboard-header.component.scss',
+  templateUrl: './workspace-header.component.html',
+  styleUrl: './workspace-header.component.scss',
 })
-export class DashboardHeaderComponent {
+export class WorkspaceHeaderComponent {
   private router = inject(Router);
   protected authStore = inject(AuthStore);
   protected usersService = inject(DummyUsersService);

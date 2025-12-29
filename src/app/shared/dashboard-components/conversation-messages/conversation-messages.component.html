@@ -1,0 +1,81 @@
+<!-- Conversation Messages -->
+<div class="conversation-messages">
+  @for (group of messageGroups(); track group.date) {
+  <!-- Date Separator -->
+  <div class="conversation-messages__date-separator">
+    <div class="conversation-messages__date-line"></div>
+    <span class="conversation-messages__date-label">{{ group.label }}</span>
+    <div class="conversation-messages__date-line"></div>
+  </div>
+
+  <!-- Messages in this group -->
+  @for (message of group.messages; track message.id) {
+  <!-- Message Wrapper (full width for hover effect) -->
+  <div
+    class="conversation-messages__message-wrapper"
+    [class.conversation-messages__message-wrapper--own]="message.isOwnMessage"
+    [class.conversation-messages__message-wrapper--other]="!message.isOwnMessage"
+  >
+    <!-- Reaction Bar -->
+    <div class="conversation-messages__reaction-bar">
+      <app-reaction-bar
+        [messageType]="message.isOwnMessage ? 'own' : 'other'"
+        (reactionClicked)="onReactionBarClick(message.id, $event)"
+      />
+    </div>
+
+    <!-- Message Content -->
+    <div
+      class="conversation-messages__message"
+      [class.conversation-messages__message--own]="message.isOwnMessage"
+      [class.conversation-messages__message--other]="!message.isOwnMessage"
+      (click)="onMessageClick(message.id)"
+    >
+      <div class="conversation-messages__message-avatar" (click)="onAvatarClick(message.senderId)">
+        <img [src]="message.senderAvatar" [alt]="message.senderName" />
+      </div>
+
+      <div class="conversation-messages__message-content">
+        <div class="conversation-messages__message-header">
+          <span class="conversation-messages__message-sender">{{ message.senderName }}</span>
+          <span class="conversation-messages__message-time">{{
+            message.timestamp | date : 'short'
+          }}</span>
+        </div>
+        
+        <p class="conversation-messages__message-text">{{ message.content }}</p>
+
+        <!-- Reactions -->
+        @if (message.reactions && message.reactions.length > 0) {
+        <div class="conversation-messages__reactions">
+          @for (reaction of message.reactions; track $index) {
+          <button
+            class="conversation-messages__reaction"
+            (click)="onReactionClick(message.id, reaction.emoji)"
+          >
+            <span class="conversation-messages__reaction-emoji">{{ reaction.emoji }}</span>
+            <span class="conversation-messages__reaction-count">{{ reaction.count }}</span>
+          </button>
+          }
+        </div>
+        }
+
+        <!-- Thread Answers -->
+        @if (message.threadCount && message.threadCount > 0) {
+        <button class="conversation-messages__thread-link" (click)="onThreadClick(message.id)">
+          <span class="conversation-messages__thread-count"
+            >{{ message.threadCount }} {{ message.threadCount === 1 ? 'Answer' : 'Answers' }}</span
+          >
+          @if (message.lastThreadTimestamp) {
+          <span class="conversation-messages__thread-time"
+            >Last answer {{ message.lastThreadTimestamp | date : 'short' }}</span
+          >
+          }
+        </button>
+        }
+      </div>
+    </div>
+    <!-- End Message Wrapper -->
+  </div>
+  } }
+</div>

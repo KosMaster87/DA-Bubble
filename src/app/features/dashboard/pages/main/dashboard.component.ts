@@ -5,17 +5,21 @@
  */
 
 import { Component, inject, signal } from '@angular/core';
-import { DashboardHeaderComponent } from '../../components/dashboard-header/dashboard-header.component';
-import { ChannelsSidebarComponent } from '../../components/channels-sidebar/channels-sidebar.component';
-import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
-import { ChannalMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
-import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
-import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
-import { ChatMainComponent } from '../../components/chat-main/chat-main.component';
+import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
+import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
+import { ChannalMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
+import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
+import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
+import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
+import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
+import { ThreadComponent } from '../../components/thread/thread.component';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { DummyChatDmService } from '../../services/dummy-chat-dm.service';
+import { DummyThreadService } from '../../services/dummy-thread.service';
+import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import { type ThreadInfo } from '../../components/thread/thread.component';
 
 type DashboardView = 'welcome' | 'chat-new-msg' | 'mailbox' | 'channel' | 'direct-message';
 
@@ -36,13 +40,14 @@ export interface DMInfo {
 @Component({
   selector: 'app-dashboard',
   imports: [
-    DashboardHeaderComponent,
-    ChannelsSidebarComponent,
+    WorkspaceHeaderComponent,
+    WorkspaceSidebarComponent,
     ChannalWelcomeComponent,
     ChannalMailboxComponent,
     ChatNewMsgComponent,
     ChannelConversationComponent,
-    ChatMainComponent,
+    ChatPrivateComponent,
+    ThreadComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -52,9 +57,13 @@ export class DashboardComponent {
   protected sidebarService = inject(WorkspaceSidebarService);
   protected channelsService = inject(DummyChannelsService);
   protected chatDmService = inject(DummyChatDmService);
+  protected threadService = inject(DummyThreadService);
   protected currentView = signal<DashboardView>('welcome');
   protected selectedChannel = signal<ChannelInfo | null>(null);
   protected selectedDM = signal<DMInfo | null>(null);
+  protected isThreadOpen = signal<boolean>(false);
+  protected threadMessageId = signal<string | null>(null);
+  protected threadInfo = signal<ThreadInfo | null>(null);
 
   /**
    * Switch to new message view
@@ -118,5 +127,37 @@ export class DashboardComponent {
       isOnline: dm.isOnline,
     });
     this.currentView.set('direct-message');
+  }
+
+  /**
+   * Open thread view
+   */
+  openThread(event: { messageId: string; parentMessage: Message }): void {
+    this.threadMessageId.set(event.messageId);
+
+    // Get channel or DM name
+    let channelName = '';
+
+    if (this.currentView() === 'channel' && this.selectedChannel()) {
+      channelName = this.selectedChannel()!.name;
+    } else if (this.currentView() === 'direct-message' && this.selectedDM()) {
+      channelName = this.selectedDM()!.userName;
+    }
+
+    this.threadInfo.set({
+      parentMessageId: event.messageId,
+      channelName: channelName,
+      parentMessage: event.parentMessage,
+    });
+    this.isThreadOpen.set(true);
+  }
+
+  /**
+   * Close thread view
+   */
+  closeThread(): void {
+    this.isThreadOpen.set(false);
+    this.threadMessageId.set(null);
+    this.threadInfo.set(null);
   }
 }

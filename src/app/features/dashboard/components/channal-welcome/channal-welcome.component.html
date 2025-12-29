@@ -81,9 +81,91 @@
         </div>
       </div>
 
-      <!-- Placeholder for future messages -->
-      <div class="channal-welcome__message-placeholder">
-        <p>Keine Nachrichten vorhanden. Starte eine Unterhaltung!</p>
+      <!-- Quick Start Guide -->
+      <div class="channal-welcome__info-card">
+        <div class="channal-welcome__info-header">
+          <span class="channal-welcome__info-icon">🚀</span>
+          <h3 class="channal-welcome__info-title">Schnellstart</h3>
+        </div>
+        <ul class="channal-welcome__info-list">
+          <li>Erstelle neue Channels für verschiedene Themen oder Teams</li>
+          <li>Starte Direktnachrichten mit Kollegen</li>
+          <li>Nutze @mentions, um bestimmte Personen zu benachrichtigen</li>
+          <li>Teile Dateien durch Drag & Drop</li>
+          <li>Organisiere Gespräche mit Threads</li>
+        </ul>
+      </div>
+
+      <!-- Team Announcement -->
+      <div class="channal-welcome__announcement">
+        <div class="channal-welcome__announcement-header">
+          <img
+            src="/img/profile/profile-1.png"
+            alt="Admin"
+            class="channal-welcome__announcement-avatar"
+          />
+          <div>
+            <strong class="channal-welcome__announcement-author">Sofia Müller</strong>
+            <span class="channal-welcome__announcement-badge">Admin</span>
+            <span class="channal-welcome__announcement-time">vor 2 Stunden</span>
+          </div>
+        </div>
+        <p class="channal-welcome__announcement-text">
+          🎉 Herzlich willkommen im Team! Wir freuen uns, dass du dabei bist. Bei Fragen stehe ich
+          und das gesamte Team jederzeit zur Verfügung.
+        </p>
+      </div>
+
+      <!-- Team Stats -->
+      <div class="channal-welcome__stats-card">
+        <h3 class="channal-welcome__stats-title">Team-Übersicht</h3>
+        <div class="channal-welcome__stats-grid">
+          <div class="channal-welcome__stat">
+            <div class="channal-welcome__stat-value">{{ totalMemberCount() }}</div>
+            <div class="channal-welcome__stat-label">Team-Mitglieder</div>
+          </div>
+          <div class="channal-welcome__stat">
+            <div class="channal-welcome__stat-value">5</div>
+            <div class="channal-welcome__stat-label">Aktive Channels</div>
+          </div>
+          <div class="channal-welcome__stat">
+            <div class="channal-welcome__stat-value">24/7</div>
+            <div class="channal-welcome__stat-label">Erreichbarkeit</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Helpful Tips -->
+      <div class="channal-welcome__tips-card">
+        <h3 class="channal-welcome__tips-title">💡 Tipps & Tricks</h3>
+        <div class="channal-welcome__tip">
+          <strong>Tastenkombinationen:</strong> Drücke <kbd>Strg</kbd> + <kbd>K</kbd> für die
+          Schnellsuche
+        </div>
+        <div class="channal-welcome__tip">
+          <strong>Statusmeldungen:</strong> Setze deinen Status, damit andere wissen, ob du
+          verfügbar bist
+        </div>
+        <div class="channal-welcome__tip">
+          <strong>Benachrichtigungen:</strong> Passe deine Benachrichtigungseinstellungen in den
+          Einstellungen an
+        </div>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="channal-welcome__cta-card">
+        <h3 class="channal-welcome__cta-title">Bereit loszulegen?</h3>
+        <p class="channal-welcome__cta-text">
+          Wähle einen Channel aus der linken Sidebar oder starte eine Direktnachricht!
+        </p>
+        <div class="channal-welcome__cta-buttons">
+          <button class="channal-welcome__cta-btn channal-welcome__cta-btn--primary">
+            Channels durchsuchen
+          </button>
+          <button class="channal-welcome__cta-btn channal-welcome__cta-btn--secondary">
+            Profil vervollständigen
+          </button>
+        </div>
       </div>
     </div>
   </div>

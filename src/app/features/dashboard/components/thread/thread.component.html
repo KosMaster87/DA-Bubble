@@ -1,0 +1,57 @@
+<div class="thread">
+  <!-- Header -->
+  <div class="thread__header">
+    <div class="thread__header-info">
+      <div class="thread__title-wrapper">
+        <h1 class="thread__title">Thread</h1>
+        <p class="thread__subtitle"># {{ threadInfo().channelName }}</p>
+      </div>
+      <p class="thread__reply-count">
+        {{ replyCount() }} {{ replyCount() === 1 ? 'Antwort' : 'Antworten' }}
+      </p>
+    </div>
+    <button class="thread__close-btn" type="button" (click)="onClose()" aria-label="Close thread">
+      <img src="/img/icon/window/close-default.svg" alt="" class="thread__close-icon" />
+    </button>
+  </div>
+
+  <!-- Messages Area (Parent + Replies) -->
+  <div class="thread__messages">
+    <!-- Parent Message -->
+    @if (threadInfo().parentMessage) {
+    <div class="thread__parent">
+      <div class="thread__parent-label">Originalnachricht</div>
+      <div class="thread__parent-message">
+        <img
+          [src]="threadInfo().parentMessage!.senderAvatar"
+          [alt]="threadInfo().parentMessage!.senderName"
+          class="thread__parent-avatar"
+        />
+        <div class="thread__parent-content">
+          <div class="thread__parent-header">
+            <span class="thread__parent-name">{{ threadInfo().parentMessage!.senderName }}</span>
+            <span class="thread__parent-time">{{
+              threadInfo().parentMessage!.timestamp | date : 'short'
+            }}</span>
+          </div>
+          <p class="thread__parent-text">{{ threadInfo().parentMessage!.content }}</p>
+        </div>
+      </div>
+      <div class="thread__divider"></div>
+    </div>
+    }
+
+    <!-- Thread Replies -->
+    <app-conversation-messages
+      [messageGroups]="repliesGroupedByDate()"
+      (messageClicked)="onMessageClick($event)"
+      (avatarClicked)="onAvatarClick($event)"
+      (reactionAdded)="onReactionAdded($event)"
+    />
+  </div>
+
+  <!-- Footer with Message Box -->
+  <div class="thread__footer">
+    <app-message-box (messageSent)="sendReply($event)" />
+  </div>
+</div>

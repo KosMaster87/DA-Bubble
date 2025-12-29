@@ -1,6 +1,6 @@
 @use '../../../../../styles/mixins' as mix;
 
-.channels-sidebar {
+.workspace-sidebar {
   height: 100%;
   background-color: var(--container-bg);
   border-right: 1px solid var(--border-color);
@@ -107,14 +107,14 @@
     transition: opacity 0.2s, filter 0.2s;
 
     // Hover state (including when active)
-    .channels-sidebar__multi-edit-btn:hover & {
+    .workspace-sidebar__multi-edit-btn:hover & {
       opacity: 1;
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
 
     // Active state (when not hovering)
-    .channels-sidebar__multi-edit-btn--active:not(:hover) & {
+    .workspace-sidebar__multi-edit-btn--active:not(:hover) & {
       opacity: 1;
       filter: none;
     }
@@ -173,7 +173,7 @@
     object-fit: contain;
     transition: filter 0.2s;
 
-    .channels-sidebar__section-toggle:hover & {
+    .workspace-sidebar__section-toggle:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -198,7 +198,7 @@
       transform: rotate(0deg);
     }
 
-    .channels-sidebar__section-toggle:hover & {
+    .workspace-sidebar__section-toggle:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -210,7 +210,7 @@
     color: var(--text-primary, #000);
     transition: color 0.2s;
 
-    .channels-sidebar__section-toggle:hover & {
+    .workspace-sidebar__section-toggle:hover & {
       color: #535af1;
     }
   }
@@ -241,18 +241,18 @@
     transition: filter 0.2s;
 
     // Hover state (not when active)
-    .channels-sidebar__section-add:hover:not(.channels-sidebar__section-add--active) & {
+    .workspace-sidebar__section-add:hover:not(.workspace-sidebar__section-add--active) & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
 
     // Active state (keep black)
-    .channels-sidebar__section-add--active & {
+    .workspace-sidebar__section-add--active & {
       filter: none;
     }
 
     // Active + Hover (also colored)
-    .channels-sidebar__section-add--active:hover & {
+    .workspace-sidebar__section-add--active:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -297,11 +297,11 @@
     text-align: left;
 
     &--active {
-      .channels-sidebar__item-content {
+      .workspace-sidebar__item-content {
         background-color: #eceefe;
       }
 
-      .channels-sidebar__item-name {
+      .workspace-sidebar__item-name {
         color: #535af1;
       }
     }
@@ -314,11 +314,11 @@
     border-radius: 2rem;
     transition: background-color 0.2s;
 
-    .channels-sidebar__item:hover & {
+    .workspace-sidebar__item:hover & {
       background-color: #eceefe;
     }
 
-    .channels-sidebar__item--active & {
+    .workspace-sidebar__item--active & {
       background-color: #eceefe;
     }
   }
@@ -339,8 +339,8 @@
     flex-shrink: 0;
     transition: filter 0.2s;
 
-    .channels-sidebar__item:hover &,
-    .channels-sidebar__item--active & {
+    .workspace-sidebar__item:hover &,
+    .workspace-sidebar__item--active & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -364,7 +364,7 @@
   }
 
   &__item--dm {
-    .channels-sidebar__item-name {
+    .workspace-sidebar__item-name {
       flex: 1;
     }
   }
@@ -388,7 +388,7 @@
     border-radius: 2rem;
     transition: background-color 0.2s;
 
-    .channels-sidebar__add-channel-btn:hover & {
+    .workspace-sidebar__add-channel-btn:hover & {
       background-color: #eceefe;
     }
   }
@@ -409,7 +409,7 @@
     flex-shrink: 0;
     transition: filter 0.2s;
 
-    .channels-sidebar__add-channel-btn:hover & {
+    .workspace-sidebar__add-channel-btn:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }

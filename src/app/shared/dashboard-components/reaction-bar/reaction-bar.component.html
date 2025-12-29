@@ -1,0 +1,49 @@
+<div
+  class="reaction-bar"
+  [class.reaction-bar--own]="messageType() === 'own'"
+  [class.reaction-bar--other]="messageType() === 'other'"
+>
+  <button
+    class="reaction-bar__button"
+    type="button"
+    (click)="onReactionClick('checked')"
+    aria-label="Check reaction"
+  >
+    <img src="/img/icon/emojis/emoji-checked.svg" alt="Check" class="reaction-bar__icon" />
+  </button>
+
+  <button
+    class="reaction-bar__button"
+    type="button"
+    (click)="onReactionClick('thumbs-up')"
+    aria-label="Thumbs up reaction"
+  >
+    <img src="/img/icon/emojis/emoji-thumbs-up.svg" alt="Thumbs up" class="reaction-bar__icon" />
+  </button>
+
+  <button
+    class="reaction-bar__button"
+    type="button"
+    (click)="onReactionClick('add-reaction')"
+    aria-label="Add reaction"
+  >
+    <img
+      src="/img/icon/emojis/emoji-add-reaction-default.svg"
+      alt="Add reaction"
+      class="reaction-bar__icon"
+    />
+  </button>
+
+  <button
+    class="reaction-bar__button"
+    type="button"
+    (click)="onReactionClick('comment')"
+    aria-label="Comment"
+  >
+    <img
+      src="/img/icon/emojis/emoji-comment-default.svg"
+      alt="Comment"
+      class="reaction-bar__icon"
+    />
+  </button>
+</div>

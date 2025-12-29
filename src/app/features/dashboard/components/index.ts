@@ -4,10 +4,11 @@
  * @module features/dashboard/components
  */
 
-export { DashboardHeaderComponent } from './dashboard-header/dashboard-header.component';
-export { ChannelsSidebarComponent } from './channels-sidebar/channels-sidebar.component';
+export { WorkspaceHeaderComponent } from './workspace-header/workspace-header.component';
+export { WorkspaceSidebarComponent } from './workspace-sidebar/workspace-sidebar.component';
 export { ChannalWelcomeComponent } from './channal-welcome/channal-welcome.component';
 export { ChannalMailboxComponent } from './channel-mailbox/channel-mailbox.component';
 export { ChatNewMsgComponent } from './chat-new-msg/chat-new-msg.component';
-export { ChatMainComponent } from './chat-main/chat-main.component';
+export { ChatPrivateComponent } from './chat-private/chat-private.component';
 export { ChannelConversationComponent } from './channel-conversation/channel-conversation.component';
+export { ThreadComponent } from './thread/thread.component';

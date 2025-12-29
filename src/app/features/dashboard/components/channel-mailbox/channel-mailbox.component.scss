@@ -60,7 +60,11 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-4);
-    @include mix.custom-scrollbar(8px, transparent, var(--border-color));
+    scrollbar-width: none; // Firefox
+
+    &::-webkit-scrollbar {
+      display: none; // Chrome, Safari, Edge
+    }
 
     @include mix.tablet-landscape {
       padding: var(--space-6);
@@ -152,7 +156,9 @@
   }
 
   &__message-header {
-    @include mix.flex(row, space-between, center);
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+    flex-wrap: wrap;
   }
 
   &__message-from {
@@ -161,9 +167,22 @@
     color: var(--text-primary);
   }
 
+  &__message-badge-inline {
+    display: inline-flex;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    background-color: #535af1;
+    border-radius: 0.25rem;
+    letter-spacing: 0.5px;
+  }
+
   &__message-time {
     font-size: 0.75rem;
     color: var(--text-secondary);
+    margin-left: auto;
   }
 
   &__message-subject {
@@ -180,6 +199,44 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__message-actions {
+    @include mix.flex(row, flex-start, center);
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+
+  &__action-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &--accept {
+      color: white;
+      background-color: #535af1;
+
+      &:hover {
+        background-color: #444bc7;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(83, 90, 241, 0.3);
+      }
+    }
+
+    &--decline {
+      color: var(--text-primary);
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+
+      &:hover {
+        background-color: #f8f8f8;
+        border-color: #535af1;
+      }
+    }
   }
 
   &__message-badge {

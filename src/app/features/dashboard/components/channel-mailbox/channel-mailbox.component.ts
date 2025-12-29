@@ -5,13 +5,12 @@
  */
 
 import { Component, signal, computed, inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { DummyChannelsService } from '../../services/dummy-channels.service';
 import { DummyMailboxService } from '../../services/dummy-mailbox.service';
 
 @Component({
   selector: 'app-channel-mailbox',
-  imports: [DatePipe],
+  imports: [],
   templateUrl: './channel-mailbox.component.html',
   styleUrl: './channel-mailbox.component.scss',
 })

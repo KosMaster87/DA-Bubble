@@ -1,0 +1,180 @@
+<aside class="workspace-sidebar" [class.workspace-sidebar--hidden]="sidebarService.isHidden()">
+  <div class="workspace-sidebar__header">
+    <div class="workspace-sidebar__branding">
+      <img
+        src="/img/logos/workspace-logo.png"
+        alt="Workspace Logo"
+        class="workspace-sidebar__logo"
+      />
+      <span class="workspace-sidebar__workspace-name">My workspace</span>
+    </div>
+    <button
+      class="workspace-sidebar__multi-edit-btn"
+      [class.workspace-sidebar__multi-edit-btn--active]="isNewMessageActive()"
+      (click)="openNewMessage()"
+      [attr.aria-label]="'Open new message'"
+    >
+      <img
+        src="/img/icon/channel-bar/multi-edit-default.svg"
+        alt=""
+        class="workspace-sidebar__multi-edit-icon"
+      />
+    </button>
+  </div>
+
+  <div class="workspace-sidebar__content">
+    <!-- Channels Dropdown -->
+    <div class="workspace-sidebar__section">
+      <div class="workspace-sidebar__section-header">
+        <button
+          class="workspace-sidebar__section-toggle"
+          (click)="toggleChannels()"
+          [attr.aria-label]="isChannelsOpen() ? 'Collapse channels' : 'Expand channels'"
+        >
+          <span class="workspace-sidebar__dropdown-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/arrow-drop-down-default.svg"
+              alt=""
+              class="workspace-sidebar__dropdown-icon"
+              [class.workspace-sidebar__dropdown-icon--open]="isChannelsOpen()"
+            />
+          </span>
+
+          <span class="workspace-sidebar__workspace-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/workspaces-default.svg"
+              alt=""
+              class="workspace-sidebar__workspace-icon"
+            />
+          </span>
+          <span class="workspace-sidebar__section-title">Channels</span>
+        </button>
+
+        <button
+          class="workspace-sidebar__section-add"
+          [class.workspace-sidebar__section-add--active]="isAddChannelActive()"
+          (click)="$event.stopPropagation(); addChannel()"
+          [attr.aria-label]="'Add channel'"
+        >
+          <img
+            src="/img/icon/channel-bar/add-channel-default.svg"
+            alt=""
+            class="workspace-sidebar__add-icon"
+          />
+        </button>
+      </div>
+
+      @if (isChannelsOpen()) {
+      <div class="workspace-sidebar__section-content workspace-sidebar__section-content--channels">
+        @if (dummyChannels().length > 0) { @for (channel of dummyChannels(); track channel.id) {
+        <button
+          class="workspace-sidebar__item"
+          [class.workspace-sidebar__item--active]="selectedChannelId() === channel.id"
+          [class.workspace-sidebar__item--mailbox]="channel.id === 'mailbox'"
+          (click)="selectDummyChannel(channel.id)"
+        >
+          <span class="workspace-sidebar__item-content">
+            <span class="workspace-sidebar__item-icon-wrapper">
+              <img
+                [src]="
+                  channel.id === 'mailbox'
+                    ? '/img/icon/profile/mail-default.svg'
+                    : '/img/icon/channel-bar/tag-default.svg'
+                "
+                alt=""
+                class="workspace-sidebar__item-icon"
+              />
+            </span>
+            <span class="workspace-sidebar__item-name">{{ channel.name }}</span>
+          </span>
+        </button>
+        } }
+      </div>
+
+      <button class="workspace-sidebar__add-channel-btn" (click)="addChannel()">
+        <span class="workspace-sidebar__add-channel-content">
+          <span class="workspace-sidebar__add-channel-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/add-channel-circle-default.svg"
+              alt=""
+              class="workspace-sidebar__add-channel-icon"
+            />
+          </span>
+          <span class="workspace-sidebar__add-channel-text">Channel hinzufügen</span>
+        </span>
+      </button>
+      }
+    </div>
+
+    <!-- Direct Messages Dropdown -->
+    <div class="workspace-sidebar__section">
+      <div class="workspace-sidebar__section-header">
+        <button
+          class="workspace-sidebar__section-toggle"
+          (click)="toggleDirectMessages()"
+          [attr.aria-label]="
+            isDirectMessagesOpen() ? 'Collapse direct messages' : 'Expand direct messages'
+          "
+        >
+          <span class="workspace-sidebar__dropdown-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/arrow-drop-down-default.svg"
+              alt=""
+              class="workspace-sidebar__dropdown-icon"
+              [class.workspace-sidebar__dropdown-icon--open]="isDirectMessagesOpen()"
+            />
+          </span>
+
+          <span class="workspace-sidebar__workspace-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/account-circle-default.svg"
+              alt=""
+              class="workspace-sidebar__workspace-icon"
+            />
+          </span>
+          <span class="workspace-sidebar__section-title">Direct messages</span>
+        </button>
+      </div>
+
+      @if (isDirectMessagesOpen()) {
+      <div class="workspace-sidebar__section-content workspace-sidebar__section-content--dm">
+        @if (directMessages().length > 0) { @for (dm of directMessages(); track dm.id) {
+        <button
+          class="workspace-sidebar__item workspace-sidebar__item--dm"
+          [class.workspace-sidebar__item--active]="selectedDirectMessageId() === dm.id"
+          (click)="selectDirectMessage(dm.id)"
+        >
+          <span class="workspace-sidebar__item-content">
+            <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
+            <span class="workspace-sidebar__item-name">{{ dm.name }}</span>
+          </span>
+        </button>
+        } } @else {
+        <div class="workspace-sidebar__empty">
+          <p>Keine Direktnachrichten verfügbar</p>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- Create Channel Popup -->
+  <app-create-channel
+    [isVisible]="isCreateChannelOpen()"
+    (closeClicked)="onCreateChannelClose()"
+    (createClicked)="onCreateChannel($event)"
+  />
+
+  <!-- Add Members Popup -->
+  @if (isAddMemberAfterChannelOpen()) {
+  <app-add-member-after-add-channel
+    [channelName]="pendingChannelName()"
+    [channels]="dummyChannels()"
+    [users]="allUsers()"
+    (closed)="onClose()"
+    (cancelled)="onCancel()"
+    (created)="onCreate($event)"
+  />
+  }
+</aside>

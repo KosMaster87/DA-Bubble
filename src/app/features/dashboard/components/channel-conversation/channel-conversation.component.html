@@ -83,41 +83,13 @@
 
   <!-- Messages Area -->
   <div class="channel-conversation__messages">
-    @for (message of messages(); track message.id) {
-    <div
-      class="channel-conversation__message"
-      [class.channel-conversation__message--own]="message.isOwnMessage"
-      [class.channel-conversation__message--other]="!message.isOwnMessage"
-    >
-      <div class="channel-conversation__message-avatar">
-        <img [src]="message.senderAvatar" [alt]="message.senderName" />
-      </div>
-      <div class="channel-conversation__message-content">
-        <div class="channel-conversation__message-header">
-          <span class="channel-conversation__message-sender">{{ message.senderName }}</span>
-          <span class="channel-conversation__message-time">{{
-            message.timestamp | date : 'short'
-          }}</span>
-        </div>
-        <p class="channel-conversation__message-text">{{ message.content }}</p>
-
-        <!-- Reactions -->
-        @if (message.reactions && message.reactions.length > 0) {
-        <div class="channel-conversation__reactions">
-          @for (reaction of message.reactions; track $index) {
-          <button
-            class="channel-conversation__reaction"
-            (click)="addReaction(message.id, reaction.emoji)"
-          >
-            <span class="channel-conversation__reaction-emoji">{{ reaction.emoji }}</span>
-            <span class="channel-conversation__reaction-count">{{ reaction.count }}</span>
-          </button>
-          }
-        </div>
-        }
-      </div>
-    </div>
-    }
+    <app-conversation-messages
+      [messageGroups]="messagesGroupedByDate()"
+      (messageClicked)="onMessageClick($event)"
+      (avatarClicked)="onAvatarClick($event)"
+      (reactionAdded)="onReactionAdded($event)"
+      (threadClicked)="onThreadClick($event)"
+    />
   </div>
 
   <!-- Footer with Message Box -->

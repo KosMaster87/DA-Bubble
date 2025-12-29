@@ -1,0 +1,25 @@
+<div class="chat-private">
+  <!-- Header -->
+  <div class="chat-private__header">
+    <div class="chat-private__header-info">
+      <h1 class="chat-private__title">{{ userName() }}</h1>
+      <p class="chat-private__status">{{ userStatus() }}</p>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="chat-private__messages">
+    <app-conversation-messages
+      [messageGroups]="messagesGroupedByDate()"
+      (messageClicked)="onMessageClick($event)"
+      (avatarClicked)="onAvatarClick($event)"
+      (reactionAdded)="onReactionAdded($event)"
+      (threadClicked)="onThreadClick($event)"
+    />
+  </div>
+
+  <!-- Footer with Message Box -->
+  <div class="chat-private__footer">
+    <app-message-box (messageSent)="sendMessage($event)" />
+  </div>
+</div>
