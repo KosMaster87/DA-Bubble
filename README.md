@@ -32,30 +32,42 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 
 ### 👤 User Account & Administration
 
-- 🔐 **User Registration** – Email/password with avatar selection
-- 🔑 **User Login** – Secure authentication with Firebase
-- 🔄 **Password Recovery** – Reset password via email
-- ✏️ **Profile Editing** – Update name and avatar
-- 📱 **Responsive Menu** – Minimizable channels/DM sidebar
-- 🟢 **Online Status** _(Optional)_ – Real-time user presence
+### 👤 User Account & Administration
+
+- ✅ **User Registration** – Email/password with avatar selection
+- ✅ **User Login** – Secure authentication with Firebase
+- ✅ **Google OAuth** – Login with Google (Popup strategy)
+- ✅ **Password Recovery** – Reset password via email
+- ✅ **Profile Editing** – Update name and avatar
+- ✅ **Auth Guards** – Route protection (auth, no-auth, avatar-selection)
+- 🔜 **Online Status** – Real-time user presence (planned)
 
 ### 💬 Channels & Direct Messages
 
-- 💌 **Direct Messages** – Private 1:1 conversations
-- 😄 **Emoticon Reactions** – React to messages with emojis
-- 🎨 **Emoticons in Messages** – Rich emoji support
-- @ **Mention Users** – Tag members with `@username`
-- \# **Mention Channels** – Reference channels with `#channel`
-- 🧵 **Threads** – Reply to specific messages in threads
-- 🔍 **Search Messages** – Find messages across channels and DMs
+- ✅ **Channels** – Group discussions with multiple members
+- ✅ **Channel Management** – Create, edit, manage channels
+- ✅ **Direct Messages** – Private 1:1 conversations
+- ✅ **Message Display** – Grouped by date with avatars
+- ✅ **Emoticon Reactions** – React to messages with emojis
+- ✅ **Threads** – Reply to specific messages in separate threads
+  - Thread count display on parent messages
+  - Last reply timestamp
+  - Parent message shown in thread
+  - Reactive loading with signals
+- 🔜 **Mention Users** – Tag members with `@username` (planned)
+- 🔜 **Mention Channels** – Reference channels with `#channel` (planned)
+- 🔜 **Search Messages** – Find messages across channels and DMs (planned)
+- 🔜 **Emoticons in Messages** – Emoji picker integration (planned)
 
 ### 🔧 Channel Management
 
-- ➕ **Create Channels** – Set name, description, and members
-- 👥 **Add Members** – Invite users to existing channels
-- 🚪 **Leave Channels** – Exit channels you don't need
-- ✏️ **Edit Channels** – Modify name and description
-- 🔒 **Duplicate Prevention** – No duplicate channel names
+- ✅ **Create Channels** – Set name, description
+- ✅ **Channel List** – Sidebar navigation with mailbox
+- ✅ **Workspace UI** – Header with search, sidebar with channels/DMs
+- 🔜 **Add Members** – Invite users to existing channels (planned)
+- 🔜 **Leave Channels** – Exit channels you don't need (planned)
+- 🔜 **Edit Channels** – Modify name and description (planned)
+- 🔜 **Duplicate Prevention** – No duplicate channel names (planned)
 
 ---
 
@@ -100,115 +112,145 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 dabubble/
 ├── .github/
 │   ├── prompts/
-│   │   ├── copilot-angular.prompt.md      # Angular dev standards
-│   │   └── copilot-project.prompt.md      # Project requirements
+│   │   ├── copilot-angular.prompt.md                      # Angular dev standards
+│   │   └── copilot-project.prompt.md                      # Project requirements
 │   └── workflows/
-│       └── deploy.yml                     # CI/CD Pipeline (future)
+│       └── deploy.yml                                     # CI/CD Pipeline (future)
 ├── public/
 │   ├── favicon.ico
-│   ├── manifest-dark.webmanifest          # PWA manifest (dark)
-│   ├── manifest-light.webmanifest         # PWA manifest (light)
-│   └── img/                               # Public images & icons
+│   ├── manifest-dark.webmanifest                          # PWA manifest (dark)
+│   ├── manifest-light.webmanifest                         # PWA manifest (light)
+│   └── img/                                               # Public images & icons
 ├── src/
 │   ├── app/
-│   │   ├── core/                          # Singleton Services, Guards, Models
-│   │   │   ├── components/                # Core Layout Components
-│   │   │   │   ├── auth-layout/           # Auth Pages Layout Wrapper
-│   │   │   │   ├── header/                # Auth Header Component
-│   │   │   │   └── footer/                # Auth Footer Component
-│   │   │   ├── guards/                    # Route Guards
-│   │   │   │   ├── auth.guard.ts          # Protect authenticated routes
-│   │   │   │   └── no-auth.guard.ts       # Redirect if authenticated
-│   │   │   ├── interceptors/              # HTTP interceptors
-│   │   │   ├── models/                    # Domain Models (User, Channel, Message)
-│   │   │   └── services/                  # Core Services
-│   │   │       └── i18n/                  # Internationalization
-│   │   ├── features/                      # Feature Modules (Business Logic)
-│   │   │   ├── auth/                      # Authentication Feature
-│   │   │   │   ├── pages/
-│   │   │   │   │   ├── signin/            # SignIn Page (Email + Google OAuth Popup)
-│   │   │   │   │   ├── signup/            # SignUp Page
-│   │   │   │   │   ├── password-reset/    # Password Reset Page
-│   │   │   │   │   ├── imprint/           # Legal: Imprint
-│   │   │   │   │   └── privacy-police/    # Legal: Privacy Policy
-│   │   │   │   └── components/
-│   │   │   │       └── popup-signup/      # Signup Popup (from Header)
-│   │   │   ├── channels/                  # Channel Management
-│   │   │   │   ├── components/
-│   │   │   │   │   ├── channel-list/
-│   │   │   │   │   └── channel-create/
-│   │   │   │   └── services/
-│   │   │   │       └── channel.service.ts
-│   │   │   ├── messages/                  # Messages & Threads
-│   │   │   │   ├── components/
-│   │   │   │   │   ├── message-list/
-│   │   │   │   │   ├── message-input/
-│   │   │   │   │   └── thread-view/
-│   │   │   │   └── services/
-│   │   │   │       └── message.service.ts
-│   │   │   └── users/                     # User Management
-│   │   │       ├── components/
-│   │   │       │   └── user-profile/
-│   │   │       └── services/
-│   │   │           └── user.service.ts
-│   │   ├── layout/                        # Main App Layout (post-auth)
-│   │   │   ├── main-layout/               # Main Layout with Sidebar
-│   │   │   ├── sidebar/                   # Navigation Sidebar
-│   │   │   └── header/                    # Top Header Bar
-│   │   ├── shared/                        # Shared/Reusable Components
-│   │   │   ├── components/
-│   │   │   │   ├── input-field/           # Form Input Component
-│   │   │   │   ├── primary-button/        # Primary Button Component
-│   │   │   │   ├── dabubble-logo/         # App Logo Component
-│   │   │   │   └── legal-information/     # Footer Legal Links
-│   │   │   ├── directives/
-│   │   │   ├── pipes/
-│   │   │   ├── validators/                # Form Validators
-│   │   │   └── utils/                     # Helper Functions
-│   │   ├── stores/                        # NgRx SignalStore (State Management)
-│   │   │   ├── auth/                      # Auth Store (Modular Structure)
-│   │   │   │   ├── auth.store.ts          # Main store integration
-│   │   │   │   ├── auth.types.ts          # State interface & initial state
-│   │   │   │   ├── auth.helpers.ts        # Mapper & utility functions
-│   │   │   │   ├── auth.login.methods.ts  # Login methods (Email, Google Popup, Anonymous)
-│   │   │   │   ├── auth.signup.methods.ts # Signup & verification
-│   │   │   │   ├── auth.password.methods.ts # Password reset/recovery
-│   │   │   │   └── index.ts               # Barrel export
-│   │   │   ├── user.store.ts              # User Management Store
-│   │   │   ├── channel.store.ts           # Channel Management Store
-│   │   │   ├── message.store.ts           # Message CRUD Store
-│   │   │   └── index.ts                   # Central Barrel Export (export type pattern)
-│   │   ├── app.ts                         # Root Component
-│   │   ├── app.config.ts                  # App Configuration
-│   │   ├── app.routes.ts                  # Route Definitions
-│   │   └── app.scss                       # Root Styles
-│   ├── assets/                            # Static Assets
+│   │   ├── core/                                          # Singleton Services, Guards, Models
+│   │   │   ├── components/                                # Core Layout Components
+│   │   │   │   ├── auth-layout/                           # Auth Pages Layout Wrapper
+│   │   │   │   ├── header/                                # Auth Header Component
+│   │   │   │   └── footer/                                # Auth Footer Component
+│   │   │   ├── guards/                                    # Route Guards
+│   │   │   │   ├── auth.guard.ts                          # Protect authenticated routes
+│   │   │   │   └── no-auth.guard.ts                       # Redirect if authenticated
+│   │   │   ├── interceptors/                              # HTTP interceptors
+│   │   │   ├── models/                                    # Domain Models (User, Channel, Message)
+│   │   │   └── services/                                  # Core Services
+│   │   │       └── i18n/                                  # Internationalization
+│   │   ├── features/                                      # Feature Modules (Business Logic)
+│   │   │   ├── auth/                                      # Authentication Feature
+│   │   │   │   ├── components/                            # Auth-specific components
+│   │   │   │   │   ├── login-form/
+│   │   │   │   │   ├── signup-form/
+│   │   │   │   │   ├── password-reset/
+│   │   │   │   │   └── avatar-selection/
+│   │   │   │   └── pages/                                 # Auth pages
+│   │   │   │       ├── login-page/
+│   │   │   │       ├── signup-page/
+│   │   │   │       └── avatar-selection-page/
+│   │   │   │
+│   │   │   ├── dashboard/                                 # Main Dashboard Feature (Channels, DMs, Threads)
+│   │   │   │   ├── components/                            # Dashboard components
+│   │   │   │   │   ├── channel-conversation/              # Channel message display
+│   │   │   │   │   ├── channel-mailbox/                   # Channel list & management
+│   │   │   │   │   ├── channal-welcome/                   # Channel welcome screen
+│   │   │   │   │   ├── chat-new-msg/                      # New DM conversation
+│   │   │   │   │   ├── chat-private/                      # Private DM message display
+│   │   │   │   │   ├── thread/                            # Thread conversation view
+│   │   │   │   │   ├── workspace-header/                  # Dashboard header with search
+│   │   │   │   │   └── workspace-sidebar/                 # Channel/DM sidebar navigation
+│   │   │   │   ├── pages/                                 # Dashboard pages
+│   │   │   │   │   └── dashboard.component.ts             # Main dashboard orchestrator
+│   │   │   │   └── services/                              # Dashboard services (localStorage-based)
+│   │   │   │       ├── current-user.service.ts            # Current authenticated user
+│   │   │   │       ├── dummy-channels.service.ts          # Channel CRUD (dev)
+│   │   │   │       ├── dummy-chat-dm.service.ts           # DM CRUD (dev)
+│   │   │   │       ├── dummy-mailbox.service.ts           # Mailbox data (dev)
+│   │   │   │       ├── dummy-thread.service.ts            # Thread replies system
+│   │   │   │       └── dummy-users.service.ts             # User data (dev)
+│   │   │   │
+│   │   │   └── legal/                                     # Legal Pages
+│   │   │       └── pages/                                 # Legal page components
+│   │   │           ├── imprint/
+│   │   │           ├── privacy/
+│   │   │           └── terms/
+│   │   │
+│   │   ├── layout/                                        # Layout Components
+│   │   │   ├── auth-layout/                               # Auth pages layout wrapper
+│   │   │   ├── main-layout/                               # Main app layout (post-auth)
+│   │   │   ├── header/                                    # App header component
+│   │   │   ├── sidebar/                                   # Navigation sidebar
+│   │   │   └── footer/                                    # App footer component
+│   │   │
+│   │   ├── shared/                                        # Shared/Reusable Components
+│   │   │   ├── components/                                # Reusable UI components
+│   │   │   │   ├── back-button/                           # Back navigation button
+│   │   │   │   ├── cancel-button/                         # Cancel action button
+│   │   │   │   ├── checkbox-field/                        # Checkbox input component
+│   │   │   │   ├── conversation-messages/                 # Reusable message list component
+│   │   │   │   ├── dabubble-logo/                         # App logo component
+│   │   │   │   ├── guest-button/                          # Guest login button
+│   │   │   │   ├── input-field/                           # Form input component
+│   │   │   │   ├── language-switcher/                     # i18n language switcher
+│   │   │   │   ├── legal-information/                     # Footer legal links
+│   │   │   │   ├── link-button/                           # Link-style button
+│   │   │   │   ├── primary-button/                        # Primary CTA button
+│   │   │   │   ├── reaction-bar/                          # Message reactions component
+│   │   │   │   └── secondary-button/                      # Secondary action button
+│   │   │   └── animations/                                # Shared animations
+│   │   │       └── slide.animations.ts                    # Slide animations
+│   │   │
+│   │   ├── stores/                                        # NgRx SignalStore (State Management)
+│   │   │   ├── auth/                                      # Auth Store (Modular Structure)
+│   │   │   │   ├── auth.store.ts                          # Main store orchestrator
+│   │   │   │   ├── auth.types.ts                          # State interface & initial state
+│   │   │   │   ├── auth.helpers.ts                        # Mapper & utility functions
+│   │   │   │   ├── auth.login.methods.ts                  # Login methods (Email, Google Popup)
+│   │   │   │   ├── auth.signup.methods.ts                 # Signup & verification
+│   │   │   │   ├── auth.password.methods.ts               # Password reset/recovery
+│   │   │   │   └── index.ts                               # Barrel export
+│   │   │   ├── channel.store.ts                           # Channel management store
+│   │   │   ├── channel-member.store.ts                    # Channel membership store
+│   │   │   ├── channel-message.store.ts                   # Channel messages store
+│   │   │   ├── direct-message.store.ts                    # DM store
+│   │   │   ├── message.store.ts                           # Message CRUD store
+│   │   │   ├── user.store.ts                              # User management store
+│   │   │   ├── user-presence.store.ts                     # User online/offline status
+│   │   │   └── index.ts                                   # Central barrel export
+│   │   ├── app.ts                                         # Root Component
+│   │   ├── app.config.ts                                  # App Configuration
+│   │   ├── app.routes.ts                                  # Route Definitions
+│   │   └── app.scss                                       # Root Styles
 │   ├── config/
-│   │   └── environments/
-│   │       ├── env.dev.ts                 # Dev config (not in Git)
-│   │       ├── env.dev.example.ts         # Dev template
-│   │       ├── env.prod.ts                # Prod config (not in Git)
-│   │       └── env.prod.example.ts        # Prod template
-│   ├── styles/                            # Global SCSS
-│   │   ├── _fonts.figtree.scss            # Figtree font-face
-│   │   ├── _fonts.nunito.scss             # Nunito font-face
-│   │   ├── _layout.scss                   # Layout utilities
-│   │   ├── _mixins.scss                   # SCSS mixins (breakpoints, buttons, etc.)
-│   │   ├── _typography.scss               # Typography
-│   │   └── _variables.scss                # CSS custom properties
-│   ├── index.html                         # HTML entry point
-│   ├── main.ts                            # Application bootstrap
-│   └── styles.scss                        # Global styles entry
+│   │   └── environments/                                  # Environment configs
+│   │       ├── env.dev.ts                                 # Dev config (not in Git)
+│   │       ├── env.dev.example.ts                         # Dev template
+│   │       ├── env.prod.ts                                # Prod config (not in Git)
+│   │       └── env.prod.example.ts                        # Prod template
+│   ├── styles/                                            # Global SCSS
+│   │   ├── _variables.scss                                # CSS custom properties
+│   │   ├── _mixins.scss                                   # All mixins (imports below)
+│   │   ├── _mixins-breakpoints.scss                       # Responsive breakpoint mixins
+│   │   ├── _mixins-buttons.scss                           # Button style mixins
+│   │   ├── _mixins-flexbox.scss                           # Flexbox utilities
+│   │   ├── _mixins-layout.scss                            # Layout mixins
+│   │   ├── _mixins-typography.scss                        # Typography mixins
+│   │   ├── _mixins-utilities.scss                         # General utility mixins
+│   │   ├── _fonts.figtree.scss                            # Figtree font-face
+│   │   ├── _fonts.nunito.scss                             # Nunito font-face
+│   │   ├── _layout.scss                                   # Layout utilities
+│   │   └── _typography.scss                               # Typography styles
+│   ├── index.html                                         # HTML entry point
+│   ├── main.ts                                            # Application bootstrap
+│   └── styles.scss                                        # Global styles entry
 ├── dist/
 │   └── dabubble/
 │       └── browser/
-│           └── .htaccess                  # Apache SPA routing (IONOS hosting)
-├── .gitignore                             # Git ignore rules
-├── angular.json                           # Angular workspace config
-├── package.json                           # Dependencies & scripts
-├── tsconfig.json                          # TypeScript config
-├── tsconfig.app.json                      # App-specific TS config
-└── README.md                              # This file
+│           └── .htaccess                                  # Apache SPA routing (IONOS hosting)
+├── .gitignore                                             # Git ignore rules
+├── angular.json                                           # Angular workspace config
+├── package.json                                           # Dependencies & scripts
+├── tsconfig.json                                          # TypeScript config
+├── tsconfig.app.json                                      # App-specific TS config
+└── README.md                                              # This file
 ```
 
 ---
@@ -277,15 +319,58 @@ RewriteRule ^.*$ index.html [L]
 
 ---
 
+### Thread System Architecture
+
+**Slack-Style Threading Implementation**
+
+DABubble implements a complete thread system where users can reply to specific messages in separate conversation threads:
+
+```typescript
+// Data Flow: Message → Parent Component → Dashboard → Thread
+User clicks thread icon
+  ↓
+ConversationMessages emits threadClicked(messageId)
+  ↓
+Parent finds message and emits threadRequested({ messageId, parentMessage })
+  ↓
+Dashboard sets threadInfo signal
+  ↓
+ThreadComponent reactively loads via effect()
+  ↓
+Thread panel slides in from right
+```
+
+**Key Features:**
+
+- ✅ Thread count displayed on parent messages
+- ✅ Last reply timestamp shown
+- ✅ Parent message included in thread view
+- ✅ Reactive loading with `effect()` watching signals
+- ✅ Structured event communication pattern
+- ✅ localStorage persistence via DummyThreadService
+- ✅ Ready for Firebase migration
+
+**Components:**
+
+- **DummyThreadService** – Thread data management (localStorage)
+- **ThreadComponent** – Thread display with parent + replies
+- **ConversationMessagesComponent** – Reusable message list
+- **Dashboard** – Orchestrates thread opening/closing
+
+**See:** [THREAD-SYSTEM.md](./THREAD-SYSTEM.md) for complete architecture documentation
+
+---
+
 ### Module READMEs
 
 Each major module has detailed documentation:
 
-- **[CORE-README.md](./src/app/core/CORE-README.md)** - AuthLayoutComponent, Guards, Services
-- **[FEATURES-README.md](./src/app/features/FEATURES-README.md)** - Auth Pages, Chat, Channels
-- **[LAYOUT-README.md](./src/app/layout/LAYOUT-README.md)** - MainLayout, Sidebar, Header
+- **[CORE-README.md](./src/app/core/CORE-README.md)** - Guards, Models, Core Services
+- **[FEATURES-README.md](./src/app/features/FEATURES-README.md)** - Auth, Dashboard Features
+- **[LAYOUT-README.md](./src/app/layout/LAYOUT-README.md)** - Layouts, Sidebar, Header
 - **[SHARED-README.md](./src/app/shared/SHARED-README.md)** - Shared UI Components
 - **[STORES-README.md](./src/app/stores/STORES-README.md)** - NgRx SignalStore Architecture
+- **[THREAD-SYSTEM.md](./THREAD-SYSTEM.md)** - Complete Thread System Documentation
 
 ---
 
@@ -505,12 +590,30 @@ This project is licensed under the MIT License.
 ---
 
 **Last Updated:** December 2025
-**Version:** 0.1.0 (In Active Development)
+**Version:** 0.2.0 (In Active Development - Pre-Firebase Migration)
 
 **Recent Updates:**
 
-- ✅ Modular NgRx SignalStore implementation (auth/)
-- ✅ Google OAuth with Popup strategy (production-ready)
-- ✅ AuthLayoutComponent with Header/Footer
-- ✅ IONOS Apache hosting with .htaccess SPA routing
-- ✅ Comprehensive module documentation (5 README files)
+- ✅ **Thread System Complete** - Full implementation with DummyThreadService
+  - Thread replies with parent message display
+  - Reactive loading with effect()
+  - Event-based parent message passing
+  - Thread count and last reply timestamp
+  - localStorage persistence
+- ✅ **ConversationMessages Component** - Reusable message display
+  - Used in channels, DMs, and threads
+  - Reaction bar with styled emoticons
+  - Thread trigger with "X Answers" link
+- ✅ **Dashboard Architecture** - Complete orchestration layer
+  - Workspace sidebar with channels/DMs
+  - Dynamic content area (channel/DM/thread)
+  - Thread panel slide-in from right
+- ✅ **Dummy Services** - localStorage-based development services
+  - DummyThreadService, DummyChannelsService, DummyChatDmService
+  - Ready for Firebase migration
+- ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
+- ✅ **Google OAuth** - Popup strategy (production-ready)
+- ✅ **IONOS Apache Hosting** - .htaccess SPA routing
+- ✅ **Documentation** - THREAD-SYSTEM.md + updated copilot prompts
+
+**Next Milestone:** Firebase Migration (Q1 2025)
