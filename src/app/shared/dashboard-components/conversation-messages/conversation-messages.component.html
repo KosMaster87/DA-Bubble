@@ -1,5 +1,5 @@
 <!-- Conversation Messages -->
-<div class="conversation-messages">
+<div class="conversation-messages" #messagesContainer (scroll)="onScroll()">
   @for (group of messageGroups(); track group.date) {
   <!-- Date Separator -->
   <div class="conversation-messages__date-separator">
@@ -20,7 +20,9 @@
     <div class="conversation-messages__reaction-bar">
       <app-reaction-bar
         [messageType]="message.isOwnMessage ? 'own' : 'other'"
+        [isInThread]="isInThread()"
         (reactionClicked)="onReactionBarClick(message.id, $event)"
+        (editMessageClicked)="onEditMessage(message.id)"
       />
     </div>
 
@@ -42,8 +44,17 @@
             message.timestamp | date : 'short'
           }}</span>
         </div>
-        
+
+        <!-- Message Text or Edit Mode -->
+        @if (isEditing(message.id)) {
+        <app-message-edit
+          [initialContent]="message.content"
+          (cancelClicked)="onCancelEdit()"
+          (saveClicked)="onSaveEdit(message.id, $event)"
+        />
+        } @else {
         <p class="conversation-messages__message-text">{{ message.content }}</p>
+        }
 
         <!-- Reactions -->
         @if (message.reactions && message.reactions.length > 0) {

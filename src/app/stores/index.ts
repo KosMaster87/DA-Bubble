@@ -16,6 +16,8 @@ export { ChannelMemberStore } from './channel-member.store';
 export { MessageStore } from './message.store';
 export { ChannelMessageStore } from './channel-message.store';
 export { DirectMessageStore } from './direct-message.store';
+export { ThreadStore } from './thread.store';
+export { MailboxStore } from './mailbox.store';
 
 // Type exports (required by isolatedModules compiler option)
 export type { AuthState } from './auth';

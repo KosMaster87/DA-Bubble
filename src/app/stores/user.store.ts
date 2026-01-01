@@ -14,6 +14,9 @@ import {
   getDocs,
   getDoc,
   deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
 } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
 
@@ -22,13 +25,9 @@ import { User } from '@core/models/user.model';
  * @interface UserState
  */
 export interface UserState {
-  /** Array of all users */
   users: User[];
-  /** Currently selected user for viewing */
   selectedUser: User | null;
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
 }
 
@@ -61,6 +60,7 @@ export const UserStore = signalStore(
   withMethods((store) => {
     const firestore = inject(Firestore);
     const usersCollection = collection(firestore, 'users');
+    let unsubscribe: (() => void) | null = null;
 
     return {
       // === ENTRY POINT METHODS ===
@@ -110,33 +110,61 @@ export const UserStore = signalStore(
       },
 
       /**
-       * Entry point: Get user by ID
+       * Entry point: Fetch user by ID from Firestore
        * @async
-       * @function getUserById
-       * @param {string} uid - User ID to get
+       * @function fetchUserById
+       * @param {string} uid - User ID to fetch
        * @returns {Promise<User | null>} User data or null if not found
        */
-      async getUserById(uid: string): Promise<User | null> {
+      async fetchUserById(uid: string): Promise<User | null> {
         return await this.performGetById(uid);
       },
 
       // === IMPLEMENTATION METHODS ===
 
       /**
-       * Implementation: Load all users from Firestore
+       * Implementation: Load all users from Firestore with real-time updates
        * @async
        * @function performLoad
        * @returns {Promise<void>}
        */
       async performLoad() {
+        // Unsubscribe from previous listener if exists
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+
         patchState(store, { isLoading: true });
         try {
-          const snapshot = await getDocs(usersCollection);
-          const users = this.mapUsersFromSnapshot(snapshot);
-          patchState(store, { users, isLoading: false });
+          // Set up real-time listener for users
+          const q = query(usersCollection, orderBy('createdAt', 'desc'));
+
+          unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const users = this.mapUsersFromSnapshot(snapshot);
+              patchState(store, { users, isLoading: false, error: null });
+            },
+            (error) => {
+              console.error('Error in users listener:', error);
+              this.handleError(error, 'Failed to load users');
+            }
+          );
         } catch (error) {
           this.handleError(error, 'Failed to load users');
         }
+      },
+
+      /**
+       * Cleanup when store is destroyed
+       */
+      cleanup(): void {
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+        patchState(store, initialState);
       },
 
       /**

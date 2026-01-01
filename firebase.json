@@ -1,4 +1,13 @@
 {
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": [
+    {
+      "bucket": "dababble-2025.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ],
   "hosting": {
     "public": "dist/dabubble/browser",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],

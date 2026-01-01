@@ -24,6 +24,7 @@
         <div class="channel-info__content-wrapper">
           <div class="channel-info__section-header">
             <label class="channel-info__label">Channel-name</label>
+            @if (currentUserId() && channel().createdBy === currentUserId()) {
             <div class="channel-info__button-wrapper">
               @if (!isEditingName()) {
               <button class="channel-info__edit-btn" (click)="onEditName()">Edit</button>
@@ -31,6 +32,7 @@
               <button class="channel-info__save-btn" (click)="onSaveName()">Save</button>
               }
             </div>
+            }
           </div>
 
           <!-- Display Mode -->
@@ -70,6 +72,7 @@
         <div class="channel-info__content-wrapper">
           <div class="channel-info__section-header">
             <label class="channel-info__label">Description</label>
+            @if (currentUserId() && channel().createdBy === currentUserId()) {
             <div class="channel-info__button-wrapper">
               @if (!isEditingDescription()) {
               <button class="channel-info__edit-btn" (click)="onEditDescription()">Edit</button>
@@ -77,6 +80,7 @@
               <button class="channel-info__save-btn" (click)="onSaveDescription()">Save</button>
               }
             </div>
+            }
           </div>
 
           <!-- Display Mode -->
@@ -94,11 +98,37 @@
           <div class="channel-info__meta-wrapper">
             <div class="channel-info__divider"></div>
 
+            <!-- Roles Section -->
+            <div class="channel-info__roles-wrapper">
+              <div class="channel-info__meta">
+                <label class="channel-info__meta-label">Created by</label>
+                <button class="channel-info__author-link" (click)="onCreatedByClick()">
+                  {{ channel().createdByName }}
+                </button>
+              </div>
+
+              <!-- Admins List -->
+              @if (channel().admins.length > 0) {
+              <div class="channel-info__meta">
+                <label class="channel-info__meta-label">Admins</label>
+                <div class="channel-info__admins-list">
+                  @for (admin of channel().admins; track admin.uid) {
+                  <button class="channel-info__author-link" (click)="onAdminClick(admin.uid)">
+                    {{ admin.name }}
+                  </button>
+                  }
+                </div>
+              </div>
+              }
+            </div>
+
+            <!-- Private Channel Checkbox (only editable by owner) -->
             <div class="channel-info__meta">
-              <label class="channel-info__meta-label">Created by</label>
-              <button class="channel-info__author-link" (click)="onCreatedByClick()">
-                {{ channel().createdByName }}
-              </button>
+              <app-checkbox-private-channel
+                [checked]="channel().isPrivate"
+                [disabled]="!currentUserId() || channel().createdBy !== currentUserId()"
+                (checkedChange)="onPrivateChange($event)"
+              />
             </div>
           </div>
         </div>
@@ -107,7 +137,13 @@
 
     <!-- Footer -->
     <div class="channel-info__footer">
+      @if (currentUserId()) { @if (channel().createdBy === currentUserId()) {
+      <!-- Owner: Show Delete Button -->
+      <app-btn-delete label="Delete channel" (clicked)="onDeleteChannel()" />
+      } @else {
+      <!-- Non-Owner: Show Leave Button -->
       <app-btn-action label="Leave channel" (clicked)="onLeaveChannel()" />
+      } }
     </div>
   </div>
 </div>

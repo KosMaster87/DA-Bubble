@@ -1,0 +1,12 @@
+<div class="checkbox-private-channel">
+  <div class="checkbox-private-channel__wrapper">
+    <input
+      type="checkbox"
+      class="checkbox-private-channel__input"
+      [checked]="checked()"
+      [disabled]="disabled()"
+      (change)="onChange($event)"
+    />
+  </div>
+  <label class="checkbox-private-channel__label">Mark channel as private</label>
+</div>

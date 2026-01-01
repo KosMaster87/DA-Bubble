@@ -66,7 +66,8 @@
 
     <!-- Footer -->
     <div class="profile-view__footer">
-      @if (!isOwnProfile() && isAdmin()) {
+      @if (!isOwnProfile() && !isSelectedUserOwner() && (isChannelOwner() || (isCurrentUserAdmin()
+      && !user().isAdmin))) {
       <app-btn-delete label="Remove from room" (clicked)="onRemoveMember()" />
       } @if (!isOwnProfile()) {
       <button class="profile-view__message-btn" (click)="onMessage()">

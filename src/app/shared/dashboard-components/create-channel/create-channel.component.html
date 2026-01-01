@@ -45,6 +45,14 @@
           (valueChange)="onDescriptionChange($event)"
         />
       </div>
+
+      <!-- Private Channel Checkbox -->
+      <div class="create-channel__field">
+        <app-checkbox-private-channel
+          [checked]="isPrivate()"
+          (checkedChange)="onPrivateChange($event)"
+        />
+      </div>
     </div>
 
     <!-- Footer -->

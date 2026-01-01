@@ -12,12 +12,15 @@ import {
   GoogleAuthProvider,
   UserCredential,
 } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { patchState } from '@ngrx/signals';
+import { User } from '@core/models/user.model';
 
 /**
  * Create login methods for auth store
  * @function createLoginMethods
  * @param {Auth} auth - Firebase Auth instance
+ * @param {Firestore} firestore - Firestore instance
  * @param {any} store - NgRx Signal Store instance
  * @param {Function} handleSuccessfulAuth - Success handler
  * @param {Function} handleAuthError - Error handler
@@ -25,6 +28,7 @@ import { patchState } from '@ngrx/signals';
  */
 export const createLoginMethods = (
   auth: Auth,
+  firestore: Firestore,
   store: any,
   handleSuccessfulAuth: (user: any) => void,
   handleAuthError: (error: unknown, message: string) => void
@@ -38,6 +42,7 @@ export const createLoginMethods = (
   async loginWithEmail(email: string, password: string): Promise<void> {
     await performLogin(
       () => signInWithEmailAndPassword(auth, email, password),
+      firestore,
       store,
       handleSuccessfulAuth,
       handleAuthError
@@ -52,6 +57,7 @@ export const createLoginMethods = (
     const provider = new GoogleAuthProvider();
     await performLogin(
       () => signInWithPopup(auth, provider),
+      firestore,
       store,
       handleSuccessfulAuth,
       handleAuthError
@@ -63,16 +69,45 @@ export const createLoginMethods = (
    * @async
    */
   async loginAnonymously(): Promise<void> {
-    await performLogin(() => signInAnonymously(auth), store, handleSuccessfulAuth, handleAuthError);
+    await performLogin(
+      () => signInAnonymously(auth),
+      firestore,
+      store,
+      handleSuccessfulAuth,
+      handleAuthError
+    );
   },
 
   /**
    * Logout current user
+   * Updates Firestore user status before signing out
    * @async
    */
   async logout(): Promise<void> {
     patchState(store, { isLoading: true });
     try {
+      const currentUser = auth.currentUser;
+
+      // Update Firestore before logout (with error handling)
+      if (currentUser) {
+        try {
+          const userDocRef = doc(firestore, 'users', currentUser.uid);
+          await setDoc(
+            userDocRef,
+            {
+              isOnline: false,
+              lastSeen: new Date(),
+              updatedAt: new Date(),
+            },
+            { merge: true }
+          );
+        } catch (firestoreError) {
+          // Log Firestore error but continue with logout
+          console.warn('Failed to update user status in Firestore:', firestoreError);
+        }
+      }
+
+      // Always logout from Firebase Auth
       await auth.signOut();
       patchState(store, { user: null, isAuthenticated: false, isLoading: false });
     } catch (error) {
@@ -83,9 +118,11 @@ export const createLoginMethods = (
 
 /**
  * Generic login handler for different authentication methods
+ * Creates Firestore user document if it doesn't exist
  * @async
  * @function performLogin
  * @param {Function} loginFn - Function that returns UserCredential promise
+ * @param {Firestore} firestore - Firestore instance
  * @param {any} store - NgRx Signal Store instance
  * @param {Function} handleSuccessfulAuth - Success handler
  * @param {Function} handleAuthError - Error handler
@@ -93,6 +130,7 @@ export const createLoginMethods = (
  */
 async function performLogin(
   loginFn: () => Promise<UserCredential>,
+  firestore: Firestore,
   store: any,
   handleSuccessfulAuth: (user: any) => void,
   handleAuthError: (error: unknown, message: string) => void
@@ -100,7 +138,41 @@ async function performLogin(
   patchState(store, { isLoading: true, error: null });
   try {
     const credential = await loginFn();
-    handleSuccessfulAuth(credential.user);
+    const firebaseUser = credential.user;
+
+    // Check if Firestore user document exists
+    const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+    const userSnapshot = await getDoc(userDocRef);
+
+    // Create user document if it doesn't exist (e.g., Google login first time)
+    if (!userSnapshot.exists()) {
+      const newUser: User = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        displayName: firebaseUser.displayName || 'Anonymous',
+        photoURL: firebaseUser.photoURL || undefined,
+        isOnline: true,
+        lastSeen: new Date(),
+        channels: [],
+        directMessages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await setDoc(userDocRef, newUser);
+    } else {
+      // Update last seen and online status
+      await setDoc(
+        userDocRef,
+        {
+          isOnline: true,
+          lastSeen: new Date(),
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+    }
+
+    await handleSuccessfulAuth(firebaseUser);
   } catch (error) {
     handleAuthError(error, 'Login failed');
   }

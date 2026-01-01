@@ -2,6 +2,7 @@
   class="btn-action"
   [class.btn-action--disabled]="disabled()"
   [disabled]="disabled()"
+  [title]="title() || ''"
   (click)="onClick()"
 >
   {{ label() }}

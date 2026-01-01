@@ -26,7 +26,9 @@ export class ProfileViewComponent {
   user = input.required<ProfileUser>();
   isVisible = input<boolean>(false);
   isOwnProfile = input<boolean>(false);
-  isAdmin = input<boolean>(false);
+  isChannelOwner = input<boolean>(false);
+  isCurrentUserAdmin = input<boolean>(false);
+  isSelectedUserOwner = input<boolean>(false);
   closeClicked = output<void>();
   editClicked = output<void>();
   messageClicked = output<void>();

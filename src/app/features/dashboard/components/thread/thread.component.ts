@@ -12,13 +12,15 @@ import {
   type Message,
   type MessageGroup,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
-import { DummyThreadService } from '../../services/dummy-thread.service';
-import { CurrentUserService } from '../../services/current-user.service';
+import { ThreadStore, UserStore } from '@stores/index';
+import { AuthStore } from '@stores/auth';
 
 export interface ThreadInfo {
+  channelId: string;
   parentMessageId: string;
   channelName: string;
   parentMessage?: Message;
+  isDirectMessage?: boolean;
 }
 
 @Component({
@@ -28,46 +30,46 @@ export interface ThreadInfo {
   styleUrl: './thread.component.scss',
 })
 export class ThreadComponent {
-  private threadService = inject(DummyThreadService);
-  private currentUserService = inject(CurrentUserService);
+  private threadStore = inject(ThreadStore);
+  private authStore = inject(AuthStore);
+  private userStore = inject(UserStore);
 
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
 
   /**
-   * Thread replies loaded from service
+   * Thread replies loaded from store (reactive to real-time updates)
    */
-  protected replies = signal<Message[]>([]);
+  protected replies = computed<Message[]>(() => {
+    const info = this.threadInfo();
+    if (!info?.parentMessageId) return [];
+
+    const threadMessages = this.threadStore.getThreadsByMessageId()(info.parentMessageId);
+    const currentUserId = this.authStore.user()?.uid || '';
+
+    // Convert ThreadMessage to Message format with user data
+    return threadMessages.map((thread) => {
+      const user = this.userStore.getUserById()(thread.authorId);
+      return {
+        id: thread.id,
+        senderId: thread.authorId,
+        senderName: user?.displayName || 'Unknown User',
+        senderAvatar: user?.photoURL || '/img/profile/profile-0.svg',
+        content: thread.content,
+        timestamp: thread.createdAt,
+        isOwnMessage: thread.authorId === currentUserId,
+      };
+    });
+  });
 
   constructor() {
-    // Load replies when threadInfo changes
+    // Load threads when threadInfo changes (sets up real-time listener)
     effect(() => {
       const info = this.threadInfo();
-      if (info?.parentMessageId) {
-        this.loadReplies(info.parentMessageId);
+      if (info?.parentMessageId && info?.channelId) {
+        this.threadStore.loadThreads(info.channelId, info.parentMessageId, info.isDirectMessage);
       }
     });
-  }
-
-  /**
-   * Load replies for the parent message
-   */
-  private loadReplies(parentMessageId: string): void {
-    const threadReplies = this.threadService.getRepliesForMessage(parentMessageId);
-    const currentUserId = this.currentUserService.currentUserId();
-
-    // Convert ThreadReply to Message format
-    const messages: Message[] = threadReplies.map((reply) => ({
-      id: reply.id,
-      senderId: reply.senderId,
-      senderName: reply.senderName,
-      senderAvatar: reply.senderAvatar,
-      content: reply.content,
-      timestamp: reply.timestamp,
-      isOwnMessage: reply.senderId === currentUserId,
-    }));
-
-    this.replies.set(messages);
   }
 
   /**
@@ -141,23 +143,22 @@ export class ThreadComponent {
   /**
    * Send reply
    */
-  sendReply(content: string): void {
+  async sendReply(content: string): Promise<void> {
     if (!content.trim()) return;
 
-    const currentUserId = this.currentUserService.currentUserId();
-    const currentUser = { id: currentUserId, name: 'Du', avatar: '/img/profile/profile-2.png' };
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return;
+    const info = this.threadInfo();
 
-    // Add reply via service
-    const newReply = this.threadService.addReply(
-      this.threadInfo().parentMessageId,
-      currentUser.id,
-      currentUser.name,
-      currentUser.avatar,
-      content.trim()
+    // Add reply via store
+    await this.threadStore.addThreadReply(
+      info.channelId,
+      info.parentMessageId,
+      content.trim(),
+      currentUserId,
+      info.isDirectMessage // Pass DM flag
     );
-
-    // Reload replies to update UI
-    this.loadReplies(this.threadInfo().parentMessageId);
+    // Replies will auto-update via computed signal
   }
 
   /**
@@ -182,5 +183,19 @@ export class ThreadComponent {
   onReactionAdded(data: { messageId: string; emoji: string }): void {
     console.log('Reaction added:', data);
     // TODO: Implement reaction logic
+  }
+
+  /**
+   * Handle message edited
+   */
+  async onMessageEdited(data: { messageId: string; newContent: string }): Promise<void> {
+    const info = this.threadInfo();
+    await this.threadStore.updateThread(
+      info.channelId,
+      info.parentMessageId,
+      data.messageId,
+      { content: data.newContent },
+      info.isDirectMessage
+    );
   }
 }

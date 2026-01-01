@@ -7,6 +7,7 @@
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
+import { Firestore } from '@angular/fire/firestore';
 
 import { initialAuthState } from './auth.types';
 import { createAuthStateHandlers } from './auth.helpers';
@@ -30,7 +31,8 @@ export const AuthStore = signalStore(
   })),
   withMethods((store) => {
     const auth = inject(Auth);
-    const handlers = createAuthStateHandlers(store);
+    const firestore = inject(Firestore);
+    const handlers = createAuthStateHandlers(store, firestore);
 
     onAuthStateChanged(auth, (firebaseUser) => {
       firebaseUser
@@ -40,12 +42,14 @@ export const AuthStore = signalStore(
 
     const loginMethods = createLoginMethods(
       auth,
+      firestore,
       store,
       handlers.handleSuccessfulAuth,
       handlers.handleAuthError
     );
     const signupMethods = createSignupMethods(
       auth,
+      firestore,
       store,
       handlers.handleSuccessfulAuth,
       handlers.handleAuthError

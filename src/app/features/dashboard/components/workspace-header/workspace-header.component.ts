@@ -17,8 +17,6 @@ import {
   EditProfileComponent,
   EditProfileUser,
 } from '@shared/dashboard-components/edit-profile/edit-profile.component';
-import { DummyUsersService } from '../../services/dummy-users.service';
-import { CurrentUserService } from '../../services/current-user.service';
 
 @Component({
   selector: 'app-workspace-header',
@@ -34,8 +32,6 @@ import { CurrentUserService } from '../../services/current-user.service';
 export class WorkspaceHeaderComponent {
   private router = inject(Router);
   protected authStore = inject(AuthStore);
-  protected usersService = inject(DummyUsersService);
-  protected currentUserService = inject(CurrentUserService);
   protected isOptionsOpen = signal(false);
   protected isProfileViewOpen = signal(false);
   protected isEditProfileOpen = signal(false);
@@ -43,10 +39,10 @@ export class WorkspaceHeaderComponent {
   mailboxRequested = output<void>();
 
   /**
-   * Get current dummy user
+   * Get current user from AuthStore
    */
   protected currentDummyUser = computed(() => {
-    return this.usersService.getUserById(this.currentUserService.currentUserId());
+    return this.authStore.user();
   });
 
   /**
@@ -117,12 +113,14 @@ export class WorkspaceHeaderComponent {
    */
   async onProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
     this.isEditProfileOpen.set(false);
-    const userId = this.currentUserService.currentUserId();
-    this.usersService.updateUser(userId, {
-      name: data.displayName,
-      isAdmin: data.isAdmin,
-    });
-    console.log('Save profile:', data);
+
+    try {
+      // Update user profile via AuthStore
+      await this.authStore.updateUserProfile({ displayName: data.displayName });
+      console.log('✅ Profile updated:', data);
+    } catch (error) {
+      console.error('❌ Failed to update profile:', error);
+    }
   }
 
   /**
@@ -132,11 +130,11 @@ export class WorkspaceHeaderComponent {
     const user = this.currentDummyUser();
     if (!user) return null;
     return {
-      id: user.id,
-      displayName: user.name,
+      id: user.uid,
+      displayName: user.displayName,
       email: user.email,
-      photoURL: user.avatar,
-      isAdmin: user.isAdmin,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      isAdmin: false, // TODO: Implement admin flag in User model
     };
   }
 
@@ -156,12 +154,12 @@ export class WorkspaceHeaderComponent {
     const user = this.currentDummyUser();
     if (!user) return null;
     return {
-      id: user.id,
-      displayName: user.name,
+      id: user.uid,
+      displayName: user.displayName,
       email: user.email,
-      photoURL: user.avatar,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
       status: user.isOnline ? 'online' : 'offline',
-      isAdmin: user.isAdmin,
+      isAdmin: false, // TODO: Implement admin flag in User model
     };
   }
 

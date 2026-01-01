@@ -4,17 +4,30 @@
  * @module features/dashboard/components/chat-private
  */
 
-import { Component, signal, input, inject, computed, output } from '@angular/core';
-import { DummyChatDmService } from '../../services/dummy-chat-dm.service';
-import { DummyUsersService } from '../../services/dummy-users.service';
-import { DummyThreadService } from '../../services/dummy-thread.service';
-import { CurrentUserService } from '../../services/current-user.service';
+import { Component, signal, input, inject, computed, output, effect } from '@angular/core';
+import { DirectMessageStore, UserStore, ThreadStore, MessageStore } from '@stores/index';
+import { MessageType } from '@core/models/message.model';
+import { AuthStore } from '@stores/auth';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import {
   ConversationMessagesComponent,
   type Message,
   type MessageGroup,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import { MembersMiniatureComponent } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
+import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
+import {
+  ProfileViewComponent,
+  ProfileUser,
+} from '@shared/dashboard-components/profile-view/profile-view.component';
+import {
+  EditProfileComponent,
+  EditProfileUser,
+} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+import {
+  UserListItemComponent,
+  UserListItem,
+} from '@shared/dashboard-components/user-list-item/user-list-item.component';
 
 export interface DMInfo {
   conversationId: string;
@@ -25,38 +38,96 @@ export interface DMInfo {
 
 @Component({
   selector: 'app-chat-private',
-  imports: [MessageBoxComponent, ConversationMessagesComponent],
+  imports: [
+    MessageBoxComponent,
+    ConversationMessagesComponent,
+    ProfileViewComponent,
+    EditProfileComponent,
+    UserListItemComponent,
+  ],
   templateUrl: './chat-private.component.html',
   styleUrl: './chat-private.component.scss',
 })
 export class ChatPrivateComponent {
-  protected chatDmService = inject(DummyChatDmService);
-  protected usersService = inject(DummyUsersService);
-  protected currentUserService = inject(CurrentUserService);
-  protected threadService = inject(DummyThreadService);
+  protected directMessageStore = inject(DirectMessageStore);
+  protected userStore = inject(UserStore);
+  protected threadStore = inject(ThreadStore);
+  protected messageStore = inject(MessageStore);
+  protected authStore = inject(AuthStore);
   protected userName = computed(() => this.dmInfo().userName);
   protected userStatus = computed(() => (this.dmInfo().isOnline ? 'Online' : 'Offline'));
   dmInfo = input.required<DMInfo>();
-  threadRequested = output<{ messageId: string; parentMessage: Message }>();
+  threadRequested = output<{
+    messageId: string;
+    parentMessage: Message;
+    isDirectMessage?: boolean;
+  }>();
+
+  // Profile state
+  protected isProfileViewOpen = signal<boolean>(false);
+  protected isEditProfileOpen = signal<boolean>(false);
+
+  constructor() {
+    console.log('🔷 ChatPrivateComponent: Constructor called');
+
+    // Load messages when conversation changes
+    effect(() => {
+      const dmInfo = this.dmInfo();
+      const currentUserId = this.authStore.user()?.uid;
+      console.log('🔷 ChatPrivateComponent: Effect triggered', { dmInfo, currentUserId });
+      if (dmInfo?.conversationId && currentUserId) {
+        // Load messages for this conversation
+        this.directMessageStore.loadMessages(dmInfo.conversationId);
+      }
+    });
+  }
 
   /**
-   * Messages from service
+   * Get the other user's ID from conversation
+   */
+  private getOtherUserId(): string | null {
+    const conversationId = this.dmInfo().conversationId;
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId || !conversationId) return null;
+
+    // ConversationId format: "uid1_uid2" (alphabetically sorted)
+    const participants = conversationId.split('_');
+    return participants.find((id) => id !== currentUserId) || null;
+  }
+
+  /**
+   * User list item data for header button
+   */
+  protected userListItem = computed<UserListItem>(() => {
+    const otherUserId = this.getOtherUserId();
+    return {
+      id: otherUserId || '',
+      name: this.dmInfo().userName,
+      avatar: this.dmInfo().userAvatar,
+    };
+  });
+
+  /**
+   * Messages from DirectMessageStore
    */
   protected messages = computed<Message[]>(() => {
-    const conversationMessages = this.chatDmService.getMessagesForConversation(
-      this.dmInfo().conversationId
-    );
-    const currentUserId = this.currentUserService.currentUserId();
+    const conversationId = this.dmInfo().conversationId;
+    const conversationMessages = this.directMessageStore.messages()[conversationId] || [];
+    const currentUserId = this.authStore.user()?.uid || '';
 
-    return conversationMessages.map((msg) => ({
-      id: msg.id,
-      senderId: msg.senderId,
-      senderName: msg.senderName,
-      senderAvatar: msg.senderAvatar,
-      content: msg.content,
-      timestamp: msg.timestamp,
-      isOwnMessage: msg.senderId === currentUserId,
-    }));
+    return conversationMessages.map((msg) => {
+      const user = this.userStore.getUserById()(msg.authorId);
+      return {
+        id: msg.id,
+        senderId: msg.authorId,
+        senderName: user?.displayName || 'Unknown User',
+        senderAvatar: user?.photoURL || '/img/profile/profile-0.svg',
+        content: msg.content,
+        timestamp: msg.createdAt,
+        isOwnMessage: msg.authorId === currentUserId,
+        threadCount: msg.threadCount || 0,
+      };
+    });
   });
 
   /**
@@ -72,14 +143,10 @@ export class ChatPrivateComponent {
         groups.set(dateKey, []);
       }
 
-      // Add thread info to message
-      const threadCount = this.threadService.getThreadCount(message.id);
-      const lastThreadTimestamp = this.threadService.getLastReplyTimestamp(message.id);
-
       groups.get(dateKey)!.push({
         ...message,
-        threadCount: threadCount > 0 ? threadCount : undefined,
-        lastThreadTimestamp: lastThreadTimestamp || undefined,
+        threadCount:
+          message.threadCount && message.threadCount > 0 ? message.threadCount : undefined,
       });
     });
 
@@ -88,6 +155,45 @@ export class ChatPrivateComponent {
       label: this.getDateLabel(msgs[0].timestamp),
       messages: msgs,
     }));
+  });
+
+  /**
+   * Get the other user's profile for profile view
+   */
+  protected otherUserProfile = computed<ProfileUser | null>(() => {
+    const otherUserId = this.getOtherUserId();
+    if (!otherUserId) return null;
+
+    const user = this.userStore.getUserById()(otherUserId);
+    if (!user) return null;
+
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      status: user.isOnline ? 'online' : 'offline',
+      isAdmin: false,
+    };
+  });
+
+  /**
+   * Other user for edit profile
+   */
+  protected editProfileUser = computed<EditProfileUser | null>(() => {
+    const otherUserId = this.getOtherUserId();
+    if (!otherUserId) return null;
+
+    const user = this.userStore.getUserById()(otherUserId);
+    if (!user) return null;
+
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      isAdmin: false,
+    };
   });
 
   /**
@@ -127,21 +233,17 @@ export class ChatPrivateComponent {
   /**
    * Send message
    */
-  sendMessage(content: string): void {
+  async sendMessage(content: string): Promise<void> {
     if (!content.trim()) return;
 
-    const currentUserId = this.currentUserService.currentUserId();
-    const currentUser = this.usersService.getUserById(currentUserId);
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return;
+    const conversationId = this.dmInfo().conversationId;
 
-    if (currentUser) {
-      this.chatDmService.sendMessage(
-        this.dmInfo().conversationId,
-        currentUserId,
-        currentUser.name,
-        currentUser.avatar,
-        content.trim()
-      );
-    }
+    console.log('📤 Sending DM message', { conversationId, authorId: currentUserId });
+
+    // Send message via DirectMessageStore
+    await this.directMessageStore.sendMessage(conversationId, currentUserId, content.trim());
   }
 
   /**
@@ -169,13 +271,80 @@ export class ChatPrivateComponent {
   }
 
   /**
+   * Handle message edited
+   */
+  async onMessageEdited(data: { messageId: string; newContent: string }): Promise<void> {
+    const conversationId = this.dmInfo().conversationId;
+    await this.directMessageStore.updateMessage(conversationId, data.messageId, data.newContent);
+  }
+
+  /**
    * Handle thread click
    */
   onThreadClick(messageId: string): void {
     // Find the parent message
     const parentMessage = this.messages().find((m) => m.id === messageId);
     if (parentMessage) {
-      this.threadRequested.emit({ messageId, parentMessage });
+      this.threadRequested.emit({
+        messageId,
+        parentMessage,
+        isDirectMessage: true, // Mark as DM thread
+      });
     }
+  }
+
+  /**
+   * Handle user button click (show profile)
+   */
+  onUserButtonClick(): void {
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle profile view close
+   */
+  onProfileViewClose(): void {
+    this.isProfileViewOpen.set(false);
+  }
+
+  /**
+   * Handle profile edit click
+   */
+  onProfileEdit(): void {
+    this.isProfileViewOpen.set(false);
+    this.isEditProfileOpen.set(true);
+  }
+
+  /**
+   * Handle profile message click
+   */
+  onProfileMessage(): void {
+    console.log('Send message to user');
+    this.isProfileViewOpen.set(false);
+    // Already in DM view with this user
+  }
+
+  /**
+   * Handle edit profile close
+   */
+  onEditProfileClose(): void {
+    this.isEditProfileOpen.set(false);
+  }
+
+  /**
+   * Handle edit profile save
+   */
+  async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
+    console.log('Save profile:', data);
+    const otherUserId = this.getOtherUserId();
+    if (!otherUserId) return;
+
+    // TODO: Implement user profile update
+    // await this.userStore.updateUser(otherUserId, {
+    //   displayName: data.displayName,
+    //   isAdmin: data.isAdmin,
+    // });
+
+    this.isEditProfileOpen.set(false);
   }
 }

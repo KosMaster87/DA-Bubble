@@ -1,9 +1,28 @@
 @use '../../../../styles/mixins' as mix;
 
+// CRITICAL: Host element must participate in flex layout
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; // Important for flex container overflow
+  overflow: hidden;
+}
+
 .conversation-messages {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  position: relative;
+
+  // CRITICAL: Must use flex to fill parent container, not height: 100%
+  // Parent is a flex container, so flex: 1 takes the defined space
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  // Padding for content
+  padding: var(--space-4) var(--space-2);
 
   &__date-separator {
     @include mix.flex(row, center, center);
@@ -102,7 +121,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    max-width: 60%;
+    // max-width: 60%;
+    width: 100%;
   }
 
   &__message-header {
@@ -129,6 +149,7 @@
     border-radius: 1rem;
     margin: 0;
     word-wrap: break-word;
+    max-width: fit-content;
   }
 
   &__reactions {

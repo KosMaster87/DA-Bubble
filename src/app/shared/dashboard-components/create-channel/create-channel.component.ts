@@ -8,20 +8,27 @@ import { Component, input, output, signal } from '@angular/core';
 import { InputFieldChannelComponent } from '../input-field-channel/input-field-channel.component';
 import { InputFieldBasicComponent } from '../input-field-basic/input-field-basic.component';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
+import { CheckboxPrivateChannelComponent } from '../checkbox-private-channel/checkbox-private-channel.component';
 
 @Component({
   selector: 'app-create-channel',
-  imports: [InputFieldChannelComponent, InputFieldBasicComponent, BtnActionComponent],
+  imports: [
+    InputFieldChannelComponent,
+    InputFieldBasicComponent,
+    BtnActionComponent,
+    CheckboxPrivateChannelComponent,
+  ],
   templateUrl: './create-channel.component.html',
   styleUrl: './create-channel.component.scss',
 })
 export class CreateChannelComponent {
   isVisible = input<boolean>(false);
   closeClicked = output<void>();
-  createClicked = output<{ name: string; description: string }>();
+  createClicked = output<{ name: string; description: string; isPrivate: boolean }>();
 
   protected channelName = signal<string>('');
   protected channelDescription = signal<string>('');
+  protected isPrivate = signal<boolean>(false);
 
   /**
    * Handle close button click
@@ -46,6 +53,13 @@ export class CreateChannelComponent {
   }
 
   /**
+   * Handle private checkbox change
+   */
+  onPrivateChange(checked: boolean): void {
+    this.isPrivate.set(checked);
+  }
+
+  /**
    * Handle create button click
    */
   onCreate(): void {
@@ -53,6 +67,7 @@ export class CreateChannelComponent {
       this.createClicked.emit({
         name: this.channelName(),
         description: this.channelDescription(),
+        isPrivate: this.isPrivate(),
       });
       this.resetForm();
     }
@@ -64,6 +79,7 @@ export class CreateChannelComponent {
   private resetForm(): void {
     this.channelName.set('');
     this.channelDescription.set('');
+    this.isPrivate.set(false);
   }
 
   /**

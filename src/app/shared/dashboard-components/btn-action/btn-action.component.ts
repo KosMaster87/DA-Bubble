@@ -14,6 +14,7 @@ import { Component, input, output } from '@angular/core';
 export class BtnActionComponent {
   label = input<string>('Save');
   disabled = input<boolean>(false);
+  title = input<string>();
   clicked = output<void>();
 
   onClick(): void {

@@ -5,6 +5,7 @@
  */
 
 import { User as FirebaseUser } from '@angular/fire/auth';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
 import { patchState } from '@ngrx/signals';
 import type { AuthState } from './auth.types';
@@ -32,16 +33,49 @@ export const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => ({
  * Handle user authenticated state
  * @function createAuthStateHandlers
  * @param {any} store - NgRx Signal Store instance
+ * @param {Firestore} firestore - Firestore instance
  * @returns {object} Handler functions
  */
-export const createAuthStateHandlers = (store: any) => ({
+export const createAuthStateHandlers = (store: any, firestore: Firestore) => ({
   /**
    * Handle user authenticated state
+   * Loads user data from Firestore to get displayName and other fields
    * @param {FirebaseUser} firebaseUser - Firebase user object
    */
-  handleUserAuthenticated: (firebaseUser: FirebaseUser): void => {
-    const user = mapFirebaseUserToUser(firebaseUser);
-    patchState(store, { user, isAuthenticated: true, isLoading: false });
+  handleUserAuthenticated: async (firebaseUser: FirebaseUser): Promise<void> => {
+    try {
+      // Try to load user data from Firestore first
+      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      let user: User;
+      if (userDoc.exists()) {
+        // Use Firestore data which has the correct displayName
+        const firestoreData = userDoc.data();
+        user = {
+          uid: firestoreData['uid'],
+          email: firestoreData['email'],
+          displayName: firestoreData['displayName'],
+          photoURL: firestoreData['photoURL'],
+          isOnline: firestoreData['isOnline'],
+          lastSeen: firestoreData['lastSeen']?.toDate() || new Date(),
+          channels: firestoreData['channels'] || [],
+          directMessages: firestoreData['directMessages'] || [],
+          createdAt: firestoreData['createdAt']?.toDate() || new Date(),
+          updatedAt: firestoreData['updatedAt']?.toDate() || new Date(),
+        };
+      } else {
+        // Fallback to Firebase Auth data only
+        user = mapFirebaseUserToUser(firebaseUser);
+      }
+
+      patchState(store, { user, isAuthenticated: true, isLoading: false });
+    } catch (error) {
+      console.warn('Failed to load user from Firestore, using Auth data:', error);
+      // Fallback to Firebase Auth data
+      const user = mapFirebaseUserToUser(firebaseUser);
+      patchState(store, { user, isAuthenticated: true, isLoading: false });
+    }
   },
 
   /**
@@ -53,16 +87,58 @@ export const createAuthStateHandlers = (store: any) => ({
 
   /**
    * Handle successful authentication response
+   * Loads user data from Firestore to ensure we have the latest photoURL and other data
    * @param {FirebaseUser} firebaseUser - Firebase user object
    */
-  handleSuccessfulAuth: (firebaseUser: FirebaseUser): void => {
-    const user = mapFirebaseUserToUser(firebaseUser);
-    patchState(store, {
-      user,
-      isAuthenticated: true,
-      isLoading: false,
-      error: null,
-    });
+  handleSuccessfulAuth: async (firebaseUser: FirebaseUser): Promise<void> => {
+    try {
+      // Load user data from Firestore to get photoURL and other fields
+      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      let user: User;
+      if (userDoc.exists()) {
+        // Use Firestore data which has the complete profile including photoURL
+        const firestoreData = userDoc.data();
+        user = {
+          uid: firestoreData['uid'],
+          email: firestoreData['email'],
+          displayName: firestoreData['displayName'],
+          photoURL: firestoreData['photoURL'],
+          isOnline: firestoreData['isOnline'],
+          lastSeen: firestoreData['lastSeen']?.toDate() || new Date(),
+          channels: firestoreData['channels'] || [],
+          directMessages: firestoreData['directMessages'] || [],
+          createdAt: firestoreData['createdAt']?.toDate() || new Date(),
+          updatedAt: firestoreData['updatedAt']?.toDate() || new Date(),
+        };
+        console.log('✅ User data loaded from Firestore:', {
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        });
+      } else {
+        // Fallback to Firebase Auth data
+        user = mapFirebaseUserToUser(firebaseUser);
+        console.warn('⚠️ No Firestore document found, using Auth data');
+      }
+
+      patchState(store, {
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('Failed to load user from Firestore:', error);
+      // Fallback to Firebase Auth data
+      const user = mapFirebaseUserToUser(firebaseUser);
+      patchState(store, {
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+    }
   },
 
   /**

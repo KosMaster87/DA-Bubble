@@ -43,10 +43,13 @@
 
     <!-- Thread Replies -->
     <app-conversation-messages
+      [conversationId]="'thread-' + threadInfo().parentMessageId"
       [messageGroups]="repliesGroupedByDate()"
+      [isInThread]="true"
       (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
       (reactionAdded)="onReactionAdded($event)"
+      (messageEdited)="onMessageEdited($event)"
     />
   </div>
 

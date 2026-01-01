@@ -1,0 +1,174 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    /**
+     * Check if user is authenticated
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    /**
+     * Check if user's email is verified
+     */
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    /**
+     * Check if file size is within limit
+     * @param maxSizeMB - Maximum size in megabytes
+     */
+    function isValidFileSize(maxSizeMB) {
+      return request.resource.size < maxSizeMB * 1024 * 1024;
+    }
+
+    /**
+     * Check if file is an image
+     */
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    /**
+     * Check if file type is allowed for images
+     */
+    function isAllowedImageType() {
+      return request.resource.contentType in [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/gif'
+      ];
+    }
+
+    /**
+     * Check if user owns the file path
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // ========================================
+    // USER AVATARS
+    // Path: avatars/{userId}/{fileName}
+    // ========================================
+
+    match /avatars/{userId}/{fileName} {
+      // Allow read for all authenticated users
+      allow read: if isAuthenticated();
+
+      // Allow write only for the user's own avatar folder
+      allow write: if isAuthenticated()
+                   && isEmailVerified()
+                   && isOwner(userId)
+                   && isImage()
+                   && isAllowedImageType()
+                   && isValidFileSize(5); // Max 5MB
+
+      // Allow delete only for the user's own avatar
+      allow delete: if isAuthenticated()
+                    && isOwner(userId);
+    }
+
+    // ========================================
+    // MESSAGE ATTACHMENTS
+    // Path: attachments/{channelId}/{messageId}/{fileName}
+    // ========================================
+
+    match /attachments/{channelId}/{messageId}/{fileName} {
+      // Allow read for authenticated users
+      // Note: Proper channel membership should be verified in Firestore rules
+      allow read: if isAuthenticated();
+
+      // Allow upload for verified users
+      allow write: if isAuthenticated()
+                   && isEmailVerified()
+                   && isImage()
+                   && isAllowedImageType()
+                   && isValidFileSize(10); // Max 10MB for message attachments
+
+      // Allow delete for authenticated users (message author check in Firestore)
+      allow delete: if isAuthenticated();
+    }
+
+    // ========================================
+    // CHANNEL IMAGES (e.g., channel header images)
+    // Path: channels/{channelId}/{fileName}
+    // ========================================
+
+    match /channels/{channelId}/{fileName} {
+      // Allow read for authenticated users
+      allow read: if isAuthenticated();
+
+      // Allow write for verified users
+      // Note: Channel creator verification should be done in app logic
+      allow write: if isAuthenticated()
+                   && isEmailVerified()
+                   && isImage()
+                   && isAllowedImageType()
+                   && isValidFileSize(5); // Max 5MB
+
+      // Allow delete for authenticated users
+      allow delete: if isAuthenticated();
+    }
+
+    // ========================================
+    // DIRECT MESSAGE ATTACHMENTS
+    // Path: dm-attachments/{conversationId}/{messageId}/{fileName}
+    // ========================================
+
+    match /dm-attachments/{conversationId}/{messageId}/{fileName} {
+      // Allow read for authenticated users
+      allow read: if isAuthenticated();
+
+      // Allow upload for verified users
+      allow write: if isAuthenticated()
+                   && isEmailVerified()
+                   && isImage()
+                   && isAllowedImageType()
+                   && isValidFileSize(10); // Max 10MB
+
+      // Allow delete for authenticated users
+      allow delete: if isAuthenticated();
+    }
+
+    // ========================================
+    // TEMP UPLOADS (for image processing before final upload)
+    // Path: temp/{userId}/{fileName}
+    // ========================================
+
+    match /temp/{userId}/{fileName} {
+      // Allow read only for owner
+      allow read: if isAuthenticated()
+                  && isOwner(userId);
+
+      // Allow write only for owner
+      allow write: if isAuthenticated()
+                   && isEmailVerified()
+                   && isOwner(userId)
+                   && isImage()
+                   && isAllowedImageType()
+                   && isValidFileSize(10); // Max 10MB
+
+      // Allow delete only for owner
+      allow delete: if isAuthenticated()
+                    && isOwner(userId);
+    }
+
+    // ========================================
+    // DENY ALL OTHER PATHS
+    // ========================================
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

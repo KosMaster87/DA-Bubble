@@ -9,6 +9,7 @@
     [class.dashboard__main--thread-open]="isThreadOpen()"
   >
     <app-workspace-sidebar
+      #sidebar
       class="dashboard__sidebar"
       [isNewMessageActive]="currentView() === 'chat-new-msg'"
       [isMailboxActive]="currentView() === 'mailbox'"
@@ -19,7 +20,10 @@
     />
 
     @if (currentView() === 'welcome') {
-    <app-channal-welcome class="dashboard__content" />
+    <app-channal-welcome
+      class="dashboard__content"
+      (directMessageRequested)="startDirectMessageWithUser($event)"
+    />
     } @else if (currentView() === 'chat-new-msg') {
     <app-chat-new-msg class="dashboard__content" />
     } @else if (currentView() === 'mailbox') {
@@ -29,6 +33,8 @@
       class="dashboard__content"
       [channel]="selectedChannel()!"
       (threadRequested)="openThread($event)"
+      (channelLeft)="onChannelLeft()"
+      (directMessageRequested)="startDirectMessageWithUser($event)"
     />
     } @else if (currentView() === 'direct-message' && selectedDM()) {
     <app-chat-private

@@ -7,28 +7,34 @@
 import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
+import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
+import { CheckboxPrivateChannelComponent } from '../checkbox-private-channel/checkbox-private-channel.component';
 
 export interface ChannelInfoData {
   id: string;
   name: string;
   description: string;
+  isPrivate: boolean;
   createdBy: string;
   createdByName: string;
+  admins: Array<{ uid: string; name: string }>;
 }
 
 @Component({
   selector: 'app-channel-info',
-  imports: [FormsModule, BtnActionComponent],
+  imports: [FormsModule, BtnActionComponent, BtnDeleteComponent, CheckboxPrivateChannelComponent],
   templateUrl: './channel-info.component.html',
   styleUrl: './channel-info.component.scss',
 })
 export class ChannelInfoComponent {
   channel = input.required<ChannelInfoData>();
   isVisible = input<boolean>(false);
+  currentUserId = input<string>();
 
   closeClicked = output<void>();
-  channelUpdated = output<{ name?: string; description?: string }>();
+  channelUpdated = output<{ name?: string; description?: string; isPrivate?: boolean }>();
   leaveChannelClicked = output<void>();
+  deleteChannelClicked = output<void>();
   createdByClicked = output<string>();
 
   protected isEditingName = signal(false);
@@ -98,9 +104,32 @@ export class ChannelInfoComponent {
   }
 
   /**
+   * Handle delete channel button click
+   */
+  onDeleteChannel(): void {
+    this.deleteChannelClicked.emit();
+  }
+
+  /**
    * Handle created by user click
    */
   onCreatedByClick(): void {
     this.createdByClicked.emit(this.channel().createdBy);
+  }
+
+  /**
+   * Handle admin user click
+   */
+  onAdminClick(adminUid: string): void {
+    this.createdByClicked.emit(adminUid);
+  }
+
+  /**
+   * Handle private checkbox change
+   */
+  onPrivateChange(checked: boolean): void {
+    if (checked !== this.channel().isPrivate) {
+      this.channelUpdated.emit({ isPrivate: checked });
+    }
   }
 }

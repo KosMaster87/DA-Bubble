@@ -4,10 +4,9 @@
  * @module features/dashboard/components/channal-welcome
  */
 
-import { Component, signal, computed, inject } from '@angular/core';
-import { DummyUsersService } from '../../services/dummy-users.service';
-import { DummyChannelsService } from '../../services/dummy-channels.service';
-import { CurrentUserService } from '../../services/current-user.service';
+import { Component, signal, computed, inject, output } from '@angular/core';
+import { UserStore, ChannelStore } from '@stores/index';
+import { AuthStore } from '@stores/auth';
 import {
   MembersMiniatureComponent,
   type MemberMiniature,
@@ -35,9 +34,11 @@ import {
   styleUrl: './channal-welcome.component.scss',
 })
 export class ChannalWelcomeComponent {
-  protected usersService = inject(DummyUsersService);
-  protected channelsService = inject(DummyChannelsService);
-  protected currentUserService = inject(CurrentUserService);
+  protected userStore = inject(UserStore);
+  protected channelStore = inject(ChannelStore);
+  protected authStore = inject(AuthStore);
+
+  directMessageRequested = output<string>(); // Emits userId to start DM with
 
   protected isMembersMenuOpen = signal<boolean>(false);
   protected isProfileViewOpen = signal<boolean>(false);
@@ -46,17 +47,17 @@ export class ChannalWelcomeComponent {
 
   /**
    * Check if current user is admin
+   * TODO: Implement admin role in User model
    */
   protected isCurrentUserAdmin = computed(() => {
-    const currentUser = this.usersService.getUserById(this.currentUserService.currentUserId());
-    return currentUser?.isAdmin || false;
+    return false;
   });
 
   /**
    * Check if viewing own profile
    */
   protected isOwnProfile = computed(() => {
-    return this.selectedMemberId() === this.currentUserService.currentUserId();
+    return this.selectedMemberId() === this.authStore.user()?.uid;
   });
 
   /**
@@ -66,49 +67,49 @@ export class ChannalWelcomeComponent {
     const memberId = this.selectedMemberId();
     if (!memberId) return null;
 
-    const user = this.usersService.getUserById(memberId);
+    const user = this.userStore.getUserById()(memberId);
     if (!user) return null;
 
     return {
-      id: user.id,
-      displayName: user.name,
+      id: user.uid,
+      displayName: user.displayName,
       email: user.email,
-      photoURL: user.avatar,
-      isAdmin: user.isAdmin,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      isAdmin: false, // TODO: Implement admin flag
     };
   });
 
   /**
-   * Channel name from service
+   * Channel name from ChannelStore
    */
   protected channelName = computed(() => {
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
     return channel?.name || 'DABubble-welcome';
   });
 
   /**
-   * Channel description from service
+   * Channel description from ChannelStore
    */
   protected channelDescription = computed(() => {
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
     return channel?.description || 'Welcome to DABubble! General announcements and introductions.';
   });
 
   /**
-   * Channel members from channel's memberIds
+   * Channel members from channel's members array
    */
   protected members = computed<UserListItem[]>(() => {
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
-    if (!channel || !channel.memberIds) return [];
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
+    if (!channel || !channel.members) return [];
 
-    return channel.memberIds
+    return channel.members
       .map((memberId) => {
-        const user = this.usersService.getUserById(memberId);
+        const user = this.userStore.getUserById()(memberId);
         if (!user) return null;
         return {
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
+          id: user.uid,
+          name: user.displayName,
+          avatar: user.photoURL || '/img/profile/profile-0.svg',
         };
       })
       .filter((user): user is UserListItem => user !== null);
@@ -120,22 +121,22 @@ export class ChannalWelcomeComponent {
   protected totalMemberCount = computed(() => this.members().length);
 
   /**
-   * Get selected member as ProfileUser from DummyUsersService
+   * Get selected member as ProfileUser from UserStore
    */
   protected selectedMember = computed<ProfileUser | null>(() => {
     const memberId = this.selectedMemberId();
     if (!memberId) return null;
 
-    const user = this.usersService.getUserById(memberId);
+    const user = this.userStore.getUserById()(memberId);
     if (!user) return null;
 
     return {
-      id: user.id,
-      displayName: user.name,
+      id: user.uid,
+      displayName: user.displayName,
       email: user.email,
-      photoURL: user.avatar,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
       status: user.isOnline ? 'online' : 'offline',
-      isAdmin: user.isAdmin,
+      isAdmin: false, // TODO: Implement admin flag
     };
   });
 
@@ -175,14 +176,16 @@ export class ChannalWelcomeComponent {
   /**
    * Handle remove member from channel
    */
-  onRemoveMember(): void {
+  async onRemoveMember(): Promise<void> {
     const memberId = this.selectedMemberId();
     if (!memberId) return;
 
-    const channel = this.channelsService.getChannelByName('DABubble-welcome');
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
     if (!channel) return;
 
-    this.channelsService.removeMemberFromChannel(channel.id, memberId);
+    const updatedMembers = channel.members.filter((id) => id !== memberId);
+    await this.channelStore.updateChannel(channel.id, { members: updatedMembers });
+
     this.isProfileViewOpen.set(false);
     this.selectedMemberId.set(null);
     console.log('Removed member from channel:', memberId);
@@ -206,13 +209,13 @@ export class ChannalWelcomeComponent {
   /**
    * Handle edit profile save
    */
-  onEditProfileSave(data: { displayName: string; isAdmin: boolean }): void {
+  async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
     const userId = this.selectedMemberId();
     if (!userId) return;
 
-    this.usersService.updateUser(userId, {
-      name: data.displayName,
-      isAdmin: data.isAdmin,
+    await this.userStore.updateUser(userId, {
+      displayName: data.displayName,
+      // TODO: isAdmin not in User model yet
     });
     this.isEditProfileOpen.set(false);
   }
@@ -221,8 +224,13 @@ export class ChannalWelcomeComponent {
    * Handle message click from profile
    */
   onProfileMessage(): void {
+    const memberId = this.selectedMemberId();
+    if (!memberId) return;
+
     this.isProfileViewOpen.set(false);
-    console.log('Message member:', this.selectedMemberId());
-    // TODO: Open direct message with selected member
+    console.log('Opening DM with member:', memberId);
+
+    // Emit event to start DM conversation
+    this.directMessageRequested.emit(memberId);
   }
 }

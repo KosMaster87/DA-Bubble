@@ -36,5 +36,5 @@ export interface UpdateChannelRequest {
 export interface ChannelMember {
   uid: string;
   joinedAt: Date;
-  role: 'member' | 'admin';
+  role: 'owner' | 'admin' | 'member';
 }

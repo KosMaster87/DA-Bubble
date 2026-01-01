@@ -12,7 +12,7 @@ import { ChannelSelectionComponent } from '../channel-selection/channel-selectio
 import { ChannelListItem } from '../channel-list-item/channel-list-item.component';
 import { UserSelectionComponent } from '../user-selection/user-selection.component';
 import { UserListItem } from '../user-list-item/user-list-item.component';
-import { CurrentUserService } from '../../../features/dashboard/services/current-user.service';
+import { AuthStore } from '@stores/auth';
 
 type MemberSelectionType = 'all' | 'specific';
 
@@ -29,14 +29,19 @@ type MemberSelectionType = 'all' | 'specific';
   styleUrl: './add-member-after-add-channel.component.scss',
 })
 export class AddMemberAfterAddChannelComponent {
-  protected currentUserService = inject(CurrentUserService);
+  protected authStore = inject(AuthStore);
 
   channelName = input<string>('');
   channels = input<ChannelListItem[]>([]);
   users = input<UserListItem[]>([]);
   closed = output<void>();
   cancelled = output<void>();
-  created = output<{ type: MemberSelectionType; searchValue?: string }>();
+  created = output<{
+    type: MemberSelectionType;
+    searchValue?: string;
+    selectedChannels: ChannelListItem[];
+    selectedUsers: UserListItem[];
+  }>();
   selectedOption = signal<MemberSelectionType>('all');
   searchValue = signal<string>('');
   channelSearchValue = signal<string>('');
@@ -61,7 +66,7 @@ export class AddMemberAfterAddChannelComponent {
    */
   availableUsers = computed<UserListItem[]>(() => {
     const selectedIds = this.selectedUsers().map((u) => u.id);
-    const currentUserId = this.currentUserService.currentUserId();
+    const currentUserId = this.authStore.user()?.uid;
     return this.users().filter(
       (user) => !selectedIds.includes(user.id) && user.id !== currentUserId
     );
@@ -135,6 +140,8 @@ export class AddMemberAfterAddChannelComponent {
     this.created.emit({
       type: this.selectedOption(),
       searchValue: this.selectedOption() === 'specific' ? this.searchValue() : undefined,
+      selectedChannels: this.selectedChannels(),
+      selectedUsers: this.selectedUsers(),
     });
   }
 

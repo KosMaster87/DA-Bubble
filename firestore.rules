@@ -1,0 +1,373 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    /**
+     * Check if user is authenticated
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    /**
+     * Check if user's email is verified
+     */
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    /**
+     * Check if user owns the document
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * Check if user is a member of the channel
+     */
+    function isChannelMember(channelId) {
+      return request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members;
+    }
+
+    /**
+     * Validate string length
+     */
+    function isValidStringLength(str, min, max) {
+      return str.size() >= min && str.size() <= max;
+    }
+
+    /**
+     * Validate timestamp is in the past or now
+     */
+    function isValidTimestamp(ts) {
+      return ts <= request.time;
+    }
+
+    /**
+     * Check if incoming data has required fields
+     */
+    function hasRequiredUserFields() {
+      return request.resource.data.keys().hasAll([
+        'uid', 'email', 'displayName', 'isOnline',
+        'lastSeen', 'channels', 'directMessages',
+        'createdAt', 'updatedAt'
+      ]);
+    }
+
+    function hasRequiredChannelFields() {
+      return request.resource.data.keys().hasAll([
+        'name', 'description', 'isPrivate',
+        'createdBy', 'members', 'admins', 'createdAt', 'updatedAt',
+        'lastMessageAt', 'messageCount'
+      ]);
+    }
+
+    function hasRequiredMessageFields() {
+      return request.resource.data.keys().hasAll([
+        'content', 'authorId', 'type',
+        'reactions', 'attachments', 'isEdited',
+        'createdAt', 'updatedAt'
+      ]);
+    }
+
+    // ========================================
+    // USERS COLLECTION
+    // ========================================
+
+    match /users/{userId} {
+      // Allow read for all authenticated users
+      allow read: if isAuthenticated();
+
+      // Allow create only for the user's own document
+      allow create: if isAuthenticated()
+                    && isOwner(userId)
+                    && hasRequiredUserFields()
+                    && isValidStringLength(request.resource.data.displayName, 1, 50)
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email;
+
+      // Allow update only for the user's own document
+      allow update: if isAuthenticated()
+                    && (
+                      // Owner can update their own document
+                      (isOwner(userId)
+                       // Cannot change uid or email
+                       && request.resource.data.uid == resource.data.uid
+                       && request.resource.data.email == resource.data.email
+                       // Only validate displayName if it's being changed
+                       && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
+                           || isValidStringLength(request.resource.data.displayName, 1, 50))
+                       // Allow updating scrollState field for multi-device sync
+                       && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['scrollState'])
+                           || true)) // scrollState can be any object structure
+                      ||
+                      // Any authenticated user can add to directMessages array (for starting conversations)
+                      (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['directMessages', 'updatedAt'])
+                       && request.resource.data.directMessages.hasAll(resource.data.directMessages))
+                    );
+
+      // Allow delete only for the user's own document
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // ========================================
+    // CHANNELS COLLECTION
+    // ========================================
+
+    match /channels/{channelId} {
+      // Allow read for all authenticated users (to enable channel discovery and listing)
+      // Users can see all channels, but only join/interact with those they have permission for
+      allow read: if isAuthenticated();
+
+      // Allow create for authenticated users
+      allow create: if isAuthenticated()
+                    && hasRequiredChannelFields()
+                    && isValidStringLength(request.resource.data.name, 1, 80)
+                    && isValidStringLength(request.resource.data.description, 0, 500)
+                    && request.resource.data.createdBy == request.auth.uid
+                    && request.auth.uid in request.resource.data.members;
+
+      // Allow update only for channel creator or members (for joining/leaving)
+      allow update: if isAuthenticated()
+                    && (
+                      // Creator can update all fields
+                      (request.auth.uid == resource.data.createdBy)
+                      ||
+                      // Members can only update members array (join/leave)
+                      (request.auth.uid in resource.data.members
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt']))
+                      ||
+                      // Special case: Allow joining DABubble-welcome channel (auto-add on signup)
+                      (resource.data.name == 'DABubble-welcome'
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt'])
+                       && request.auth.uid in request.resource.data.members
+                       && !(request.auth.uid in resource.data.members)) // Only adding, not removing
+                    );
+
+      // Allow delete only for channel creator
+      allow delete: if isAuthenticated()
+                    && request.auth.uid == resource.data.createdBy;
+
+      // ========================================
+      // CHANNEL MESSAGES SUBCOLLECTION
+      // ========================================
+
+      match /messages/{messageId} {
+        // Allow read for channel members
+        allow read: if isAuthenticated()
+                    && isChannelMember(channelId);
+
+        // Allow create for channel members
+        allow create: if isAuthenticated()
+                      && isChannelMember(channelId)
+                      && hasRequiredMessageFields()
+                      && request.resource.data.authorId == request.auth.uid
+                      && request.resource.data.channelId == channelId
+                      && isValidStringLength(request.resource.data.content, 1, 5000);
+
+        // Allow update only for message author (edit content or reactions)
+        allow update: if isAuthenticated()
+                      && (
+                        // Author can edit message
+                        (request.resource.data.authorId == request.auth.uid)
+                        ||
+                        // Any member can add reactions
+                        (isChannelMember(channelId)
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                        ||
+                        // Any member can increment threadCount (when adding thread reply)
+                        (isChannelMember(channelId)
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'updatedAt']))
+                      );
+
+        // Allow delete only for message author
+        allow delete: if isAuthenticated()
+                      && resource.data.authorId == request.auth.uid;
+
+        // ========================================
+        // MESSAGE THREADS SUBCOLLECTION
+        // ========================================
+
+        match /threads/{threadId} {
+          // Allow read for channel members
+          allow read: if isAuthenticated()
+                      && isChannelMember(channelId);
+
+          // Allow create for channel members
+          allow create: if isAuthenticated()
+                        && isChannelMember(channelId)
+                        && request.resource.data.authorId == request.auth.uid
+                        && isValidStringLength(request.resource.data.content, 1, 5000);
+
+          // Allow update only for thread author
+          allow update: if isAuthenticated()
+                        && (
+                          // Author can edit thread
+                          (request.resource.data.authorId == request.auth.uid)
+                          ||
+                          // Any member can add reactions
+                          (isChannelMember(channelId)
+                           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                        );
+
+          // Allow delete only for thread author
+          allow delete: if isAuthenticated()
+                        && resource.data.authorId == request.auth.uid;
+        }
+      }
+    }
+
+    // ========================================
+    // DIRECT MESSAGES COLLECTION
+    // ========================================
+
+    match /direct-messages/{conversationId} {
+      // Helper to check if user is participant based on conversationId format
+      // conversationId format: "uid1_uid2" (alphabetically sorted)
+      function isConversationParticipant() {
+        return conversationId.matches('^.*' + request.auth.uid + '.*$');
+      }
+
+      // Allow read if user is participant (check via conversationId pattern or existing data)
+      allow read: if isAuthenticated()
+                  && (
+                    isConversationParticipant()
+                    || (exists(/databases/$(database)/documents/direct-messages/$(conversationId))
+                        && request.auth.uid in resource.data.participants)
+                  );
+
+      // Allow create if user is one of the participants
+      allow create: if isAuthenticated()
+                    && request.auth.uid in request.resource.data.participants
+                    && request.resource.data.participants.size() == 2
+                    && isConversationParticipant();
+
+      // Allow update for participants (for lastMessageAt, unreadCount, etc.)
+      allow update: if isAuthenticated()
+                    && request.auth.uid in resource.data.participants;
+
+      // ========================================
+      // DM MESSAGES SUBCOLLECTION
+      // ========================================
+
+      match /messages/{messageId} {
+        // Get parent conversation
+        function getConversation() {
+          return get(/databases/$(database)/documents/direct-messages/$(conversationId)).data;
+        }
+
+        // Check if user is participant in conversation
+        function isParticipant() {
+          return request.auth.uid in getConversation().participants;
+        }
+
+        // Allow read for conversation participants
+        allow read: if isAuthenticated()
+                    && isParticipant();
+
+        // Allow create for conversation participants
+        allow create: if isAuthenticated()
+                      && isParticipant()
+                      && request.resource.data.authorId == request.auth.uid
+                      && isValidStringLength(request.resource.data.content, 1, 5000);
+
+        // Allow update for message author (edit) or participants (reactions, threadCount)
+        allow update: if isAuthenticated()
+                      && (
+                        // Author can edit message
+                        (request.resource.data.authorId == request.auth.uid)
+                        ||
+                        // Any participant can add reactions or update threadCount
+                        (isParticipant()
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt', 'threadCount']))
+                      );
+
+        // Allow delete for message author
+        allow delete: if isAuthenticated()
+                      && resource.data.authorId == request.auth.uid;
+
+        // ========================================
+        // THREADS SUBCOLLECTION (replies to DM messages)
+        // ========================================
+
+        match /threads/{threadId} {
+          // Allow read for conversation participants
+          allow read: if isAuthenticated()
+                      && isParticipant();
+
+          // Allow create for conversation participants
+          allow create: if isAuthenticated()
+                        && isParticipant()
+                        && request.resource.data.authorId == request.auth.uid
+                        && isValidStringLength(request.resource.data.content, 1, 5000);
+
+          // Allow update for thread author (edit) or participants (reactions)
+          allow update: if isAuthenticated()
+                        && (
+                          // Author can edit thread
+                          (request.resource.data.authorId == request.auth.uid)
+                          ||
+                          // Any participant can add reactions
+                          (isParticipant()
+                           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                        );
+
+          // Allow delete for thread author
+          allow delete: if isAuthenticated()
+                        && resource.data.authorId == request.auth.uid;
+        }
+      }
+    }
+
+    // ========================================
+    // MAILBOX COLLECTION
+    // ========================================
+
+    match /mailbox/{messageId} {
+      // Allow read only for the recipient
+      allow read: if isAuthenticated()
+                  && request.auth.uid == resource.data.recipientId;
+
+      // Allow create for authenticated users (sender or admin)
+      allow create: if isAuthenticated()
+                    && request.resource.data.keys().hasAll([
+                      'recipientId', 'authorId', 'subject', 'content',
+                      'type', 'isRead', 'createdAt', 'updatedAt'
+                    ])
+                    && isValidStringLength(request.resource.data.subject, 1, 200)
+                    && isValidStringLength(request.resource.data.content, 1, 10000)
+                    && request.resource.data.type in ['user', 'admin', 'system']
+                    && (
+                      // User sending message to another user
+                      (request.resource.data.type == 'user'
+                       && request.resource.data.authorId == request.auth.uid)
+                      ||
+                      // Admin or system message (TODO: add admin role check)
+                      request.resource.data.type in ['admin', 'system']
+                    );
+
+      // Allow update only for recipient (mark as read/unread)
+      allow update: if isAuthenticated()
+                    && request.auth.uid == resource.data.recipientId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'updatedAt']);
+
+      // Allow delete for recipient
+      allow delete: if isAuthenticated()
+                    && request.auth.uid == resource.data.recipientId;
+    }
+
+    // ========================================
+    // DENY ALL OTHER COLLECTIONS
+    // ========================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

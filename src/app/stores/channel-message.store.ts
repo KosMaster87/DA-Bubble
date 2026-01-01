@@ -17,8 +17,14 @@ import {
   where,
   orderBy,
   limit,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  doc,
+  serverTimestamp,
+  Unsubscribe,
 } from '@angular/fire/firestore';
-import { Message } from '@core/models/message.model';
+import { Message, CreateMessageRequest, MessageType } from '@core/models/message.model';
 
 /**
  * State interface for channel message management
@@ -85,21 +91,45 @@ export const ChannelMessageStore = signalStore(
   })),
   withMethods((store) => {
     const firestore = inject(Firestore);
-    const messagesCollection = collection(firestore, 'messages');
-
+    const messageListeners = new Map<string, Unsubscribe>();
     return {
       // === ENTRY POINT METHODS ===
 
       /**
-       * Entry point: Load messages for a specific channel
+       * Entry point: Load messages for a specific channel with real-time updates
        * @async
        * @function loadChannelMessages
        * @param {string} channelId - Channel ID to load messages for
-       * @param {number} messageLimit - Maximum number of messages to load
+       * @returns {void}
+       */
+      loadChannelMessages(channelId: string) {
+        this.performLoadChannelMessages(channelId);
+      },
+
+      /**
+       * Entry point: Send message to channel
+       * @async
+       * @function sendMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} content - Message content
+       * @param {string} authorId - Author user ID
        * @returns {Promise<void>}
        */
-      async loadChannelMessages(channelId: string, messageLimit = 50) {
-        await this.performLoadChannelMessages(channelId, messageLimit);
+      async sendMessage(channelId: string, content: string, authorId: string) {
+        await this.performSendMessage(channelId, content, authorId);
+      },
+
+      /**
+       * Entry point: Update message content
+       * @async
+       * @function updateMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID to update
+       * @param {string} content - New message content
+       * @returns {Promise<void>}
+       */
+      async updateMessage(channelId: string, messageId: string, content: string) {
+        await this.performUpdateMessage(channelId, messageId, content);
       },
 
       /**
@@ -124,22 +154,102 @@ export const ChannelMessageStore = signalStore(
       // === IMPLEMENTATION METHODS ===
 
       /**
-       * Implementation: Load channel messages from Firestore
-       * @async
+       * Implementation: Load channel messages from Firestore with real-time updates
        * @function performLoadChannelMessages
        * @param {string} channelId - Channel ID to load messages for
-       * @param {number} messageLimit - Maximum number of messages to load
+       * @returns {void}
+       */
+      performLoadChannelMessages(channelId: string) {
+        // Unsubscribe from previous listener for this channel
+        const existingListener = messageListeners.get(channelId);
+        if (existingListener) {
+          existingListener();
+        }
+
+        patchState(store, { isLoading: true, error: null });
+
+        try {
+          // Get messages subcollection for this channel
+          const messagesRef = collection(firestore, `channels/${channelId}/messages`);
+          const q = query(messagesRef, orderBy('createdAt', 'asc'));
+
+          // Set up real-time listener
+          const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const messages = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data()['createdAt']?.toDate() || new Date(),
+                updatedAt: doc.data()['updatedAt']?.toDate() || new Date(),
+              })) as Message[];
+
+              this.updateChannelMessages(channelId, messages);
+              patchState(store, { isLoading: false });
+            },
+            (error) => {
+              this.handleError(error, 'Failed to load channel messages');
+            }
+          );
+
+          // Store unsubscribe function in private variable
+          messageListeners.set(channelId, unsubscribe);
+        } catch (error) {
+          this.handleError(error, 'Failed to setup message listener');
+        }
+      },
+
+      /**
+       * Implementation: Send message to channel
+       * @async
+       * @function performSendMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} content - Message content
+       * @param {string} authorId - Author user ID
        * @returns {Promise<void>}
        */
-      async performLoadChannelMessages(channelId: string, messageLimit: number) {
-        patchState(store, { isLoading: true });
+      async performSendMessage(channelId: string, content: string, authorId: string) {
         try {
-          const q = this.buildChannelQuery(channelId, messageLimit);
-          const snapshot = await getDocs(q);
-          const messages = this.mapMessagesFromSnapshot(snapshot);
-          this.updateChannelMessages(channelId, messages);
+          const messagesRef = collection(firestore, `channels/${channelId}/messages`);
+          await addDoc(messagesRef, {
+            content,
+            authorId,
+            channelId,
+            type: MessageType.TEXT,
+            attachments: [],
+            reactions: [],
+            threadCount: 0,
+            isEdited: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
         } catch (error) {
-          this.handleError(error, 'Failed to load channel messages');
+          this.handleError(error, 'Failed to send message');
+          throw error;
+        }
+      },
+
+      /**
+       * Implementation: Update message in Firestore
+       * @async
+       * @function performUpdateMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID to update
+       * @param {string} content - New message content
+       * @returns {Promise<void>}
+       */
+      async performUpdateMessage(channelId: string, messageId: string, content: string) {
+        try {
+          const messageRef = doc(firestore, `channels/${channelId}/messages/${messageId}`);
+          await updateDoc(messageRef, {
+            content,
+            isEdited: true,
+            updatedAt: serverTimestamp(),
+          });
+          // onSnapshot listener will automatically update state
+        } catch (error) {
+          this.handleError(error, 'Failed to update message');
+          throw error;
         }
       },
 
@@ -155,38 +265,6 @@ export const ChannelMessageStore = signalStore(
       },
 
       // === HELPER FUNCTIONS ===
-
-      /**
-       * Build Firestore query for channel messages
-       * @function buildChannelQuery
-       * @param {string} channelId - Channel ID
-       * @param {number} messageLimit - Message limit
-       * @returns {any} Firestore query
-       */
-      buildChannelQuery(channelId: string, messageLimit: number): any {
-        return query(
-          messagesCollection,
-          where('channelId', '==', channelId),
-          orderBy('createdAt', 'desc'),
-          limit(messageLimit)
-        );
-      },
-
-      /**
-       * Map Firestore snapshot to Message array
-       * @function mapMessagesFromSnapshot
-       * @param {any} snapshot - Firestore query snapshot
-       * @returns {Message[]} Array of message objects
-       */
-      mapMessagesFromSnapshot(snapshot: any): Message[] {
-        return snapshot.docs.map(
-          (doc: any) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as Message)
-        );
-      },
 
       /**
        * Update channel messages in state
@@ -258,6 +336,15 @@ export const ChannelMessageStore = signalStore(
        */
       clearError() {
         patchState(store, { error: null });
+      },
+
+      /**
+       * Cleanup all listeners
+       * @function destroy
+       */
+      destroy() {
+        messageListeners.forEach((unsubscribe) => unsubscribe());
+        messageListeners.clear();
       },
     };
   })

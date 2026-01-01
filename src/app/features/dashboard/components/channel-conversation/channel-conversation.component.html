@@ -8,7 +8,7 @@
           alt=""
           class="channel-conversation__title-icon"
         />
-        {{ channel().name }}
+        {{ currentChannelData()?.name || channel().name }}
         <img
           src="/img/icon/arrow_default.svg"
           alt=""
@@ -16,15 +16,24 @@
           [class.channel-conversation__title-arrow--open]="isChannelInfoOpen()"
         />
       </h1>
-      <p class="channel-conversation__description">{{ channel().description }}</p>
+      <div class="channel-conversation__description-wrapper">
+        <span class="channel-conversation__privacy-badge">
+          {{ currentChannelData()?.isPrivate ?? channel().isPrivate ? 'Private' : 'Public' }}
+        </span>
+        <p class="channel-conversation__description">
+          {{ currentChannelData()?.description || channel().description }}
+        </p>
+      </div>
 
       <!-- Channel Info -->
       <app-channel-info
         [channel]="channelInfo()"
         [isVisible]="isChannelInfoOpen()"
+        [currentUserId]="authStore.user()?.uid"
         (closeClicked)="onChannelInfoClose()"
         (channelUpdated)="onChannelUpdated($event)"
         (leaveChannelClicked)="onLeaveChannel()"
+        (deleteChannelClicked)="onDeleteChannel()"
         (createdByClicked)="onCreatedByClick($event)"
       />
     </div>
@@ -35,12 +44,15 @@
         [totalCount]="totalMemberCount()"
         (memberClicked)="onViewMembers()"
       />
+      @if (isCurrentUserChannelOwner() || isCurrentUserAdmin()) {
       <app-add-member-button (addMemberClicked)="onAddMember()" />
+      }
 
       <!-- Members Options Menu -->
       <app-members-options-menu
         [isOpen]="isMembersMenuOpen()"
         [members]="members()"
+        [showAddMember]="isCurrentUserChannelOwner() || isCurrentUserAdmin()"
         (closeClicked)="onCloseMembersMenu()"
         (addMemberClicked)="onAddMember()"
         (memberSelected)="onMemberSelected($event)"
@@ -52,7 +64,9 @@
         [user]="selectedMember()!"
         [isVisible]="isProfileViewOpen()"
         [isOwnProfile]="isOwnProfile()"
-        [isAdmin]="isCurrentUserAdmin()"
+        [isChannelOwner]="isCurrentUserChannelOwner()"
+        [isCurrentUserAdmin]="isCurrentUserAdmin()"
+        [isSelectedUserOwner]="isSelectedUserChannelOwner()"
         (closeClicked)="onProfileViewClose()"
         (editClicked)="onProfileEdit()"
         (messageClicked)="onProfileMessage()"
@@ -84,11 +98,13 @@
   <!-- Messages Area -->
   <div class="channel-conversation__messages">
     <app-conversation-messages
+      [conversationId]="'channel-' + channel().id"
       [messageGroups]="messagesGroupedByDate()"
       (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
       (reactionAdded)="onReactionAdded($event)"
       (threadClicked)="onThreadClick($event)"
+      (messageEdited)="onMessageEdited($event)"
     />
   </div>
 

@@ -13,6 +13,7 @@ export interface Message {
   type: MessageType;
   attachments: MessageAttachment[];
   reactions: MessageReaction[];
+  threadCount?: number; // Number of thread replies
   isEdited: boolean;
   editedAt?: Date;
   createdAt: Date;

@@ -1,0 +1,32 @@
+<div class="message-edit-wrapper">
+  <div class="message-edit">
+    <!-- Textarea Row -->
+    <div class="message-edit__textarea-wrapper">
+      <textarea
+        class="message-edit__textarea"
+        [value]="editedContent()"
+        (input)="onInput($event)"
+        placeholder="Edit your message..."
+        rows="3"
+      ></textarea>
+    </div>
+
+    <!-- Actions Row -->
+    <div class="message-edit__actions">
+      <!-- Left: Add Reaction Button -->
+      <button class="message-edit__emoji-btn" type="button" aria-label="Add emoji">
+        <img
+          src="/img/icon/emojis/emoji-add-reaction-default.svg"
+          alt="Add emoji"
+          class="message-edit__emoji-icon"
+        />
+      </button>
+
+      <!-- Right: Cancel and Save Buttons -->
+      <div class="message-edit__buttons">
+        <app-btn-cancel (click)="onCancel()" />
+        <app-btn-action text="Save" (click)="onSave()" />
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,9 +1,6 @@
 /**
- * @fileoverview Direct message management store with NgRx SignalStore
- * Provides state management for direct message operations between users,
- * including conversation handling and real-time messaging.
- * @description This store handles all direct message operations including
- * loading conversations, managing direct message state, and user-to-user messaging.
+ * @fileoverview Direct Message Store with proper conversation structure
+ * Uses /direct-messages/{conversationId}/messages subcollection
  * @module DirectMessageStore
  */
 
@@ -12,275 +9,400 @@ import { signalStore, withState, withMethods, withComputed, patchState } from '@
 import {
   Firestore,
   collection,
+  doc,
+  getDoc,
   getDocs,
+  setDoc,
+  updateDoc,
+  addDoc,
   query,
   where,
   orderBy,
-  limit,
+  serverTimestamp,
+  arrayUnion,
+  onSnapshot,
+  Timestamp,
+  Unsubscribe,
 } from '@angular/fire/firestore';
-import { Message } from '@core/models/message.model';
+import {
+  DirectMessageConversation,
+  DirectMessage,
+  getConversationId,
+  getOtherParticipant,
+} from '@core/models/direct-message.model';
 
 /**
- * State interface for direct message management
- * @interface DirectMessageState
+ * State interface
  */
 export interface DirectMessageState {
-  /** Direct messages grouped by conversation ID */
-  directMessages: { [conversationId: string]: Message[] };
-  /** Currently active conversation ID */
+  conversations: DirectMessageConversation[];
+  messages: { [conversationId: string]: DirectMessage[] };
   activeConversationId: string | null;
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
 }
 
-/**
- * Initial direct message state
- * @constant {DirectMessageState}
- */
 const initialState: DirectMessageState = {
-  directMessages: {},
+  conversations: [],
+  messages: {},
   activeConversationId: null,
   isLoading: false,
   error: null,
 };
 
 /**
- * Direct message management store with Firestore integration
- * Provides methods for direct message operations and conversation management
- * @constant {SignalStore}
+ * DirectMessageStore - manages DM conversations and messages
  */
 export const DirectMessageStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed((store) => ({
     /**
-     * Computed function to get direct messages between two users
-     * @returns {Signal<Function>} Function that takes user IDs and returns messages array
+     * Get conversations sorted by last message time
      */
-    getDirectMessagesBetween: computed(() => (user1Id: string, user2Id: string) => {
-      const conversationId = [user1Id, user2Id].sort().join('_');
-      return store.directMessages()[conversationId] || [];
-    }),
-
-    /**
-     * Computed property for active conversation messages
-     * @returns {Signal<Message[]>} Messages for currently active conversation
-     */
-    activeConversationMessages: computed(() => {
-      const activeId = store.activeConversationId();
-      return activeId ? store.directMessages()[activeId] || [] : [];
-    }),
-
-    /**
-     * Computed property for direct message count
-     * @returns {Signal<number>} Total number of direct messages
-     */
-    directMessageCount: computed(() => {
-      return Object.values(store.directMessages()).reduce(
-        (total, messages) => total + messages.length,
-        0
+    sortedConversations: computed(() => {
+      return [...store.conversations()].sort(
+        (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
       );
     }),
 
     /**
-     * Computed property for conversation count
-     * @returns {Signal<number>} Number of active conversations
+     * Get messages for active conversation
      */
-    conversationCount: computed(() => Object.keys(store.directMessages()).length),
+    activeMessages: computed(() => {
+      const activeId = store.activeConversationId();
+      return activeId ? store.messages()[activeId] || [] : [];
+    }),
+
+    /**
+     * Get active conversation
+     */
+    activeConversation: computed(() => {
+      const activeId = store.activeConversationId();
+      return store.conversations().find((c) => c.id === activeId) || null;
+    }),
   })),
   withMethods((store) => {
     const firestore = inject(Firestore);
-    const messagesCollection = collection(firestore, 'messages');
+    let conversationsUnsubscribe: Unsubscribe | null = null;
+    let messagesUnsubscribers: Map<string, Unsubscribe> = new Map();
 
     return {
-      // === ENTRY POINT METHODS ===
-
       /**
-       * Entry point: Load direct messages between two users
-       * @async
-       * @function loadDirectMessages
-       * @param {string} user1Id - First user ID
-       * @param {string} user2Id - Second user ID
-       * @param {number} messageLimit - Maximum number of messages to load
-       * @returns {Promise<void>}
+       * Load user's conversations
+       * @param userConversationIds Array of conversation IDs from user.directMessages
        */
-      async loadDirectMessages(user1Id: string, user2Id: string, messageLimit = 50) {
-        await this.performLoadDirectMessages(user1Id, user2Id, messageLimit);
-      },
+      async loadConversations(userConversationIds: string[]): Promise<void> {
+        if (userConversationIds.length === 0) {
+          patchState(store, { conversations: [], isLoading: false });
+          return;
+        }
 
-      /**
-       * Entry point: Set active conversation
-       * @function setActiveConversation
-       * @param {string | null} conversationId - Conversation ID to set as active
-       */
-      setActiveConversation(conversationId: string | null) {
-        patchState(store, { activeConversationId: conversationId });
-      },
+        patchState(store, { isLoading: true, error: null });
 
-      /**
-       * Entry point: Add message to conversation
-       * @function addMessageToConversation
-       * @param {string} conversationId - Conversation ID
-       * @param {Message} message - Message to add
-       */
-      addMessageToConversation(conversationId: string, message: Message) {
-        this.performAddMessageToConversation(conversationId, message);
-      },
-
-      // === IMPLEMENTATION METHODS ===
-
-      /**
-       * Implementation: Load direct messages from Firestore
-       * @async
-       * @function performLoadDirectMessages
-       * @param {string} user1Id - First user ID
-       * @param {string} user2Id - Second user ID
-       * @param {number} messageLimit - Maximum number of messages to load
-       * @returns {Promise<void>}
-       */
-      async performLoadDirectMessages(user1Id: string, user2Id: string, messageLimit: number) {
-        patchState(store, { isLoading: true });
         try {
-          const conversationId = this.generateConversationId(user1Id, user2Id);
-          const q = this.buildDirectMessageQuery(user1Id, user2Id, messageLimit);
-          const snapshot = await getDocs(q);
-          const messages = this.mapMessagesFromSnapshot(snapshot);
-          this.updateDirectMessages(conversationId, messages);
-        } catch (error) {
-          this.handleError(error, 'Failed to load direct messages');
+          // Unsubscribe from previous listener if exists
+          if (conversationsUnsubscribe) {
+            conversationsUnsubscribe();
+            conversationsUnsubscribe = null;
+          }
+
+          // Real-time listener for conversations
+          const conversationsRef = collection(firestore, 'direct-messages');
+          const q = query(conversationsRef, where('__name__', 'in', userConversationIds));
+
+          conversationsUnsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const conversations = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                const createdAt = data['createdAt'] as Timestamp | null;
+                const lastMessageAt = data['lastMessageAt'] as Timestamp | null;
+
+                return {
+                  id: doc.id,
+                  participants: data['participants'] as [string, string],
+                  createdAt: createdAt ? createdAt.toDate() : new Date(),
+                  lastMessageAt: lastMessageAt ? lastMessageAt.toDate() : new Date(),
+                  lastMessageContent: data['lastMessageContent'],
+                  lastMessageBy: data['lastMessageBy'],
+                  unreadCount: data['unreadCount'] || {},
+                } as DirectMessageConversation;
+              });
+
+              patchState(store, { conversations, isLoading: false });
+            },
+            (error) => {
+              console.error('Error loading conversations:', error);
+              patchState(store, { error: error.message, isLoading: false });
+            }
+          );
+        } catch (error: any) {
+          console.error('Error setting up conversations listener:', error);
+          patchState(store, { error: error.message, isLoading: false });
         }
       },
 
       /**
-       * Implementation: Add message to conversation state
-       * @function performAddMessageToConversation
-       * @param {string} conversationId - Conversation ID
-       * @param {Message} message - Message to add
+       * Load messages for a specific conversation
+       * @param conversationId Conversation ID
        */
-      performAddMessageToConversation(conversationId: string, message: Message) {
-        const directMessages = store.directMessages()[conversationId] || [];
-        this.updateDirectMessages(conversationId, [message, ...directMessages]);
-      },
+      async loadMessages(conversationId: string): Promise<void> {
+        try {
+          const messagesRef = collection(firestore, 'direct-messages', conversationId, 'messages');
+          const q = query(messagesRef, orderBy('createdAt', 'asc')); // Ascending order - oldest first
 
-      // === HELPER FUNCTIONS ===
+          // Unsubscribe from previous listener if exists
+          if (messagesUnsubscribers.has(conversationId)) {
+            messagesUnsubscribers.get(conversationId)!();
+          }
 
-      /**
-       * Generate conversation ID from two user IDs
-       * @function generateConversationId
-       * @param {string} user1Id - First user ID
-       * @param {string} user2Id - Second user ID
-       * @returns {string} Conversation ID
-       */
-      generateConversationId(user1Id: string, user2Id: string): string {
-        return [user1Id, user2Id].sort().join('_');
-      },
+          // Real-time listener for messages
+          const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const messages = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                // Handle serverTimestamp() null values
+                const createdAt = data['createdAt'] as Timestamp | null;
+                const updatedAt = data['updatedAt'] as Timestamp | null;
+                const editedAt = data['editedAt'] as Timestamp | null | undefined;
+                return {
+                  id: doc.id,
+                  authorId: data['authorId'],
+                  content: data['content'],
+                  createdAt: createdAt ? createdAt.toDate() : new Date(),
+                  updatedAt: updatedAt ? updatedAt.toDate() : new Date(),
+                  isEdited: data['isEdited'] || false,
+                  editedAt: editedAt ? editedAt.toDate() : undefined,
+                  reactions: data['reactions'] || [],
+                  attachments: data['attachments'] || [],
+                  threadCount: data['threadCount'] || 0,
+                } as DirectMessage;
+              });
 
-      /**
-       * Build Firestore query for direct messages
-       * @function buildDirectMessageQuery
-       * @param {string} user1Id - First user ID
-       * @param {string} user2Id - Second user ID
-       * @param {number} messageLimit - Message limit
-       * @returns {any} Firestore query
-       */
-      buildDirectMessageQuery(user1Id: string, user2Id: string, messageLimit: number): any {
-        return query(
-          messagesCollection,
-          where('recipientId', 'in', [user1Id, user2Id]),
-          where('authorId', 'in', [user1Id, user2Id]),
-          orderBy('createdAt', 'desc'),
-          limit(messageLimit)
-        );
-      },
-
-      /**
-       * Map Firestore snapshot to Message array
-       * @function mapMessagesFromSnapshot
-       * @param {any} snapshot - Firestore query snapshot
-       * @returns {Message[]} Array of message objects
-       */
-      mapMessagesFromSnapshot(snapshot: any): Message[] {
-        return snapshot.docs.map(
-          (doc: any) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as Message)
-        );
-      },
-
-      /**
-       * Update direct messages in state
-       * @function updateDirectMessages
-       * @param {string} conversationId - Conversation ID
-       * @param {Message[]} messages - Messages to update
-       */
-      updateDirectMessages(conversationId: string, messages: Message[]) {
-        patchState(store, {
-          directMessages: {
-            ...store.directMessages(),
-            [conversationId]: messages,
-          },
-          isLoading: false,
-        });
-      },
-
-      /**
-       * Update direct messages with changes
-       * @function updateDirectMessagesWithChanges
-       * @param {string} messageId - Message ID to update
-       * @param {Partial<Message>} updates - Updates to apply
-       * @returns {object} Updated direct messages
-       */
-      updateDirectMessagesWithChanges(messageId: string, updates: Partial<Message>): any {
-        const updatedDirectMessages = { ...store.directMessages() };
-        Object.keys(updatedDirectMessages).forEach((conversationId) => {
-          updatedDirectMessages[conversationId] = updatedDirectMessages[conversationId].map((msg) =>
-            msg.id === messageId ? { ...msg, ...updates } : msg
+              patchState(store, {
+                messages: {
+                  ...store.messages(),
+                  [conversationId]: messages,
+                },
+              });
+            },
+            (error) => {
+              console.error(`Error loading messages for ${conversationId}:`, error);
+            }
           );
+
+          messagesUnsubscribers.set(conversationId, unsubscribe);
+        } catch (error: any) {
+          console.error('Error loading messages:', error);
+          patchState(store, { error: error.message });
+        }
+      },
+
+      /**
+       * Start or get existing conversation with another user
+       * @param currentUserId Current user's UID
+       * @param otherUserId Other user's UID
+       * @returns Conversation data
+       */
+      async startConversation(
+        currentUserId: string,
+        otherUserId: string
+      ): Promise<{ id: string; participants: [string, string] }> {
+        const conversationId = getConversationId(currentUserId, otherUserId);
+        const conversationRef = doc(firestore, 'direct-messages', conversationId);
+
+        console.log('🔍 Starting conversation', {
+          currentUserId,
+          otherUserId,
+          conversationId,
         });
-        return updatedDirectMessages;
+
+        try {
+          const conversationSnap = await getDoc(conversationRef);
+
+          if (!conversationSnap.exists()) {
+            console.log('📝 Creating new conversation:', conversationId);
+
+            const now = new Date();
+
+            // Create new conversation
+            await setDoc(conversationRef, {
+              participants: [currentUserId, otherUserId].sort(),
+              createdAt: serverTimestamp(),
+              lastMessageAt: serverTimestamp(),
+              lastMessageContent: '',
+              lastMessageBy: '',
+              unreadCount: {
+                [currentUserId]: 0,
+                [otherUserId]: 0,
+              },
+            });
+
+            console.log('✅ Conversation document created');
+
+            // Immediately add to store (before listener fires)
+            const newConversation: DirectMessageConversation = {
+              id: conversationId,
+              participants: [currentUserId, otherUserId].sort() as [string, string],
+              createdAt: now,
+              lastMessageAt: now,
+              lastMessageContent: '',
+              lastMessageBy: '',
+              unreadCount: {
+                [currentUserId]: 0,
+                [otherUserId]: 0,
+              },
+            };
+
+            patchState(store, {
+              conversations: [...store.conversations(), newConversation],
+            });
+
+            console.log('✅ Conversation added to store immediately');
+
+            // Update both users' directMessages arrays
+            const currentUserRef = doc(firestore, 'users', currentUserId);
+            const otherUserRef = doc(firestore, 'users', otherUserId);
+
+            console.log('📝 Updating users directMessages arrays');
+
+            await Promise.all([
+              updateDoc(currentUserRef, { directMessages: arrayUnion(conversationId) }),
+              updateDoc(otherUserRef, { directMessages: arrayUnion(conversationId) }),
+            ]);
+
+            console.log('✅ Users updated with conversation ID');
+          } else {
+            console.log('✅ Conversation already exists:', conversationId);
+          }
+
+          return {
+            id: conversationId,
+            participants: [currentUserId, otherUserId].sort() as [string, string],
+          };
+        } catch (error: any) {
+          console.error('❌ Error starting conversation:', error);
+          console.error('Error code:', error?.code);
+          console.error('Error message:', error?.message);
+          throw error;
+        }
       },
 
       /**
-       * Handle errors and update state
-       * @function handleError
-       * @param {unknown} error - Error object
-       * @param {string} defaultMessage - Default error message
+       * Send a message in a conversation
+       * @param conversationId Conversation ID
+       * @param authorId Author's UID
+       * @param content Message content
        */
-      handleError(error: unknown, defaultMessage: string) {
-        const errorMessage = error instanceof Error ? error.message : defaultMessage;
-        patchState(store, { error: errorMessage, isLoading: false });
+      async sendMessage(conversationId: string, authorId: string, content: string): Promise<void> {
+        try {
+          const messagesRef = collection(firestore, 'direct-messages', conversationId, 'messages');
+
+          // Add message
+          await addDoc(messagesRef, {
+            authorId,
+            content,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isEdited: false,
+            reactions: [],
+            attachments: [],
+            threadCount: 0,
+          });
+
+          // Update conversation metadata
+          const conversationRef = doc(firestore, 'direct-messages', conversationId);
+          const conversationSnap = await getDoc(conversationRef);
+
+          if (conversationSnap.exists()) {
+            const data = conversationSnap.data();
+            const participants = data['participants'] as string[];
+            const otherParticipant = participants.find((uid) => uid !== authorId);
+
+            if (otherParticipant) {
+              await updateDoc(conversationRef, {
+                lastMessageAt: serverTimestamp(),
+                lastMessageContent: content.substring(0, 100), // Preview
+                lastMessageBy: authorId,
+                [`unreadCount.${otherParticipant}`]:
+                  (data['unreadCount']?.[otherParticipant] || 0) + 1,
+              });
+            }
+          }
+        } catch (error: any) {
+          console.error('Error sending message:', error);
+          throw error;
+        }
       },
 
-      // === STATE MANAGEMENT HELPERS ===
-
       /**
-       * Set loading state
-       * @function setLoading
-       * @param {boolean} isLoading - Loading state
+       * Update a message in a conversation
+       * @param conversationId Conversation ID
+       * @param messageId Message ID to update
+       * @param content New message content
        */
-      setLoading(isLoading: boolean) {
-        patchState(store, { isLoading });
+      async updateMessage(
+        conversationId: string,
+        messageId: string,
+        content: string
+      ): Promise<void> {
+        try {
+          const messageRef = doc(
+            firestore,
+            `direct-messages/${conversationId}/messages/${messageId}`
+          );
+          await updateDoc(messageRef, {
+            content,
+            isEdited: true,
+            updatedAt: serverTimestamp(),
+          });
+          // onSnapshot listener will automatically update state
+        } catch (error: any) {
+          console.error('Error updating message:', error);
+          throw error;
+        }
       },
 
       /**
-       * Set error message
-       * @function setError
-       * @param {string | null} error - Error message or null to clear
+       * Set active conversation
+       * @param conversationId Conversation ID or null
        */
-      setError(error: string | null) {
-        patchState(store, { error });
+      setActiveConversation(conversationId: string | null): void {
+        patchState(store, { activeConversationId: conversationId });
+
+        // Load messages if not loaded yet
+        if (conversationId && !store.messages()[conversationId]) {
+          this.loadMessages(conversationId);
+        }
       },
 
       /**
-       * Clear error message
-       * @function clearError
+       * Mark conversation as read
+       * @param conversationId Conversation ID
+       * @param userId Current user's UID
        */
-      clearError() {
-        patchState(store, { error: null });
+      async markAsRead(conversationId: string, userId: string): Promise<void> {
+        try {
+          const conversationRef = doc(firestore, 'direct-messages', conversationId);
+          await updateDoc(conversationRef, {
+            [`unreadCount.${userId}`]: 0,
+          });
+        } catch (error: any) {
+          console.error('Error marking conversation as read:', error);
+        }
+      },
+
+      /**
+       * Cleanup listeners
+       */
+      destroy(): void {
+        if (conversationsUnsubscribe) {
+          conversationsUnsubscribe();
+        }
+        messagesUnsubscribers.forEach((unsubscribe) => unsubscribe());
+        messagesUnsubscribers.clear();
       },
     };
   })

@@ -9,7 +9,19 @@
 
 import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { Firestore, collection, doc, getDocs, addDoc, updateDoc } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  arrayRemove,
+} from '@angular/fire/firestore';
 
 import { Channel, CreateChannelRequest } from '@core/models/channel.model';
 
@@ -18,17 +30,11 @@ import { Channel, CreateChannelRequest } from '@core/models/channel.model';
  * @interface ChannelState
  */
 export interface ChannelState {
-  /** Array of all channels */
   channels: Channel[];
-  /** Currently selected channel */
   selectedChannel: Channel | null;
-  /** User's joined channels */
   myChannels: Channel[];
-  /** Available public channels */
   publicChannels: Channel[];
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
 }
 
@@ -89,12 +95,13 @@ export const ChannelStore = signalStore(
   withMethods((store) => {
     const firestore = inject(Firestore);
     const channelsCollection = collection(firestore, 'channels');
+    let unsubscribe: (() => void) | null = null;
 
     return {
       // === ENTRY POINT METHODS ===
 
       /**
-       * Entry point: Load all channels or user-specific channels
+       * Entry point: Load all channels or user-specific channels with real-time updates
        * @async
        * @function loadChannels
        * @param {string} userId - Optional user ID to filter channels
@@ -110,10 +117,10 @@ export const ChannelStore = signalStore(
        * @function createChannel
        * @param {CreateChannelRequest} channelData - Channel data to create
        * @param {string} createdBy - User ID of channel creator
-       * @returns {Promise<void>}
+       * @returns {Promise<string>} - The ID of the created channel
        */
-      async createChannel(channelData: CreateChannelRequest, createdBy: string) {
-        await this.performCreate(channelData, createdBy);
+      async createChannel(channelData: CreateChannelRequest, createdBy: string): Promise<string> {
+        return await this.performCreate(channelData, createdBy);
       },
 
       /**
@@ -128,25 +135,119 @@ export const ChannelStore = signalStore(
         await this.performUpdate(channelId, updates);
       },
 
-      // === IMPLEMENTATION METHODS ===
+      /**
+       * Entry point: Leave channel (remove user from members)
+       * @async
+       * @function leaveChannel
+       * @param {string} channelId - Channel ID to leave
+       * @param {string} userId - User ID who wants to leave
+       * @returns {Promise<void>}
+       */
+      async leaveChannel(channelId: string, userId: string) {
+        patchState(store, { isLoading: true, error: null });
+        try {
+          const channel = store.getChannelById()(channelId);
+          if (!channel) {
+            throw new Error('Channel not found');
+          }
+
+          // Check if user is the owner/creator
+          if (channel.createdBy === userId) {
+            throw new Error('Channel owner cannot leave the channel');
+          }
+
+          // Remove user from members array
+          const channelDoc = doc(channelsCollection, channelId);
+          await updateDoc(channelDoc, {
+            members: arrayRemove(userId),
+            updatedAt: new Date(),
+          });
+
+          patchState(store, { isLoading: false });
+        } catch (error) {
+          this.handleError(error, 'Failed to leave channel');
+          throw error;
+        }
+      },
 
       /**
-       * Implementation: Load channels from Firestore
+       * Entry point: Delete channel (only owner)
+       * @async
+       * @function deleteChannel
+       * @param {string} channelId - Channel ID to delete
+       * @returns {Promise<void>}
+       */
+      async deleteChannel(channelId: string) {
+        patchState(store, { isLoading: true, error: null });
+        try {
+          const channel = store.getChannelById()(channelId);
+          if (!channel) {
+            throw new Error('Channel not found');
+          }
+
+          // Delete channel document from Firestore
+          const channelDoc = doc(channelsCollection, channelId);
+          await deleteDoc(channelDoc);
+          // onSnapshot listener will automatically remove it from state
+
+          patchState(store, { isLoading: false });
+        } catch (error) {
+          this.handleError(error, 'Failed to delete channel');
+          throw error;
+        }
+      },
+
+      // === IMPLEMENTATION METHODS ===
+
+      /** with real-time listener
        * @async
        * @function performLoad
        * @param {string} userId - Optional user ID to filter channels
        * @returns {Promise<void>}
        */
       async performLoad(userId?: string) {
+        // Unsubscribe from previous listener if exists
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+
         patchState(store, { isLoading: true });
         try {
-          const snapshot = await getDocs(channelsCollection);
-          const channels = this.mapChannelsFromSnapshot(snapshot);
-          const userChannels = this.filterUserChannels(channels, userId);
-          patchState(store, { channels, myChannels: userChannels, isLoading: false });
+          // Set up real-time listener for channels
+          const q = query(channelsCollection, orderBy('createdAt', 'desc'));
+
+          unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+              const channels = this.mapChannelsFromSnapshot(snapshot);
+              const userChannels = this.filterUserChannels(channels, userId);
+              patchState(store, {
+                channels,
+                myChannels: userChannels,
+                isLoading: false,
+                error: null,
+              });
+            },
+            (error) => {
+              console.error('Error in channels listener:', error);
+              this.handleError(error, 'Failed to load channels');
+            }
+          );
         } catch (error) {
           this.handleError(error, 'Failed to load channels');
         }
+      },
+
+      /**
+       * Cleanup when store is destroyed
+       */
+      cleanup(): void {
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+        patchState(store, initialState);
       },
 
       /**
@@ -155,17 +256,20 @@ export const ChannelStore = signalStore(
        * @function performCreate
        * @param {CreateChannelRequest} channelData - Channel data to create
        * @param {string} createdBy - User ID of channel creator
-       * @returns {Promise<void>}
+       * @returns {Promise<string>} - The ID of the created channel
        */
-      async performCreate(channelData: CreateChannelRequest, createdBy: string) {
+      async performCreate(channelData: CreateChannelRequest, createdBy: string): Promise<string> {
         patchState(store, { isLoading: true, error: null });
         try {
           const newChannel = this.buildChannelData(channelData, createdBy);
           const docRef = await addDoc(channelsCollection, newChannel);
-          const channel = { ...newChannel, id: docRef.id };
-          patchState(store, { channels: [...store.channels(), channel], isLoading: false });
+          // Don't add to state manually - let the onSnapshot listener handle it
+          // This prevents duplicate channels
+          patchState(store, { isLoading: false });
+          return docRef.id;
         } catch (error) {
           this.handleError(error, 'Failed to create channel');
+          throw error;
         }
       },
 
@@ -196,13 +300,28 @@ export const ChannelStore = signalStore(
        * @returns {Channel[]} Array of channel objects
        */
       mapChannelsFromSnapshot(snapshot: any): Channel[] {
-        return snapshot.docs.map(
-          (doc: any) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as Channel)
-        );
+        const channels = snapshot.docs.map((doc: any) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            // Convert Firestore Timestamps to Date objects
+            createdAt: data.createdAt?.toDate?.() || new Date(),
+            updatedAt: data.updatedAt?.toDate?.() || new Date(),
+            lastMessageAt: data.lastMessageAt?.toDate?.() || new Date(),
+          } as Channel;
+        });
+
+        // Deduplicate channels by ID (just in case)
+        const uniqueChannels = channels.reduce((acc: Channel[], channel: Channel) => {
+          const exists = acc.find((c) => c.id === channel.id);
+          if (!exists) {
+            acc.push(channel);
+          }
+          return acc;
+        }, []);
+
+        return uniqueChannels;
       },
 
       /**
@@ -225,11 +344,15 @@ export const ChannelStore = signalStore(
        */
       buildChannelData(channelData: CreateChannelRequest, createdBy: string): Omit<Channel, 'id'> {
         const now = new Date();
+        // Ensure creator is in members array, but avoid duplicates
+        const uniqueMembers = channelData.members.includes(createdBy)
+          ? channelData.members
+          : [...channelData.members, createdBy];
         return {
           ...channelData,
           createdBy,
           admins: [createdBy],
-          members: [...channelData.members, createdBy],
+          members: uniqueMembers,
           createdAt: now,
           updatedAt: now,
           lastMessageAt: now,

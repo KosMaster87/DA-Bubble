@@ -4,6 +4,18 @@
  * @module UserModel
  */
 
+/**
+ * Scroll state for a conversation (channel, thread, DM)
+ */
+export interface ScrollState {
+  /** Whether auto-scroll is enabled */
+  autoScroll: boolean;
+  /** ID of the last read message */
+  lastRead: string | null;
+  /** Timestamp when last read */
+  lastReadAt: Date | null;
+}
+
 export interface User {
   uid: string;
   email: string;
@@ -15,6 +27,8 @@ export interface User {
   directMessages: string[]; // User IDs for direct conversations
   createdAt: Date;
   updatedAt: Date;
+  /** Scroll state per conversation for multi-device sync */
+  scrollState?: Record<string, ScrollState>;
 }
 
 export interface CreateUserRequest {

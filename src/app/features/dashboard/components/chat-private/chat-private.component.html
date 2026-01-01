@@ -1,20 +1,41 @@
 <div class="chat-private">
   <!-- Header -->
   <div class="chat-private__header">
-    <div class="chat-private__header-info">
-      <h1 class="chat-private__title">{{ userName() }}</h1>
-      <p class="chat-private__status">{{ userStatus() }}</p>
-    </div>
+    <app-user-list-item [user]="userListItem()" (itemClicked)="onUserButtonClick()" />
+
+    <!-- Profile View -->
+    @if (otherUserProfile()) {
+    <app-profile-view
+      [user]="otherUserProfile()!"
+      [isVisible]="isProfileViewOpen()"
+      [isOwnProfile]="false"
+      (closeClicked)="onProfileViewClose()"
+      (editClicked)="onProfileEdit()"
+      (messageClicked)="onProfileMessage()"
+    />
+    }
+
+    <!-- Edit Profile -->
+    @if (editProfileUser()) {
+    <app-edit-profile
+      [user]="editProfileUser()!"
+      [isVisible]="isEditProfileOpen()"
+      (closeClicked)="onEditProfileClose()"
+      (saveClicked)="onEditProfileSave($event)"
+    />
+    }
   </div>
 
   <!-- Messages Area -->
   <div class="chat-private__messages">
     <app-conversation-messages
+      [conversationId]="'dm-' + dmInfo().conversationId"
       [messageGroups]="messagesGroupedByDate()"
       (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
       (reactionAdded)="onReactionAdded($event)"
       (threadClicked)="onThreadClick($event)"
+      (messageEdited)="onMessageEdited($event)"
     />
   </div>
 

@@ -4,9 +4,9 @@
  * @module features/dashboard/components/channel-mailbox
  */
 
-import { Component, signal, computed, inject } from '@angular/core';
-import { DummyChannelsService } from '../../services/dummy-channels.service';
-import { DummyMailboxService } from '../../services/dummy-mailbox.service';
+import { Component, signal, computed, inject, effect } from '@angular/core';
+import { ChannelStore, MailboxStore } from '@stores/index';
+import { AuthStore } from '@stores/auth';
 
 @Component({
   selector: 'app-channel-mailbox',
@@ -15,36 +15,71 @@ import { DummyMailboxService } from '../../services/dummy-mailbox.service';
   styleUrl: './channel-mailbox.component.scss',
 })
 export class ChannalMailboxComponent {
-  protected channelsService = inject(DummyChannelsService);
-  protected mailboxService = inject(DummyMailboxService);
+  protected channelStore = inject(ChannelStore);
+  protected mailboxStore = inject(MailboxStore);
+  protected authStore = inject(AuthStore);
+
+  constructor() {
+    // Load mailbox messages when user changes
+    effect(() => {
+      const currentUser = this.authStore.user();
+      if (currentUser?.uid) {
+        this.mailboxStore.setCurrentUser(currentUser.uid);
+      }
+    });
+  }
 
   /**
-   * Mailbox title from service
+   * Mailbox title from ChannelStore
    */
   protected mailboxTitle = computed(() => {
-    const channel = this.channelsService.getChannelById('mailbox');
+    const channel = this.channelStore.getChannelById()('mailbox');
     return channel?.name || 'Mailbox';
   });
 
   /**
-   * Mailbox description from service
+   * Mailbox description from ChannelStore
    */
   protected mailboxDescription = computed(() => {
-    const channel = this.channelsService.getChannelById('mailbox');
+    const channel = this.channelStore.getChannelById()('mailbox');
     return channel?.description || 'Messages from contacts, admins, and system notifications';
   });
 
   /**
-   * Messages from mailbox service
+   * Messages from mailbox store
    */
-  protected messages = computed(() => this.mailboxService.messages());
+  protected messages = computed(() => this.mailboxStore.messages());
+
+  /**
+   * Unread message count
+   */
+  protected unreadCount = computed(() => this.mailboxStore.unreadCount());
+
+  /**
+   * Loading state
+   */
+  protected loading = computed(() => this.mailboxStore.loading());
 
   /**
    * Handle message click
    */
-  onMessageClick(messageId: string): void {
-    this.mailboxService.markAsRead(messageId);
+  async onMessageClick(messageId: string): Promise<void> {
+    await this.mailboxStore.markAsRead(messageId);
     console.log('Message clicked:', messageId);
     // TODO: Open chat window with this message
+  }
+
+  /**
+   * Mark all messages as read
+   */
+  async markAllAsRead(): Promise<void> {
+    await this.mailboxStore.markAllAsRead();
+  }
+
+  /**
+   * Delete a message
+   */
+  async deleteMessage(messageId: string): Promise<void> {
+    await this.mailboxStore.deleteMessage(messageId);
   }
 }

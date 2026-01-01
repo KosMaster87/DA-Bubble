@@ -3,6 +3,7 @@
   [class.reaction-bar--own]="messageType() === 'own'"
   [class.reaction-bar--other]="messageType() === 'other'"
 >
+  @if (!isInThread()) {
   <button
     class="reaction-bar__button"
     type="button"
@@ -20,6 +21,7 @@
   >
     <img src="/img/icon/emojis/emoji-thumbs-up.svg" alt="Thumbs up" class="reaction-bar__icon" />
   </button>
+  }
 
   <button
     class="reaction-bar__button"
@@ -34,6 +36,7 @@
     />
   </button>
 
+  @if (!isInThread()) {
   <button
     class="reaction-bar__button"
     type="button"
@@ -46,4 +49,28 @@
       class="reaction-bar__icon"
     />
   </button>
+  } @if (messageType() === 'own') {
+  <div class="reaction-bar__more-wrapper">
+    <button
+      class="reaction-bar__button"
+      type="button"
+      (click)="toggleEditMenu()"
+      aria-label="More options"
+    >
+      <img
+        src="/img/icon/emojis/emoji-more-vert-default.svg"
+        alt="More options"
+        class="reaction-bar__icon"
+      />
+    </button>
+
+    @if (isEditMenuOpen()) {
+    <div class="reaction-bar__edit-menu">
+      <button class="reaction-bar__edit-button" type="button" (click)="onEditMessage()">
+        Edit message
+      </button>
+    </div>
+    }
+  </div>
+  }
 </div>

@@ -4,3 +4,4 @@
  */
 
 export { WorkspaceSidebarService } from './workspace-sidebar.service';
+export { ChatScrollService } from './chat-scroll.service';
