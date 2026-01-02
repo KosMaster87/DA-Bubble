@@ -138,8 +138,17 @@
 
   &__parent-name {
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--primary-color, #444df2);
+    }
   }
 
   &__parent-time {
@@ -165,5 +174,22 @@
 
   &__footer {
     padding: var(--space-5) var(--space-16);
+  }
+
+  // Override profile-view positioning when shown in thread
+  ::ng-deep .profile-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ::ng-deep .profile-view__content {
+    width: fit-content;
+    border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
   }
 }

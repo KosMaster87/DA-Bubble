@@ -35,6 +35,15 @@
               [alt]="currentUser?.displayName || 'User'"
               class="workspace-header__avatar-img"
             />
+            <img
+              [src]="
+                userPresenceStore.isUserOnline()(currentUser?.uid || '')
+                  ? '/img/icon/profile/status-online.svg'
+                  : '/img/icon/profile/status-away.svg'
+              "
+              alt=""
+              class="workspace-header__status-badge"
+            />
             } @else {
             <div class="workspace-header__avatar-placeholder">
               {{ (currentUser?.displayName || 'U').charAt(0).toUpperCase() }}

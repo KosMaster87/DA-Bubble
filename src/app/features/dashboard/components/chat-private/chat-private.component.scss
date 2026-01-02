@@ -38,13 +38,18 @@
 
   // Override profile-view positioning when shown in chat-private
   ::ng-deep .profile-view {
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   ::ng-deep .profile-view__content {
     width: fit-content;
-    margin: 0 auto;
     border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
   }
 }

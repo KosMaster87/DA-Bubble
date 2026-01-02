@@ -654,6 +654,14 @@ export class ChannelConversationComponent {
   }
 
   /**
+   * Handle sender name click
+   */
+  onSenderClick(senderId: string): void {
+    this.selectedMemberId.set(senderId);
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
    * Handle reaction added
    */
   onReactionAdded(data: { messageId: string; emoji: string }): void {

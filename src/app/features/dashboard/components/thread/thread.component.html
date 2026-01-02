@@ -29,7 +29,12 @@
         />
         <div class="thread__parent-content">
           <div class="thread__parent-header">
-            <span class="thread__parent-name">{{ threadInfo().parentMessage!.senderName }}</span>
+            <button
+              class="thread__parent-name"
+              (click)="onSenderClick(threadInfo().parentMessage!.senderId)"
+            >
+              {{ threadInfo().parentMessage!.senderName }}
+            </button>
             <span class="thread__parent-time">{{
               threadInfo().parentMessage!.timestamp | date : 'short'
             }}</span>
@@ -48,6 +53,7 @@
       [isInThread]="true"
       (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
+      (senderClicked)="onSenderClick($event)"
       (reactionAdded)="onReactionAdded($event)"
       (messageEdited)="onMessageEdited($event)"
     />
@@ -57,4 +63,26 @@
   <div class="thread__footer">
     <app-message-box (messageSent)="sendReply($event)" />
   </div>
+
+  <!-- Profile View -->
+  @if (selectedUserProfile()) {
+  <app-profile-view
+    [user]="selectedUserProfile()!"
+    [isVisible]="isProfileViewOpen()"
+    [isOwnProfile]="isOwnProfile()"
+    (closeClicked)="onProfileViewClose()"
+    (editClicked)="onProfileEdit()"
+    (messageClicked)="onProfileMessage()"
+  />
+  }
+
+  <!-- Edit Profile -->
+  @if (editProfileUser()) {
+  <app-edit-profile
+    [user]="editProfileUser()!"
+    [isVisible]="isEditProfileOpen()"
+    (closeClicked)="onEditProfileClose()"
+    (saveClicked)="onEditProfileSave($event)"
+  />
+  }
 </div>

@@ -66,6 +66,7 @@ export class ChatPrivateComponent {
   // Profile state
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);
+  protected selectedUserId = signal<string | null>(null);
 
   constructor() {
     console.log('🔷 ChatPrivateComponent: Constructor called');
@@ -158,13 +159,13 @@ export class ChatPrivateComponent {
   });
 
   /**
-   * Get the other user's profile for profile view
+   * Get the selected user's profile for profile view
    */
-  protected otherUserProfile = computed<ProfileUser | null>(() => {
-    const otherUserId = this.getOtherUserId();
-    if (!otherUserId) return null;
+  protected selectedUserProfile = computed<ProfileUser | null>(() => {
+    const userId = this.selectedUserId();
+    if (!userId) return null;
 
-    const user = this.userStore.getUserById()(otherUserId);
+    const user = this.userStore.getUserById()(userId);
     if (!user) return null;
 
     return {
@@ -181,10 +182,10 @@ export class ChatPrivateComponent {
    * Other user for edit profile
    */
   protected editProfileUser = computed<EditProfileUser | null>(() => {
-    const otherUserId = this.getOtherUserId();
-    if (!otherUserId) return null;
+    const userId = this.selectedUserId();
+    if (!userId) return null;
 
-    const user = this.userStore.getUserById()(otherUserId);
+    const user = this.userStore.getUserById()(userId);
     if (!user) return null;
 
     return {
@@ -194,6 +195,13 @@ export class ChatPrivateComponent {
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
       isAdmin: false,
     };
+  });
+
+  /**
+   * Check if selected user is own profile
+   */
+  protected isOwnProfile = computed(() => {
+    return this.selectedUserId() === this.authStore.user()?.uid;
   });
 
   /**
@@ -259,7 +267,17 @@ export class ChatPrivateComponent {
    */
   onAvatarClick(senderId: string): void {
     console.log('Avatar clicked:', senderId);
-    // TODO: Open user profile
+    this.selectedUserId.set(senderId);
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle sender name click
+   */
+  onSenderClick(senderId: string): void {
+    console.log('Sender name clicked:', senderId);
+    this.selectedUserId.set(senderId);
+    this.isProfileViewOpen.set(true);
   }
 
   /**
@@ -297,7 +315,11 @@ export class ChatPrivateComponent {
    * Handle user button click (show profile)
    */
   onUserButtonClick(): void {
-    this.isProfileViewOpen.set(true);
+    const otherUserId = this.getOtherUserId();
+    if (otherUserId) {
+      this.selectedUserId.set(otherUserId);
+      this.isProfileViewOpen.set(true);
+    }
   }
 
   /**
@@ -305,6 +327,7 @@ export class ChatPrivateComponent {
    */
   onProfileViewClose(): void {
     this.isProfileViewOpen.set(false);
+    this.selectedUserId.set(null);
   }
 
   /**
@@ -336,15 +359,16 @@ export class ChatPrivateComponent {
    */
   async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
     console.log('Save profile:', data);
-    const otherUserId = this.getOtherUserId();
-    if (!otherUserId) return;
+    const userId = this.selectedUserId();
+    if (!userId) return;
 
     // TODO: Implement user profile update
-    // await this.userStore.updateUser(otherUserId, {
+    // await this.userStore.updateUser(userId, {
     //   displayName: data.displayName,
     //   isAdmin: data.isAdmin,
     // });
 
     this.isEditProfileOpen.set(false);
+    this.selectedUserId.set(null);
   }
 }

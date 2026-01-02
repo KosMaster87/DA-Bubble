@@ -5,7 +5,7 @@
  */
 
 import { Component, inject, output, input, signal, computed, effect } from '@angular/core';
-import { ChannelStore, DirectMessageStore, UserStore } from '@stores/index';
+import { ChannelStore, DirectMessageStore, UserStore, UserPresenceStore } from '@stores/index';
 import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
@@ -22,6 +22,7 @@ export class WorkspaceSidebarComponent {
   protected channelStore = inject(ChannelStore);
   protected directMessageStore = inject(DirectMessageStore);
   protected userStore = inject(UserStore);
+  protected userPresenceStore = inject(UserPresenceStore);
   protected sidebarService = inject(WorkspaceSidebarService);
   protected authStore = inject(AuthStore);
   isNewMessageActive = input<boolean>(false);
@@ -100,7 +101,7 @@ export class WorkspaceSidebarComponent {
    * Shows all DM conversations sorted alphabetically by name
    */
   protected directMessages = computed<
-    Array<{ id: string; name: string; avatar: string; isOnline: boolean }>
+    Array<{ id: string; userId: string; name: string; avatar: string; isOnline: boolean }>
   >(() => {
     const currentUser = this.authStore.user();
     if (!currentUser) return [];
@@ -116,6 +117,7 @@ export class WorkspaceSidebarComponent {
 
       return {
         id: conv.id,
+        userId: otherUserId || '',
         name: otherUser?.displayName || 'Unknown User',
         avatar: otherUser?.photoURL || '/img/profile/profile-0.svg',
         isOnline: otherUser?.isOnline || false,

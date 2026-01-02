@@ -8,7 +8,16 @@
 
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import { Firestore, collection, doc, updateDoc } from '@angular/fire/firestore';
+import {
+  Firestore,
+  collection,
+  doc,
+  updateDoc,
+  query,
+  where,
+  onSnapshot,
+  getDocs,
+} from '@angular/fire/firestore';
 
 /**
  * State interface for user presence management
@@ -96,6 +105,36 @@ export const UserPresenceStore = signalStore(
        */
       updateMultipleUserPresence(onlineUserIds: string[]) {
         patchState(store, { onlineUsers: onlineUserIds });
+      },
+
+      /**
+       * Entry point: Load all online users from Firestore
+       * @async
+       * @function loadOnlineUsers
+       * @returns {Promise<void>}
+       */
+      async loadOnlineUsers(): Promise<void> {
+        try {
+          const q = query(usersCollection, where('isOnline', '==', true));
+          const snapshot = await getDocs(q);
+          const onlineUserIds = snapshot.docs.map((doc) => doc.id);
+          patchState(store, { onlineUsers: onlineUserIds });
+        } catch (error) {
+          this.handleError(error, 'Failed to load online users');
+        }
+      },
+
+      /**
+       * Entry point: Start listening to online user changes
+       * @function startPresenceListener
+       * @returns {Function} Unsubscribe function
+       */
+      startPresenceListener() {
+        const q = query(usersCollection, where('isOnline', '==', true));
+        return onSnapshot(q, (snapshot) => {
+          const onlineUserIds = snapshot.docs.map((doc) => doc.id);
+          patchState(store, { onlineUsers: onlineUserIds });
+        });
       },
 
       // === IMPLEMENTATION METHODS ===

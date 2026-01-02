@@ -4,7 +4,8 @@
  * @module shared/dashboard-components/user-list-item
  */
 
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject } from '@angular/core';
+import { UserPresenceStore } from '../../../stores';
 
 export interface UserListItem {
   id: string;
@@ -19,6 +20,8 @@ export interface UserListItem {
   styleUrl: './user-list-item.component.scss',
 })
 export class UserListItemComponent {
+  protected userPresenceStore = inject(UserPresenceStore);
+
   user = input.required<UserListItem>();
   isActive = input<boolean>(false);
   itemClicked = output<string>();

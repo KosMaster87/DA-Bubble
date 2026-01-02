@@ -23,6 +23,7 @@ export interface User {
   photoURL?: string;
   isOnline: boolean;
   lastSeen: Date;
+  lastHeartbeat?: Date; // Timestamp of last heartbeat for offline detection
   channels: string[]; // Channel IDs where user is member
   directMessages: string[]; // User IDs for direct conversations
   createdAt: Date;

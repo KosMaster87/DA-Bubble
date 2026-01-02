@@ -356,12 +356,27 @@
     white-space: nowrap;
   }
 
+  &__item-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
   &__item-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     flex-shrink: 0;
     object-fit: cover;
+  }
+
+  &__status-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--container-bg, #fff);
   }
 
   &__item--dm {

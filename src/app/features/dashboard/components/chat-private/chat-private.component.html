@@ -4,11 +4,11 @@
     <app-user-list-item [user]="userListItem()" (itemClicked)="onUserButtonClick()" />
 
     <!-- Profile View -->
-    @if (otherUserProfile()) {
+    @if (selectedUserProfile()) {
     <app-profile-view
-      [user]="otherUserProfile()!"
+      [user]="selectedUserProfile()!"
       [isVisible]="isProfileViewOpen()"
-      [isOwnProfile]="false"
+      [isOwnProfile]="isOwnProfile()"
       (closeClicked)="onProfileViewClose()"
       (editClicked)="onProfileEdit()"
       (messageClicked)="onProfileMessage()"
@@ -33,6 +33,7 @@
       [messageGroups]="messagesGroupedByDate()"
       (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
+      (senderClicked)="onSenderClick($event)"
       (reactionAdded)="onReactionAdded($event)"
       (threadClicked)="onThreadClick($event)"
       (messageEdited)="onMessageEdited($event)"

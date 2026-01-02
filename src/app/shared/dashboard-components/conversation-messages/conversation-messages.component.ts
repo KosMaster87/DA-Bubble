@@ -19,6 +19,7 @@ import { DatePipe } from '@angular/common';
 import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
 import { MessageEdit } from '../message-edit/message-edit';
 import { ChatScrollService } from '../../services';
+import { UserPresenceStore } from '../../../stores';
 
 export interface Message {
   id: string;
@@ -53,12 +54,14 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   isInThread = input<boolean>(false);
   messageClicked = output<string>();
   avatarClicked = output<string>();
+  senderClicked = output<string>();
   reactionAdded = output<{ messageId: string; emoji: string }>();
   reactionBarClicked = output<{ messageId: string; type: ReactionType }>();
   threadClicked = output<string>();
   messageEdited = output<{ messageId: string; newContent: string }>();
 
   private chatScrollService = inject(ChatScrollService);
+  protected userPresenceStore = inject(UserPresenceStore);
 
   protected editingMessageId = signal<string | null>(null);
   private shouldScrollToBottom = false;
@@ -223,6 +226,13 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    */
   onAvatarClick(senderId: string): void {
     this.avatarClicked.emit(senderId);
+  }
+
+  /**
+   * Handle sender name click
+   */
+  onSenderClick(senderId: string): void {
+    this.senderClicked.emit(senderId);
   }
 
   /**

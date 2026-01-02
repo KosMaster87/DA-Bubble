@@ -4,8 +4,9 @@
  * @module shared/dashboard-components/profile-view
  */
 
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject, computed } from '@angular/core';
 import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
+import { UserPresenceStore } from '../../../stores';
 
 export interface ProfileUser {
   id: string;
@@ -23,6 +24,8 @@ export interface ProfileUser {
   styleUrl: './profile-view.component.scss',
 })
 export class ProfileViewComponent {
+  protected userPresenceStore = inject(UserPresenceStore);
+
   user = input.required<ProfileUser>();
   isVisible = input<boolean>(false);
   isOwnProfile = input<boolean>(false);
@@ -66,29 +69,15 @@ export class ProfileViewComponent {
    * Get status icon based on user status
    */
   getStatusIcon(): string {
-    switch (this.user().status) {
-      case 'online':
-        return '/img/icon/profile/status-online.svg';
-      case 'away':
-        return '/img/icon/profile/status-away.svg';
-      case 'offline':
-      default:
-        return '/img/icon/profile/status-away.svg';
-    }
+    const isOnline = this.userPresenceStore.isUserOnline()(this.user().id);
+    return isOnline ? '/img/icon/profile/status-online.svg' : '/img/icon/profile/status-away.svg';
   }
 
   /**
    * Get status text based on user status
    */
   getStatusText(): string {
-    switch (this.user().status) {
-      case 'online':
-        return 'Activ';
-      case 'away':
-        return 'Away';
-      case 'offline':
-      default:
-        return 'Offline';
-    }
+    const isOnline = this.userPresenceStore.isUserOnline()(this.user().id);
+    return isOnline ? 'Activ' : 'Offline';
   }
 }

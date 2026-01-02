@@ -7,6 +7,7 @@
 import { Component, inject, signal, output, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
+import { UserPresenceStore } from '@stores/index';
 import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
 import { UserOptionsMenuComponent } from '@shared/dashboard-components';
 import {
@@ -32,6 +33,7 @@ import {
 export class WorkspaceHeaderComponent {
   private router = inject(Router);
   protected authStore = inject(AuthStore);
+  protected userPresenceStore = inject(UserPresenceStore);
   protected isOptionsOpen = signal(false);
   protected isProfileViewOpen = signal(false);
   protected isEditProfileOpen = signal(false);

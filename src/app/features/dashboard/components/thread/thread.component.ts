@@ -12,6 +12,14 @@ import {
   type Message,
   type MessageGroup,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import {
+  ProfileViewComponent,
+  ProfileUser,
+} from '@shared/dashboard-components/profile-view/profile-view.component';
+import {
+  EditProfileComponent,
+  EditProfileUser,
+} from '@shared/dashboard-components/edit-profile/edit-profile.component';
 import { ThreadStore, UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 
@@ -25,7 +33,13 @@ export interface ThreadInfo {
 
 @Component({
   selector: 'app-thread',
-  imports: [DatePipe, MessageBoxComponent, ConversationMessagesComponent],
+  imports: [
+    DatePipe,
+    MessageBoxComponent,
+    ConversationMessagesComponent,
+    ProfileViewComponent,
+    EditProfileComponent,
+  ],
   templateUrl: './thread.component.html',
   styleUrl: './thread.component.scss',
 })
@@ -36,6 +50,11 @@ export class ThreadComponent {
 
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
+
+  // Profile state
+  protected isProfileViewOpen = signal<boolean>(false);
+  protected isEditProfileOpen = signal<boolean>(false);
+  protected selectedUserId = signal<string | null>(null);
 
   /**
    * Thread replies loaded from store (reactive to real-time updates)
@@ -98,6 +117,52 @@ export class ThreadComponent {
    * Total reply count
    */
   protected replyCount = computed(() => this.replies().length);
+
+  /**
+   * Get the selected user's profile for profile view
+   */
+  protected selectedUserProfile = computed<ProfileUser | null>(() => {
+    const userId = this.selectedUserId();
+    if (!userId) return null;
+
+    const user = this.userStore.getUserById()(userId);
+    if (!user) return null;
+
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      status: user.isOnline ? 'online' : 'offline',
+      isAdmin: false,
+    };
+  });
+
+  /**
+   * Selected user for edit profile
+   */
+  protected editProfileUser = computed<EditProfileUser | null>(() => {
+    const userId = this.selectedUserId();
+    if (!userId) return null;
+
+    const user = this.userStore.getUserById()(userId);
+    if (!user) return null;
+
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL || '/img/profile/profile-0.svg',
+      isAdmin: false,
+    };
+  });
+
+  /**
+   * Check if selected user is own profile
+   */
+  protected isOwnProfile = computed(() => {
+    return this.selectedUserId() === this.authStore.user()?.uid;
+  });
 
   /**
    * Get date key for grouping (YYYY-MM-DD)
@@ -174,7 +239,17 @@ export class ThreadComponent {
    */
   onAvatarClick(senderId: string): void {
     console.log('Avatar clicked:', senderId);
-    // TODO: Open user profile
+    this.selectedUserId.set(senderId);
+    this.isProfileViewOpen.set(true);
+  }
+
+  /**
+   * Handle sender name click
+   */
+  onSenderClick(senderId: string): void {
+    console.log('Sender name clicked:', senderId);
+    this.selectedUserId.set(senderId);
+    this.isProfileViewOpen.set(true);
   }
 
   /**
@@ -197,5 +272,56 @@ export class ThreadComponent {
       { content: data.newContent },
       info.isDirectMessage
     );
+  }
+
+  /**
+   * Handle profile view close
+   */
+  onProfileViewClose(): void {
+    this.isProfileViewOpen.set(false);
+    this.selectedUserId.set(null);
+  }
+
+  /**
+   * Handle profile edit click
+   */
+  onProfileEdit(): void {
+    this.isProfileViewOpen.set(false);
+    this.isEditProfileOpen.set(true);
+  }
+
+  /**
+   * Handle profile message click
+   */
+  onProfileMessage(): void {
+    console.log('Send message to user:', this.selectedUserId());
+    this.isProfileViewOpen.set(false);
+    // TODO: Open DM with this user
+  }
+
+  /**
+   * Handle edit profile close
+   */
+  onEditProfileClose(): void {
+    this.isEditProfileOpen.set(false);
+    this.selectedUserId.set(null);
+  }
+
+  /**
+   * Handle edit profile save
+   */
+  async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
+    console.log('Save profile:', data);
+    const userId = this.selectedUserId();
+    if (!userId) return;
+
+    // TODO: Implement user profile update
+    // await this.userStore.updateUser(userId, {
+    //   displayName: data.displayName,
+    //   isAdmin: data.isAdmin,
+    // });
+
+    this.isEditProfileOpen.set(false);
+    this.selectedUserId.set(null);
   }
 }

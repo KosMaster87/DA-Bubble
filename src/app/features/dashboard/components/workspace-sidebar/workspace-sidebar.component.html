@@ -145,7 +145,18 @@
           (click)="selectDirectMessage(dm.id)"
         >
           <span class="workspace-sidebar__item-content">
-            <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
+            <span class="workspace-sidebar__item-avatar-wrapper">
+              <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
+              <img
+                [src]="
+                  userPresenceStore.isUserOnline()(dm.userId)
+                    ? '/img/icon/profile/status-online.svg'
+                    : '/img/icon/profile/status-away.svg'
+                "
+                alt=""
+                class="workspace-sidebar__status-badge"
+              />
+            </span>
             <span class="workspace-sidebar__item-name">{{ dm.name }}</span>
           </span>
         </button>

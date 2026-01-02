@@ -5,9 +5,12 @@
  * @module AppComponent
  */
 
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnDestroy, effect } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FirebaseService } from '@core/services/firebase/firebase.service';
+import { HeartbeatService } from '@core/services/heartbeat/heartbeat.service';
+import { UserPresenceStore } from '@stores/index';
+import { AuthStore } from '@stores/auth';
 import { environment } from '../config/environments/env.dev';
 
 @Component({
@@ -16,13 +19,53 @@ import { environment } from '../config/environments/env.dev';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
+export class App implements OnDestroy {
   protected readonly title = signal('dabubble');
   private firebaseService = inject(FirebaseService);
+  private heartbeatService = inject(HeartbeatService);
+  private userPresenceStore = inject(UserPresenceStore);
+  private authStore = inject(AuthStore);
+  private presenceUnsubscribe?: () => void;
 
   constructor() {
     if (!environment.production) {
       console.log('🚀 DABubble App started!');
+    }
+
+    /**
+     * Reactive effect that manages user presence listener lifecycle
+     * @description Automatically starts/stops the Firestore presence listener based on authentication state
+     * - On login: Stops any existing listener, starts a new one, and loads online users
+     * - On logout: Stops the listener and clears online user data
+     */
+    effect(() => {
+      const isLoggedIn = this.authStore.isLoggedIn();
+
+      if (isLoggedIn) {
+        if (this.presenceUnsubscribe) {
+          this.presenceUnsubscribe();
+        }
+
+        this.presenceUnsubscribe = this.userPresenceStore.startPresenceListener();
+        this.userPresenceStore.loadOnlineUsers();
+      } else {
+        if (this.presenceUnsubscribe) {
+          this.presenceUnsubscribe();
+          this.presenceUnsubscribe = undefined;
+        }
+
+        this.userPresenceStore.clearOnlineUsers();
+      }
+    });
+  }
+
+  /**
+   * Lifecycle hook called when component is destroyed
+   * @description Cleans up the presence listener subscription to prevent memory leaks
+   */
+  ngOnDestroy() {
+    if (this.presenceUnsubscribe) {
+      this.presenceUnsubscribe();
     }
   }
 }
