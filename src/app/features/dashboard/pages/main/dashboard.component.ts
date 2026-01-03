@@ -4,7 +4,7 @@
  * @module features/dashboard/pages/main
  */
 
-import { Component, inject, signal, ViewChild, effect } from '@angular/core';
+import { Component, inject, signal, ViewChild, effect, computed } from '@angular/core';
 import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
@@ -72,18 +72,24 @@ export class DashboardComponent {
   protected threadMessageId = signal<string | null>(null);
   protected threadInfo = signal<ThreadInfo | null>(null);
 
+  // Computed to track only directMessages changes
+  private userDirectMessages = computed(() => {
+    const user = this.authStore.user();
+    return user?.directMessages || [];
+  });
+
   constructor() {
     // Default view is welcome (DABubble-welcome channel)
     this.currentView.set('welcome');
 
-    // Watch for changes in user's directMessages array
+    // Watch for changes in user's directMessages array (only when IDs actually change)
     effect(() => {
-      const user = this.authStore.user();
-      if (user?.directMessages) {
+      const directMessages = this.userDirectMessages();
+      if (directMessages.length > 0) {
         console.log('🔄 User directMessages changed, reloading conversations:', {
-          count: user.directMessages.length,
+          count: directMessages.length,
         });
-        this.directMessageStore.loadConversations(user.directMessages);
+        this.directMessageStore.loadConversations(directMessages);
       }
     });
 

@@ -4,7 +4,16 @@
  * @module features/dashboard/components/thread
  */
 
-import { Component, signal, input, output, computed, inject, effect } from '@angular/core';
+import {
+  Component,
+  signal,
+  input,
+  output,
+  computed,
+  inject,
+  effect,
+  untracked,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import {
@@ -22,6 +31,7 @@ import {
 } from '@shared/dashboard-components/edit-profile/edit-profile.component';
 import { ThreadStore, UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
+import { UnreadService } from '@core/services/unread/unread.service';
 
 export interface ThreadInfo {
   channelId: string;
@@ -47,6 +57,7 @@ export class ThreadComponent {
   private threadStore = inject(ThreadStore);
   private authStore = inject(AuthStore);
   private userStore = inject(UserStore);
+  private unreadService = inject(UnreadService);
 
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
@@ -89,6 +100,26 @@ export class ThreadComponent {
       if (info?.parentMessageId && info?.channelId) {
         this.threadStore.loadThreads(info.channelId, info.parentMessageId, info.isDirectMessage);
       }
+    });
+
+    // Auto-mark thread as read when new replies arrive
+    let previousReplyCount = 0;
+    effect(() => {
+      const info = this.threadInfo();
+      const currentUserId = untracked(() => this.authStore.user()?.uid);
+      if (!info?.parentMessageId || !currentUserId) return;
+
+      const replies = this.replies();
+      const currentCount = replies.length;
+
+      // Only mark as read if reply count increased (new reply arrived)
+      if (currentCount > previousReplyCount && currentCount > 0) {
+        untracked(() => {
+          this.unreadService.markAsRead(info.parentMessageId);
+        });
+      }
+
+      previousReplyCount = currentCount;
     });
   }
 
@@ -224,6 +255,11 @@ export class ThreadComponent {
       currentUserId,
       info.isDirectMessage // Pass DM flag
     );
+
+    // Mark both parent message AND parent channel/conversation as read
+    // to prevent current user from seeing their own thread message as unread
+    this.unreadService.markAsRead(info.parentMessageId);
+    this.unreadService.markAsRead(info.channelId);
     // Replies will auto-update via computed signal
   }
 

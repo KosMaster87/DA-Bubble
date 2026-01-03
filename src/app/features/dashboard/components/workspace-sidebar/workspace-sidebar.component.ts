@@ -5,12 +5,20 @@
  */
 
 import { Component, inject, output, input, signal, computed, effect } from '@angular/core';
-import { ChannelStore, DirectMessageStore, UserStore, UserPresenceStore } from '@stores/index';
+import {
+  ChannelStore,
+  DirectMessageStore,
+  UserStore,
+  UserPresenceStore,
+  ChannelMessageStore,
+  ThreadStore,
+} from '@stores/index';
 import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
 import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-components/add-member-after-add-channel/add-member-after-add-channel.component';
 import { AuthStore } from '@stores/auth';
+import { UnreadService } from '@core/services/unread/unread.service';
 
 @Component({
   selector: 'app-workspace-sidebar',
@@ -25,6 +33,9 @@ export class WorkspaceSidebarComponent {
   protected userPresenceStore = inject(UserPresenceStore);
   protected sidebarService = inject(WorkspaceSidebarService);
   protected authStore = inject(AuthStore);
+  protected unreadService = inject(UnreadService);
+  protected channelMessageStore = inject(ChannelMessageStore);
+  protected threadStore = inject(ThreadStore);
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   newMessageRequested = output<void>();
@@ -47,13 +58,9 @@ export class WorkspaceSidebarComponent {
     this.channelStore.loadChannels();
     this.userStore.loadUsers();
 
-    // Load DM conversations when user is available
-    effect(() => {
-      const currentUser = this.authStore.user();
-      if (currentUser?.directMessages && currentUser.directMessages.length > 0) {
-        this.directMessageStore.loadConversations(currentUser.directMessages);
-      }
-    });
+    // Load DM conversations when user's directMessages change
+    // Note: This is now handled by the Dashboard component to avoid duplicate effects
+    // The Dashboard component watches userDirectMessages computed and calls loadConversations
 
     // Auto-select DABubble-welcome channel when channels are loaded (only once on initial load)
     effect(() => {
@@ -76,10 +83,79 @@ export class WorkspaceSidebarComponent {
    * Channels from ChannelStore - sorted with DABubble-welcome first, then alphabetically
    */
   protected sortedChannels = computed(() => {
-    const channels = this.channelStore.channels().map((ch) => ({
-      id: ch.id,
-      name: ch.name,
-    }));
+    const channels = this.channelStore.channels().map((ch) => {
+      // Get all messages for this channel
+      const messages = this.channelMessageStore.getMessagesByChannel()(ch.id);
+
+      // Find latest NORMAL message timestamp (from createdAt of actual messages)
+      const latestNormalMessageTime = messages.reduce((latest: Date | undefined, msg) => {
+        const msgTime = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
+        if (!latest || msgTime > latest) {
+          return msgTime;
+        }
+        return latest;
+      }, undefined);
+
+      // Find latest THREAD message timestamp (from lastThreadTimestamp)
+      const latestThreadTimestamp = messages.reduce((latest: Date | undefined, msg) => {
+        if (msg.lastThreadTimestamp) {
+          const threadTime =
+            msg.lastThreadTimestamp instanceof Date
+              ? msg.lastThreadTimestamp
+              : new Date(msg.lastThreadTimestamp);
+          if (!latest || threadTime > latest) {
+            return threadTime;
+          }
+        }
+        return latest;
+      }, undefined);
+
+      // RULE: Normal messages ALWAYS have priority over thread messages
+      // Determine the timestamp to use for normal message unread check
+      let normalMessageTimestamp: Date | undefined = latestNormalMessageTime;
+
+      // If messages array is empty/not loaded, use ch.lastMessageAt as fallback
+      // BUT only if it doesn't match the thread timestamp (meaning it's not a thread update)
+      if (!normalMessageTimestamp && ch.lastMessageAt) {
+        const lastMsgTime =
+          ch.lastMessageAt instanceof Date ? ch.lastMessageAt : new Date(ch.lastMessageAt);
+        const threadTime =
+          latestThreadTimestamp instanceof Date
+            ? latestThreadTimestamp
+            : latestThreadTimestamp
+            ? new Date(latestThreadTimestamp)
+            : undefined;
+
+        // Only use ch.lastMessageAt if it's NOT a thread update (timestamps don't match within 1 second)
+        const isThreadUpdate =
+          threadTime && Math.abs(lastMsgTime.getTime() - threadTime.getTime()) < 1000;
+        if (!isThreadUpdate) {
+          normalMessageTimestamp = lastMsgTime;
+        }
+      }
+
+      const hasNormalUnread = normalMessageTimestamp
+        ? this.unreadService.hasUnread(ch.id, normalMessageTimestamp)
+        : false;
+
+      // Thread-unread ONLY if:
+      // 1. No normal messages are unread
+      // 2. Thread timestamp exists and is newer than lastRead
+      // 3. Thread timestamp is NEWER than latest normal message (thread activity after normal messages)
+      // Note: User's own thread messages are handled by markAsRead() in thread.component.ts
+      const hasThreadUnread =
+        !hasNormalUnread &&
+        latestThreadTimestamp &&
+        (!normalMessageTimestamp || latestThreadTimestamp > normalMessageTimestamp) &&
+        this.unreadService.hasThreadUnread(ch.id, latestThreadTimestamp);
+
+      return {
+        id: ch.id,
+        name: ch.name,
+        hasUnread: hasNormalUnread || false,
+        hasThreadUnread: hasThreadUnread || false,
+      };
+    });
 
     // Separate DABubble-welcome from other channels
     const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
@@ -101,13 +177,22 @@ export class WorkspaceSidebarComponent {
    * Shows all DM conversations sorted alphabetically by name
    */
   protected directMessages = computed<
-    Array<{ id: string; userId: string; name: string; avatar: string; isOnline: boolean }>
+    Array<{
+      id: string;
+      userId: string;
+      name: string;
+      avatar: string;
+      isOnline: boolean;
+      hasUnread: boolean;
+      hasThreadUnread: boolean;
+    }>
   >(() => {
     const currentUser = this.authStore.user();
     if (!currentUser) return [];
 
     const conversations = this.directMessageStore.sortedConversations();
     const allUsers = this.userStore.users();
+    const allMessages = this.directMessageStore.messages();
 
     // Map conversations to UI format with user info
     const dmList = conversations.map((conv) => {
@@ -115,12 +200,79 @@ export class WorkspaceSidebarComponent {
       const otherUserId = conv.participants.find((id) => id !== currentUser.uid);
       const otherUser = allUsers.find((u) => u.uid === otherUserId);
 
+      // Get all messages for this conversation
+      const messages = allMessages[conv.id] || [];
+
+      // Find latest NORMAL message timestamp (from createdAt of actual messages)
+      const latestNormalMessageTime = messages.reduce((latest: Date | undefined, msg) => {
+        const msgTime = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
+        if (!latest || msgTime > latest) {
+          return msgTime;
+        }
+        return latest;
+      }, undefined);
+
+      // Find latest THREAD message timestamp (from lastThreadTimestamp)
+      const latestThreadTimestamp = messages.reduce((latest: Date | undefined, msg) => {
+        if (msg.lastThreadTimestamp) {
+          const threadTime =
+            msg.lastThreadTimestamp instanceof Date
+              ? msg.lastThreadTimestamp
+              : new Date(msg.lastThreadTimestamp);
+          if (!latest || threadTime > latest) {
+            return threadTime;
+          }
+        }
+        return latest;
+      }, undefined);
+
+      // RULE: Normal messages ALWAYS have priority over thread messages
+      // Determine the timestamp to use for normal message unread check
+      let normalMessageTimestamp: Date | undefined = latestNormalMessageTime;
+
+      // If messages array is empty/not loaded, use conv.lastMessageAt as fallback
+      // BUT only if it doesn't match the thread timestamp (meaning it's not a thread update)
+      if (!normalMessageTimestamp && conv.lastMessageAt) {
+        const lastMsgTime =
+          conv.lastMessageAt instanceof Date ? conv.lastMessageAt : new Date(conv.lastMessageAt);
+        const threadTime =
+          latestThreadTimestamp instanceof Date
+            ? latestThreadTimestamp
+            : latestThreadTimestamp
+            ? new Date(latestThreadTimestamp)
+            : undefined;
+
+        // Only use conv.lastMessageAt if it's NOT a thread update (timestamps don't match within 1 second)
+        const isThreadUpdate =
+          threadTime && Math.abs(lastMsgTime.getTime() - threadTime.getTime()) < 1000;
+        if (!isThreadUpdate) {
+          normalMessageTimestamp = lastMsgTime;
+        }
+      }
+
+      const hasNormalUnread = normalMessageTimestamp
+        ? this.unreadService.hasUnread(conv.id, normalMessageTimestamp)
+        : false;
+
+      // Thread-unread ONLY if:
+      // 1. No normal messages are unread
+      // 2. Thread timestamp exists and is newer than lastRead
+      // 3. Thread timestamp is NEWER than latest normal message (thread activity after normal messages)
+      // Note: User's own thread messages are handled by markAsRead() in thread.component.ts
+      const hasThreadUnread =
+        !hasNormalUnread &&
+        latestThreadTimestamp &&
+        (!normalMessageTimestamp || latestThreadTimestamp > normalMessageTimestamp) &&
+        this.unreadService.hasThreadUnread(conv.id, latestThreadTimestamp);
+
       return {
         id: conv.id,
         userId: otherUserId || '',
         name: otherUser?.displayName || 'Unknown User',
         avatar: otherUser?.photoURL || '/img/profile/profile-0.svg',
         isOnline: otherUser?.isOnline || false,
+        hasUnread: hasNormalUnread || false,
+        hasThreadUnread: hasThreadUnread || false,
       };
     });
 
@@ -179,6 +331,9 @@ export class WorkspaceSidebarComponent {
     const channel = this.channelStore.channels().find((ch) => ch.id === channelId);
     if (channel) {
       this.channelStore.selectChannel(channel);
+      this.selectedChannelId.set(channelId);
+      this.channelSelected.emit(channelId);
+      this.unreadService.markAsRead(channelId);
     }
   }
 
@@ -319,6 +474,7 @@ export class WorkspaceSidebarComponent {
     this.selectedChannelId.set(null);
     this.selectedDirectMessageId.set(messageId);
     this.directMessageSelected.emit(messageId);
+    this.unreadService.markAsRead(messageId);
   }
 
   /**
@@ -362,6 +518,9 @@ export class WorkspaceSidebarComponent {
       await this.directMessageStore.loadMessages(conversation.id);
 
       console.log('✅ Messages loaded for conversation:', conversation.id);
+
+      // Mark as read for the user who started the conversation
+      await this.unreadService.markAsRead(conversation.id);
 
       // Deselect channel
       this.selectedChannelId.set(null);

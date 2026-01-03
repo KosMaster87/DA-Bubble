@@ -4,10 +4,20 @@
  * @module features/dashboard/components/chat-private
  */
 
-import { Component, signal, input, inject, computed, output, effect } from '@angular/core';
+import {
+  Component,
+  signal,
+  input,
+  inject,
+  computed,
+  output,
+  effect,
+  untracked,
+} from '@angular/core';
 import { DirectMessageStore, UserStore, ThreadStore, MessageStore } from '@stores/index';
 import { MessageType } from '@core/models/message.model';
 import { AuthStore } from '@stores/auth';
+import { UnreadService } from '@core/services/unread/unread.service';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import {
   ConversationMessagesComponent,
@@ -54,6 +64,7 @@ export class ChatPrivateComponent {
   protected threadStore = inject(ThreadStore);
   protected messageStore = inject(MessageStore);
   protected authStore = inject(AuthStore);
+  protected unreadService = inject(UnreadService);
   protected userName = computed(() => this.dmInfo().userName);
   protected userStatus = computed(() => (this.dmInfo().isOnline ? 'Online' : 'Offline'));
   dmInfo = input.required<DMInfo>();
@@ -69,17 +80,46 @@ export class ChatPrivateComponent {
   protected selectedUserId = signal<string | null>(null);
 
   constructor() {
-    console.log('🔷 ChatPrivateComponent: Constructor called');
-
     // Load messages when conversation changes
     effect(() => {
       const dmInfo = this.dmInfo();
-      const currentUserId = this.authStore.user()?.uid;
-      console.log('🔷 ChatPrivateComponent: Effect triggered', { dmInfo, currentUserId });
-      if (dmInfo?.conversationId && currentUserId) {
-        // Load messages for this conversation
-        this.directMessageStore.loadMessages(dmInfo.conversationId);
+      if (dmInfo?.conversationId) {
+        // Use untracked to get currentUserId without creating dependency
+        const currentUserId = untracked(() => this.authStore.user()?.uid);
+        if (currentUserId) {
+          // Load messages for this conversation
+          this.directMessageStore.loadMessages(dmInfo.conversationId);
+          // Debounce markAsRead to prevent race condition
+          setTimeout(() => {
+            this.unreadService.markAsRead(dmInfo.conversationId);
+          }, 200);
+        }
       }
+    });
+
+    // Auto-mark-as-read when new messages arrive in active chat
+    let previousMessageCount = 0;
+    effect(() => {
+      const dmInfo = this.dmInfo();
+      const currentUserId = untracked(() => this.authStore.user()?.uid);
+
+      if (!dmInfo?.conversationId || !currentUserId) {
+        return;
+      }
+
+      // Get messages for current conversation
+      const messagesMap = this.directMessageStore.messages();
+      const messages = messagesMap[dmInfo.conversationId] || [];
+      const currentCount = messages.length;
+
+      // Only mark as read if message count increased (new message arrived)
+      if (currentCount > previousMessageCount && currentCount > 0) {
+        untracked(() => {
+          this.unreadService.markAsRead(dmInfo.conversationId);
+        });
+      }
+
+      previousMessageCount = currentCount;
     });
   }
 
@@ -262,10 +302,11 @@ export class ChatPrivateComponent {
     if (!currentUserId) return;
     const conversationId = this.dmInfo().conversationId;
 
-    console.log('📤 Sending DM message', { conversationId, authorId: currentUserId });
-
     // Send message via DirectMessageStore
     await this.directMessageStore.sendMessage(conversationId, currentUserId, content.trim());
+
+    // Immediately mark as read to prevent unread flash
+    this.unreadService.markAsRead(conversationId);
   }
 
   /**

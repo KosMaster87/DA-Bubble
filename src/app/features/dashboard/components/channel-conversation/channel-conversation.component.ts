@@ -4,7 +4,16 @@
  * @module features/dashboard/components/channel-conversation
  */
 
-import { Component, signal, input, inject, computed, output, effect } from '@angular/core';
+import {
+  Component,
+  signal,
+  input,
+  inject,
+  computed,
+  output,
+  effect,
+  untracked,
+} from '@angular/core';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import {
   ConversationMessagesComponent,
@@ -36,6 +45,7 @@ import {
   ChannelMessageStore,
 } from '@stores/index';
 import { AuthStore } from '@stores/auth';
+import { UnreadService } from '@core/services/unread/unread.service';
 import { MessageType, MessageReaction } from '@core/models/message.model';
 
 export interface ChannelMessage {
@@ -82,6 +92,7 @@ export class ChannelConversationComponent {
   protected messageStore = inject(MessageStore);
   protected channelMessageStore = inject(ChannelMessageStore);
   protected authStore = inject(AuthStore);
+  protected unreadService = inject(UnreadService);
   threadRequested = output<{ messageId: string; parentMessage: Message }>();
   channelLeft = output<void>();
   directMessageRequested = output<string>(); // Emits userId to start DM with
@@ -112,7 +123,35 @@ export class ChannelConversationComponent {
       const channelId = this.channel().id;
       if (channelId) {
         this.channelMessageStore.loadChannelMessages(channelId);
+        // Debounce markAsRead to prevent race condition
+        setTimeout(() => {
+          this.unreadService.markAsRead(channelId);
+        }, 200);
       }
+    });
+
+    // Auto-mark-as-read when new messages arrive in active channel
+    let previousMessageCount = 0;
+    effect(() => {
+      const channelId = this.channel().id;
+      const currentUserId = untracked(() => this.authStore.user()?.uid);
+
+      if (!channelId || !currentUserId) {
+        return;
+      }
+
+      // Get messages for current channel
+      const messages = this.channelMessageStore.getMessagesByChannel()(channelId);
+      const currentCount = messages.length;
+
+      // Only mark as read if message count increased (new message arrived)
+      if (currentCount > previousMessageCount && currentCount > 0) {
+        untracked(() => {
+          this.unreadService.markAsRead(channelId);
+        });
+      }
+
+      previousMessageCount = currentCount;
     });
   }
 
@@ -292,16 +331,6 @@ export class ChannelConversationComponent {
     return rawMessages.map((msg) => {
       const author = this.userStore.getUserById()(msg.authorId);
 
-      // Debug: Log lastThreadTimestamp
-      if (msg.threadCount && msg.threadCount > 0) {
-        console.log('📅 Message with thread:', {
-          id: msg.id,
-          threadCount: msg.threadCount,
-          lastThreadTimestamp: msg.lastThreadTimestamp,
-          type: typeof msg.lastThreadTimestamp,
-        });
-      }
-
       return {
         id: msg.id,
         senderId: msg.authorId,
@@ -341,6 +370,9 @@ export class ChannelConversationComponent {
     const channelId = this.channel().id;
 
     await this.channelMessageStore.sendMessage(channelId, content.trim(), currentUser.uid);
+
+    // Immediately mark as read to prevent unread flash
+    this.unreadService.markAsRead(channelId);
   }
 
   /**

@@ -71,7 +71,9 @@
           class="workspace-sidebar__item"
           [class.workspace-sidebar__item--active]="selectedChannelId() === channel.id"
           [class.workspace-sidebar__item--mailbox]="channel.id === 'mailbox'"
-          (click)="selectDummyChannel(channel.id)"
+          [class.workspace-sidebar__item--unread]="channel.hasUnread"
+          [class.workspace-sidebar__item--thread-unread]="channel.hasThreadUnread"
+          (click)="selectChannel(channel.id)"
         >
           <span class="workspace-sidebar__item-content">
             <span class="workspace-sidebar__item-icon-wrapper">
@@ -142,6 +144,8 @@
         <button
           class="workspace-sidebar__item workspace-sidebar__item--dm"
           [class.workspace-sidebar__item--active]="selectedDirectMessageId() === dm.id"
+          [class.workspace-sidebar__item--unread]="dm.hasUnread"
+          [class.workspace-sidebar__item--thread-unread]="dm.hasThreadUnread"
           (click)="selectDirectMessage(dm.id)"
         >
           <span class="workspace-sidebar__item-content">

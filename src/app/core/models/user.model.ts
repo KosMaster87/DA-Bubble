@@ -30,6 +30,8 @@ export interface User {
   updatedAt: Date;
   /** Scroll state per conversation for multi-device sync */
   scrollState?: Record<string, ScrollState>;
+  /** Last read timestamp per channel/conversation (channelId or conversationId -> timestamp) */
+  lastRead?: Record<string, Date>;
 }
 
 export interface CreateUserRequest {

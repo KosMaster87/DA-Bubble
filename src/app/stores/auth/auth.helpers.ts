@@ -30,6 +30,22 @@ export const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => ({
 });
 
 /**
+ * Convert Firestore timestamps to Date objects
+ * @function convertTimestampsToDate
+ * @param {Record<string, any>} obj - Object with Firestore timestamps
+ * @returns {Record<string, Date>} Object with Date objects
+ */
+const convertTimestampsToDate = (obj: Record<string, any>): Record<string, Date> => {
+  const result: Record<string, Date> = {};
+  for (const key in obj) {
+    if (obj[key]?.toDate) {
+      result[key] = obj[key].toDate();
+    }
+  }
+  return result;
+};
+
+/**
  * Handle user authenticated state
  * @function createAuthStateHandlers
  * @param {any} store - NgRx Signal Store instance
@@ -72,6 +88,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
             directMessages: firestoreData['directMessages'] || [],
             createdAt: firestoreData['createdAt']?.toDate() || new Date(),
             updatedAt: firestoreData['updatedAt']?.toDate() || new Date(),
+            // lastRead is handled separately by UnreadService to avoid reactive loops
           };
         } else {
           // Fallback to Firebase Auth data only
@@ -81,6 +98,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
         patchState(store, { user, isAuthenticated: true, isLoading: false });
 
         // Setup real-time listener for user document changes (e.g., directMessages updates)
+        // Note: We do NOT listen to lastRead changes here to avoid infinite loops
         userDocListener = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
             const firestoreData = snapshot.data();
@@ -104,6 +122,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
                 directMessages: newDirectMessages,
                 createdAt: firestoreData['createdAt']?.toDate() || new Date(),
                 updatedAt: firestoreData['updatedAt']?.toDate() || new Date(),
+                // lastRead is intentionally NOT included to avoid triggering effects
               };
               patchState(store, { user: updatedUser });
               console.log('🔄 User document updated:', {
@@ -158,6 +177,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
             directMessages: firestoreData['directMessages'] || [],
             createdAt: firestoreData['createdAt']?.toDate() || new Date(),
             updatedAt: firestoreData['updatedAt']?.toDate() || new Date(),
+            // lastRead is handled separately by UnreadService to avoid reactive loops
           };
           console.log('✅ User data loaded from Firestore:', {
             displayName: user.displayName,

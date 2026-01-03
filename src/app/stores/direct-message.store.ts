@@ -365,24 +365,16 @@ export const DirectMessageStore = signalStore(
             threadCount: 0,
           });
 
-          // Update conversation metadata
+          // Update conversation metadata (only preview fields)
+          // Note: lastMessageAt is updated by Cloud Function
           const conversationRef = doc(firestore, 'direct-messages', conversationId);
           const conversationSnap = await getDoc(conversationRef);
 
           if (conversationSnap.exists()) {
-            const data = conversationSnap.data();
-            const participants = data['participants'] as string[];
-            const otherParticipant = participants.find((uid) => uid !== authorId);
-
-            if (otherParticipant) {
-              await updateDoc(conversationRef, {
-                lastMessageAt: serverTimestamp(),
-                lastMessageContent: content.substring(0, 100), // Preview
-                lastMessageBy: authorId,
-                [`unreadCount.${otherParticipant}`]:
-                  (data['unreadCount']?.[otherParticipant] || 0) + 1,
-              });
-            }
+            await updateDoc(conversationRef, {
+              lastMessageContent: content.substring(0, 100),
+              lastMessageBy: authorId,
+            });
           }
         } catch (error: any) {
           console.error('Error sending message:', error);

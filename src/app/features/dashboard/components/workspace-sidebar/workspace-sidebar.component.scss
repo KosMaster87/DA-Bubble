@@ -314,6 +314,7 @@
     padding: 0.5rem 1.5rem 0.5rem 0.75rem;
     border-radius: 2rem;
     transition: background-color 0.2s;
+    border-left: 3px solid transparent;
 
     .workspace-sidebar__item:hover & {
       background-color: #eceefe;
@@ -321,6 +322,16 @@
 
     .workspace-sidebar__item--active & {
       background-color: #eceefe;
+    }
+
+    .workspace-sidebar__item--unread & {
+      border-left-color: #535af1;
+      padding-left: calc(0.75rem - 3px);
+    }
+
+    .workspace-sidebar__item--thread-unread & {
+      border-left-color: #ff9500;
+      padding-left: calc(0.75rem - 3px);
     }
   }
 
