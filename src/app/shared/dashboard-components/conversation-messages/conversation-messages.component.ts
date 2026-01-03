@@ -34,6 +34,8 @@ export interface Message {
   reactions?: MessageReaction[];
   threadCount?: number;
   lastThreadTimestamp?: Date;
+  isEdited?: boolean;
+  editedAt?: Date;
 }
 
 export interface MessageGroup {

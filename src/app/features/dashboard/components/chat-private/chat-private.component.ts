@@ -134,6 +134,13 @@ export class ChatPrivateComponent {
             : msg.lastThreadTimestamp
             ? new Date(msg.lastThreadTimestamp)
             : undefined,
+        isEdited: msg.isEdited,
+        editedAt:
+          msg.editedAt instanceof Date
+            ? msg.editedAt
+            : msg.editedAt
+            ? new Date(msg.editedAt)
+            : undefined,
       };
     });
   });

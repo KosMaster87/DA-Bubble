@@ -408,6 +408,7 @@ export const DirectMessageStore = signalStore(
           await updateDoc(messageRef, {
             content,
             isEdited: true,
+            editedAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           });
           // onSnapshot listener will automatically update state

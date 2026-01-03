@@ -40,9 +40,15 @@
       <div class="conversation-messages__message-content">
         <div class="conversation-messages__message-header">
           @if (message.isOwnMessage) {
-          <span class="conversation-messages__message-time">{{
-            message.timestamp | date : 'short'
-          }}</span>
+          <span class="conversation-messages__message-time">
+            {{
+              (message.isEdited && message.editedAt ? message.editedAt : message.timestamp)
+                | date : 'short'
+            }}
+            @if (message.isEdited) {
+            <span class="conversation-messages__message-edited"> (last edited)</span>
+            }
+          </span>
           <button
             class="conversation-messages__message-sender"
             (click)="onSenderClick(message.senderId)"
@@ -56,9 +62,15 @@
           >
             {{ message.senderName }}
           </button>
-          <span class="conversation-messages__message-time">{{
-            message.timestamp | date : 'short'
-          }}</span>
+          <span class="conversation-messages__message-time">
+            {{
+              (message.isEdited && message.editedAt ? message.editedAt : message.timestamp)
+                | date : 'short'
+            }}
+            @if (message.isEdited) {
+            <span class="conversation-messages__message-edited"> (last edited)</span>
+            }
+          </span>
           }
         </div>
 

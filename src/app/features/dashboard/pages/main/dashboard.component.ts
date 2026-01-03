@@ -76,6 +76,17 @@ export class DashboardComponent {
     // Default view is welcome (DABubble-welcome channel)
     this.currentView.set('welcome');
 
+    // Watch for changes in user's directMessages array
+    effect(() => {
+      const user = this.authStore.user();
+      if (user?.directMessages) {
+        console.log('🔄 User directMessages changed, reloading conversations:', {
+          count: user.directMessages.length,
+        });
+        this.directMessageStore.loadConversations(user.directMessages);
+      }
+    });
+
     // Debug effect to track view changes
     // effect(() => {
     //   console.log('🎯 Dashboard View Effect:', {
