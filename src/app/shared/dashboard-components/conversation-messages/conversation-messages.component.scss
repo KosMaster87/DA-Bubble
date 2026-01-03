@@ -78,6 +78,14 @@
     @include mix.flex(row, flex-start, flex-start);
     gap: var(--space-3);
     cursor: pointer;
+    transition: border-color 0.2s ease;
+    border: 1px solid #adb0d9;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+
+    &:hover {
+      border-color: #535bf131;
+    }
 
     &--own {
       flex-direction: row-reverse;
@@ -160,42 +168,17 @@
     max-width: fit-content;
   }
 
-  &__reactions {
-    @include mix.flex(row, flex-start, center);
-    gap: var(--space-1);
-    flex-wrap: wrap;
-  }
-
-  &__reaction {
-    @include mix.flex(row, center, center);
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
-    background-color: #f0f0ff;
-    border: 1px solid #535af1;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background-color: #e8e8ff;
-    }
-  }
-
-  &__reaction-emoji {
-    font-size: 1rem;
-  }
-
-  &__reaction-count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #535af1;
+  // Footer wrapper for reactions and thread link
+  &__footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
   }
 
   &__thread-link {
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
-    margin-top: var(--space-2);
     padding: 0;
     background: none;
     border: none;
@@ -204,6 +187,7 @@
     font-size: 0.8125rem;
     font-weight: 600;
     transition: color 0.2s;
+    width: fit-content;
 
     &:hover {
       color: #444bc7;

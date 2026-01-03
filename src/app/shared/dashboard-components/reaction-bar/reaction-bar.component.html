@@ -23,18 +23,36 @@
   </button>
   }
 
-  <button
-    class="reaction-bar__button"
-    type="button"
-    (click)="onReactionClick('add-reaction')"
-    aria-label="Add reaction"
-  >
-    <img
-      src="/img/icon/emojis/emoji-add-reaction-default.svg"
-      alt="Add reaction"
-      class="reaction-bar__icon"
-    />
-  </button>
+  <div class="reaction-bar__emoji-wrapper">
+    <button
+      class="reaction-bar__button"
+      type="button"
+      (click)="toggleEmojiPicker()"
+      aria-label="Add reaction"
+    >
+      <img
+        src="/img/icon/emojis/emoji-add-reaction-default.svg"
+        alt="Add reaction"
+        class="reaction-bar__icon"
+      />
+    </button>
+
+    <!-- Emoji Picker Popup -->
+    @if (isEmojiPickerOpen()) {
+    <div class="reaction-bar__emoji-picker">
+      @for (emoji of availableEmojis; track emoji.id) {
+      <button
+        class="reaction-bar__emoji-button"
+        type="button"
+        (click)="onEmojiSelect(emoji)"
+        [attr.aria-label]="emoji.label"
+      >
+        <img [src]="emoji.icon" [alt]="emoji.label" class="reaction-bar__emoji-icon" />
+      </button>
+      }
+    </div>
+    }
+  </div>
 
   @if (!isInThread()) {
   <button

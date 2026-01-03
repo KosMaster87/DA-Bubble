@@ -77,6 +77,7 @@ export class ThreadComponent {
         content: thread.content,
         timestamp: thread.createdAt,
         isOwnMessage: thread.authorId === currentUserId,
+        reactions: thread.reactions || [],
       };
     });
   });
@@ -255,9 +256,29 @@ export class ThreadComponent {
   /**
    * Handle reaction added
    */
-  onReactionAdded(data: { messageId: string; emoji: string }): void {
-    console.log('Reaction added:', data);
-    // TODO: Implement reaction logic
+  async onReactionAdded(data: { messageId: string; emoji: string }): Promise<void> {
+    console.log('🟣 Thread: Reaction added:', data);
+    const info = this.threadInfo();
+    const currentUserId = this.authStore.user()?.uid;
+
+    if (!currentUserId) {
+      console.error('❌ No user ID available');
+      return;
+    }
+
+    try {
+      await this.threadStore.toggleReaction(
+        info.channelId,
+        info.parentMessageId,
+        data.messageId,
+        data.emoji,
+        currentUserId,
+        info.isDirectMessage || false
+      );
+      console.log('✅ Thread Reaction toggled:', data.messageId, data.emoji);
+    } catch (error) {
+      console.error('❌ Failed to add reaction:', error);
+    }
   }
 
   /**

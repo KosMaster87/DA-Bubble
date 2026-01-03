@@ -9,9 +9,11 @@
       [user]="selectedUserProfile()!"
       [isVisible]="isProfileViewOpen()"
       [isOwnProfile]="isOwnProfile()"
+      [isDirectMessage]="true"
       (closeClicked)="onProfileViewClose()"
       (editClicked)="onProfileEdit()"
       (messageClicked)="onProfileMessage()"
+      (leaveConversationClicked)="onLeaveConversation()"
     />
     }
 

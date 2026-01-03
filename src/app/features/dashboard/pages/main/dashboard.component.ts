@@ -77,15 +77,15 @@ export class DashboardComponent {
     this.currentView.set('welcome');
 
     // Debug effect to track view changes
-    effect(() => {
-      console.log('🎯 Dashboard View Effect:', {
-        currentView: this.currentView(),
-        selectedDM: this.selectedDM(),
-        selectedChannel: this.selectedChannel(),
-        shouldShowDM: this.currentView() === 'direct-message' && !!this.selectedDM(),
-        shouldShowChannel: this.currentView() === 'channel' && !!this.selectedChannel(),
-      });
-    });
+    // effect(() => {
+    //   console.log('🎯 Dashboard View Effect:', {
+    //     currentView: this.currentView(),
+    //     selectedDM: this.selectedDM(),
+    //     selectedChannel: this.selectedChannel(),
+    //     shouldShowDM: this.currentView() === 'direct-message' && !!this.selectedDM(),
+    //     shouldShowChannel: this.currentView() === 'channel' && !!this.selectedChannel(),
+    //   });
+    // });
   }
 
   /**

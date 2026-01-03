@@ -18,8 +18,10 @@ import {
 import { DatePipe } from '@angular/common';
 import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
 import { MessageEdit } from '../message-edit/message-edit';
+import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
 import { ChatScrollService } from '../../services';
 import { UserPresenceStore } from '../../../stores';
+import { MessageReaction } from '@core/models/message.model';
 
 export interface Message {
   id: string;
@@ -29,7 +31,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   isOwnMessage: boolean;
-  reactions?: { emoji: string; count: number }[];
+  reactions?: MessageReaction[];
   threadCount?: number;
   lastThreadTimestamp?: Date;
 }
@@ -42,7 +44,7 @@ export interface MessageGroup {
 
 @Component({
   selector: 'app-conversation-messages',
-  imports: [DatePipe, ReactionBarComponent, MessageEdit],
+  imports: [DatePipe, ReactionBarComponent, MessageEdit, ReactionCountingComponent],
   templateUrl: './conversation-messages.component.html',
   styleUrl: './conversation-messages.component.scss',
 })
@@ -77,18 +79,18 @@ export class ConversationMessagesComponent implements AfterViewChecked {
       const conversationId = this.conversationId();
       const autoScrollEnabled = this.chatScrollService.getAutoScroll(conversationId);
 
-      console.log('📊 ConversationMessages: Effect triggered', {
-        conversationId,
-        currentMessageCount,
-        lastMessageCount: this.lastMessageCount,
-        autoScrollEnabled,
-      });
+      // console.log('📊 ConversationMessages: Effect triggered', {
+      //   conversationId,
+      //   currentMessageCount,
+      //   lastMessageCount: this.lastMessageCount,
+      //   autoScrollEnabled,
+      // });
 
       // Scroll on initial load or when new messages arrive (only if auto-scroll is enabled)
       if (currentMessageCount !== this.lastMessageCount) {
         if (this.lastMessageCount === 0 && currentMessageCount > 0) {
           // Initial load - always scroll and mark as read
-          console.log('🎯 Initial load detected - will scroll to bottom');
+          // console.log('🎯 Initial load detected - will scroll to bottom');
           this.shouldScrollToBottom = true;
           const latestMessageId = this.getLatestMessageId();
           if (latestMessageId) {
@@ -96,14 +98,14 @@ export class ConversationMessagesComponent implements AfterViewChecked {
           }
         } else if (currentMessageCount > this.lastMessageCount && autoScrollEnabled) {
           // New messages arrived and auto-scroll is enabled
-          console.log('📩 New messages arrived - will scroll to bottom');
+          // console.log('📩 New messages arrived - will scroll to bottom');
           this.shouldScrollToBottom = true;
           const latestMessageId = this.getLatestMessageId();
           if (latestMessageId) {
             this.chatScrollService.markAsRead(conversationId, latestMessageId);
           }
         } else if (currentMessageCount > this.lastMessageCount && !autoScrollEnabled) {
-          console.log('⚠️ New messages arrived but auto-scroll is OFF');
+          // console.log('⚠️ New messages arrived but auto-scroll is OFF');
         }
       }
       this.lastMessageCount = currentMessageCount;
@@ -130,12 +132,12 @@ export class ConversationMessagesComponent implements AfterViewChecked {
           const clientHeight = container.clientHeight;
           const targetScrollTop = scrollHeight - clientHeight;
 
-          console.log('⬇️ Attempting to scroll to bottom', {
-            scrollHeight,
-            clientHeight,
-            targetScrollTop,
-            currentScrollTop: container.scrollTop,
-          });
+          // console.log('⬇️ Attempting to scroll to bottom', {
+          //   scrollHeight,
+          //   clientHeight,
+          //   targetScrollTop,
+          //   currentScrollTop: container.scrollTop,
+          // });
 
           if (targetScrollTop > 0) {
             // Use smooth scrolling
@@ -144,9 +146,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
               behavior: 'instant', // instant for immediate feedback
             });
             this.lastScrollTop = targetScrollTop;
-            console.log('✅ Scrolled to bottom successfully');
+            // console.log('✅ Scrolled to bottom successfully');
           } else {
-            console.warn('⚠️ No scrolling needed - content fits in viewport');
+            // console.warn('⚠️ No scrolling needed - content fits in viewport');
           }
         } catch (err) {
           console.error('❌ Scroll to bottom failed:', err);
@@ -246,10 +248,16 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * Handle reaction bar button click
    */
   onReactionBarClick(messageId: string, type: ReactionType): void {
+    console.log('🔵 Reaction bar clicked:', messageId, type);
     if (type === 'comment') {
       this.threadClicked.emit(messageId);
+    } else if (type === 'add-reaction') {
+      // Add-reaction button opens picker in ReactionBar, no need to emit
+      console.log('Emoji picker opened');
     } else {
-      this.reactionBarClicked.emit({ messageId, type });
+      // Direct emoji click (thumbs-up, checked, rocket, nerd-face)
+      console.log('🎯 Emitting reaction:', messageId, type);
+      this.reactionAdded.emit({ messageId, emoji: type });
     }
   }
 

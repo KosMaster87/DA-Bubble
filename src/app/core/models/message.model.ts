@@ -14,6 +14,7 @@ export interface Message {
   attachments: MessageAttachment[];
   reactions: MessageReaction[];
   threadCount?: number; // Number of thread replies
+  lastThreadTimestamp?: Date; // Timestamp of last thread reply
   isEdited: boolean;
   editedAt?: Date;
   createdAt: Date;

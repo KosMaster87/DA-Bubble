@@ -181,9 +181,9 @@ service cloud.firestore {
                         (isChannelMember(channelId)
                          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
                         ||
-                        // Any member can increment threadCount (when adding thread reply)
+                        // Any member can increment threadCount and set lastThreadTimestamp (when adding thread reply)
                         (isChannelMember(channelId)
-                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'updatedAt']))
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'lastThreadTimestamp', 'updatedAt']))
                       );
 
         // Allow delete only for message author
@@ -283,9 +283,13 @@ service cloud.firestore {
                         // Author can edit message
                         (request.resource.data.authorId == request.auth.uid)
                         ||
-                        // Any participant can add reactions or update threadCount
+                        // Any participant can add reactions
                         (isParticipant()
-                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt', 'threadCount']))
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                        ||
+                        // Any participant can update threadCount with lastThreadTimestamp
+                        (isParticipant()
+                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'lastThreadTimestamp', 'updatedAt']))
                       );
 
         // Allow delete for message author

@@ -73,34 +73,29 @@
         <p class="conversation-messages__message-text">{{ message.content }}</p>
         }
 
-        <!-- Reactions -->
-        @if (message.reactions && message.reactions.length > 0) {
-        <div class="conversation-messages__reactions">
-          @for (reaction of message.reactions; track $index) {
-          <button
-            class="conversation-messages__reaction"
-            (click)="onReactionClick(message.id, reaction.emoji)"
-          >
-            <span class="conversation-messages__reaction-emoji">{{ reaction.emoji }}</span>
-            <span class="conversation-messages__reaction-count">{{ reaction.count }}</span>
+        <!-- Reactions & Thread Wrapper -->
+        <div class="conversation-messages__footer">
+          <!-- Reaction Counting -->
+          <app-reaction-counting
+            [reactions]="message.reactions || []"
+            (reactionClicked)="onReactionClick(message.id, $event)"
+          />
+
+          <!-- Thread Answers -->
+          @if (message.threadCount && message.threadCount > 0) {
+          <button class="conversation-messages__thread-link" (click)="onThreadClick(message.id)">
+            <span class="conversation-messages__thread-count"
+              >{{ message.threadCount }}
+              {{ message.threadCount === 1 ? 'Answer' : 'Answers' }}
+            </span>
+            @if (message.lastThreadTimestamp) {
+            <span class="conversation-messages__thread-time">
+              - Last answer {{ message.lastThreadTimestamp | date : 'short' }}
+            </span>
+            }
           </button>
           }
         </div>
-        }
-
-        <!-- Thread Answers -->
-        @if (message.threadCount && message.threadCount > 0) {
-        <button class="conversation-messages__thread-link" (click)="onThreadClick(message.id)">
-          <span class="conversation-messages__thread-count"
-            >{{ message.threadCount }} {{ message.threadCount === 1 ? 'Answer' : 'Answers' }}</span
-          >
-          @if (message.lastThreadTimestamp) {
-          <span class="conversation-messages__thread-time"
-            >Last answer {{ message.lastThreadTimestamp | date : 'short' }}</span
-          >
-          }
-        </button>
-        }
       </div>
     </div>
     <!-- End Message Wrapper -->

@@ -11,6 +11,7 @@ import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import { collection, doc, addDoc, updateDoc, Firestore } from '@angular/fire/firestore';
 import { Message, CreateMessageRequest } from '@core/models/message.model';
+import { ReactionService } from '@core/services/reaction/reaction.service';
 
 // Export types for use in other modules
 export type { CreateMessageRequest };
@@ -79,6 +80,7 @@ export const MessageStore = signalStore(
   withMethods((store) => {
     const firestore = inject(Firestore);
     const messagesCollection = collection(firestore, 'messages');
+    const reactionService = inject(ReactionService);
 
     return {
       // === ENTRY POINT METHODS ===
@@ -269,6 +271,18 @@ export const MessageStore = signalStore(
        */
       clearError() {
         patchState(store, { error: null });
+      },
+
+      /**
+       * Toggle reaction on a message
+       * @function toggleReaction
+       * @param {string} messageId - Message ID
+       * @param {string} emojiId - Emoji ID
+       * @param {string} userId - User ID who reacted
+       */
+      async toggleReaction(messageId: string, emojiId: string, userId: string) {
+        const messageRef = reactionService.getMessageRef('messages', messageId);
+        await reactionService.toggleReaction(messageRef, emojiId, userId);
       },
     };
   })

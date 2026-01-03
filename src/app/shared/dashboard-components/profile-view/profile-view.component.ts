@@ -32,10 +32,12 @@ export class ProfileViewComponent {
   isChannelOwner = input<boolean>(false);
   isCurrentUserAdmin = input<boolean>(false);
   isSelectedUserOwner = input<boolean>(false);
+  isDirectMessage = input<boolean>(false);
   closeClicked = output<void>();
   editClicked = output<void>();
   messageClicked = output<void>();
   removeMemberClicked = output<void>();
+  leaveConversationClicked = output<void>();
 
   /**
    * Handle close button click
@@ -63,6 +65,13 @@ export class ProfileViewComponent {
    */
   onRemoveMember(): void {
     this.removeMemberClicked.emit();
+  }
+
+  /**
+   * Handle leave conversation button click
+   */
+  onLeaveConversation(): void {
+    this.leaveConversationClicked.emit();
   }
 
   /**

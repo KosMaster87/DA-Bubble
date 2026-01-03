@@ -69,6 +69,8 @@
       @if (!isOwnProfile() && !isSelectedUserOwner() && (isChannelOwner() || (isCurrentUserAdmin()
       && !user().isAdmin))) {
       <app-btn-delete label="Remove from room" (clicked)="onRemoveMember()" />
+      } @if (!isOwnProfile() && isDirectMessage()) {
+      <app-btn-delete label="Leave conversation" (clicked)="onLeaveConversation()" />
       } @if (!isOwnProfile()) {
       <button class="profile-view__message-btn" (click)="onMessage()">
         <img src="/img/icon/profile/msg-default.svg" alt="" class="profile-view__icon" />

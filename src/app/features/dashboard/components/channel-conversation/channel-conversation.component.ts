@@ -36,7 +36,7 @@ import {
   ChannelMessageStore,
 } from '@stores/index';
 import { AuthStore } from '@stores/auth';
-import { MessageType } from '@core/models/message.model';
+import { MessageType, MessageReaction } from '@core/models/message.model';
 
 export interface ChannelMessage {
   id: string;
@@ -46,8 +46,9 @@ export interface ChannelMessage {
   content: string;
   timestamp: Date;
   isOwnMessage: boolean;
-  reactions?: { emoji: string; count: number }[];
+  reactions?: MessageReaction[];
   threadCount?: number;
+  lastThreadTimestamp?: Date;
 }
 
 export interface ChannelInfo {
@@ -290,6 +291,17 @@ export class ChannelConversationComponent {
 
     return rawMessages.map((msg) => {
       const author = this.userStore.getUserById()(msg.authorId);
+
+      // Debug: Log lastThreadTimestamp
+      if (msg.threadCount && msg.threadCount > 0) {
+        console.log('📅 Message with thread:', {
+          id: msg.id,
+          threadCount: msg.threadCount,
+          lastThreadTimestamp: msg.lastThreadTimestamp,
+          type: typeof msg.lastThreadTimestamp,
+        });
+      }
+
       return {
         id: msg.id,
         senderId: msg.authorId,
@@ -298,8 +310,14 @@ export class ChannelConversationComponent {
         content: msg.content,
         timestamp: msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt),
         isOwnMessage: msg.authorId === currentUserId,
-        reactions: msg.reactions?.map((r) => ({ emoji: r.emoji, count: r.count })),
+        reactions: msg.reactions,
         threadCount: msg.threadCount,
+        lastThreadTimestamp:
+          msg.lastThreadTimestamp instanceof Date
+            ? msg.lastThreadTimestamp
+            : msg.lastThreadTimestamp
+            ? new Date(msg.lastThreadTimestamp)
+            : undefined,
       };
     });
   });
@@ -341,7 +359,7 @@ export class ChannelConversationComponent {
         isOwnMessage: msg.isOwnMessage,
         reactions: msg.reactions,
         threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
-        lastThreadTimestamp: undefined, // TODO: Implement
+        lastThreadTimestamp: msg.lastThreadTimestamp,
       });
     });
 
@@ -389,9 +407,17 @@ export class ChannelConversationComponent {
   /**
    * Add reaction to message
    */
-  addReaction(messageId: string, emoji: string): void {
-    console.log('Add reaction:', messageId, emoji);
-    // TODO: Implement reaction functionality
+  async addReaction(messageId: string, emojiId: string): Promise<void> {
+    const currentUserId = this.authStore.user()?.uid;
+    const channelId = this.channel().id;
+    if (!currentUserId || !channelId) return;
+
+    try {
+      await this.channelMessageStore.toggleReaction(channelId, messageId, emojiId, currentUserId);
+      console.log('✅ Reaction toggled:', messageId, emojiId);
+    } catch (error) {
+      console.error('❌ Failed to add reaction:', error);
+    }
   }
 
   /**

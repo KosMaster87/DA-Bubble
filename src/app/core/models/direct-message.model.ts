@@ -35,6 +35,7 @@ export interface DirectMessage {
   reactions: MessageReaction[];
   attachments: MessageAttachment[];
   threadCount?: number; // Number of thread replies
+  lastThreadTimestamp?: Date; // Timestamp of last thread reply
 }
 
 /**

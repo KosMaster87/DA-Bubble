@@ -22,6 +22,7 @@ import {
   Unsubscribe,
   serverTimestamp,
 } from '@angular/fire/firestore';
+import { ReactionService } from '@core/services/reaction/reaction.service';
 
 /**
  * Thread message interface
@@ -99,6 +100,7 @@ export const ThreadStore = signalStore(
   })),
   withMethods((store) => {
     const firestore = inject(Firestore);
+    const reactionService = inject(ReactionService);
     const threadListeners = new Map<string, Unsubscribe>();
     return {
       // === ENTRY POINT METHODS ===
@@ -293,6 +295,7 @@ export const ThreadStore = signalStore(
           const parentMessageRef = doc(firestore, parentMessagePath);
           await updateDoc(parentMessageRef, {
             threadCount: increment(1),
+            lastThreadTimestamp: serverTimestamp(),
             updatedAt: serverTimestamp(),
           });
 
@@ -403,6 +406,31 @@ export const ThreadStore = signalStore(
           selectedThread: null,
           selectedParentId: null,
         });
+      },
+
+      /**
+       * Toggle reaction on a thread message
+       * @param channelId Channel ID or conversation ID
+       * @param parentMessageId Parent message ID
+       * @param threadId Thread message ID
+       * @param emojiId Emoji ID
+       * @param userId User ID who reacted
+       * @param isDirectMessage Whether this is a direct message thread
+       */
+      async toggleReaction(
+        channelId: string,
+        parentMessageId: string,
+        threadId: string,
+        emojiId: string,
+        userId: string,
+        isDirectMessage = false
+      ): Promise<void> {
+        const threadsPath = isDirectMessage
+          ? ['direct-messages', channelId, 'messages', parentMessageId, 'threads', threadId]
+          : ['channels', channelId, 'messages', parentMessageId, 'threads', threadId];
+
+        const threadRef = reactionService.getMessageRef(...threadsPath);
+        await reactionService.toggleReaction(threadRef, emojiId, userId);
       },
     };
   })

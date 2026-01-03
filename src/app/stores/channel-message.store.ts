@@ -25,6 +25,7 @@ import {
   Unsubscribe,
 } from '@angular/fire/firestore';
 import { Message, CreateMessageRequest, MessageType } from '@core/models/message.model';
+import { ReactionService } from '@core/services/reaction/reaction.service';
 
 /**
  * State interface for channel message management
@@ -91,6 +92,7 @@ export const ChannelMessageStore = signalStore(
   })),
   withMethods((store) => {
     const firestore = inject(Firestore);
+    const reactionService = inject(ReactionService);
     const messageListeners = new Map<string, Unsubscribe>();
     return {
       // === ENTRY POINT METHODS ===
@@ -177,12 +179,18 @@ export const ChannelMessageStore = signalStore(
           const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
-              const messages = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data()['createdAt']?.toDate() || new Date(),
-                updatedAt: doc.data()['updatedAt']?.toDate() || new Date(),
-              })) as Message[];
+              const messages = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  ...data,
+                  createdAt: data['createdAt']?.toDate() || new Date(),
+                  updatedAt: data['updatedAt']?.toDate() || new Date(),
+                  lastThreadTimestamp: data['lastThreadTimestamp']?.toDate() || undefined,
+                  reactions: data['reactions'] || [],
+                  threadCount: data['threadCount'] || 0,
+                };
+              }) as Message[];
 
               this.updateChannelMessages(channelId, messages);
               patchState(store, { isLoading: false });
@@ -336,6 +344,29 @@ export const ChannelMessageStore = signalStore(
        */
       clearError() {
         patchState(store, { error: null });
+      },
+
+      /**
+       * Toggle reaction on a channel message
+       * @function toggleReaction
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID
+       * @param {string} emojiId - Emoji ID
+       * @param {string} userId - User ID who reacted
+       */
+      async toggleReaction(
+        channelId: string,
+        messageId: string,
+        emojiId: string,
+        userId: string
+      ): Promise<void> {
+        const messageRef = reactionService.getMessageRef(
+          'channels',
+          channelId,
+          'messages',
+          messageId
+        );
+        await reactionService.toggleReaction(messageRef, emojiId, userId);
       },
 
       /**

@@ -127,6 +127,13 @@ export class ChatPrivateComponent {
         timestamp: msg.createdAt,
         isOwnMessage: msg.authorId === currentUserId,
         threadCount: msg.threadCount || 0,
+        reactions: msg.reactions || [],
+        lastThreadTimestamp:
+          msg.lastThreadTimestamp instanceof Date
+            ? msg.lastThreadTimestamp
+            : msg.lastThreadTimestamp
+            ? new Date(msg.lastThreadTimestamp)
+            : undefined,
       };
     });
   });
@@ -283,9 +290,27 @@ export class ChatPrivateComponent {
   /**
    * Handle reaction added
    */
-  onReactionAdded(data: { messageId: string; emoji: string }): void {
-    console.log('Reaction added:', data);
-    // TODO: Implement reaction logic
+  async onReactionAdded(data: { messageId: string; emoji: string }): Promise<void> {
+    console.log('🟣 ChatPrivate: Reaction added:', data);
+    const conversationId = this.dmInfo().conversationId;
+    const currentUserId = this.authStore.user()?.uid;
+
+    if (!currentUserId) {
+      console.error('❌ No user ID available');
+      return;
+    }
+
+    try {
+      await this.directMessageStore.toggleReaction(
+        conversationId,
+        data.messageId,
+        data.emoji,
+        currentUserId
+      );
+      console.log('✅ DM Reaction toggled:', data.messageId, data.emoji);
+    } catch (error) {
+      console.error('❌ Failed to add reaction:', error);
+    }
   }
 
   /**
@@ -370,5 +395,32 @@ export class ChatPrivateComponent {
 
     this.isEditProfileOpen.set(false);
     this.selectedUserId.set(null);
+  }
+
+  /**
+   * Handle leave conversation
+   */
+  async onLeaveConversation(): Promise<void> {
+    const conversationId = this.dmInfo().conversationId;
+    const currentUserId = this.authStore.user()?.uid;
+
+    if (!currentUserId || !conversationId) {
+      console.error('❌ Cannot leave conversation: Missing user ID or conversation ID');
+      return;
+    }
+
+    console.log('🚪 Leaving conversation:', { conversationId, userId: currentUserId });
+
+    try {
+      await this.directMessageStore.leaveConversation(conversationId, currentUserId);
+      console.log('✅ Conversation left successfully');
+
+      // Close profile view
+      this.onProfileViewClose();
+
+      // TODO: Navigate back to main view (emit event to dashboard component)
+    } catch (error) {
+      console.error('❌ Failed to leave conversation:', error);
+    }
   }
 }

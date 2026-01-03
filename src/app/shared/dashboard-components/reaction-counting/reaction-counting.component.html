@@ -1,0 +1,15 @@
+<!-- Reaction Counting -->
+@if (reactions().length > 0) {
+<div class="reaction-counting">
+  @for (reaction of reactions(); track reaction.emoji) {
+  <button class="reaction-counting__reaction" (click)="onReactionClick(reaction.emoji)">
+    <img
+      [src]="getEmojiIcon(reaction.emoji)"
+      [alt]="reaction.emoji"
+      class="reaction-counting__emoji"
+    />
+    <span class="reaction-counting__count">{{ reaction.count }}</span>
+  </button>
+  }
+</div>
+}
