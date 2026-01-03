@@ -711,6 +711,19 @@ export class ChannelConversationComponent {
   }
 
   /**
+   * Handle message deleted
+   */
+  async onMessageDeleted(messageId: string): Promise<void> {
+    const channelId = this.channel().id;
+    try {
+      await this.channelMessageStore.deleteMessage(channelId, messageId);
+      console.log('✅ Message deleted successfully');
+    } catch (error) {
+      console.error('❌ Failed to delete message:', error);
+    }
+  }
+
+  /**
    * Handle thread click
    */
   onThreadClick(messageId: string): void {

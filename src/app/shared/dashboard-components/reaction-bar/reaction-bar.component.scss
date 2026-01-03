@@ -59,7 +59,7 @@
 
   &__edit-menu {
     position: absolute;
-    bottom: -200%;
+    bottom: -320%;
     left: 0;
     background-color: #ffffff;
     border: 1px solid var(--border-color);
@@ -69,6 +69,8 @@
     z-index: 100;
     min-width: 140px;
     white-space: nowrap;
+    display: flex;
+    flex-direction: column;
   }
 
   &__edit-button {

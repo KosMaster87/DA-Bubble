@@ -23,6 +23,7 @@
         [isInThread]="isInThread()"
         (reactionClicked)="onReactionBarClick(message.id, $event)"
         (editMessageClicked)="onEditMessage(message.id)"
+        (deleteMessageClicked)="onDeleteMessage(message.id)"
       />
     </div>
 
@@ -114,3 +115,9 @@
   </div>
   } }
 </div>
+
+<app-delete-message-modal
+  [isVisible]="deleteConfirmationMessageId() !== null"
+  (cancelClicked)="onCancelDelete()"
+  (confirmClicked)="onConfirmDelete()"
+/>

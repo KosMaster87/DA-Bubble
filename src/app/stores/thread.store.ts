@@ -158,9 +158,15 @@ export const ThreadStore = signalStore(
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Parent message ID
        * @param {string} threadId - Thread message ID
+       * @param {boolean} isDirectMessage - Whether this is a direct message thread
        */
-      async deleteThread(channelId: string, messageId: string, threadId: string): Promise<void> {
-        await this.performDeleteThread(channelId, messageId, threadId);
+      async deleteThread(
+        channelId: string,
+        messageId: string,
+        threadId: string,
+        isDirectMessage?: boolean
+      ): Promise<void> {
+        await this.performDeleteThread(channelId, messageId, threadId, isDirectMessage);
       },
 
       /**
@@ -353,13 +359,45 @@ export const ThreadStore = signalStore(
       async performDeleteThread(
         channelId: string,
         messageId: string,
-        threadId: string
+        threadId: string,
+        isDirectMessage?: boolean
       ): Promise<void> {
         try {
-          const threadPath = `channels/${channelId}/messages/${messageId}/threads`;
+          const collectionType = isDirectMessage ? 'direct-messages' : 'channels';
+          const threadPath = `${collectionType}/${channelId}/messages/${messageId}/threads`;
           const threadDoc = doc(firestore, threadPath, threadId);
 
           await deleteDoc(threadDoc);
+
+          // Get remaining threads to update parent message metadata
+          const threadsRef = collection(firestore, threadPath);
+          const threadsSnapshot = await getDocs(query(threadsRef, orderBy('createdAt', 'desc')));
+          const remainingThreadCount = threadsSnapshot.size;
+
+          // Update parent message with new thread count and last timestamp
+          const parentMessageRef = doc(
+            firestore,
+            `${collectionType}/${channelId}/messages/${messageId}`
+          );
+
+          if (remainingThreadCount > 0) {
+            // Get the timestamp of the most recent remaining thread
+            const latestThread = threadsSnapshot.docs[0];
+            const latestThreadData = latestThread.data();
+
+            await updateDoc(parentMessageRef, {
+              threadCount: remainingThreadCount,
+              lastThreadTimestamp: latestThreadData['createdAt'],
+              updatedAt: serverTimestamp(),
+            });
+          } else {
+            // No threads left, reset to 0
+            await updateDoc(parentMessageRef, {
+              threadCount: 0,
+              lastThreadTimestamp: null,
+              updatedAt: serverTimestamp(),
+            });
+          }
 
           // Update local state
           const currentThreads = store.threads()[messageId] || [];
@@ -371,6 +409,8 @@ export const ThreadStore = signalStore(
               [messageId]: filteredThreads,
             },
           });
+
+          console.log('✅ Thread message deleted, parent message updated');
         } catch (error) {
           this.handleError(error, 'Failed to delete thread');
         }

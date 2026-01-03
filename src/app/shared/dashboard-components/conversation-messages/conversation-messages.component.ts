@@ -19,6 +19,7 @@ import { DatePipe } from '@angular/common';
 import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
 import { MessageEdit } from '../message-edit/message-edit';
 import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
+import { DeleteMessageModalComponent } from '../delete-message-modal/delete-message-modal.component';
 import { ChatScrollService } from '../../services';
 import { UserPresenceStore } from '../../../stores';
 import { MessageReaction } from '@core/models/message.model';
@@ -46,7 +47,13 @@ export interface MessageGroup {
 
 @Component({
   selector: 'app-conversation-messages',
-  imports: [DatePipe, ReactionBarComponent, MessageEdit, ReactionCountingComponent],
+  imports: [
+    DatePipe,
+    ReactionBarComponent,
+    MessageEdit,
+    ReactionCountingComponent,
+    DeleteMessageModalComponent,
+  ],
   templateUrl: './conversation-messages.component.html',
   styleUrl: './conversation-messages.component.scss',
 })
@@ -63,11 +70,13 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   reactionBarClicked = output<{ messageId: string; type: ReactionType }>();
   threadClicked = output<string>();
   messageEdited = output<{ messageId: string; newContent: string }>();
+  messageDeleted = output<string>();
 
   private chatScrollService = inject(ChatScrollService);
   protected userPresenceStore = inject(UserPresenceStore);
 
   protected editingMessageId = signal<string | null>(null);
+  protected deleteConfirmationMessageId = signal<string | null>(null);
   private shouldScrollToBottom = false;
   private lastMessageCount = 0;
   private lastScrollTop = 0;
@@ -290,6 +299,31 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   onSaveEdit(messageId: string, newContent: string): void {
     this.messageEdited.emit({ messageId, newContent });
     this.editingMessageId.set(null);
+  }
+
+  /**
+   * Handle delete message request
+   */
+  onDeleteMessage(messageId: string): void {
+    this.deleteConfirmationMessageId.set(messageId);
+  }
+
+  /**
+   * Handle delete confirmation cancel
+   */
+  onCancelDelete(): void {
+    this.deleteConfirmationMessageId.set(null);
+  }
+
+  /**
+   * Handle delete confirmation confirm
+   */
+  onConfirmDelete(): void {
+    const messageId = this.deleteConfirmationMessageId();
+    if (messageId) {
+      this.messageDeleted.emit(messageId);
+      this.deleteConfirmationMessageId.set(null);
+    }
   }
 
   /**

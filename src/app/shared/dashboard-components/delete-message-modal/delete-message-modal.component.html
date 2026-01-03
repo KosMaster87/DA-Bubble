@@ -1,0 +1,15 @@
+@if (isVisible()) {
+<div class="delete-message-modal">
+  <div class="delete-message-modal__overlay" (click)="onCancel()"></div>
+  <div class="delete-message-modal__content">
+    <h2 class="delete-message-modal__title">Delete message</h2>
+    <p class="delete-message-modal__text">
+      Are you sure you want to delete this message? This action cannot be undone.
+    </p>
+    <div class="delete-message-modal__actions">
+      <app-btn-cancel label="Cancel" (clicked)="onCancel()" />
+      <app-btn-delete label="Confirm" (clicked)="onConfirm()" />
+    </div>
+  </div>
+</div>
+}

@@ -30,6 +30,7 @@ export class ReactionBarComponent {
   isInThread = input<boolean>(false);
   reactionClicked = output<ReactionType>();
   editMessageClicked = output<void>();
+  deleteMessageClicked = output<void>();
 
   protected isEditMenuOpen = signal<boolean>(false);
   protected isEmojiPickerOpen = signal<boolean>(false);
@@ -62,6 +63,14 @@ export class ReactionBarComponent {
    */
   onEditMessage(): void {
     this.editMessageClicked.emit();
+    this.closeEditMenu();
+  }
+
+  /**
+   * Handle delete message click
+   */
+  onDeleteMessage(): void {
+    this.deleteMessageClicked.emit();
     this.closeEditMenu();
   }
 

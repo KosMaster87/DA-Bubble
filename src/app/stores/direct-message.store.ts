@@ -14,6 +14,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   addDoc,
   query,
   where,
@@ -414,6 +415,37 @@ export const DirectMessageStore = signalStore(
           // onSnapshot listener will automatically update state
         } catch (error: any) {
           console.error('Error updating message:', error);
+          throw error;
+        }
+      },
+
+      /**
+       * Delete a message in a conversation
+       * @param conversationId Conversation ID
+       * @param messageId Message ID to delete
+       */
+      async deleteMessage(conversationId: string, messageId: string): Promise<void> {
+        try {
+          // Delete message document
+          const messageRef = doc(
+            firestore,
+            `direct-messages/${conversationId}/messages/${messageId}`
+          );
+          await deleteDoc(messageRef);
+
+          // Delete all thread messages for this parent message
+          const threadsRef = collection(
+            firestore,
+            `direct-messages/${conversationId}/messages/${messageId}/threads`
+          );
+          const threadsSnapshot = await getDocs(threadsRef);
+          const deletePromises = threadsSnapshot.docs.map((threadDoc) => deleteDoc(threadDoc.ref));
+          await Promise.all(deletePromises);
+
+          console.log('✅ DM message and thread deleted successfully');
+          // onSnapshot listener will automatically update state
+        } catch (error: any) {
+          console.error('Error deleting message:', error);
           throw error;
         }
       },

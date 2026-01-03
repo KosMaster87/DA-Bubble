@@ -329,6 +329,19 @@ export class ChatPrivateComponent {
   }
 
   /**
+   * Handle message deleted
+   */
+  async onMessageDeleted(messageId: string): Promise<void> {
+    const conversationId = this.dmInfo().conversationId;
+    try {
+      await this.directMessageStore.deleteMessage(conversationId, messageId);
+      console.log('✅ DM message deleted successfully');
+    } catch (error) {
+      console.error('❌ Failed to delete DM message:', error);
+    }
+  }
+
+  /**
    * Handle thread click
    */
   onThreadClick(messageId: string): void {

@@ -1,0 +1,51 @@
+.delete-message-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  &__content {
+    position: relative;
+    background-color: var(--bg-color, white);
+    border-radius: 30px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    color: var(--text-color, #000);
+  }
+
+  &__text {
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0 0 30px 0;
+    color: var(--text-color-secondary, #686868);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+  }
+}

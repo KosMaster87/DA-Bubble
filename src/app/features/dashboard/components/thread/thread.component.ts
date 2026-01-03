@@ -296,6 +296,24 @@ export class ThreadComponent {
   }
 
   /**
+   * Handle message deleted
+   */
+  async onMessageDeleted(messageId: string): Promise<void> {
+    const info = this.threadInfo();
+    try {
+      await this.threadStore.deleteThread(
+        info.channelId,
+        info.parentMessageId,
+        messageId,
+        info.isDirectMessage
+      );
+      console.log('✅ Thread message deleted successfully');
+    } catch (error) {
+      console.error('❌ Failed to delete thread message:', error);
+    }
+  }
+
+  /**
    * Handle profile view close
    */
   onProfileViewClose(): void {

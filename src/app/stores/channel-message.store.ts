@@ -20,6 +20,7 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
   Unsubscribe,
@@ -132,6 +133,18 @@ export const ChannelMessageStore = signalStore(
        */
       async updateMessage(channelId: string, messageId: string, content: string) {
         await this.performUpdateMessage(channelId, messageId, content);
+      },
+
+      /**
+       * Entry point: Delete message
+       * @async
+       * @function deleteMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID to delete
+       * @returns {Promise<void>}
+       */
+      async deleteMessage(channelId: string, messageId: string) {
+        await this.performDeleteMessage(channelId, messageId);
       },
 
       /**
@@ -258,6 +271,36 @@ export const ChannelMessageStore = signalStore(
           // onSnapshot listener will automatically update state
         } catch (error) {
           this.handleError(error, 'Failed to update message');
+          throw error;
+        }
+      },
+
+      /**
+       * Implementation: Delete message
+       * @function performDeleteMessage
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID to delete
+       * @returns {Promise<void>}
+       */
+      async performDeleteMessage(channelId: string, messageId: string) {
+        try {
+          // Delete message document
+          const messageRef = doc(firestore, `channels/${channelId}/messages/${messageId}`);
+          await deleteDoc(messageRef);
+
+          // Delete all thread messages for this parent message
+          const threadsRef = collection(
+            firestore,
+            `channels/${channelId}/messages/${messageId}/threads`
+          );
+          const threadsSnapshot = await getDocs(threadsRef);
+          const deletePromises = threadsSnapshot.docs.map((threadDoc) => deleteDoc(threadDoc.ref));
+          await Promise.all(deletePromises);
+
+          console.log('✅ Message and thread deleted successfully');
+          // onSnapshot listener will automatically update state
+        } catch (error) {
+          this.handleError(error, 'Failed to delete message');
           throw error;
         }
       },
