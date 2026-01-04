@@ -17,9 +17,11 @@ import { ChatPrivateComponent } from '../../components/chat-private/chat-private
 import { ThreadComponent } from '../../components/thread/thread.component';
 import { ChannelStore } from '../../../../stores/channel.store';
 import { DirectMessageStore } from '../../../../stores/direct-message.store';
+import { ChannelMessageStore } from '../../../../stores/channel-message.store';
 import { ThreadStore } from '../../../../stores/thread.store';
 import { UserStore } from '../../../../stores/user.store';
 import { AuthStore } from '../../../../stores/auth';
+import { UnreadService } from '@core/services/unread/unread.service';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { type ThreadInfo } from '../../components/thread/thread.component';
 
@@ -62,9 +64,11 @@ export class DashboardComponent {
   protected sidebarService = inject(WorkspaceSidebarService);
   protected channelStore = inject(ChannelStore);
   protected directMessageStore = inject(DirectMessageStore);
+  protected channelMessageStore = inject(ChannelMessageStore);
   protected threadStore = inject(ThreadStore);
   protected userStore = inject(UserStore);
   protected authStore = inject(AuthStore);
+  protected unreadService = inject(UnreadService);
   protected currentView = signal<DashboardView>('welcome');
   protected selectedChannel = signal<ChannelInfo | null>(null);
   protected selectedDM = signal<DMInfo | null>(null);
@@ -82,6 +86,15 @@ export class DashboardComponent {
     // Default view is welcome (DABubble-welcome channel)
     this.currentView.set('welcome');
 
+    // Load messages for all channels to enable thread-unread detection
+    effect(() => {
+      const channels = this.channelStore.channels();
+      channels.forEach((channel) => {
+        this.channelMessageStore.loadChannelMessages(channel.id);
+      });
+      console.log('📥 Loaded messages for all channels:', channels.length);
+    });
+
     // Watch for changes in user's directMessages array (only when IDs actually change)
     effect(() => {
       const directMessages = this.userDirectMessages();
@@ -91,6 +104,15 @@ export class DashboardComponent {
         });
         this.directMessageStore.loadConversations(directMessages);
       }
+    });
+
+    // Load messages for all DM conversations to enable thread-unread detection
+    effect(() => {
+      const conversations = this.directMessageStore.conversations();
+      conversations.forEach((conversation) => {
+        this.directMessageStore.loadMessages(conversation.id);
+      });
+      console.log('📨 Loaded messages for all DM conversations:', conversations.length);
     });
 
     // Debug effect to track view changes
@@ -287,6 +309,11 @@ export class DashboardComponent {
       isDirectMessage: isDirectMessage,
     });
     this.isThreadOpen.set(true);
+
+    // Mark specific thread as read to remove orange border
+    if (channelId && event.messageId) {
+      this.unreadService.markThreadAsRead(channelId, event.messageId);
+    }
   }
 
   /**

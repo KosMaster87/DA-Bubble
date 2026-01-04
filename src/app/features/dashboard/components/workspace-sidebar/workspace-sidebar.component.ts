@@ -17,12 +17,20 @@ import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
 import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-components/add-member-after-add-channel/add-member-after-add-channel.component';
+import { ThreadUnreadPopupComponent } from '@shared/dashboard-components/thread-unread-popup/thread-unread-popup.component';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { type Message as PopupMessage } from '@core/models/message.model';
+import { type Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 
 @Component({
   selector: 'app-workspace-sidebar',
-  imports: [CommonModule, CreateChannelComponent, AddMemberAfterAddChannelComponent],
+  imports: [
+    CommonModule,
+    CreateChannelComponent,
+    AddMemberAfterAddChannelComponent,
+    ThreadUnreadPopupComponent,
+  ],
   templateUrl: './workspace-sidebar.component.html',
   styleUrl: './workspace-sidebar.component.scss',
 })
@@ -42,11 +50,20 @@ export class WorkspaceSidebarComponent {
   mailboxRequested = output<void>();
   channelSelected = output<string>();
   directMessageSelected = output<string>();
+  threadOpened = output<{
+    messageId: string;
+    parentMessage: ViewMessage;
+    isDirectMessage: boolean;
+  }>();
   protected isChannelsOpen = signal(true);
   protected isDirectMessagesOpen = signal(true);
   protected isAddChannelActive = signal(false);
   protected isCreateChannelOpen = signal(false);
   protected isAddMemberAfterChannelOpen = signal(false);
+
+  // Thread unread popup state
+  protected hoveredThreadUnreadId = signal<string | null>(null);
+  private hoverTimeout: any = null;
 
   // Temporary storage for channel data between popups
   protected pendingChannelName = signal<string>('');
@@ -83,6 +100,9 @@ export class WorkspaceSidebarComponent {
    * Channels from ChannelStore - sorted with DABubble-welcome first, then alphabetically
    */
   protected sortedChannels = computed(() => {
+    // Track update counter to force re-compute on Firestore updates
+    this.channelMessageStore.updateCounter();
+
     const channels = this.channelStore.channels().map((ch) => {
       // Get all messages for this channel
       const messages = this.channelMessageStore.getMessagesByChannel()(ch.id);
@@ -138,16 +158,49 @@ export class WorkspaceSidebarComponent {
         ? this.unreadService.hasUnread(ch.id, normalMessageTimestamp)
         : false;
 
-      // Thread-unread ONLY if:
-      // 1. No normal messages are unread
-      // 2. Thread timestamp exists and is newer than lastRead
-      // 3. Thread timestamp is NEWER than latest normal message (thread activity after normal messages)
-      // Note: User's own thread messages are handled by markAsRead() in thread.component.ts
-      const hasThreadUnread =
-        !hasNormalUnread &&
-        latestThreadTimestamp &&
-        (!normalMessageTimestamp || latestThreadTimestamp > normalMessageTimestamp) &&
-        this.unreadService.hasThreadUnread(ch.id, latestThreadTimestamp);
+      // Thread-unread: Check if ANY message in this channel has an unread thread
+      // Can be shown together with normal unread (blue + orange)
+      // Force deep tracking by mapping lastThreadTimestamp
+      const threadTimestamps = messages.map((m) => m.lastThreadTimestamp).filter(Boolean);
+      const hasThreadUnread = messages.some((msg) => {
+        if (!msg.lastThreadTimestamp) return false;
+
+        // Get thread messages to check user participation
+        const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
+
+        // Check if user participated in this thread
+        const currentUserId = this.authStore.user()?.uid;
+        if (!currentUserId) return false;
+
+        const wroteThreadReply = threadMessages.some(
+          (threadMsg) => threadMsg.authorId === currentUserId
+        );
+        const wroteParentMessage = msg.authorId === currentUserId;
+        const userParticipated = wroteThreadReply || wroteParentMessage;
+
+        // Only check for unread if user participated
+        if (!userParticipated) return false;
+
+        const threadTime =
+          msg.lastThreadTimestamp instanceof Date
+            ? msg.lastThreadTimestamp
+            : new Date(msg.lastThreadTimestamp);
+
+        // Check if this specific thread is unread
+        const isUnread = this.unreadService.hasThreadUnread(ch.id, msg.id, threadTime);
+
+        if (isUnread) {
+          console.log('🟠 Thread unread detected:', {
+            channelId: ch.id,
+            channelName: ch.name,
+            messageId: msg.id,
+            threadTime,
+            content: msg.content.substring(0, 30),
+          });
+        }
+
+        return isUnread;
+      });
 
       return {
         id: ch.id,
@@ -187,6 +240,9 @@ export class WorkspaceSidebarComponent {
       hasThreadUnread: boolean;
     }>
   >(() => {
+    // Track update counter to force re-compute on Firestore updates
+    this.directMessageStore.updateCounter();
+
     const currentUser = this.authStore.user();
     if (!currentUser) return [];
 
@@ -254,16 +310,48 @@ export class WorkspaceSidebarComponent {
         ? this.unreadService.hasUnread(conv.id, normalMessageTimestamp)
         : false;
 
-      // Thread-unread ONLY if:
-      // 1. No normal messages are unread
-      // 2. Thread timestamp exists and is newer than lastRead
-      // 3. Thread timestamp is NEWER than latest normal message (thread activity after normal messages)
-      // Note: User's own thread messages are handled by markAsRead() in thread.component.ts
-      const hasThreadUnread =
-        !hasNormalUnread &&
-        latestThreadTimestamp &&
-        (!normalMessageTimestamp || latestThreadTimestamp > normalMessageTimestamp) &&
-        this.unreadService.hasThreadUnread(conv.id, latestThreadTimestamp);
+      // Thread-unread: Check if ANY message in this conversation has an unread thread
+      // Can be shown together with normal unread (blue + orange)
+      // Force deep tracking by mapping lastThreadTimestamp
+      const threadTimestamps = messages.map((m) => m.lastThreadTimestamp).filter(Boolean);
+      const hasThreadUnread = messages.some((msg) => {
+        if (!msg.lastThreadTimestamp) return false;
+
+        // Get thread messages to check user participation
+        const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
+
+        // Check if user participated in this thread
+        const currentUserId = this.authStore.user()?.uid;
+        if (!currentUserId) return false;
+
+        const wroteThreadReply = threadMessages.some(
+          (threadMsg) => threadMsg.authorId === currentUserId
+        );
+        const wroteParentMessage = msg.authorId === currentUserId;
+        const userParticipated = wroteThreadReply || wroteParentMessage;
+
+        // Only check for unread if user participated
+        if (!userParticipated) return false;
+
+        const threadTime =
+          msg.lastThreadTimestamp instanceof Date
+            ? msg.lastThreadTimestamp
+            : new Date(msg.lastThreadTimestamp);
+
+        // Check if this specific thread is unread
+        const isUnread = this.unreadService.hasThreadUnread(conv.id, msg.id, threadTime);
+
+        if (isUnread) {
+          console.log('🟠 DM Thread unread detected:', {
+            conversationId: conv.id,
+            messageId: msg.id,
+            threadTime,
+            content: msg.content.substring(0, 30),
+          });
+        }
+
+        return isUnread;
+      });
 
       return {
         id: conv.id,
@@ -534,6 +622,92 @@ export class WorkspaceSidebarComponent {
     } catch (error) {
       console.error('❌ Failed to start DM conversation:', error);
       return null;
+    }
+  }
+
+  /**
+   * Handle thread click from popup
+   */
+  onThreadClick(
+    event: {
+      messageId: string;
+      parentMessage: PopupMessage;
+      conversationId: string;
+      isDirectMessage: boolean;
+    },
+    isDirectMessage: boolean
+  ): void {
+    // First, navigate to the channel or DM
+    if (event.isDirectMessage) {
+      // Select the DM conversation
+      this.selectedDirectMessageId.set(event.conversationId);
+      this.selectedChannelId.set(null);
+      this.directMessageSelected.emit(event.conversationId);
+    } else {
+      // Select the channel
+      this.selectedChannelId.set(event.conversationId);
+      this.selectedDirectMessageId.set(null);
+      this.channelSelected.emit(event.conversationId);
+    }
+
+    // Small delay to ensure conversation is loaded before opening thread
+    setTimeout(() => {
+      // Convert PopupMessage to ViewMessage format
+      const user = this.userStore.users().find((u) => u.uid === event.parentMessage.authorId);
+      const currentUserId = this.authStore.user()?.uid;
+
+      const viewMessage: ViewMessage = {
+        id: event.parentMessage.id,
+        senderId: event.parentMessage.authorId,
+        senderName: user?.displayName || 'Unknown',
+        senderAvatar: user?.photoURL || '',
+        content: event.parentMessage.content,
+        timestamp: event.parentMessage.createdAt,
+        isOwnMessage: event.parentMessage.authorId === currentUserId,
+        reactions: event.parentMessage.reactions,
+        threadCount: event.parentMessage.threadCount,
+        lastThreadTimestamp: event.parentMessage.lastThreadTimestamp,
+        isEdited: event.parentMessage.isEdited,
+        editedAt: event.parentMessage.editedAt,
+      };
+
+      this.threadOpened.emit({
+        messageId: event.messageId,
+        parentMessage: viewMessage,
+        isDirectMessage: event.isDirectMessage,
+      });
+
+      // Close popup
+      this.hoveredThreadUnreadId.set(null);
+    }, 100);
+  }
+
+  /**
+   * Handle mouse enter on thread unread item
+   */
+  onThreadUnreadMouseEnter(id: string): void {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+    }
+    this.hoveredThreadUnreadId.set(id);
+  }
+
+  /**
+   * Handle mouse leave on thread unread item
+   */
+  onThreadUnreadMouseLeave(): void {
+    // Add delay before hiding to allow moving to popup
+    this.hoverTimeout = setTimeout(() => {
+      this.hoveredThreadUnreadId.set(null);
+    }, 200);
+  }
+
+  /**
+   * Cancel hover timeout (when entering popup)
+   */
+  onPopupMouseEnter(): void {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
     }
   }
 }

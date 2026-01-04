@@ -34,11 +34,11 @@ setGlobalOptions({ maxInstances: 10 });
 
 /**
  * Scheduled function to detect and mark offline users
- * Runs every 2 minutes to check for stale heartbeats
+ * Runs every 5 minutes to check for stale heartbeats (optimized for cost)
  */
 export const detectOfflineUsers = onSchedule(
   {
-    schedule: 'every 2 minutes',
+    schedule: 'every 5 minutes',
     timeZone: 'Europe/Berlin',
   },
   async () => {
@@ -47,7 +47,7 @@ export const detectOfflineUsers = onSchedule(
     try {
       const db = admin.firestore();
       const now = admin.firestore.Timestamp.now();
-      const oneMinuteAgo = new Date(now.toMillis() - 60 * 1000);
+      const fiveMinutesAgo = new Date(now.toMillis() - 5 * 60 * 1000);
 
       // Query all users marked as online
       const usersSnapshot = await db.collection('users').where('isOnline', '==', true).get();
@@ -64,9 +64,9 @@ export const detectOfflineUsers = onSchedule(
         const userData = doc.data();
         const lastHeartbeat = userData.lastHeartbeat?.toDate();
 
-        // If no heartbeat or heartbeat older than 1 minute,
+        // If no heartbeat or heartbeat older than 5 minutes,
         // mark as offline
-        if (!lastHeartbeat || lastHeartbeat < oneMinuteAgo) {
+        if (!lastHeartbeat || lastHeartbeat < fiveMinutesAgo) {
           batch.update(doc.ref, {
             isOnline: false,
             lastSeen: lastHeartbeat || now,
@@ -166,10 +166,10 @@ export const updateDirectMessageLastMessage = onDocumentCreated(
 );
 
 /**
- * Cloud Function: Update parent Channel when thread message is created
- * Triggers when a thread message is created. Updates the parent channel's
- * lastMessageAt so users see unread status when someone replies
- * to a thread.
+ * Cloud Function: Update parent Message when thread message is created
+ * Triggers when a thread message is created in a channel. Updates the parent
+ * message's lastThreadTimestamp and threadCount but NOT the channel's
+ * lastMessageAt to avoid marking the entire channel as unread.
  */
 export const updateChannelOnThreadMessage = onDocumentCreated(
   {
@@ -178,36 +178,42 @@ export const updateChannelOnThreadMessage = onDocumentCreated(
   },
   async (event) => {
     const channelId = event.params.channelId;
+    const messageId = event.params.messageId;
     const threadData = event.data?.data();
 
     if (!threadData) {
-      logger.warn(`⚠️ No thread data found for channel ${channelId}`);
+      logger.warn(`⚠️ No thread data found for message ${messageId}`);
       return;
     }
 
     try {
-      logger.info(`🔔 Thread created in channel ${channelId}`);
+      logger.info(`🔔 Thread created in channel ${channelId}, ` + `message ${messageId}`);
 
-      const channelRef = admin.firestore().collection('channels').doc(channelId);
+      const messageRef = admin
+        .firestore()
+        .collection('channels')
+        .doc(channelId)
+        .collection('messages')
+        .doc(messageId);
 
-      await channelRef.update({
-        lastMessageAt: threadData.createdAt,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      await messageRef.update({
+        lastThreadTimestamp: threadData.createdAt,
+        threadCount: admin.firestore.FieldValue.increment(1),
       });
 
-      logger.info(`✅ Updated channel ${channelId} lastMessageAt from thread`);
+      logger.info(`✅ Updated message ${messageId} thread metadata`);
     } catch (error) {
-      logger.error(`❌ Error updating channel ${channelId} from thread:`, error);
+      logger.error(`❌ Error updating message ${messageId} thread:`, error);
       throw error;
     }
   }
 );
 
 /**
- * Cloud Function: Update parent DM conversation
- * when thread message is created
+ * Cloud Function: Update parent Message when thread message is created in DM
  * Triggers when a thread message is created in a DM. Updates the parent
- * conversation's lastMessageAt.
+ * message's lastThreadTimestamp and threadCount but NOT the conversation's
+ * lastMessageAt to avoid marking the entire conversation as unread.
  */
 export const updateDirectMessageOnThreadMessage = onDocumentCreated(
   {
@@ -216,26 +222,32 @@ export const updateDirectMessageOnThreadMessage = onDocumentCreated(
   },
   async (event) => {
     const conversationId = event.params.conversationId;
+    const messageId = event.params.messageId;
     const threadData = event.data?.data();
 
     if (!threadData) {
-      logger.warn(`⚠️ No thread data found for conversation ${conversationId}`);
+      logger.warn(`⚠️ No thread data found for message ${messageId}`);
       return;
     }
 
     try {
-      logger.info(`🔔 Thread created in conversation ${conversationId}`);
+      logger.info(`🔔 Thread created in conversation ${conversationId}, ` + `message ${messageId}`);
 
-      const conversationRef = admin.firestore().collection('direct-messages').doc(conversationId);
+      const messageRef = admin
+        .firestore()
+        .collection('direct-messages')
+        .doc(conversationId)
+        .collection('messages')
+        .doc(messageId);
 
-      await conversationRef.update({
-        lastMessageAt: threadData.createdAt,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      await messageRef.update({
+        lastThreadTimestamp: threadData.createdAt,
+        threadCount: admin.firestore.FieldValue.increment(1),
       });
 
-      logger.info(`✅ Updated conversation ${conversationId} ` + 'lastMessageAt from thread');
+      logger.info(`✅ Updated message ${messageId} thread metadata`);
     } catch (error) {
-      logger.error(`❌ Error updating conversation ${conversationId} from thread:`, error);
+      logger.error(`❌ Error updating message ${messageId} thread:`, error);
       throw error;
     }
   }

@@ -1,0 +1,25 @@
+<div class="thread-unread-popup" [style]="popupStyle()">
+  <div class="thread-unread-popup__header">
+    <span class="thread-unread-popup__title">Ungelesene Threads</span>
+    <span class="thread-unread-popup__count">{{ unreadThreads().length }}</span>
+  </div>
+
+  <div class="thread-unread-popup__list">
+    @if (unreadThreads().length === 0) {
+    <div class="thread-unread-popup__empty">
+      <span>Keine ungelesenen Threads</span>
+    </div>
+    } @else { @for (thread of unreadThreads(); track thread.messageId) {
+    <div class="thread-unread-popup__item" (click)="onThreadClick(thread.messageId)">
+      <div class="thread-unread-popup__item-content">
+        <span class="thread-unread-popup__message">{{ thread.parentMessageContent }}</span>
+        <div class="thread-unread-popup__meta">
+          <span class="thread-unread-popup__count-badge">
+            {{ thread.threadCount }} {{ thread.threadCount === 1 ? 'Antwort' : 'Antworten' }}
+          </span>
+        </div>
+      </div>
+    </div>
+    } }
+  </div>
+</div>

@@ -98,17 +98,40 @@ export class UnreadService {
   }
 
   /**
-   * Check if conversation has unread THREAD messages
+   * Check if a specific thread has unread messages
+   * Uses per-thread tracking: conversationId_thread_messageId
    * @param conversationId Channel ID or Conversation ID
-   * @param lastThreadTimestamp Last thread message timestamp (from any message in conversation)
-   * @returns true if thread messages are unread
+   * @param messageId Parent message ID of the thread
+   * @param lastThreadTimestamp Last thread activity timestamp
+   * @returns true if this specific thread has unread messages
    */
-  hasThreadUnread(conversationId: string, lastThreadTimestamp?: Date): boolean {
+  hasThreadUnread(conversationId: string, messageId: string, lastThreadTimestamp?: Date): boolean {
     if (!lastThreadTimestamp) return false;
 
-    const lastRead = this.lastReadCache()[conversationId];
+    const threadKey = `${conversationId}_thread_${messageId}`;
+    const lastRead = this.lastReadCache()[threadKey];
     if (!lastRead) return true; // Never read
 
     return lastThreadTimestamp > lastRead;
+  }
+
+  /**
+   * Mark a specific thread as read
+   * @param conversationId Channel ID or Conversation ID
+   * @param messageId Parent message ID of the thread
+   */
+  async markThreadAsRead(conversationId: string, messageId: string): Promise<void> {
+    const userId = this.authStore.user()?.uid;
+    if (!userId) return;
+
+    try {
+      const userRef = doc(this.firestore, 'users', userId);
+      await updateDoc(userRef, {
+        [`lastRead.${conversationId}_thread_${messageId}`]: serverTimestamp(),
+      });
+      console.log(`✅ Marked thread as read: ${conversationId}/${messageId}`);
+    } catch (error) {
+      console.error('❌ Failed to mark thread as read:', error);
+    }
   }
 }

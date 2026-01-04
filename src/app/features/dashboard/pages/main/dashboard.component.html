@@ -17,6 +17,7 @@
       (mailboxRequested)="showMailbox()"
       (channelSelected)="showChannel($event)"
       (directMessageSelected)="showDirectMessage($event)"
+      (threadOpened)="openThread($event)"
     />
 
     @if (currentView() === 'welcome') {

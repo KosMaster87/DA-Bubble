@@ -102,12 +102,12 @@ export class ThreadComponent {
       }
     });
 
-    // Auto-mark thread as read when new replies arrive
+    // Auto-mark thread as read when new replies arrive while thread is open
     let previousReplyCount = 0;
     effect(() => {
       const info = this.threadInfo();
       const currentUserId = untracked(() => this.authStore.user()?.uid);
-      if (!info?.parentMessageId || !currentUserId) return;
+      if (!info?.parentMessageId || !currentUserId || !info?.channelId) return;
 
       const replies = this.replies();
       const currentCount = replies.length;
@@ -115,7 +115,9 @@ export class ThreadComponent {
       // Only mark as read if reply count increased (new reply arrived)
       if (currentCount > previousReplyCount && currentCount > 0) {
         untracked(() => {
+          // Mark both parent message AND thread as read
           this.unreadService.markAsRead(info.parentMessageId);
+          this.unreadService.markThreadAsRead(info.channelId, info.parentMessageId);
         });
       }
 
@@ -260,6 +262,9 @@ export class ThreadComponent {
     // to prevent current user from seeing their own thread message as unread
     this.unreadService.markAsRead(info.parentMessageId);
     this.unreadService.markAsRead(info.channelId);
+
+    // Mark this specific thread as read to prevent orange border
+    this.unreadService.markThreadAsRead(info.channelId, info.parentMessageId);
     // Replies will auto-update via computed signal
   }
 

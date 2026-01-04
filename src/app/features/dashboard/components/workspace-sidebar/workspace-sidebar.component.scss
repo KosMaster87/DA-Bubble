@@ -288,6 +288,11 @@
     }
   }
 
+  // Item wrapper for popup positioning
+  &__item-wrapper {
+    position: relative;
+  }
+
   &__item {
     @include mix.flex(row, flex-start, center);
     width: auto;
@@ -311,10 +316,11 @@
   &__item-content {
     @include mix.flex(row, flex-start, center);
     gap: 0.75rem;
-    padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+    padding: 0.5rem 1.5rem 0.5rem calc(0.75rem - 3px);
     border-radius: 2rem;
     transition: background-color 0.2s;
     border-left: 3px solid transparent;
+    position: relative;
 
     .workspace-sidebar__item:hover & {
       background-color: #eceefe;
@@ -326,12 +332,38 @@
 
     .workspace-sidebar__item--unread & {
       border-left-color: #535af1;
-      padding-left: calc(0.75rem - 3px);
     }
 
-    .workspace-sidebar__item--thread-unread & {
+    .workspace-sidebar__item--thread-unread:not(.workspace-sidebar__item--unread) & {
       border-left-color: #ff9500;
-      padding-left: calc(0.75rem - 3px);
+      animation: pulse-orange-border 2s ease-in-out infinite;
+    }
+
+    // Both unread states: blue base + pulsing orange overlay
+    .workspace-sidebar__item--unread.workspace-sidebar__item--thread-unread & {
+      border-left-color: #535af1;
+      box-shadow: inset 3px 0 0 0 #ff9500;
+      animation: pulse-orange-shadow 2s ease-in-out infinite;
+    }
+  }
+
+  @keyframes pulse-orange-border {
+    0%,
+    100% {
+      border-left-color: #ff9500;
+    }
+    50% {
+      border-left-color: rgba(255, 149, 0, 0.4);
+    }
+  }
+
+  @keyframes pulse-orange-shadow {
+    0%,
+    100% {
+      box-shadow: inset 3px 0 0 0 #ff9500;
+    }
+    50% {
+      box-shadow: inset 3px 0 0 0 rgba(255, 149, 0, 0.4);
     }
   }
 

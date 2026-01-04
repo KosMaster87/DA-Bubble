@@ -67,29 +67,47 @@
       @if (isChannelsOpen()) {
       <div class="workspace-sidebar__section-content workspace-sidebar__section-content--channels">
         @if (sortedChannels().length > 0) { @for (channel of sortedChannels(); track channel.id) {
-        <button
-          class="workspace-sidebar__item"
-          [class.workspace-sidebar__item--active]="selectedChannelId() === channel.id"
-          [class.workspace-sidebar__item--mailbox]="channel.id === 'mailbox'"
-          [class.workspace-sidebar__item--unread]="channel.hasUnread"
-          [class.workspace-sidebar__item--thread-unread]="channel.hasThreadUnread"
-          (click)="selectChannel(channel.id)"
+        <div
+          class="workspace-sidebar__item-wrapper"
+          (mouseenter)="channel.hasThreadUnread ? onThreadUnreadMouseEnter(channel.id) : null"
+          (mouseleave)="onThreadUnreadMouseLeave()"
         >
-          <span class="workspace-sidebar__item-content">
-            <span class="workspace-sidebar__item-icon-wrapper">
-              <img
-                [src]="
-                  channel.id === 'mailbox'
-                    ? '/img/icon/profile/mail-default.svg'
-                    : '/img/icon/channel-bar/tag-default.svg'
-                "
-                alt=""
-                class="workspace-sidebar__item-icon"
-              />
+          <button
+            class="workspace-sidebar__item"
+            [class.workspace-sidebar__item--active]="selectedChannelId() === channel.id"
+            [class.workspace-sidebar__item--mailbox]="channel.id === 'mailbox'"
+            [class.workspace-sidebar__item--unread]="channel.hasUnread"
+            [class.workspace-sidebar__item--thread-unread]="channel.hasThreadUnread"
+            (click)="selectChannel(channel.id)"
+          >
+            <span class="workspace-sidebar__item-content">
+              <span class="workspace-sidebar__item-icon-wrapper">
+                <img
+                  [src]="
+                    channel.id === 'mailbox'
+                      ? '/img/icon/profile/mail-default.svg'
+                      : '/img/icon/channel-bar/tag-default.svg'
+                  "
+                  alt=""
+                  class="workspace-sidebar__item-icon"
+                />
+              </span>
+              <span class="workspace-sidebar__item-name">{{ channel.name }}</span>
             </span>
-            <span class="workspace-sidebar__item-name">{{ channel.name }}</span>
-          </span>
-        </button>
+          </button>
+
+          @if (channel.hasThreadUnread && hoveredThreadUnreadId() === channel.id &&
+          authStore.user()?.uid) {
+          <app-thread-unread-popup
+            [conversationId]="channel.id"
+            [currentUserId]="authStore.user()!.uid"
+            [isDirectMessage]="false"
+            (threadClicked)="onThreadClick($event, false)"
+            (mouseenter)="onPopupMouseEnter()"
+            (mouseleave)="onThreadUnreadMouseLeave()"
+          />
+          }
+        </div>
         } }
       </div>
 
@@ -141,29 +159,46 @@
       @if (isDirectMessagesOpen()) {
       <div class="workspace-sidebar__section-content workspace-sidebar__section-content--dm">
         @if (directMessages().length > 0) { @for (dm of directMessages(); track dm.id) {
-        <button
-          class="workspace-sidebar__item workspace-sidebar__item--dm"
-          [class.workspace-sidebar__item--active]="selectedDirectMessageId() === dm.id"
-          [class.workspace-sidebar__item--unread]="dm.hasUnread"
-          [class.workspace-sidebar__item--thread-unread]="dm.hasThreadUnread"
-          (click)="selectDirectMessage(dm.id)"
+        <div
+          class="workspace-sidebar__item-wrapper"
+          (mouseenter)="dm.hasThreadUnread ? onThreadUnreadMouseEnter(dm.id) : null"
+          (mouseleave)="onThreadUnreadMouseLeave()"
         >
-          <span class="workspace-sidebar__item-content">
-            <span class="workspace-sidebar__item-avatar-wrapper">
-              <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
-              <img
-                [src]="
-                  userPresenceStore.isUserOnline()(dm.userId)
-                    ? '/img/icon/profile/status-online.svg'
-                    : '/img/icon/profile/status-away.svg'
-                "
-                alt=""
-                class="workspace-sidebar__status-badge"
-              />
+          <button
+            class="workspace-sidebar__item workspace-sidebar__item--dm"
+            [class.workspace-sidebar__item--active]="selectedDirectMessageId() === dm.id"
+            [class.workspace-sidebar__item--unread]="dm.hasUnread"
+            [class.workspace-sidebar__item--thread-unread]="dm.hasThreadUnread"
+            (click)="selectDirectMessage(dm.id)"
+          >
+            <span class="workspace-sidebar__item-content">
+              <span class="workspace-sidebar__item-avatar-wrapper">
+                <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
+                <img
+                  [src]="
+                    userPresenceStore.isUserOnline()(dm.userId)
+                      ? '/img/icon/profile/status-online.svg'
+                      : '/img/icon/profile/status-away.svg'
+                  "
+                  alt=""
+                  class="workspace-sidebar__status-badge"
+                />
+              </span>
+              <span class="workspace-sidebar__item-name">{{ dm.name }}</span>
             </span>
-            <span class="workspace-sidebar__item-name">{{ dm.name }}</span>
-          </span>
-        </button>
+          </button>
+
+          @if (dm.hasThreadUnread && hoveredThreadUnreadId() === dm.id && authStore.user()?.uid) {
+          <app-thread-unread-popup
+            [conversationId]="dm.id"
+            [currentUserId]="authStore.user()!.uid"
+            [isDirectMessage]="true"
+            (threadClicked)="onThreadClick($event, true)"
+            (mouseenter)="onPopupMouseEnter()"
+            (mouseleave)="onThreadUnreadMouseLeave()"
+          />
+          }
+        </div>
         } } @else {
         <div class="workspace-sidebar__empty">
           <p>Keine Direktnachrichten verfügbar</p>

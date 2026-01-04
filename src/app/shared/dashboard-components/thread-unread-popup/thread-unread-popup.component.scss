@@ -1,0 +1,115 @@
+.thread-unread-popup {
+  position: fixed;
+  background: white;
+  border: 1px solid #adb0d9;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+  z-index: 1000;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eceefe;
+    background: #f8f9fe;
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #000;
+  }
+
+  &__count {
+    background: #ff9500;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  &__empty {
+    padding: 32px 20px;
+    text-align: center;
+    color: #686868;
+    font-size: 14px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: var(--bg-color);
+    border: 1px solid #adb0d9;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--bg-color-hover);
+      border-color: #535af1;
+      transform: scale(1.02);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  &__item-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0; // Allow text truncation
+  }
+
+  &__message {
+    flex: 1;
+    font-size: 13px;
+    color: #000;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  &__count-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: #535af1;
+    color: white;
+    font-weight: 600;
+    border-radius: 12px;
+    font-size: 11px;
+  }
+
+  &__time {
+    color: #686868;
+  }
+}

@@ -26,6 +26,7 @@ import {
   Timestamp,
   Unsubscribe,
 } from '@angular/fire/firestore';
+import { ThreadStore } from './thread.store';
 import {
   DirectMessageConversation,
   DirectMessage,
@@ -43,6 +44,8 @@ export interface DirectMessageState {
   activeConversationId: string | null;
   isLoading: boolean;
   error: string | null;
+  /** Update counter to force reactivity on Firestore updates */
+  updateCounter: number;
 }
 
 const initialState: DirectMessageState = {
@@ -51,6 +54,7 @@ const initialState: DirectMessageState = {
   activeConversationId: null,
   isLoading: false,
   error: null,
+  updateCounter: 0,
 };
 
 /**
@@ -88,6 +92,7 @@ export const DirectMessageStore = signalStore(
   withMethods((store) => {
     const firestore = inject(Firestore);
     const reactionService = inject(ReactionService);
+    const threadStore = inject(ThreadStore);
     let conversationsUnsubscribe: Unsubscribe | null = null;
     let messagesUnsubscribers: Map<string, Unsubscribe> = new Map();
 
@@ -192,11 +197,25 @@ export const DirectMessageStore = signalStore(
                 } as DirectMessage;
               });
 
+              // Auto-load threads for messages with lastThreadTimestamp
+              const messagesWithThreads = messages.filter((m) => m.lastThreadTimestamp);
+              if (messagesWithThreads.length > 0) {
+                console.log('📨 DM auto-loading threads:', {
+                  conversationId,
+                  threadsToLoad: messagesWithThreads.length,
+                  messageIds: messagesWithThreads.map((m) => m.id),
+                });
+                messagesWithThreads.forEach((msg) => {
+                  threadStore.loadThreads(conversationId, msg.id, true);
+                });
+              }
+
               patchState(store, {
                 messages: {
                   ...store.messages(),
                   [conversationId]: messages,
                 },
+                updateCounter: store.updateCounter() + 1,
               });
             },
             (error) => {
