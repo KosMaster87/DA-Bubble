@@ -16,126 +16,81 @@
     <!-- Loading State -->
     @if (loading()) {
     <div class="channel-mailbox__loading">
-      <p>Lade Nachrichten...</p>
-    </div>
-    }
-
-    <!-- Invitations Section -->
-    @if (pendingInvitations().length > 0) {
-    <div class="channel-mailbox__section">
-      <h2 class="channel-mailbox__section-title">📬 Einladungen ({{ pendingCount() }})</h2>
-
-      @for (invitation of pendingInvitations(); track invitation.id) {
-      <div
-        class="channel-mailbox__message channel-mailbox__message--invitation channel-mailbox__message--unread"
-      >
-        <div class="channel-mailbox__message-avatar">
-          <img
-            [src]="getSenderAvatar(invitation.senderId)"
-            [alt]="getSenderName(invitation.senderId)"
-          />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">{{
-              getSenderName(invitation.senderId)
-            }}</span>
-            <span class="channel-mailbox__message-time">
-              {{ invitation.createdAt | date : 'short' }}
-            </span>
-          </div>
-
-          @if (invitation.type === 'channel') {
-          <h3 class="channel-mailbox__message-subject">
-            📢 Einladung zum Channel #{{ invitation.channelName }}
-          </h3>
-          <p class="channel-mailbox__message-preview">
-            {{ getSenderName(invitation.senderId) }} lädt dich zum Channel #{{
-              invitation.channelName
-            }}
-            ein. @if (invitation.message) {
-            <br />
-            <em>"{{ invitation.message }}"</em>
-            }
-          </p>
-          } @if (invitation.type === 'direct-message') {
-          <h3 class="channel-mailbox__message-subject">💬 Einladung zur Direktnachricht</h3>
-          <p class="channel-mailbox__message-preview">
-            {{ getSenderName(invitation.senderId) }} möchte mit dir chatten. @if
-            (invitation.message) {
-            <br />
-            <em>"{{ invitation.message }}"</em>
-            }
-          </p>
-          }
-
-          <div class="channel-mailbox__message-actions">
-            <button
-              class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
-              (click)="acceptInvitation(invitation)"
-            >
-              Annehmen
-            </button>
-            <button
-              class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
-              (click)="declineInvitation(invitation.id)"
-            >
-              Ablehnen
-            </button>
-          </div>
-        </div>
-        <div class="channel-mailbox__message-badge"></div>
-      </div>
-      }
+      <p>Loading messages...</p>
     </div>
     }
 
     <!-- Messages Section -->
     <div class="channel-mailbox__messages">
-      <!-- Channel Invitation -->
-      <!-- <div class="channel-mailbox__message channel-mailbox__message--unread">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/profile/profile-1.png" alt="Sofia Müller" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">Sofia Müller</span>
-            <span class="channel-mailbox__message-time">vor 2 Stunden</span>
-          </div>
-          <h3 class="channel-mailbox__message-subject">📢 Einladung zum #entwicklung Channel</h3>
-          <p class="channel-mailbox__message-preview">
-            Du wurdest zum Channel #entwicklung eingeladen. Tritt bei, um an den Diskussionen
-            teilzunehmen!
-          </p>
-          <div class="channel-mailbox__message-actions">
-            <button class="channel-mailbox__action-btn channel-mailbox__action-btn--accept">
-              Annehmen
-            </button>
-            <button class="channel-mailbox__action-btn channel-mailbox__action-btn--decline">
-              Ablehnen
-            </button>
-          </div>
-        </div>
-        <div class="channel-mailbox__message-badge"></div>
-      </div> -->
+      <!-- Invitations Section -->
+      @if (pendingInvitations().length > 0) {
+      <div class="channel-mailbox__section">
+        <h2 class="channel-mailbox__section-title">📬 Invitations ({{ pendingCount() }})</h2>
 
-      <!-- Direct Message Notification -->
-      <!-- <div class="channel-mailbox__message channel-mailbox__message--unread">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/profile/profile-3.png" alt="Noah Braun" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">Noah Braun</span>
-            <span class="channel-mailbox__message-time">vor 5 Stunden</span>
+        <div class="channel-mailbox__invitations">
+          @for (invitation of pendingInvitations(); track invitation.id) {
+          <div
+            class="channel-mailbox__message channel-mailbox__message--invitation channel-mailbox__message--unread"
+          >
+            <div class="channel-mailbox__message-avatar">
+              <img
+                [src]="getSenderAvatar(invitation.senderId)"
+                [alt]="getSenderName(invitation.senderId)"
+              />
+            </div>
+            <div class="channel-mailbox__message-content">
+              <div class="channel-mailbox__message-header">
+                <span class="channel-mailbox__message-from">{{
+                  getSenderName(invitation.senderId)
+                }}</span>
+                <span class="channel-mailbox__message-time">
+                  {{ invitation.createdAt | date : 'short' }}
+                </span>
+              </div>
+
+              @if (invitation.type === 'channel') {
+              <h3 class="channel-mailbox__message-subject">
+                📢 Invitation to Channel #{{ invitation.channelName }}
+              </h3>
+              <p class="channel-mailbox__message-preview">
+                {{ getSenderName(invitation.senderId) }} invites you to the channel #{{
+                  invitation.channelName
+                }}. @if (invitation.message) {
+                <br />
+                <em>"{{ invitation.message }}"</em>
+                }
+              </p>
+              } @if (invitation.type === 'direct-message') {
+              <h3 class="channel-mailbox__message-subject">💬 Direct Message Invitation</h3>
+              <p class="channel-mailbox__message-preview">
+                {{ getSenderName(invitation.senderId) }} wants to chat with you. @if
+                (invitation.message) {
+                <br />
+                <em>"{{ invitation.message }}"</em>
+                }
+              </p>
+              }
+
+              <div class="channel-mailbox__message-actions">
+                <button
+                  class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
+                  (click)="acceptInvitation(invitation)"
+                >
+                  Accept
+                </button>
+                <button
+                  class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
+                  (click)="declineInvitation(invitation.id)"
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
           </div>
-          <h3 class="channel-mailbox__message-subject">💬 Neue Direktnachricht</h3>
-          <p class="channel-mailbox__message-preview">
-            Hey! Hast du kurz Zeit für ein Quick-Meeting zum neuen Feature?
-          </p>
+          }
         </div>
-        <div class="channel-mailbox__message-badge"></div>
-      </div> -->
+      </div>
+      }
 
       <!-- System Notification -->
       <div class="channel-mailbox__message channel-mailbox__message--system">
@@ -145,64 +100,11 @@
         <div class="channel-mailbox__message-content">
           <div class="channel-mailbox__message-header">
             <span class="channel-mailbox__message-from">DABubble System</span>
-            <span class="channel-mailbox__message-time">gestern</span>
+            <span class="channel-mailbox__message-time">yesterday</span>
           </div>
-          <h3 class="channel-mailbox__message-subject">🔔 Neue Funktion verfügbar</h3>
+          <h3 class="channel-mailbox__message-subject">🔔 New Feature Available</h3>
           <p class="channel-mailbox__message-preview">
-            Thread-Antworten sind jetzt verfügbar! Klicke auf eine Nachricht, um in einem Thread zu
-            antworten.
-          </p>
-        </div>
-      </div>
-
-      <!-- Admin Message -->
-      <div class="channel-mailbox__message channel-mailbox__message--admin">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/profile/profile-1.png" alt="Admin" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">Sofia Müller</span>
-            <span class="channel-mailbox__message-badge-inline">Admin</span>
-            <span class="channel-mailbox__message-time">vor 2 Tagen</span>
-          </div>
-          <h3 class="channel-mailbox__message-subject">⚡ Wartungsarbeiten angekündigt</h3>
-          <p class="channel-mailbox__message-preview">
-            Am Sonntag, 5. Januar, werden zwischen 2:00 und 4:00 Uhr Wartungsarbeiten durchgeführt.
-          </p>
-        </div>
-      </div>
-
-      <!-- Mention Notification -->
-      <div class="channel-mailbox__message">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/profile/profile-4.png" alt="Elias Neumann" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">Elias Neumann</span>
-            <span class="channel-mailbox__message-time">vor 3 Tagen</span>
-          </div>
-          <h3 class="channel-mailbox__message-subject">@mention in #design</h3>
-          <p class="channel-mailbox__message-preview">
-            @du Kannst du dir bitte das neue Design-Konzept anschauen und Feedback geben?
-          </p>
-        </div>
-      </div>
-
-      <!-- Team Update -->
-      <div class="channel-mailbox__message">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/profile/profile-1.png" alt="Sofia Müller" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">Sofia Müller</span>
-            <span class="channel-mailbox__message-time">vor 1 Woche</span>
-          </div>
-          <h3 class="channel-mailbox__message-subject">📅 Team-Meeting nächsten Montag</h3>
-          <p class="channel-mailbox__message-preview">
-            Reminder: Unser wöchentliches Team-Meeting findet am Montag um 10:00 Uhr statt.
+            Thread replies are now available! Click on a message to reply in a thread.
           </p>
         </div>
       </div>
@@ -215,12 +117,12 @@
         <div class="channel-mailbox__message-content">
           <div class="channel-mailbox__message-header">
             <span class="channel-mailbox__message-from">DABubble</span>
-            <span class="channel-mailbox__message-time">vor 2 Wochen</span>
+            <span class="channel-mailbox__message-time">2 weeks ago</span>
           </div>
-          <h3 class="channel-mailbox__message-subject">🎉 Willkommen bei DABubble!</h3>
+          <h3 class="channel-mailbox__message-subject">🎉 Welcome to DABubble!</h3>
           <p class="channel-mailbox__message-preview">
-            Schön, dass du da bist! Hier erhältst du wichtige Benachrichtigungen, Einladungen und
-            Updates.
+            Great to have you here! You'll receive important notifications, invitations and updates
+            here.
           </p>
         </div>
       </div>

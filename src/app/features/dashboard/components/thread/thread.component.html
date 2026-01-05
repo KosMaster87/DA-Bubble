@@ -7,7 +7,7 @@
         <p class="thread__subtitle"># {{ threadInfo().channelName }}</p>
       </div>
       <p class="thread__reply-count">
-        {{ replyCount() }} {{ replyCount() === 1 ? 'Antwort' : 'Antworten' }}
+        {{ replyCount() }} {{ replyCount() === 1 ? 'Answer' : 'Answer' }}
       </p>
     </div>
     <button class="thread__close-btn" type="button" (click)="onClose()" aria-label="Close thread">

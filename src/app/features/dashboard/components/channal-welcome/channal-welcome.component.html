@@ -61,26 +61,29 @@
     <div class="channal-welcome__messages">
       <!-- Welcome Message -->
       <div class="channal-welcome__welcome-card">
-        <h2 class="channal-welcome__welcome-title">Willkommen bei DABubble!</h2>
+        <h2 class="channal-welcome__welcome-title">Welcome to DABubble!</h2>
         <p class="channal-welcome__welcome-text">
-          Dies ist der Anfang des <strong>#dabubble-welcome</strong> Channels. DABubble ist deine
-          zentrale Kommunikationsplattform für effiziente Teamarbeit. Organisiere Projekte in
-          Channels, tausche dich in Echtzeit aus, teile Dateien und bleibe mit deinem Team immer
-          verbunden – egal wo du bist.
+          This is the beginning of the <strong>#dabubble-welcome</strong> channel. DABubble is your
+          central communication platform for efficient teamwork. Organize projects in channels,
+          communicate in real-time, share files, and stay connected with your team wherever you are.
         </p>
 
         <div class="channal-welcome__welcome-features">
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">💬</span>
-            <span>Nachrichten senden und empfangen</span>
+            <span>Send and receive messages</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">📎</span>
-            <span>Dateien teilen - featured</span>
+            <span>Share files - featured</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">🔔</span>
-            <span>Benachrichtigungen erhalten</span>
+            <span>Get notifications</span>
+          </div>
+          <div class="channal-welcome__feature">
+            <span class="channal-welcome__feature-icon">💡</span>
+            <span>We are already working on the next feature.</span>
           </div>
         </div>
       </div>
@@ -89,14 +92,14 @@
       <div class="channal-welcome__info-card">
         <div class="channal-welcome__info-header">
           <span class="channal-welcome__info-icon">🚀</span>
-          <h3 class="channal-welcome__info-title">Schnellstart</h3>
+          <h3 class="channal-welcome__info-title">Quick Start</h3>
         </div>
         <ul class="channal-welcome__info-list">
-          <li>Erstelle neue Channels für verschiedene Themen oder Teams</li>
-          <li>Organisiere Gespräche mit Threads</li>
-          <li>Starte Direktnachrichten mit Kollegen</li>
-          <li>Nutze @mentions, um bestimmte Personen zu suchen</li>
-          <li>Nutze #mentions, um bestimmte Channels zu suchen</li>
+          <li>Create new channels for different topics or teams</li>
+          <li>Organize conversations with threads</li>
+          <li>Start direct messages with colleagues</li>
+          <li>Use @mentions to find specific people</li>
+          <li>Use #mentions to find specific channels</li>
         </ul>
       </div>
 
@@ -128,62 +131,51 @@
           <span class="channal-welcome__announcement-badge">Channel Owner</span>
         </div>
         <p class="channal-welcome__announcement-text">
-          🎉 Herzlich willkommen im Team! Wir freuen uns, dass du dabei bist. Bei Fragen stehe ich
-          und das gesamte Team jederzeit zur Verfügung.
+          🎉 Welcome to the team! We're glad to have you. If you have any questions, I and the
+          entire team are always here to help.
         </p>
       </div>
       }
 
       <!-- Team Stats -->
       <div class="channal-welcome__stats-card">
-        <h3 class="channal-welcome__stats-title">Team-Übersicht</h3>
+        <h3 class="channal-welcome__stats-title">Team Overview</h3>
         <div class="channal-welcome__stats-grid">
           <div class="channal-welcome__stat">
             <div class="channal-welcome__stat-value">{{ totalMemberCount() }}</div>
-            <div class="channal-welcome__stat-label">Team-Mitglieder</div>
+            <div class="channal-welcome__stat-label">Team Members</div>
           </div>
           <div class="channal-welcome__stat">
-            <div class="channal-welcome__stat-value">5</div>
-            <div class="channal-welcome__stat-label">Aktive Channels</div>
+            <div class="channal-welcome__stat-value">{{ publicChannelCount() }}</div>
+            <div class="channal-welcome__stat-label">Active Channels</div>
           </div>
           <div class="channal-welcome__stat">
             <div class="channal-welcome__stat-value">24/7</div>
-            <div class="channal-welcome__stat-label">Erreichbarkeit</div>
+            <div class="channal-welcome__stat-label">Availability</div>
           </div>
         </div>
       </div>
 
       <!-- Helpful Tips -->
       <div class="channal-welcome__tips-card">
-        <h3 class="channal-welcome__tips-title">💡 Tipps & Tricks</h3>
+        <h3 class="channal-welcome__tips-title">💡 Tips & Tricks</h3>
         <div class="channal-welcome__tip">
-          <strong>Tastenkombinationen:</strong> Drücke <kbd>Strg</kbd> + <kbd>K</kbd> für die
-          Schnellsuche
+          <strong>Keyboard Shortcuts:</strong> Press <kbd>Ctrl</kbd> + <kbd>K</kbd> for quick search
         </div>
         <div class="channal-welcome__tip">
-          <strong>Statusmeldungen:</strong> Setze deinen Status, damit andere wissen, ob du
-          verfügbar bist
+          <strong>Status Messages:</strong> Set your status so others know if you're available
         </div>
         <div class="channal-welcome__tip">
-          <strong>Benachrichtigungen:</strong> Passe deine Benachrichtigungseinstellungen in den
-          Einstellungen an
+          <strong>Notifications:</strong> Customize your notification settings in preferences
         </div>
       </div>
 
       <!-- Call to Action -->
       <div class="channal-welcome__cta-card">
-        <h3 class="channal-welcome__cta-title">Bereit loszulegen?</h3>
+        <h3 class="channal-welcome__cta-title">Ready to get started?</h3>
         <p class="channal-welcome__cta-text">
-          Wähle einen Channel aus der linken Sidebar oder starte eine Direktnachricht!
+          Choose a channel from the left sidebar or start a direct message!
         </p>
-        <div class="channal-welcome__cta-buttons">
-          <button class="channal-welcome__cta-btn channal-welcome__cta-btn--primary">
-            Channels durchsuchen
-          </button>
-          <button class="channal-welcome__cta-btn channal-welcome__cta-btn--secondary">
-            Profil vervollständigen
-          </button>
-        </div>
       </div>
     </div>
   </div>

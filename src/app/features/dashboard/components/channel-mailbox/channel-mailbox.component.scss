@@ -97,7 +97,26 @@
   &__messages {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  &__section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  &__invitations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
   &__message {
@@ -167,18 +186,6 @@
     color: var(--text-primary);
   }
 
-  &__message-badge-inline {
-    display: inline-flex;
-    padding: 0.125rem 0.5rem;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: white;
-    background-color: #535af1;
-    border-radius: 0.25rem;
-    letter-spacing: 0.5px;
-  }
-
   &__message-time {
     font-size: 0.75rem;
     color: var(--text-secondary);
@@ -237,15 +244,5 @@
         border-color: #535af1;
       }
     }
-  }
-
-  &__message-badge {
-    position: absolute;
-    top: var(--space-4);
-    right: var(--space-4);
-    width: 10px;
-    height: 10px;
-    background-color: #535af1;
-    border-radius: 50%;
   }
 }

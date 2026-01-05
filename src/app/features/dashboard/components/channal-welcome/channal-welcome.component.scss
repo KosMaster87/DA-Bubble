@@ -6,6 +6,7 @@
   flex-direction: column;
   background-color: var(--container-bg);
   overflow: hidden;
+  gap: var(--space-2);
 
   &__header {
     @include mix.flex(row, space-between, center);
@@ -82,12 +83,17 @@
     }
   }
 
+  &__messages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
   &__welcome-card {
     background: linear-gradient(135deg, rgba(68, 77, 242, 0.05) 0%, rgba(121, 126, 243, 0.05) 100%);
     border: 1px solid rgba(68, 77, 242, 0.2);
     border-radius: 12px;
     padding: 2rem;
-    margin-bottom: 2rem;
   }
 
   &__welcome-title {
@@ -107,7 +113,7 @@
   &__welcome-features {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.7rem;
   }
 
   &__feature {
@@ -133,7 +139,6 @@
     border: 1px solid var(--border-color, #e0e0e0);
     border-radius: 12px;
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
   }
 
   &__info-header {
@@ -159,7 +164,7 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
 
     li {
       padding-left: 1.5rem;
@@ -265,7 +270,6 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
   }
 
   &__stats-title {
@@ -302,7 +306,6 @@
     border: 1px solid #ffd93d;
     border-radius: 12px;
     padding: 1.5rem;
-    margin-bottom: 1.5rem;
   }
 
   &__tips-title {
@@ -344,7 +347,6 @@
     padding: 2rem;
     text-align: center;
     color: #fff;
-    margin-bottom: 1.5rem;
   }
 
   &__cta-title {
@@ -355,46 +357,7 @@
 
   &__cta-text {
     font-size: 1rem;
-    margin: 0 0 1.5rem 0;
     opacity: 0.95;
-  }
-
-  &__cta-buttons {
-    @include mix.flex(row, center, center);
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  &__cta-btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9375rem;
-
-    &--primary {
-      background-color: #fff;
-      color: #535af1;
-
-      &:hover {
-        background-color: #f0f0f0;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-    }
-
-    &--secondary {
-      background-color: transparent;
-      color: #fff;
-      border: 2px solid #fff;
-
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-      }
-    }
   }
 
   // Override profile-view positioning when shown in chat-private

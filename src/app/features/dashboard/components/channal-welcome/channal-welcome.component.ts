@@ -121,6 +121,13 @@ export class ChannalWelcomeComponent {
   protected totalMemberCount = computed(() => this.members().length);
 
   /**
+   * Count of active public channels
+   */
+  protected publicChannelCount = computed(() => {
+    return this.channelStore.channels().filter((ch) => !ch.isPrivate).length;
+  });
+
+  /**
    * Channel owner (first member who created the channel)
    */
   protected channelOwner = computed<{
