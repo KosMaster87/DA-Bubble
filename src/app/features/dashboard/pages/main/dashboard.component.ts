@@ -324,9 +324,17 @@ export class DashboardComponent {
     let otherUserId: string | undefined;
     if (!conversation && participants) {
       otherUserId = participants.find((id) => id !== currentUserId);
+      // If otherUserId is undefined or same as currentUserId, this is a self-DM
+      if (!otherUserId || otherUserId === currentUserId) {
+        otherUserId = currentUserId;
+      }
       console.log('Using provided participants, otherUserId:', otherUserId);
     } else if (conversation) {
       otherUserId = conversation.participants.find((id) => id !== currentUserId);
+      // If no other user found, this is a self-DM
+      if (!otherUserId) {
+        otherUserId = currentUserId;
+      }
     }
 
     if (!otherUserId) {
@@ -341,9 +349,13 @@ export class DashboardComponent {
       return;
     }
 
+    // For self-DM, show special title
+    const isSelfDM = otherUserId === currentUserId;
+    const displayName = isSelfDM ? `${otherUser.displayName} (Notes)` : otherUser.displayName;
+
     this.selectedDM.set({
       conversationId: conversationId,
-      userName: otherUser.displayName,
+      userName: displayName,
       userAvatar: otherUser.photoURL || '/img/profile/profile-0.svg',
       isOnline: otherUser.isOnline,
     });

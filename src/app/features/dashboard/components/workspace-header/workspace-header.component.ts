@@ -165,4 +165,12 @@ export class WorkspaceHeaderComponent {
     await this.authStore.logout();
     await this.router.navigate(['/']);
   }
+
+  /**
+   * Handle image load error - fallback to placeholder
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/img/profile/profile-0.svg';
+  }
 }

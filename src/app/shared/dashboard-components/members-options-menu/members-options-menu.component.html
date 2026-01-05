@@ -20,11 +20,12 @@
 
     <!-- Body -->
     <div class="members-options-menu__body">
+      <!-- Debug: {{ members().length }} members in menu -->
       @if (members().length > 0) { @for (member of members(); track member.id) {
       <app-user-list-item [user]="member" (itemClicked)="onMemberClick($event)" />
       } } @else {
       <div class="members-options-menu__empty">
-        <p>Keine Mitglieder verfügbar</p>
+        <p>Keine Mitglieder verfügbar ({{ members().length }})</p>
       </div>
       }
     </div>

@@ -26,10 +26,36 @@ export class UserListItemComponent {
   isActive = input<boolean>(false);
   itemClicked = output<string>();
 
+  constructor() {
+    // Debug: Log which users are being rendered
+    const userSignal = this.user;
+    if (userSignal) {
+      setTimeout(() => {
+        const u = userSignal();
+        if (u) {
+          console.log('🎨 Rendering user-list-item:', {
+            id: u.id,
+            name: u.name,
+            avatar: u.avatar,
+            isGoogle: u.avatar?.includes('googleusercontent'),
+          });
+        }
+      });
+    }
+  }
+
   /**
    * Handle click event
    */
   onClick(): void {
     this.itemClicked.emit(this.user().id);
+  }
+
+  /**
+   * Handle image load error - use fallback avatar
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/img/profile/profile-0.svg';
   }
 }

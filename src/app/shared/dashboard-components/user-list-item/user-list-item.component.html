@@ -1,7 +1,12 @@
 <button class="user-list-item" [class.user-list-item--active]="isActive()" (click)="onClick()">
   <span class="user-list-item__content">
     <span class="user-list-item__avatar-wrapper">
-      <img [src]="user().avatar" [alt]="user().name" class="user-list-item__avatar" />
+      <img
+        [src]="user().avatar"
+        [alt]="user().name"
+        class="user-list-item__avatar"
+        (error)="onImageError($event)"
+      />
       <img
         [src]="
           userPresenceStore.isUserOnline()(user().id)

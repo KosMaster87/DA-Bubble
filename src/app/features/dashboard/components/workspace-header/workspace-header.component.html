@@ -34,6 +34,7 @@
               [src]="currentUser()?.photoURL"
               [alt]="currentUser()?.displayName || 'User'"
               class="workspace-header__avatar-img"
+              (error)="onImageError($event)"
             />
             <img
               [src]="

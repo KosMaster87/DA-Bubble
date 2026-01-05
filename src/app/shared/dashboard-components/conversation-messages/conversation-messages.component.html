@@ -35,7 +35,11 @@
       (click)="onMessageClick(message.id)"
     >
       <div class="conversation-messages__message-avatar" (click)="onAvatarClick(message.senderId)">
-        <img [src]="message.senderAvatar" [alt]="message.senderName" />
+        <img
+          [src]="message.senderAvatar"
+          [alt]="message.senderName"
+          (error)="onImageError($event)"
+        />
       </div>
 
       <div class="conversation-messages__message-content">

@@ -7,6 +7,7 @@
       [title]="member.name"
       class="members-miniatures__avatar"
       [style.z-index]="i"
+      (error)="onImageError($event)"
     />
     }
   </div>

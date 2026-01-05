@@ -21,6 +21,25 @@ import {
 import { User } from '@core/models/user.model';
 
 /**
+ * Normalize Google profile photo URL to a shorter, stable format
+ * @param photoURL - The original photo URL from Google
+ * @returns Normalized photo URL or undefined
+ */
+const normalizeGooglePhotoURL = (photoURL: string | null | undefined): string | undefined => {
+  if (!photoURL) return undefined;
+
+  // Check if it's a Google photo URL
+  if (photoURL.includes('googleusercontent.com')) {
+    // Remove any existing size parameters and add =s96-c
+    // This handles both short and long Google photo URLs
+    const baseUrl = photoURL.split('=')[0].split('?')[0];
+    return `${baseUrl}=s96-c`;
+  }
+
+  return photoURL;
+};
+
+/**
  * User management state interface
  * @interface UserState
  */
@@ -259,13 +278,26 @@ export const UserStore = signalStore(
        * @returns {User[]} Array of user objects
        */
       mapUsersFromSnapshot(snapshot: any): User[] {
-        return snapshot.docs.map(
-          (doc: any) =>
-            ({
-              uid: doc.id,
-              ...doc.data(),
-            } as User)
-        );
+        return snapshot.docs.map((doc: any) => {
+          const data = doc.data();
+          const originalPhotoURL = data.photoURL;
+          const normalizedPhotoURL = normalizeGooglePhotoURL(data.photoURL);
+
+          console.log('🔄 UserStore mapping user:', {
+            uid: doc.id,
+            displayName: data.displayName,
+            originalPhotoURL: originalPhotoURL,
+            normalizedPhotoURL: normalizedPhotoURL,
+            isGoogle: originalPhotoURL?.includes('googleusercontent'),
+            wasNormalized: originalPhotoURL !== normalizedPhotoURL,
+          });
+
+          return {
+            uid: doc.id,
+            ...data,
+            photoURL: normalizedPhotoURL,
+          } as User;
+        });
       },
 
       /**

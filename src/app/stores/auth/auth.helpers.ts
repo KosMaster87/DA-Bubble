@@ -11,6 +11,25 @@ import { patchState } from '@ngrx/signals';
 import type { AuthState } from './auth.types';
 
 /**
+ * Normalize Google profile photo URL to a shorter, stable format
+ * @param photoURL - The original photo URL from Google
+ * @returns Normalized photo URL or undefined
+ */
+const normalizeGooglePhotoURL = (photoURL: string | null | undefined): string | undefined => {
+  if (!photoURL) return undefined;
+
+  // Check if it's a Google photo URL
+  if (photoURL.includes('googleusercontent.com')) {
+    // Remove any existing size parameters and add =s96-c
+    // This handles both short and long Google photo URLs
+    const baseUrl = photoURL.split('=')[0].split('?')[0];
+    return `${baseUrl}=s96-c`;
+  }
+
+  return photoURL;
+};
+
+/**
  * Convert Firebase user to app User model
  * @function mapFirebaseUserToUser
  * @param {FirebaseUser} firebaseUser - Firebase user object
@@ -20,7 +39,7 @@ export const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => ({
   uid: firebaseUser.uid,
   email: firebaseUser.email || '',
   displayName: firebaseUser.displayName || '',
-  photoURL: firebaseUser.photoURL || undefined,
+  photoURL: normalizeGooglePhotoURL(firebaseUser.photoURL),
   isOnline: true,
   lastSeen: new Date(),
   channels: [],
@@ -81,7 +100,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
             uid: firestoreData['uid'],
             email: firestoreData['email'],
             displayName: firestoreData['displayName'],
-            photoURL: firestoreData['photoURL'],
+            photoURL: normalizeGooglePhotoURL(firestoreData['photoURL']),
             isOnline: firestoreData['isOnline'],
             lastSeen: firestoreData['lastSeen']?.toDate() || new Date(),
             channels: firestoreData['channels'] || [],
@@ -115,7 +134,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
                 uid: firestoreData['uid'],
                 email: firestoreData['email'],
                 displayName: firestoreData['displayName'],
-                photoURL: firestoreData['photoURL'],
+                photoURL: normalizeGooglePhotoURL(firestoreData['photoURL']),
                 isOnline: firestoreData['isOnline'],
                 lastSeen: firestoreData['lastSeen']?.toDate() || new Date(),
                 channels: firestoreData['channels'] || [],
@@ -175,7 +194,7 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
             uid: firestoreData['uid'],
             email: firestoreData['email'],
             displayName: firestoreData['displayName'],
-            photoURL: firestoreData['photoURL'],
+            photoURL: normalizeGooglePhotoURL(firestoreData['photoURL']),
             isOnline: firestoreData['isOnline'],
             lastSeen: firestoreData['lastSeen']?.toDate() || new Date(),
             channels: firestoreData['channels'] || [],

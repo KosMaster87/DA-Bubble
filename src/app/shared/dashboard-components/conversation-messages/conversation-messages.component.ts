@@ -332,4 +332,12 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   isEditing(messageId: string): boolean {
     return this.editingMessageId() === messageId;
   }
+
+  /**
+   * Handle image load error - use fallback avatar
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/img/profile/profile-0.svg';
+  }
 }

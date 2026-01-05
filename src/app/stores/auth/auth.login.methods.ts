@@ -12,7 +12,18 @@ import {
   GoogleAuthProvider,
   UserCredential,
 } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import {
+  Firestore,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  arrayUnion,
+} from '@angular/fire/firestore';
 import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
 
@@ -159,6 +170,45 @@ async function performLogin(
         updatedAt: new Date(),
       };
       await setDoc(userDocRef, newUser);
+
+      // Add user to DABubble-Welcome channel (create if not exists)
+      try {
+        const welcomeChannelQuery = query(
+          collection(firestore, 'channels'),
+          where('name', '==', 'DABubble-welcome')
+        );
+        const welcomeSnapshot = await getDocs(welcomeChannelQuery);
+
+        if (!welcomeSnapshot.empty) {
+          // DABubble-Welcome exists - add user as member
+          const welcomeChannel = welcomeSnapshot.docs[0];
+          const channelRef = doc(firestore, 'channels', welcomeChannel.id);
+          await updateDoc(channelRef, {
+            members: arrayUnion(firebaseUser.uid),
+            updatedAt: new Date(),
+          });
+          console.log('✅ Google user added to DABubble-Welcome channel');
+        } else {
+          // DABubble-Welcome doesn't exist - create it with this user as creator
+          const welcomeChannelData = {
+            name: 'DABubble-welcome',
+            description: 'Welcome to DABubble! General announcements and introductions.',
+            isPrivate: false,
+            createdBy: firebaseUser.uid,
+            members: [firebaseUser.uid],
+            admins: [firebaseUser.uid],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastMessageAt: new Date(),
+            messageCount: 0,
+          };
+          await setDoc(doc(collection(firestore, 'channels')), welcomeChannelData);
+          console.log('✅ DABubble-Welcome channel created with Google user as admin');
+        }
+      } catch (channelError) {
+        console.warn('⚠️ Could not add Google user to DABubble-Welcome channel:', channelError);
+        // Don't fail login if channel addition fails
+      }
     } else {
       // Update last seen and online status
       await setDoc(

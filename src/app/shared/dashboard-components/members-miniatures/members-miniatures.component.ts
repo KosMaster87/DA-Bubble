@@ -30,4 +30,12 @@ export class MembersMiniatureComponent {
   onClick(): void {
     this.memberClicked.emit();
   }
+
+  /**
+   * Handle image load error - use fallback avatar
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/img/profile/profile-0.svg';
+  }
 }

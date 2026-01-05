@@ -100,12 +100,25 @@ export class ChannalWelcomeComponent {
    */
   protected members = computed<UserListItem[]>(() => {
     const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
-    if (!channel || !channel.members) return [];
+    if (!channel || !channel.members) {
+      console.log('🔍 DABubble-welcome: No channel or no members', {
+        channelFound: !!channel,
+        members: channel?.members,
+        allChannels: this.channelStore.channels().map((ch) => ch.name),
+      });
+      return [];
+    }
 
-    return channel.members
+    const membersList = channel.members
       .map((memberId) => {
         const user = this.userStore.getUserById()(memberId);
-        if (!user) return null;
+        if (!user) {
+          console.log('⚠️ User not found in UserStore:', {
+            memberId,
+            totalUsersInStore: this.userStore.users().length,
+          });
+          return null;
+        }
         return {
           id: user.uid,
           name: user.displayName,
@@ -113,6 +126,23 @@ export class ChannalWelcomeComponent {
         };
       })
       .filter((user): user is UserListItem => user !== null);
+
+    console.log('👥 DABubble-welcome members:', {
+      totalInChannel: channel.members.length,
+      foundInStore: membersList.length,
+      members: membersList.map((m) => ({
+        id: m.id,
+        name: m.name,
+        avatar: m.avatar,
+        isGoogleAvatar: m.avatar.includes('googleusercontent'),
+        nameLength: m.name?.length || 0,
+        hasAvatar: !!m.avatar,
+      })),
+      emailUsers: membersList.filter((m) => !m.avatar.includes('googleusercontent')).length,
+      googleUsers: membersList.filter((m) => m.avatar.includes('googleusercontent')).length,
+    });
+
+    return membersList;
   });
 
   /**

@@ -162,6 +162,14 @@ export class ChannelConversationComponent {
    * Effect: Load messages when channel changes
    */
   constructor() {
+    // Reset isJoiningChannel when channel changes
+    effect(() => {
+      const channelId = this.channel().id;
+      untracked(() => {
+        this.isJoiningChannel.set(false);
+      });
+    });
+
     effect(() => {
       const channelId = this.channel().id;
       if (channelId) {

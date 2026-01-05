@@ -6,7 +6,6 @@
 
 import { Component, input, output, signal, computed, inject } from '@angular/core';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
-import { BtnCancelComponent } from '../btn-cancel/btn-cancel.component';
 import { InputFieldBasicComponent } from '../input-field-basic/input-field-basic.component';
 import { ChannelSelectionComponent } from '../channel-selection/channel-selection.component';
 import { ChannelListItem } from '../channel-list-item/channel-list-item.component';
@@ -20,7 +19,6 @@ type MemberSelectionType = 'all' | 'specific';
   selector: 'app-add-member-after-add-channel',
   imports: [
     BtnActionComponent,
-    BtnCancelComponent,
     InputFieldBasicComponent,
     ChannelSelectionComponent,
     UserSelectionComponent,
@@ -35,7 +33,6 @@ export class AddMemberAfterAddChannelComponent {
   channels = input<ChannelListItem[]>([]);
   users = input<UserListItem[]>([]);
   closed = output<void>();
-  cancelled = output<void>();
   created = output<{
     type: MemberSelectionType;
     searchValue?: string;
@@ -124,13 +121,6 @@ export class AddMemberAfterAddChannelComponent {
    */
   onClose(): void {
     this.closed.emit();
-  }
-
-  /**
-   * Handle cancel button click
-   */
-  onCancel(): void {
-    this.cancelled.emit();
   }
 
   /**

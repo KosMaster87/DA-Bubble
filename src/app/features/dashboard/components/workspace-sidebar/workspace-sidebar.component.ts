@@ -319,7 +319,14 @@ export class WorkspaceSidebarComponent {
     // Map conversations to UI format with user info
     const dmList = conversations.map((conv) => {
       // Get the other participant's ID
-      const otherUserId = conv.participants.find((id) => id !== currentUser.uid);
+      // For self-conversations, both participants are the same
+      let otherUserId = conv.participants.find((id) => id !== currentUser.uid);
+
+      // If no other user found, this is a self-conversation
+      if (!otherUserId) {
+        otherUserId = currentUser.uid;
+      }
+
       const otherUser = allUsers.find((u) => u.uid === otherUserId);
 
       // Get all messages for this conversation
@@ -431,7 +438,32 @@ export class WorkspaceSidebarComponent {
     });
 
     // Sort alphabetically by name
-    return dmList.sort((a, b) => a.name.localeCompare(b.name));
+    const sortedList = dmList.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Check if self-conversation already exists in the list
+    const selfConversationId = `${currentUser.uid}_${currentUser.uid}`;
+    const existingSelfDM = sortedList.find((dm) => dm.id === selfConversationId);
+
+    // Create or use existing self-DM entry at the top
+    const selfDM = existingSelfDM
+      ? {
+          ...existingSelfDM,
+          name: `${currentUser.displayName} (Notes)`, // Override name to show (Notes)
+        }
+      : {
+          id: `self-${currentUser.uid}`,
+          userId: currentUser.uid,
+          name: `${currentUser.displayName} (Notes)`,
+          avatar: currentUser.photoURL || '/img/profile/profile-0.svg',
+          isOnline: true,
+          hasUnread: false,
+          hasThreadUnread: false,
+        };
+
+    // Filter out the self-conversation from the regular list if it exists
+    const filteredList = sortedList.filter((dm) => dm.id !== selfConversationId);
+
+    return [selfDM, ...filteredList];
   });
 
   /**
@@ -574,48 +606,9 @@ export class WorkspaceSidebarComponent {
   }
 
   /**
-   * Handle add member after channel cancel - create channel without inviting members
+   * Lock to prevent multiple simultaneous channel creation
    */
   private isCreatingChannel = signal(false);
-
-  async onCancel(): Promise<void> {
-    if (this.isCreatingChannel()) {
-      console.log('⏸️  Channel creation already in progress');
-      return;
-    }
-
-    const currentUserId = this.authStore.user()?.uid;
-    if (!currentUserId) return;
-
-    this.isCreatingChannel.set(true);
-
-    try {
-      // Create channel via store
-      const newChannelId = await this.channelStore.createChannel(
-        {
-          name: this.pendingChannelName(),
-          description: this.pendingChannelDescription(),
-          isPrivate: this.pendingChannelIsPrivate(),
-          members: [currentUserId],
-        },
-        currentUserId
-      );
-
-      this.isAddMemberAfterChannelOpen.set(false);
-      this.pendingChannelName.set('');
-      this.pendingChannelDescription.set('');
-      this.pendingChannelIsPrivate.set(false);
-
-      // Auto-select the newly created channel
-      this.selectedChannelId.set(newChannelId);
-      this.channelSelected.emit(newChannelId);
-    } finally {
-      // Re-enable after a short delay
-      setTimeout(() => {
-        this.isCreatingChannel.set(false);
-      }, 1000);
-    }
-  }
 
   /**
    * Handle add member after channel create - create channel and send invitations
@@ -718,7 +711,21 @@ export class WorkspaceSidebarComponent {
   /**
    * Select a direct message
    */
-  selectDirectMessage(messageId: string): void {
+  async selectDirectMessage(messageId: string): Promise<void> {
+    // Handle self DM (Notes to self)
+    if (messageId.startsWith('self-')) {
+      const currentUser = this.authStore.user();
+      if (!currentUser) return;
+
+      // Start a conversation with self
+      const conversation = await this.startDirectMessage(currentUser.uid);
+      if (conversation) {
+        // Emit the actual conversation ID to trigger navigation
+        this.directMessageSelected.emit(conversation.id);
+      }
+      return;
+    }
+
     // Deselect channel when DM is selected
     this.selectedChannelId.set(null);
     this.selectedDirectMessageId.set(messageId);
@@ -880,5 +887,13 @@ export class WorkspaceSidebarComponent {
     if (this.hoverTimeout) {
       clearTimeout(this.hoverTimeout);
     }
+  }
+
+  /**
+   * Handle image load error - use fallback avatar
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = '/img/profile/profile-0.svg';
   }
 }

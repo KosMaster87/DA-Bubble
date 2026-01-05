@@ -168,7 +168,12 @@
           >
             <span class="workspace-sidebar__item-content">
               <span class="workspace-sidebar__item-avatar-wrapper">
-                <img [src]="dm.avatar" [alt]="dm.name" class="workspace-sidebar__item-avatar" />
+                <img
+                  [src]="dm.avatar"
+                  [alt]="dm.name"
+                  class="workspace-sidebar__item-avatar"
+                  (error)="onImageError($event)"
+                />
                 <img
                   [src]="
                     userPresenceStore.isUserOnline()(dm.userId)
@@ -323,7 +328,6 @@
     [channels]="sortedChannels()"
     [users]="allUsers()"
     (closed)="onClose()"
-    (cancelled)="onCancel()"
     (created)="onCreate($event)"
   />
   }
