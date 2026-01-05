@@ -283,15 +283,6 @@ export const UserStore = signalStore(
           const originalPhotoURL = data.photoURL;
           const normalizedPhotoURL = normalizeGooglePhotoURL(data.photoURL);
 
-          console.log('🔄 UserStore mapping user:', {
-            uid: doc.id,
-            displayName: data.displayName,
-            originalPhotoURL: originalPhotoURL,
-            normalizedPhotoURL: normalizedPhotoURL,
-            isGoogle: originalPhotoURL?.includes('googleusercontent'),
-            wasNormalized: originalPhotoURL !== normalizedPhotoURL,
-          });
-
           return {
             uid: doc.id,
             ...data,

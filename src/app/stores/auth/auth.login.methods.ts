@@ -11,6 +11,7 @@ import {
   signInAnonymously,
   GoogleAuthProvider,
   UserCredential,
+  deleteUser,
 } from '@angular/fire/auth';
 import {
   Firestore,
@@ -23,6 +24,8 @@ import {
   getDocs,
   updateDoc,
   arrayUnion,
+  deleteDoc,
+  writeBatch,
 } from '@angular/fire/firestore';
 import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
@@ -92,6 +95,7 @@ export const createLoginMethods = (
   /**
    * Logout current user
    * Updates Firestore user status before signing out
+   * For guest users: Deletes all data (Firestore, Auth, channels, DMs)
    * @async
    */
   async logout(): Promise<void> {
@@ -99,28 +103,90 @@ export const createLoginMethods = (
     try {
       const currentUser = auth.currentUser;
 
-      // Update Firestore before logout (with error handling)
       if (currentUser) {
-        try {
-          const userDocRef = doc(firestore, 'users', currentUser.uid);
-          await setDoc(
-            userDocRef,
-            {
-              isOnline: false,
-              lastSeen: new Date(),
-              updatedAt: new Date(),
-            },
-            { merge: true }
-          );
-        } catch (firestoreError) {
-          // Log Firestore error but continue with logout
-          console.warn('Failed to update user status in Firestore:', firestoreError);
+        // Check if user is a guest
+        const userDocRef = doc(firestore, 'users', currentUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        const isGuest = userDoc.exists() && userDoc.data()?.['isGuest'] === true;
+
+        if (isGuest) {
+          // Guest user: Complete account deletion
+          console.log('🗑️ Guest user logout - deleting account:', currentUser.uid);
+
+          try {
+            // 1. Remove from all channels
+            const channelsRef = collection(firestore, 'channels');
+            const channelsSnapshot = await getDocs(channelsRef);
+
+            const batch = writeBatch(firestore);
+            let channelUpdates = 0;
+
+            for (const channelDoc of channelsSnapshot.docs) {
+              const channel = channelDoc.data();
+              if (channel['members']?.includes(currentUser.uid)) {
+                batch.update(channelDoc.ref, {
+                  members: channel['members'].filter((id: string) => id !== currentUser.uid),
+                  updatedAt: new Date(),
+                });
+                channelUpdates++;
+              }
+            }
+
+            if (channelUpdates > 0) {
+              await batch.commit();
+              console.log(`✅ Removed guest from ${channelUpdates} channels`);
+            }
+
+            // 2. Delete Notes-DM (self-conversation)
+            const notesDmId = `${currentUser.uid}_${currentUser.uid}`;
+            const notesDmRef = doc(firestore, 'directMessages', notesDmId);
+            try {
+              await deleteDoc(notesDmRef);
+              console.log('✅ Deleted Notes-DM:', notesDmId);
+            } catch (dmError) {
+              console.warn('Notes-DM not found or already deleted:', dmError);
+            }
+
+            // 3. Delete user document from Firestore
+            await deleteDoc(userDocRef);
+            console.log('✅ Deleted Firestore user document');
+
+            // 4. Delete Firebase Auth account
+            await deleteUser(currentUser);
+            console.log('✅ Deleted Firebase Auth account');
+
+            console.log('🎉 Guest account completely deleted');
+          } catch (deleteError) {
+            console.error('❌ Error deleting guest account:', deleteError);
+            // Continue with logout even if deletion fails
+          }
+        } else {
+          // Regular user: Update status only
+          try {
+            await setDoc(
+              userDocRef,
+              {
+                isOnline: false,
+                lastSeen: new Date(),
+                updatedAt: new Date(),
+              },
+              { merge: true }
+            );
+          } catch (firestoreError) {
+            // Log Firestore error but continue with logout
+            console.warn('Failed to update user status in Firestore:', firestoreError);
+          }
         }
       }
 
-      // Always logout from Firebase Auth
-      await auth.signOut();
-      patchState(store, { user: null, isAuthenticated: false, isLoading: false });
+      // Always logout from Firebase Auth (unless already deleted)
+      if (!auth.currentUser) {
+        // User already deleted (guest user case)
+        patchState(store, { user: null, isAuthenticated: false, isLoading: false });
+      } else {
+        await auth.signOut();
+        patchState(store, { user: null, isAuthenticated: false, isLoading: false });
+      }
     } catch (error) {
       handleAuthError(error, 'Logout failed');
     }
@@ -157,11 +223,14 @@ async function performLogin(
 
     // Create user document if it doesn't exist (e.g., Google login first time)
     if (!userSnapshot.exists()) {
+      const isAnonymous = firebaseUser.isAnonymous;
+      const defaultAvatar = '/img/profile/profile-0.svg';
+
       const newUser: User = {
         uid: firebaseUser.uid,
         email: firebaseUser.email || '',
-        displayName: firebaseUser.displayName || 'Anonymous',
-        photoURL: firebaseUser.photoURL || undefined,
+        displayName: firebaseUser.displayName || (isAnonymous ? 'Guest' : 'Anonymous'),
+        photoURL: isAnonymous ? defaultAvatar : firebaseUser.photoURL || defaultAvatar,
         isOnline: true,
         lastSeen: new Date(),
         channels: [],
@@ -169,7 +238,39 @@ async function performLogin(
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+
+      // Add expiration time for guest users (1 hour from now)
+      if (isAnonymous) {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 1);
+        (newUser as any).expiresAt = expiresAt;
+        (newUser as any).isGuest = true;
+        console.log('🕐 Guest user will expire at:', expiresAt.toISOString());
+      }
+
       await setDoc(userDocRef, newUser);
+      console.log(`✅ User document created: ${isAnonymous ? 'Guest' : 'Google'} user`);
+
+      // Create Notes DM (self-conversation) for the new user
+      try {
+        const notesDmId = `${firebaseUser.uid}_${firebaseUser.uid}`;
+        const notesDmRef = doc(firestore, 'directMessages', notesDmId);
+        const notesDmDoc = await getDoc(notesDmRef);
+
+        if (!notesDmDoc.exists()) {
+          const notesDmData = {
+            participants: [firebaseUser.uid, firebaseUser.uid],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastMessageAt: new Date(),
+            messageCount: 0,
+          };
+          await setDoc(notesDmRef, notesDmData);
+          console.log('📝 Notes DM created for user');
+        }
+      } catch (dmError) {
+        console.warn('⚠️ Could not create Notes DM:', dmError);
+      }
 
       // Add user to DABubble-Welcome channel (create if not exists)
       try {
@@ -187,7 +288,9 @@ async function performLogin(
             members: arrayUnion(firebaseUser.uid),
             updatedAt: new Date(),
           });
-          console.log('✅ Google user added to DABubble-Welcome channel');
+          console.log(
+            `✅ ${isAnonymous ? 'Guest' : 'Google'} user added to DABubble-Welcome channel`
+          );
         } else {
           // DABubble-Welcome doesn't exist - create it with this user as creator
           const welcomeChannelData = {
@@ -203,10 +306,14 @@ async function performLogin(
             messageCount: 0,
           };
           await setDoc(doc(collection(firestore, 'channels')), welcomeChannelData);
-          console.log('✅ DABubble-Welcome channel created with Google user as admin');
+          console.log(
+            `✅ DABubble-Welcome channel created with ${
+              isAnonymous ? 'Guest' : 'Google'
+            } user as admin`
+          );
         }
       } catch (channelError) {
-        console.warn('⚠️ Could not add Google user to DABubble-Welcome channel:', channelError);
+        console.warn('⚠️ Could not add user to DABubble-Welcome channel:', channelError);
         // Don't fail login if channel addition fails
       }
     } else {

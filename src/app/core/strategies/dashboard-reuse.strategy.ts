@@ -34,7 +34,6 @@ export class DashboardReuseStrategy extends BaseRouteReuseStrategy {
       path === 'dashboard/legal';
 
     if (isDashboardRoute(futurePath) && isDashboardRoute(currPath)) {
-      console.log('🔄 Reusing Dashboard component:', { from: currPath, to: futurePath });
       return true;
     }
 

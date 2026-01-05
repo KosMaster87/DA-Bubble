@@ -76,7 +76,6 @@ export class UnreadService {
       await updateDoc(userRef, {
         [`lastRead.${conversationId}`]: serverTimestamp(),
       });
-      console.log('✅ Marked as read:', conversationId);
     } catch (error: any) {
       // Ignore transient Firestore state errors
       if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {

@@ -246,16 +246,6 @@ export class WorkspaceSidebarComponent {
           // Check if this specific thread is unread
           const isUnread = this.unreadService.hasThreadUnread(ch.id, msg.id, threadTime);
 
-          if (isUnread) {
-            console.log('🟠 Thread unread detected:', {
-              channelId: ch.id,
-              channelName: ch.name,
-              messageId: msg.id,
-              threadTime,
-              content: msg.content.substring(0, 30),
-            });
-          }
-
           return isUnread;
         });
 
@@ -413,15 +403,6 @@ export class WorkspaceSidebarComponent {
 
         // Check if this specific thread is unread
         const isUnread = this.unreadService.hasThreadUnread(conv.id, msg.id, threadTime);
-
-        if (isUnread) {
-          console.log('🟠 DM Thread unread detected:', {
-            conversationId: conv.id,
-            messageId: msg.id,
-            threadTime,
-            content: msg.content.substring(0, 30),
-          });
-        }
 
         return isUnread;
       });

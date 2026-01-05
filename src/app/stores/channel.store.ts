@@ -293,7 +293,6 @@ export const ChannelStore = signalStore(
        */
       async performUpdate(channelId: string, updates: Partial<Channel>) {
         try {
-          console.log('🔄 performUpdate called:', { channelId, updates });
           const channelDoc = doc(channelsCollection, channelId);
           console.log('📝 Channel doc path:', channelDoc.path);
           await updateDoc(channelDoc, { ...updates, updatedAt: new Date() });

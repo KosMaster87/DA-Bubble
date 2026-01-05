@@ -40,7 +40,6 @@ export class ReactionBarComponent {
    * Handle reaction click
    */
   onReactionClick(type: ReactionType): void {
-    console.log('🟢 ReactionBar: Emoji clicked:', type);
     this.reactionClicked.emit(type);
   }
 
@@ -78,7 +77,6 @@ export class ReactionBarComponent {
    * Toggle emoji picker
    */
   toggleEmojiPicker(): void {
-    console.log('🟡 ReactionBar: Toggling emoji picker');
     this.isEmojiPickerOpen.set(!this.isEmojiPickerOpen());
   }
 
@@ -93,7 +91,6 @@ export class ReactionBarComponent {
    * Handle emoji selection from picker
    */
   onEmojiSelect(emoji: ReactionEmoji): void {
-    console.log('🟢 ReactionBar: Emoji selected from picker:', emoji.id);
     this.reactionClicked.emit(emoji.id);
     this.closeEmojiPicker();
   }

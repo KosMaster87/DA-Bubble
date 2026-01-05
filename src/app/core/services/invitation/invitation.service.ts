@@ -303,7 +303,6 @@ export class InvitationService {
       (snapshot) => {
         const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
         callback(invitations);
-        console.log('📬 Pending invitations updated:', userId, invitations.length);
       },
       (error: any) => {
         // Auto-cleanup on permission error (user logged out)

@@ -27,21 +27,7 @@ export class UserListItemComponent {
   itemClicked = output<string>();
 
   constructor() {
-    // Debug: Log which users are being rendered
-    const userSignal = this.user;
-    if (userSignal) {
-      setTimeout(() => {
-        const u = userSignal();
-        if (u) {
-          console.log('🎨 Rendering user-list-item:', {
-            id: u.id,
-            name: u.name,
-            avatar: u.avatar,
-            isGoogle: u.avatar?.includes('googleusercontent'),
-          });
-        }
-      });
-    }
+    // Component initialized
   }
 
   /**

@@ -252,3 +252,100 @@ export const updateDirectMessageOnThreadMessage = onDocumentCreated(
     }
   }
 );
+
+/**
+ * Scheduled function to cleanup expired guest users
+ * Runs every 15 minutes to delete guest users whose session has expired
+ * Guest users have a 1-hour session limit set in expiresAt field
+ */
+export const cleanupExpiredGuests = onSchedule(
+  {
+    schedule: 'every 15 minutes',
+    timeZone: 'Europe/Berlin',
+  },
+  async () => {
+    logger.info('🧹 Starting expired guest user cleanup');
+
+    try {
+      const db = admin.firestore();
+      const now = admin.firestore.Timestamp.now();
+
+      // Find all guest users whose session has expired
+      const expiredGuestsQuery = db
+        .collection('users')
+        .where('isGuest', '==', true)
+        .where('expiresAt', '<=', now.toDate());
+
+      const expiredGuestsSnapshot = await expiredGuestsQuery.get();
+
+      if (expiredGuestsSnapshot.empty) {
+        logger.info('✅ No expired guest users found');
+        return;
+      }
+
+      logger.info(`🗑️ Found ${expiredGuestsSnapshot.size} expired guest users`);
+
+      const batch = db.batch();
+      const deleteAuthPromises: Promise<void>[] = [];
+
+      for (const doc of expiredGuestsSnapshot.docs) {
+        const guestData = doc.data();
+        const guestId = doc.id;
+
+        logger.info(`Deleting guest user: ${guestId} (${guestData.displayName})`);
+
+        // Delete Firestore user document
+        batch.delete(doc.ref);
+
+        // Delete from Firebase Auth (async)
+        deleteAuthPromises.push(
+          admin
+            .auth()
+            .deleteUser(guestId)
+            .then(() => {
+              logger.info(`✅ Deleted auth account: ${guestId}`);
+            })
+            .catch((error) => {
+              logger.warn(`⚠️ Could not delete auth account ${guestId}:`, error);
+            })
+        );
+
+        // Optional: Delete guest user's DMs and remove from channels
+        // This helps keep the database clean
+        try {
+          // Remove from all channels
+          if (guestData.channels && Array.isArray(guestData.channels)) {
+            for (const channelId of guestData.channels) {
+              const channelRef = db.collection('channels').doc(channelId);
+              batch.update(channelRef, {
+                members: admin.firestore.FieldValue.arrayRemove(guestId),
+                updatedAt: now.toDate(),
+              });
+            }
+          }
+
+          // Delete Notes DM (self-conversation)
+          const notesDmId = `${guestId}_${guestId}`;
+          const notesDmRef = db.collection('directMessages').doc(notesDmId);
+          batch.delete(notesDmRef);
+        } catch (cleanupError) {
+          logger.warn(`⚠️ Error cleaning up guest ${guestId} data:`, cleanupError);
+        }
+      }
+
+      // Commit all Firestore deletions
+      await batch.commit();
+      logger.info('✅ Committed batch delete for ' + `${expiredGuestsSnapshot.size} guest users`);
+
+      // Wait for all Auth deletions to complete
+      await Promise.allSettled(deleteAuthPromises);
+
+      logger.info(
+        '🎉 Cleanup complete: Deleted ' + `${expiredGuestsSnapshot.size} expired guest users`
+      );
+    } catch (error) {
+      logger.error('❌ Error during guest user cleanup:', error);
+      throw error;
+    }
+  }
+);

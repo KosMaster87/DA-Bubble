@@ -195,13 +195,6 @@ export const ChannelMessageStore = signalStore(
           const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
-              console.log('📨 Channel messages snapshot:', {
-                channelId,
-                docChanges: snapshot.docChanges().length,
-                types: snapshot.docChanges().map((c) => c.type),
-                total: snapshot.docs.length,
-              });
-
               const messages = snapshot.docs.map((doc) => {
                 const data = doc.data();
                 return {
@@ -219,13 +212,6 @@ export const ChannelMessageStore = signalStore(
               patchState(store, {
                 isLoading: false,
                 updateCounter: store.updateCounter() + 1,
-              });
-
-              console.log('✅ Updated channel messages:', {
-                channelId,
-                messageCount: messages.length,
-                messagesWithThreads: messages.filter((m) => m.lastThreadTimestamp).length,
-                updateCounter: store.updateCounter(),
               });
             },
             (error: any) => {

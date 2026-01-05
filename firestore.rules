@@ -90,7 +90,15 @@ service cloud.firestore {
                     && hasRequiredUserFields()
                     && isValidStringLength(request.resource.data.displayName, 1, 50)
                     && request.resource.data.uid == userId
-                    && request.resource.data.email == request.auth.token.email;
+                    && (
+                      // Regular users must have matching email
+                      (!request.auth.token.firebase.sign_in_provider == 'anonymous'
+                       && request.resource.data.email == request.auth.token.email)
+                      ||
+                      // Guest users (anonymous) can have empty email
+                      (request.auth.token.firebase.sign_in_provider == 'anonymous'
+                       && request.resource.data.get('isGuest', false) == true)
+                    );
 
       // Allow update only for the user's own document
       allow update: if isAuthenticated()
@@ -259,12 +267,30 @@ service cloud.firestore {
       // Allow create if user is one of the participants
       allow create: if isAuthenticated()
                     && request.auth.uid in request.resource.data.participants
-                    && request.resource.data.participants.size() == 2
+                    && (
+                      // Normal DM: 2 participants
+                      request.resource.data.participants.size() == 2
+                      ||
+                      // Notes DM (self-conversation): 1 participant (same user twice)
+                      (request.resource.data.participants.size() == 1
+                       && request.resource.data.participants[0] == request.auth.uid)
+                    )
                     && isConversationParticipant();
 
       // Allow update for participants (for lastMessageAt, unreadCount, etc.)
       allow update: if isAuthenticated()
                     && request.auth.uid in resource.data.participants;
+
+      // Allow delete for Notes DM (self-conversation) or if all participants agree
+      allow delete: if isAuthenticated()
+                    && (
+                      // Notes DM: user can delete their own self-conversation
+                      (resource.data.participants.size() == 1
+                       && resource.data.participants[0] == request.auth.uid)
+                      ||
+                      // Regular DM: only if user is participant (for future cleanup)
+                      (request.auth.uid in resource.data.participants)
+                    );
 
       // ========================================
       // DM MESSAGES SUBCOLLECTION

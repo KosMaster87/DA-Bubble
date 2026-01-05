@@ -34,7 +34,6 @@ export class MessageBoxComponent {
    */
   openEmojiPicker(): void {
     this.isEmojiPickerOpen.update((v) => !v);
-    console.log('Open emoji picker');
   }
 
   /**
@@ -42,6 +41,5 @@ export class MessageBoxComponent {
    */
   openMentionPicker(): void {
     this.isMentionPickerOpen.update((v) => !v);
-    console.log('Open mention picker');
   }
 }

@@ -419,8 +419,6 @@ export const ThreadStore = signalStore(
               [messageId]: filteredThreads,
             },
           });
-
-          console.log('✅ Thread message deleted, parent message updated');
         } catch (error) {
           this.handleError(error, 'Failed to delete thread');
         }

@@ -259,15 +259,13 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * Handle reaction bar button click
    */
   onReactionBarClick(messageId: string, type: ReactionType): void {
-    console.log('🔵 Reaction bar clicked:', messageId, type);
     if (type === 'comment') {
       this.threadClicked.emit(messageId);
     } else if (type === 'add-reaction') {
       // Add-reaction button opens picker in ReactionBar, no need to emit
-      console.log('Emoji picker opened');
     } else {
       // Direct emoji click (thumbs-up, checked, rocket, nerd-face)
-      console.log('🎯 Emitting reaction:', messageId, type);
+
       this.reactionAdded.emit({ messageId, emoji: type });
     }
   }

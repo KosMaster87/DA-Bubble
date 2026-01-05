@@ -127,21 +127,6 @@ export class ChannalWelcomeComponent {
       })
       .filter((user): user is UserListItem => user !== null);
 
-    console.log('👥 DABubble-welcome members:', {
-      totalInChannel: channel.members.length,
-      foundInStore: membersList.length,
-      members: membersList.map((m) => ({
-        id: m.id,
-        name: m.name,
-        avatar: m.avatar,
-        isGoogleAvatar: m.avatar.includes('googleusercontent'),
-        nameLength: m.name?.length || 0,
-        hasAvatar: !!m.avatar,
-      })),
-      emailUsers: membersList.filter((m) => !m.avatar.includes('googleusercontent')).length,
-      googleUsers: membersList.filter((m) => m.avatar.includes('googleusercontent')).length,
-    });
-
     return membersList;
   });
 

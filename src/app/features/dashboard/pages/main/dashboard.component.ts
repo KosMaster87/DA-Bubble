@@ -136,28 +136,23 @@ export class DashboardComponent {
 
       // /dashboard (no subpath) → show welcome
       if (!path) {
-        console.log('📡 Route changed to dashboard (welcome)');
         this.showWelcome();
         return;
       }
 
       if (path === 'channel' && id) {
-        console.log('📡 Route changed to channel:', id);
         this.showChannel(id);
         if (this.sidebar) {
           this.sidebar.selectChannelById(id);
         }
       } else if (path === 'dm' && id) {
-        console.log('📡 Route changed to DM:', id);
         this.showDirectMessage(id);
         if (this.sidebar) {
           this.sidebar.selectDirectMessageById(id);
         }
       } else if (path === 'mailbox') {
-        console.log('📡 Route changed to mailbox');
         this.showMailbox();
       } else if (path === 'legal') {
-        console.log('📡 Route changed to legal');
         this.showLegal();
       }
     });
@@ -175,7 +170,6 @@ export class DashboardComponent {
       memberChannels.forEach((channel) => {
         this.channelMessageStore.loadChannelMessages(channel.id);
       });
-      console.log('📥 Loaded messages for all channels:', memberChannels.length);
     });
 
     // Watch for changes in user's directMessages array (only when IDs actually change)
@@ -195,19 +189,7 @@ export class DashboardComponent {
       conversations.forEach((conversation) => {
         this.directMessageStore.loadMessages(conversation.id);
       });
-      console.log('📨 Loaded messages for all DM conversations:', conversations.length);
     });
-
-    // Debug effect to track view changes
-    // effect(() => {
-    //   console.log('🎯 Dashboard View Effect:', {
-    //     currentView: this.currentView(),
-    //     selectedDM: this.selectedDM(),
-    //     selectedChannel: this.selectedChannel(),
-    //     shouldShowDM: this.currentView() === 'direct-message' && !!this.selectedDM(),
-    //     shouldShowChannel: this.currentView() === 'channel' && !!this.selectedChannel(),
-    //   });
-    // });
   }
 
   /**
@@ -299,13 +281,6 @@ export class DashboardComponent {
    * Switch to direct message view
    */
   showDirectMessage(conversationId: string, participants?: [string, string]): void {
-    console.log('📱 showDirectMessage called', {
-      conversationId,
-      participants,
-      currentView: this.currentView(),
-      stack: new Error().stack,
-    });
-
     // Close thread panel if open
     if (this.isThreadOpen()) {
       this.closeThread();
