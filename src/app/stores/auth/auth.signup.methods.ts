@@ -185,7 +185,7 @@ export const createSignupMethods = (
         { merge: true }
       );
 
-      console.log('🖼️ Avatar updated in Firestore:', profile.photoURL);
+      console.log('🖼️ Profile updated in Firestore:', profile);
 
       // Immediately read back the updated user data from Firestore
       const updatedUserDoc = await getDoc(userDocRef);
@@ -211,7 +211,10 @@ export const createSignupMethods = (
           error: null,
         });
 
-        console.log('✅ User state updated with avatar:', user.photoURL);
+        console.log('✅ AuthStore user state updated:', {
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        });
       } else {
         // Fallback to handleSuccessfulAuth if Firestore read fails
         await handleSuccessfulAuth(currentUser);

@@ -30,7 +30,8 @@ export class DashboardReuseStrategy extends BaseRouteReuseStrategy {
       path === 'dashboard' ||
       path === 'dashboard/channel/:id' ||
       path === 'dashboard/dm/:id' ||
-      path === 'dashboard/mailbox';
+      path === 'dashboard/mailbox' ||
+      path === 'dashboard/legal';
 
     if (isDashboardRoute(futurePath) && isDashboardRoute(currPath)) {
       console.log('🔄 Reusing Dashboard component:', { from: currPath, to: futurePath });

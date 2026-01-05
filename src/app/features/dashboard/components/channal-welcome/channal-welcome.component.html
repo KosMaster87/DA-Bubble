@@ -47,7 +47,7 @@
 
       <!-- Edit Profile -->
       @if (editProfileUser()) {
-      <app-edit-profile
+      <app-profile-edit
         [user]="editProfileUser()!"
         [isVisible]="isEditProfileOpen()"
         (closeClicked)="onEditProfileClose()"
@@ -63,8 +63,10 @@
       <div class="channal-welcome__welcome-card">
         <h2 class="channal-welcome__welcome-title">Willkommen bei DABubble!</h2>
         <p class="channal-welcome__welcome-text">
-          Dies ist der Anfang des <strong>#dabubble-welcome</strong> Channels. Hier kannst du dich
-          mit deinem Team austauschen und zusammenarbeiten.
+          Dies ist der Anfang des <strong>#dabubble-welcome</strong> Channels. DABubble ist deine
+          zentrale Kommunikationsplattform für effiziente Teamarbeit. Organisiere Projekte in
+          Channels, tausche dich in Echtzeit aus, teile Dateien und bleibe mit deinem Team immer
+          verbunden – egal wo du bist.
         </p>
 
         <div class="channal-welcome__welcome-features">
@@ -74,7 +76,7 @@
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">📎</span>
-            <span>Dateien teilen</span>
+            <span>Dateien teilen - featured</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">🔔</span>
@@ -91,32 +93,46 @@
         </div>
         <ul class="channal-welcome__info-list">
           <li>Erstelle neue Channels für verschiedene Themen oder Teams</li>
-          <li>Starte Direktnachrichten mit Kollegen</li>
-          <li>Nutze @mentions, um bestimmte Personen zu benachrichtigen</li>
-          <li>Teile Dateien durch Drag & Drop</li>
           <li>Organisiere Gespräche mit Threads</li>
+          <li>Starte Direktnachrichten mit Kollegen</li>
+          <li>Nutze @mentions, um bestimmte Personen zu suchen</li>
+          <li>Nutze #mentions, um bestimmte Channels zu suchen</li>
         </ul>
       </div>
 
       <!-- Team Announcement -->
+      @if (channelOwner()) {
       <div class="channal-welcome__announcement">
         <div class="channal-welcome__announcement-header">
-          <img
-            src="/img/profile/profile-1.png"
-            alt="Admin"
-            class="channal-welcome__announcement-avatar"
-          />
-          <div>
-            <strong class="channal-welcome__announcement-author">Sofia Müller</strong>
-            <span class="channal-welcome__announcement-badge">Admin</span>
-            <span class="channal-welcome__announcement-time">vor 2 Stunden</span>
-          </div>
+          <button class="channal-welcome__owner-btn" (click)="onViewOwnerProfile()">
+            <span class="channal-welcome__owner-content">
+              <span class="channal-welcome__owner-avatar-wrapper">
+                <img
+                  [src]="channelOwner()!.avatar"
+                  [alt]="channelOwner()!.name"
+                  class="channal-welcome__owner-avatar"
+                />
+                <img
+                  [src]="
+                    channelOwner()!.isOnline
+                      ? '/img/icon/profile/status-online.svg'
+                      : '/img/icon/profile/status-away.svg'
+                  "
+                  alt=""
+                  class="channal-welcome__owner-status-badge"
+                />
+              </span>
+              <span class="channal-welcome__owner-name">{{ channelOwner()!.name }}</span>
+            </span>
+          </button>
+          <span class="channal-welcome__announcement-badge">Channel Owner</span>
         </div>
         <p class="channal-welcome__announcement-text">
           🎉 Herzlich willkommen im Team! Wir freuen uns, dass du dabei bist. Bei Fragen stehe ich
           und das gesamte Team jederzeit zur Verfügung.
         </p>
       </div>
+      }
 
       <!-- Team Stats -->
       <div class="channal-welcome__stats-card">

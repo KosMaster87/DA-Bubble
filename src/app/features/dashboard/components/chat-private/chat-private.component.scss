@@ -52,6 +52,22 @@
     width: fit-content;
     border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
   }
+
+  ::ng-deep .profile-edit {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ::ng-deep .profile-edit__content {
+    width: fit-content;
+    border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
+  }
 }
 
 .user-list-item {

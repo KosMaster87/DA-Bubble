@@ -256,7 +256,11 @@
         </button>
 
         <!-- Legal -->
-        <button class="workspace-sidebar__item" (click)="openLegal()">
+        <button
+          class="workspace-sidebar__item"
+          [class.workspace-sidebar__item--active]="isLegalActive()"
+          (click)="openLegal()"
+        >
           <span class="workspace-sidebar__item-content">
             <span class="workspace-sidebar__item-icon-wrapper">
               <img

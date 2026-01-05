@@ -29,9 +29,9 @@ import {
   ProfileUser,
 } from '@shared/dashboard-components/profile-view/profile-view.component';
 import {
-  EditProfileComponent,
+  ProfileEditComponent,
   EditProfileUser,
-} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+} from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
 import {
   ChannelInfoComponent,
@@ -80,7 +80,7 @@ export interface ChannelInfo {
     AddMemberButtonComponent,
     MembersOptionsMenuComponent,
     ProfileViewComponent,
-    EditProfileComponent,
+    ProfileEditComponent,
     AddMembersComponent,
     ChannelInfoComponent,
     ChannelAccessComponent,
@@ -685,11 +685,24 @@ export class ChannelConversationComponent {
     const userId = this.selectedMemberId();
     if (!userId) return;
 
-    await this.userStore.updateUser(userId, {
-      displayName: data.displayName,
-      // TODO: isAdmin not in User model yet
-    });
-    this.isEditProfileOpen.set(false);
+    try {
+      // Check if editing own profile
+      const currentUserId = this.authStore.user()?.uid;
+      if (userId === currentUserId) {
+        // Update AuthStore for own profile (syncs to UserStore automatically)
+        await this.authStore.updateUserProfile({ displayName: data.displayName });
+      } else {
+        // Update UserStore for other users
+        await this.userStore.updateUserData(userId, {
+          displayName: data.displayName,
+          // TODO: isAdmin not in User model yet
+        });
+      }
+      console.log('✅ User profile updated:', data);
+      this.isEditProfileOpen.set(false);
+    } catch (error) {
+      console.error('❌ Failed to update user profile:', error);
+    }
   }
 
   /**

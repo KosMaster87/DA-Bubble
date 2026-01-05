@@ -26,9 +26,9 @@ import {
   ProfileUser,
 } from '@shared/dashboard-components/profile-view/profile-view.component';
 import {
-  EditProfileComponent,
+  ProfileEditComponent,
   EditProfileUser,
-} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+} from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { ThreadStore, UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
@@ -48,7 +48,7 @@ export interface ThreadInfo {
     MessageBoxComponent,
     ConversationMessagesComponent,
     ProfileViewComponent,
-    EditProfileComponent,
+    ProfileEditComponent,
   ],
   templateUrl: './thread.component.html',
   styleUrl: './thread.component.scss',
@@ -391,15 +391,26 @@ export class ThreadComponent {
    * Handle edit profile save
    */
   async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
-    console.log('Save profile:', data);
     const userId = this.selectedUserId();
     if (!userId) return;
 
-    // TODO: Implement user profile update
-    // await this.userStore.updateUser(userId, {
-    //   displayName: data.displayName,
-    //   isAdmin: data.isAdmin,
-    // });
+    try {
+      // Check if editing own profile
+      const currentUserId = this.authStore.user()?.uid;
+      if (userId === currentUserId) {
+        // Update AuthStore for own profile (syncs to UserStore automatically)
+        await this.authStore.updateUserProfile({ displayName: data.displayName });
+      } else {
+        // Update UserStore for other users
+        await this.userStore.updateUserData(userId, {
+          displayName: data.displayName,
+          // TODO: isAdmin not in User model yet
+        });
+      }
+      console.log('✅ User profile updated:', data);
+    } catch (error) {
+      console.error('❌ Failed to update user profile:', error);
+    }
 
     this.isEditProfileOpen.set(false);
     this.selectedUserId.set(null);

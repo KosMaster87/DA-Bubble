@@ -13,6 +13,7 @@
       class="dashboard__sidebar"
       [isNewMessageActive]="currentView() === 'chat-new-msg'"
       [isMailboxActive]="currentView() === 'mailbox'"
+      [isLegalActive]="currentView() === 'legal'"
       (newMessageRequested)="showNewMessage()"
       (mailboxRequested)="showMailbox()"
       (channelSelected)="showChannel($event)"
@@ -29,6 +30,8 @@
     <app-chat-new-msg class="dashboard__content" />
     } @else if (currentView() === 'mailbox') {
     <app-channel-mailbox class="dashboard__content" (channelSelected)="openChannelById($event)" />
+    } @else if (currentView() === 'legal') {
+    <app-legal-overview class="dashboard__content" />
     } @else if (currentView() === 'channel' && selectedChannel()) {
     <app-channel-conversation
       class="dashboard__content"

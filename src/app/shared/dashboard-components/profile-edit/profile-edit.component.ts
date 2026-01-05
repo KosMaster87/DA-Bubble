@@ -1,7 +1,7 @@
 /**
- * @fileoverview Edit Profile Component
+ * @fileoverview Profile Edit Component
  * @description Popup for editing user profile
- * @module shared/dashboard-components/edit-profile
+ * @module shared/dashboard-components/profile-edit
  */
 
 import { Component, input, output, signal } from '@angular/core';
@@ -18,12 +18,12 @@ export interface EditProfileUser {
 }
 
 @Component({
-  selector: 'app-edit-profile',
+  selector: 'app-profile-edit',
   imports: [FormsModule, BtnActionComponent, BtnCancelComponent],
-  templateUrl: './edit-profile.component.html',
-  styleUrl: './edit-profile.component.scss',
+  templateUrl: './profile-edit.component.html',
+  styleUrl: './profile-edit.component.scss',
 })
-export class EditProfileComponent {
+export class ProfileEditComponent {
   user = input.required<EditProfileUser>();
   isVisible = input<boolean>(false);
   closeClicked = output<void>();
@@ -41,6 +41,14 @@ export class EditProfileComponent {
    */
   onClose(): void {
     this.closeClicked.emit();
+  }
+
+  /**
+   * Handle display name input change
+   */
+  onDisplayNameChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.displayName.set(input.value);
   }
 
   /**

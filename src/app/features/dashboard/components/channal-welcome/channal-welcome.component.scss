@@ -58,7 +58,7 @@
   }
 
   &__description {
-    font-size:  1rem;
+    font-size: 1rem;
     color: var(--text-secondary);
     margin: 0;
   }
@@ -128,7 +128,6 @@
     font-size: 0.9rem;
   }
 
-  // Info Card (Quick Start)
   &__info-card {
     background-color: #fff;
     border: 1px solid var(--border-color, #e0e0e0);
@@ -178,7 +177,6 @@
     }
   }
 
-  // Announcement
   &__announcement {
     background-color: #f8f9ff;
     border-left: 4px solid #535af1;
@@ -193,17 +191,53 @@
     margin-bottom: 0.75rem;
   }
 
-  &__announcement-avatar {
+  &__owner-btn {
+    @include mix.flex(row, flex-start, center);
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  &__owner-content {
+    @include mix.flex(row, flex-start, center);
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem 0.5rem 0.75rem;
+    border-radius: 2rem;
+    transition: background-color 0.2s;
+
+    .channal-welcome__owner-btn:hover & {
+      background-color: #eceefe;
+    }
+  }
+
+  &__owner-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  &__owner-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
   }
 
-  &__announcement-author {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-right: 0.5rem;
+  &__owner-status-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--container-bg, #fff);
+  }
+
+  &__owner-name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary, #000);
   }
 
   &__announcement-badge {
@@ -213,7 +247,6 @@
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
-    margin-right: 0.5rem;
   }
 
   &__announcement-time {
@@ -227,7 +260,6 @@
     color: var(--text-primary);
   }
 
-  // Stats Card
   &__stats-card {
     background-color: #fff;
     border: 1px solid var(--border-color);
@@ -265,7 +297,6 @@
     color: var(--text-secondary);
   }
 
-  // Tips Card
   &__tips-card {
     background-color: #fffbf0;
     border: 1px solid #ffd93d;
@@ -307,7 +338,6 @@
     }
   }
 
-  // Call to Action Card
   &__cta-card {
     background: linear-gradient(135deg, #535af1 0%, #797ef3 100%);
     border-radius: 12px;
@@ -365,5 +395,38 @@
         transform: translateY(-2px);
       }
     }
+  }
+
+  // Override profile-view positioning when shown in chat-private
+  ::ng-deep .profile-view {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ::ng-deep .profile-view__content {
+    width: fit-content;
+    border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
+  }
+
+  ::ng-deep .profile-edit {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ::ng-deep .profile-edit__content {
+    width: fit-content;
+    border-radius: 1.5rem 1.5rem 1.5rem 1.5rem;
   }
 }

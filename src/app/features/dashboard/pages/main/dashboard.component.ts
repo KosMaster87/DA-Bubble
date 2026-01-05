@@ -18,6 +18,7 @@ import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.
 import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
 import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
 import { ThreadComponent } from '../../components/thread/thread.component';
+import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
 import { ChannelStore } from '../../../../stores/channel.store';
 import { DirectMessageStore } from '../../../../stores/direct-message.store';
 import { ChannelMessageStore } from '../../../../stores/channel-message.store';
@@ -28,7 +29,13 @@ import { UnreadService } from '@core/services/unread/unread.service';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { type ThreadInfo } from '../../components/thread/thread.component';
 
-type DashboardView = 'welcome' | 'chat-new-msg' | 'mailbox' | 'channel' | 'direct-message';
+type DashboardView =
+  | 'welcome'
+  | 'chat-new-msg'
+  | 'mailbox'
+  | 'legal'
+  | 'channel'
+  | 'direct-message';
 
 export interface ChannelInfo {
   id: string;
@@ -56,6 +63,7 @@ export interface DMInfo {
     ChannelConversationComponent,
     ChatPrivateComponent,
     ThreadComponent,
+    LegalOverviewComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -113,8 +121,13 @@ export class DashboardComponent {
   });
 
   constructor() {
-    // Default view is welcome (DABubble-welcome channel)
+    // Always show welcome on page reload and reset URL to /dashboard
     this.currentView.set('welcome');
+
+    const url = this.router.url;
+    if (url !== '/dashboard') {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }
 
     // Listen to route changes for deep linking (reactive)
     effect(() => {
@@ -143,6 +156,9 @@ export class DashboardComponent {
       } else if (path === 'mailbox') {
         console.log('📡 Route changed to mailbox');
         this.showMailbox();
+      } else if (path === 'legal') {
+        console.log('📡 Route changed to legal');
+        this.showLegal();
       }
     });
 
@@ -216,6 +232,13 @@ export class DashboardComponent {
   }
 
   /**
+   * Switch to legal overview view
+   */
+  showLegal(): void {
+    this.currentView.set('legal');
+  }
+
+  /**
    * Open channel by ID (used by mailbox after accepting invitation)
    */
   openChannelById(channelId: string): void {
@@ -234,6 +257,11 @@ export class DashboardComponent {
     // Special channels - check BEFORE trying to lookup
     if (channelId === 'mailbox') {
       this.showMailbox();
+      return;
+    }
+
+    if (channelId === 'legal') {
+      this.showLegal();
       return;
     }
 

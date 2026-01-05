@@ -18,9 +18,9 @@ import {
   ProfileUser,
 } from '@shared/dashboard-components/profile-view/profile-view.component';
 import {
-  EditProfileComponent,
+  ProfileEditComponent,
   EditProfileUser,
-} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+} from '@shared/dashboard-components/profile-edit/profile-edit.component';
 
 @Component({
   selector: 'app-channal-welcome',
@@ -28,7 +28,7 @@ import {
     MembersMiniatureComponent,
     MembersOptionsMenuComponent,
     ProfileViewComponent,
-    EditProfileComponent,
+    ProfileEditComponent,
   ],
   templateUrl: './channal-welcome.component.html',
   styleUrl: './channal-welcome.component.scss',
@@ -121,6 +121,29 @@ export class ChannalWelcomeComponent {
   protected totalMemberCount = computed(() => this.members().length);
 
   /**
+   * Channel owner (first member who created the channel)
+   */
+  protected channelOwner = computed<{
+    name: string;
+    avatar: string;
+    isOnline: boolean;
+  } | null>(() => {
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
+    if (!channel || !channel.members || channel.members.length === 0) return null;
+
+    // First member is the owner (channel creator)
+    const ownerId = channel.members[0];
+    const owner = this.userStore.getUserById()(ownerId);
+    if (!owner) return null;
+
+    return {
+      name: owner.displayName,
+      avatar: owner.photoURL || '/img/profile/profile-1.png',
+      isOnline: owner.isOnline || false,
+    };
+  });
+
+  /**
    * Get selected member as ProfileUser from UserStore
    */
   protected selectedMember = computed<ProfileUser | null>(() => {
@@ -146,6 +169,19 @@ export class ChannalWelcomeComponent {
   onViewMembers(): void {
     console.log('View members clicked');
     this.isMembersMenuOpen.set(true);
+  }
+
+  /**
+   * Handle channel owner profile view click
+   */
+  onViewOwnerProfile(): void {
+    const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
+    if (!channel || !channel.members || channel.members.length === 0) return;
+
+    const ownerId = channel.members[0];
+    this.selectedMemberId.set(ownerId);
+    this.isProfileViewOpen.set(true);
+    this.isMembersMenuOpen.set(false);
   }
 
   /**
@@ -213,11 +249,24 @@ export class ChannalWelcomeComponent {
     const userId = this.selectedMemberId();
     if (!userId) return;
 
-    await this.userStore.updateUser(userId, {
-      displayName: data.displayName,
-      // TODO: isAdmin not in User model yet
-    });
-    this.isEditProfileOpen.set(false);
+    try {
+      // Check if editing own profile
+      const currentUserId = this.authStore.user()?.uid;
+      if (userId === currentUserId) {
+        // Update AuthStore for own profile (syncs to UserStore automatically)
+        await this.authStore.updateUserProfile({ displayName: data.displayName });
+      } else {
+        // Update UserStore for other users
+        await this.userStore.updateUserData(userId, {
+          displayName: data.displayName,
+          // TODO: isAdmin not in User model yet
+        });
+      }
+      console.log('✅ User profile updated:', data);
+      this.isEditProfileOpen.set(false);
+    } catch (error) {
+      console.error('❌ Failed to update user profile:', error);
+    }
   }
 
   /**

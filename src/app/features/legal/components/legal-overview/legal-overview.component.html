@@ -1,0 +1,48 @@
+<div class="legal-overview">
+  <div class="legal-overview__header">
+    <h1 class="legal-overview__title">Legal Information</h1>
+    <p class="legal-overview__subtitle">
+      Access important legal documents and information about DABubble
+    </p>
+  </div>
+
+  <div class="legal-overview__grid">
+    @for (link of legalLinks; track link.title) {
+    <button class="legal-card" (click)="navigateTo(link)">
+      <div class="legal-card__icon-wrapper">
+        <img [src]="link.icon" [alt]="link.title + ' icon'" class="legal-card__icon" />
+      </div>
+      <div class="legal-card__content">
+        <h2 class="legal-card__title">{{ link.title }}</h2>
+        <p class="legal-card__description">{{ link.description }}</p>
+      </div>
+      <div class="legal-card__arrow">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M9 18L15 12L9 6"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+    </button>
+    }
+  </div>
+
+  <div class="legal-overview__footer">
+    <button class="legal-overview__back-btn" (click)="goBack()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M15 18L9 12L15 6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      Back to Dashboard
+    </button>
+  </div>
+</div>

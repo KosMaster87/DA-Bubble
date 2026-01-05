@@ -1,0 +1,85 @@
+@if (isVisible()) {
+<div class="profile-edit">
+  <div class="profile-edit__overlay" (click)="onClose()"></div>
+  <div class="profile-edit__content">
+    <!-- Header -->
+    <div class="profile-edit__header">
+      <h2 class="profile-edit__title">Profil bearbeiten</h2>
+      <button
+        class="profile-edit__close-btn"
+        (click)="onClose()"
+        [attr.aria-label]="'Close edit profile'"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="profile-edit__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="profile-edit__body">
+      <!-- Avatar -->
+      <div class="profile-edit__avatar-wrapper">
+        @if (user().photoURL) {
+        <img [src]="user().photoURL" [alt]="user().displayName" class="profile-edit__avatar-img" />
+        } @else {
+        <div class="profile-edit__avatar-placeholder">
+          {{ user().displayName.charAt(0).toUpperCase() }}
+        </div>
+        }
+
+        <!-- Avatar Edit -->
+        <button class="profile-edit__avatar-edit-btn">
+          <img src="/img/icon/profile/edit-default.svg" alt="" class="profile-edit__icon" />
+          <span class="profile-edit__avatar-edit-text">Change avatar</span>
+        </button>
+      </div>
+
+      <!-- Admin Status -->
+      <div class="profile-edit__field">
+        <div class="profile-edit__radio-row">
+          <button
+            class="profile-edit__radio-btn"
+            (click)="isAdmin.set(!isAdmin())"
+            [attr.aria-checked]="isAdmin()"
+          >
+            <img
+              [src]="
+                isAdmin()
+                  ? '/img/icon/channel-bar/radio-btn-checked.svg'
+                  : '/img/icon/channel-bar/radio-btn-default.svg'
+              "
+              alt=""
+              class="profile-edit__radio-icon"
+            />
+          </button>
+          <label class="profile-edit__radio-label">Set as admin</label>
+        </div>
+      </div>
+
+      <!-- Full Name -->
+      <div class="profile-edit__field">
+        <div class="profile-edit__field-label">
+          <img
+            src="/img/icon/profile/account-circle-default.svg"
+            alt=""
+            class="profile-edit__icon"
+          />
+          <span class="profile-edit__label">Full name</span>
+        </div>
+        <input
+          type="text"
+          class="profile-edit__input"
+          placeholder="Your name here"
+          [value]="displayName()"
+          (input)="onDisplayNameChange($event)"
+        />
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="profile-edit__footer">
+      <app-btn-cancel label="Cancel" (clicked)="onCancel()" />
+      <app-btn-action label="Save" [disabled]="isSaveDisabled()" (clicked)="onSave()" />
+    </div>
+  </div>
+</div>
+}

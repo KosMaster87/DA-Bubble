@@ -1,6 +1,6 @@
 @use '../../../../styles/mixins' as mix;
 
-.edit-profile {
+.profile-edit {
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
@@ -71,7 +71,7 @@
     height: 12px;
     transition: filter 0.2s;
 
-    .edit-profile__close-btn:hover & {
+    .profile-edit__close-btn:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -143,11 +143,11 @@
       background-color: #eceefe;
     }
 
-    .edit-profile__icon {
+    .profile-edit__icon {
       transition: filter 0.2s;
     }
 
-    &:hover .edit-profile__icon {
+    &:hover .profile-edit__icon {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
         brightness(98%) contrast(92%);
     }
@@ -159,7 +159,7 @@
     color: var(--text-primary);
     transition: color 0.2s;
 
-    .edit-profile__avatar-edit-btn:hover & {
+    .profile-edit__avatar-edit-btn:hover & {
       color: #535af1;
     }
   }

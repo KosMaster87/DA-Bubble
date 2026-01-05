@@ -15,9 +15,9 @@ import {
   ProfileUser,
 } from '@shared/dashboard-components/profile-view/profile-view.component';
 import {
-  EditProfileComponent,
+  ProfileEditComponent,
   EditProfileUser,
-} from '@shared/dashboard-components/edit-profile/edit-profile.component';
+} from '@shared/dashboard-components/profile-edit/profile-edit.component';
 
 @Component({
   selector: 'app-workspace-header',
@@ -25,7 +25,7 @@ import {
     DABubbleLogoComponent,
     UserOptionsMenuComponent,
     ProfileViewComponent,
-    EditProfileComponent,
+    ProfileEditComponent,
   ],
   templateUrl: './workspace-header.component.html',
   styleUrl: './workspace-header.component.scss',

@@ -119,6 +119,14 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+  {
+    path: 'dashboard/legal',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
+    canActivate: [authGuard],
+  },
 
   // Wildcard - catch all unknown routes
   { path: '**', redirectTo: '/not-found' },

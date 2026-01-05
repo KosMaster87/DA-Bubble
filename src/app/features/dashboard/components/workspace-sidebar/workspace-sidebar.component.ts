@@ -53,6 +53,7 @@ export class WorkspaceSidebarComponent {
   protected router = inject(Router);
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
+  isLegalActive = input<boolean>(false);
   newMessageRequested = output<void>();
   mailboxRequested = output<void>();
   channelSelected = output<string>();
@@ -488,8 +489,8 @@ export class WorkspaceSidebarComponent {
    * Open legal page
    */
   openLegal(): void {
-    // TODO: Navigate to legal/imprint page
-    console.log('Opening legal page...');
+    this.selectedChannelId.set('legal');
+    this.router.navigate(['/dashboard/legal']);
   }
 
   /**
@@ -506,7 +507,7 @@ export class WorkspaceSidebarComponent {
    */
   selectChannel(channelId: string): void {
     // Special virtual views (not real channels)
-    const virtualViews = ['mailbox'];
+    const virtualViews = ['mailbox', 'legal'];
     if (virtualViews.includes(channelId)) {
       this.selectedChannelId.set(channelId);
       this.channelSelected.emit(channelId);
