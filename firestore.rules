@@ -143,6 +143,20 @@ service cloud.firestore {
                       (request.auth.uid in resource.data.members
                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt']))
                       ||
+                      // Allow users to join PUBLIC channels (add themselves to members)
+                      (!resource.data.isPrivate
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt'])
+                       && request.auth.uid in request.resource.data.members
+                       && !(request.auth.uid in resource.data.members)) // Only adding self, not removing
+                      ||
+                      // Allow users to join PRIVATE channels after accepting invitation
+                      // User can ONLY add themselves, no other changes allowed
+                      (resource.data.isPrivate
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt'])
+                       && request.auth.uid in request.resource.data.members
+                       && !(request.auth.uid in resource.data.members) // Only adding self
+                       && request.resource.data.members.size() == resource.data.members.size() + 1) // Only +1 member
+                      ||
                       // Special case: Allow joining DABubble-welcome channel (auto-add on signup)
                       (resource.data.name == 'DABubble-welcome'
                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'updatedAt'])
@@ -364,6 +378,69 @@ service cloud.firestore {
       // Allow delete for recipient
       allow delete: if isAuthenticated()
                     && request.auth.uid == resource.data.recipientId;
+    }
+
+    // ========================================
+    // INVITATIONS COLLECTION
+    // ========================================
+
+    match /invitations/{invitationId} {
+
+      /**
+       * Check if user is the sender of the invitation
+       */
+      function isSender() {
+        return isAuthenticated() &&
+               request.auth.uid == resource.data.senderId;
+      }
+
+      /**
+       * Check if user is the recipient of the invitation
+       */
+      function isRecipient() {
+        return isAuthenticated() &&
+               request.auth.uid == resource.data.recipientId;
+      }
+
+      /**
+       * Check if user is involved (sender or recipient)
+       */
+      function isInvolved() {
+        return isSender() || isRecipient();
+      }
+
+      /**
+       * Validate invitation creation data
+       */
+      function isValidInvitationCreate() {
+        let data = request.resource.data;
+        return data.keys().hasAll(['type', 'senderId', 'recipientId', 'status', 'createdAt', 'updatedAt']) &&
+               data.type in ['channel', 'direct-message'] &&
+               data.status == 'pending' &&
+               request.auth.uid == data.senderId &&
+               // Optional fields validation
+               (!data.keys().hasAny(['channelId']) || data.channelId is string) &&
+               (!data.keys().hasAny(['channelName']) || data.channelName is string) &&
+               (!data.keys().hasAny(['message']) || data.message is string) &&
+               (!data.keys().hasAny(['expiresAt']) || data.expiresAt is timestamp);
+      }
+
+      // CREATE: User can create invitations (senderId must be auth.uid)
+      allow create: if isAuthenticated() && isValidInvitationCreate();
+
+      // READ: Only sender and recipient can read
+      allow read: if isInvolved();
+
+      // UPDATE: Only recipient can accept/decline
+      allow update: if isRecipient() &&
+                       request.resource.data.recipientId == resource.data.recipientId &&
+                       request.resource.data.senderId == resource.data.senderId &&
+                       request.resource.data.status in ['accepted', 'declined'] &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'respondedAt', 'updatedAt']);
+
+      // DELETE: Only sender can delete pending invitations
+      allow delete: if isSender() && resource.data.status == 'pending';
     }
 
     // ========================================

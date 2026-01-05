@@ -229,7 +229,17 @@ export const ChannelStore = signalStore(
                 error: null,
               });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log('🔓 Permission error detected - cleaning up channel subscription');
+                if (unsubscribe) {
+                  unsubscribe();
+                  unsubscribe = null;
+                }
+                patchState(store, initialState);
+                return;
+              }
               console.error('Error in channels listener:', error);
               this.handleError(error, 'Failed to load channels');
             }
@@ -285,9 +295,11 @@ export const ChannelStore = signalStore(
         try {
           const channelDoc = doc(channelsCollection, channelId);
           await updateDoc(channelDoc, { ...updates, updatedAt: new Date() });
+          console.log('✅ Channel updated in Firestore:', channelId, updates);
           this.updateChannelInState(channelId, updates);
         } catch (error) {
           this.handleError(error, 'Failed to update channel');
+          throw error; // Re-throw so caller knows update failed
         }
       },
 

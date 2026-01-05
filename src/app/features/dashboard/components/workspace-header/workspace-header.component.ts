@@ -43,17 +43,9 @@ export class WorkspaceHeaderComponent {
   /**
    * Get current user from AuthStore
    */
-  protected currentDummyUser = computed(() => {
+  protected currentUser = computed(() => {
     return this.authStore.user();
   });
-
-  /**
-   * Get current user
-   * @returns {User | null} Current user
-   */
-  get currentUser() {
-    return this.authStore.user();
-  }
 
   /**
    * Handle search input
@@ -129,7 +121,7 @@ export class WorkspaceHeaderComponent {
    * Get current user as EditProfileUser
    */
   get editProfileUser(): EditProfileUser | null {
-    const user = this.currentDummyUser();
+    const user = this.currentUser();
     if (!user) return null;
     return {
       id: user.uid,
@@ -153,7 +145,7 @@ export class WorkspaceHeaderComponent {
    * Get current user as ProfileUser
    */
   get profileUser(): ProfileUser | null {
-    const user = this.currentDummyUser();
+    const user = this.currentUser();
     if (!user) return null;
     return {
       id: user.uid,

@@ -250,7 +250,17 @@ export const ThreadStore = signalStore(
                 isLoading: false,
               });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log('🔓 Permission error detected - cleaning up thread subscription');
+                if (threadListeners.has(listenerKey)) {
+                  threadListeners.get(listenerKey)!();
+                  threadListeners.delete(listenerKey);
+                }
+                return;
+              }
+
               this.handleError(error, 'Failed to load threads');
             }
           );

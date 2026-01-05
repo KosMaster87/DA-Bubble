@@ -75,7 +75,6 @@
           <button
             class="workspace-sidebar__item"
             [class.workspace-sidebar__item--active]="selectedChannelId() === channel.id"
-            [class.workspace-sidebar__item--mailbox]="channel.id === 'mailbox'"
             [class.workspace-sidebar__item--unread]="channel.hasUnread"
             [class.workspace-sidebar__item--thread-unread]="channel.hasThreadUnread"
             (click)="selectChannel(channel.id)"
@@ -83,11 +82,7 @@
             <span class="workspace-sidebar__item-content">
               <span class="workspace-sidebar__item-icon-wrapper">
                 <img
-                  [src]="
-                    channel.id === 'mailbox'
-                      ? '/img/icon/profile/mail-default.svg'
-                      : '/img/icon/channel-bar/tag-default.svg'
-                  "
+                  src="/img/icon/channel-bar/tag-default.svg"
                   alt=""
                   class="workspace-sidebar__item-icon"
                 />
@@ -204,6 +199,107 @@
           <p>Keine Direktnachrichten verfügbar</p>
         </div>
         }
+      </div>
+      }
+    </div>
+
+    <!-- System Control Dropdown -->
+    <div class="workspace-sidebar__section">
+      <div class="workspace-sidebar__section-header">
+        <button
+          class="workspace-sidebar__section-toggle"
+          (click)="toggleSystemControl()"
+          [attr.aria-label]="
+            isSystemControlOpen() ? 'Collapse system control' : 'Expand system control'
+          "
+        >
+          <span class="workspace-sidebar__dropdown-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/arrow-drop-down-default.svg"
+              alt=""
+              class="workspace-sidebar__dropdown-icon"
+              [class.workspace-sidebar__dropdown-icon--open]="isSystemControlOpen()"
+            />
+          </span>
+
+          <span class="workspace-sidebar__workspace-icon-wrapper">
+            <img
+              src="/img/icon/channel-bar/stacks-default.svg"
+              alt=""
+              class="workspace-sidebar__workspace-icon"
+            />
+          </span>
+          <span class="workspace-sidebar__section-title">System Control</span>
+        </button>
+      </div>
+
+      @if (isSystemControlOpen()) {
+      <div class="workspace-sidebar__section-content">
+        <!-- Mailbox -->
+        <button
+          class="workspace-sidebar__item"
+          [class.workspace-sidebar__item--active]="selectedChannelId() === 'mailbox'"
+          [class.workspace-sidebar__item--mailbox]="true"
+          [class.workspace-sidebar__item--unread]="hasMailboxUnread()"
+          (click)="selectChannel('mailbox')"
+        >
+          <span class="workspace-sidebar__item-content">
+            <span class="workspace-sidebar__item-icon-wrapper">
+              <img
+                src="/img/icon/profile/mail-default.svg"
+                alt=""
+                class="workspace-sidebar__item-icon"
+              />
+            </span>
+            <span class="workspace-sidebar__item-name">Mailbox</span>
+          </span>
+        </button>
+
+        <!-- Legal -->
+        <button class="workspace-sidebar__item" (click)="openLegal()">
+          <span class="workspace-sidebar__item-content">
+            <span class="workspace-sidebar__item-icon-wrapper">
+              <img
+                src="/img/icon/channel-bar/legal.svg"
+                alt=""
+                class="workspace-sidebar__item-icon"
+              />
+            </span>
+            <span class="workspace-sidebar__item-name">Legal</span>
+          </span>
+        </button>
+
+        <!-- Einstellungen -->
+        <button class="workspace-sidebar__item" (click)="openSettings()">
+          <span class="workspace-sidebar__item-content">
+            <span class="workspace-sidebar__item-icon-wrapper">
+              <img
+                src="/img/icon/channel-bar/settings.svg"
+                alt=""
+                class="workspace-sidebar__item-icon"
+              />
+            </span>
+            <span class="workspace-sidebar__item-name">Settings</span>
+          </span>
+        </button>
+
+        <!-- Kommende Features -->
+        <button
+          class="workspace-sidebar__item"
+          [disabled]="true"
+          style="opacity: 0.5; cursor: not-allowed"
+        >
+          <span class="workspace-sidebar__item-content">
+            <span class="workspace-sidebar__item-icon-wrapper">
+              <img
+                src="/img/icon/channel-bar/featured.svg"
+                alt=""
+                class="workspace-sidebar__item-icon"
+              />
+            </span>
+            <span class="workspace-sidebar__item-name">Upcoming features</span>
+          </span>
+        </button>
       </div>
       }
     </div>

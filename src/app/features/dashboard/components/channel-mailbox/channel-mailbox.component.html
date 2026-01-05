@@ -4,15 +4,96 @@
       <h1 class="channel-mailbox__title">
         <img src="/img/icon/profile/mail-default.svg" alt="" class="channel-mailbox__title-icon" />
         {{ mailboxTitle() }}
+        @if (pendingCount() > 0) {
+        <span class="channel-mailbox__badge">{{ pendingCount() }}</span>
+        }
       </h1>
       <p class="channel-mailbox__description">{{ mailboxDescription() }}</p>
     </div>
   </div>
 
   <div class="channel-mailbox__content">
+    <!-- Loading State -->
+    @if (loading()) {
+    <div class="channel-mailbox__loading">
+      <p>Lade Nachrichten...</p>
+    </div>
+    }
+
+    <!-- Invitations Section -->
+    @if (pendingInvitations().length > 0) {
+    <div class="channel-mailbox__section">
+      <h2 class="channel-mailbox__section-title">📬 Einladungen ({{ pendingCount() }})</h2>
+
+      @for (invitation of pendingInvitations(); track invitation.id) {
+      <div
+        class="channel-mailbox__message channel-mailbox__message--invitation channel-mailbox__message--unread"
+      >
+        <div class="channel-mailbox__message-avatar">
+          <img
+            [src]="getSenderAvatar(invitation.senderId)"
+            [alt]="getSenderName(invitation.senderId)"
+          />
+        </div>
+        <div class="channel-mailbox__message-content">
+          <div class="channel-mailbox__message-header">
+            <span class="channel-mailbox__message-from">{{
+              getSenderName(invitation.senderId)
+            }}</span>
+            <span class="channel-mailbox__message-time">
+              {{ invitation.createdAt | date : 'short' }}
+            </span>
+          </div>
+
+          @if (invitation.type === 'channel') {
+          <h3 class="channel-mailbox__message-subject">
+            📢 Einladung zum Channel #{{ invitation.channelName }}
+          </h3>
+          <p class="channel-mailbox__message-preview">
+            {{ getSenderName(invitation.senderId) }} lädt dich zum Channel #{{
+              invitation.channelName
+            }}
+            ein. @if (invitation.message) {
+            <br />
+            <em>"{{ invitation.message }}"</em>
+            }
+          </p>
+          } @if (invitation.type === 'direct-message') {
+          <h3 class="channel-mailbox__message-subject">💬 Einladung zur Direktnachricht</h3>
+          <p class="channel-mailbox__message-preview">
+            {{ getSenderName(invitation.senderId) }} möchte mit dir chatten. @if
+            (invitation.message) {
+            <br />
+            <em>"{{ invitation.message }}"</em>
+            }
+          </p>
+          }
+
+          <div class="channel-mailbox__message-actions">
+            <button
+              class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
+              (click)="acceptInvitation(invitation)"
+            >
+              Annehmen
+            </button>
+            <button
+              class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
+              (click)="declineInvitation(invitation.id)"
+            >
+              Ablehnen
+            </button>
+          </div>
+        </div>
+        <div class="channel-mailbox__message-badge"></div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Messages Section -->
     <div class="channel-mailbox__messages">
       <!-- Channel Invitation -->
-      <div class="channel-mailbox__message channel-mailbox__message--unread">
+      <!-- <div class="channel-mailbox__message channel-mailbox__message--unread">
         <div class="channel-mailbox__message-avatar">
           <img src="/img/profile/profile-1.png" alt="Sofia Müller" />
         </div>
@@ -36,10 +117,10 @@
           </div>
         </div>
         <div class="channel-mailbox__message-badge"></div>
-      </div>
+      </div> -->
 
       <!-- Direct Message Notification -->
-      <div class="channel-mailbox__message channel-mailbox__message--unread">
+      <!-- <div class="channel-mailbox__message channel-mailbox__message--unread">
         <div class="channel-mailbox__message-avatar">
           <img src="/img/profile/profile-3.png" alt="Noah Braun" />
         </div>
@@ -54,7 +135,7 @@
           </p>
         </div>
         <div class="channel-mailbox__message-badge"></div>
-      </div>
+      </div> -->
 
       <!-- System Notification -->
       <div class="channel-mailbox__message channel-mailbox__message--system">

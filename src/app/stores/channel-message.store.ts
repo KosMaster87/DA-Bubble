@@ -228,7 +228,19 @@ export const ChannelMessageStore = signalStore(
                 updateCounter: store.updateCounter(),
               });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log(
+                  '🔓 Permission error detected - cleaning up channel messages subscription'
+                );
+                if (messageListeners.has(channelId)) {
+                  messageListeners.get(channelId)!();
+                  messageListeners.delete(channelId);
+                }
+                return;
+              }
+
               this.handleError(error, 'Failed to load channel messages');
             }
           );

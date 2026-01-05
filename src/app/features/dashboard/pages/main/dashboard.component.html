@@ -28,7 +28,7 @@
     } @else if (currentView() === 'chat-new-msg') {
     <app-chat-new-msg class="dashboard__content" />
     } @else if (currentView() === 'mailbox') {
-    <app-channel-mailbox class="dashboard__content" />
+    <app-channel-mailbox class="dashboard__content" (channelSelected)="openChannelById($event)" />
     } @else if (currentView() === 'channel' && selectedChannel()) {
     <app-channel-conversation
       class="dashboard__content"

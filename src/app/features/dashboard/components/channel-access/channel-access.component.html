@@ -1,0 +1,80 @@
+<div class="channel-access">
+  @if (channelInfo().isPrivate) {
+  <!-- PRIVATE CHANNEL: Access Denied -->
+  <div class="channel-access__private">
+    <div class="channel-access__icon">
+      <img src="/img/icon/channel-bar/lock.svg" alt="Private Channel" />
+    </div>
+
+    <h1 class="channel-access__title">Privater Channel: #{{ channelInfo().channelName }}</h1>
+
+    <p class="channel-access__message">
+      Dieser Channel ist privat und nur für Mitglieder zugänglich.
+    </p>
+
+    <div class="channel-access__info">
+      <p>
+        <strong>Du bist kein Mitglied dieses Channels.</strong>
+      </p>
+      <p>Um Zugriff zu erhalten, wende dich bitte an:</p>
+      <ul>
+        <li>Den Channel-Besitzer</li>
+        <li>Einen Administrator</li>
+        <li>Ein bestehendes Mitglied, das dich einladen kann</li>
+      </ul>
+    </div>
+
+    <div class="channel-access__note">
+      <p>💡 <strong>Hinweis:</strong> Channel-Mitglieder können dich über die Mailbox einladen.</p>
+    </div>
+  </div>
+  } @else {
+  <!-- PUBLIC CHANNEL: Welcome Screen -->
+  <div class="channel-access__public">
+    <div class="channel-access__icon">
+      <img src="/img/icon/channel-bar/tag-default.svg" alt="Public Channel" />
+    </div>
+
+    <h1 class="channel-access__title">Willkommen bei #{{ channelInfo().channelName }}</h1>
+
+    @if (channelInfo().description) {
+    <p class="channel-access__description">
+      {{ channelInfo().description }}
+    </p>
+    }
+
+    <div class="channel-access__rules">
+      <h2>Channel-Regeln</h2>
+
+      @if (channelInfo().rules && channelInfo().rules!.length > 0) {
+      <ul>
+        @for (rule of channelInfo().rules; track $index) {
+        <li>{{ rule }}</li>
+        }
+      </ul>
+      } @else {
+      <ul>
+        <li>Sei respektvoll und höflich gegenüber anderen Mitgliedern</li>
+        <li>Halte dich an das Thema des Channels</li>
+        <li>Kein Spam oder unangemessene Inhalte</li>
+        <li>Nutze Threads für detaillierte Diskussionen</li>
+        <li>Markiere wichtige Nachrichten mit Reaktionen</li>
+      </ul>
+      }
+    </div>
+
+    <div class="channel-access__actions">
+      <button class="channel-access__accept-btn" (click)="acceptAndJoin()">
+        Regeln akzeptieren und Channel beitreten
+      </button>
+    </div>
+
+    <div class="channel-access__note">
+      <p>
+        ℹ️ Durch Beitreten bestätigst du, dass du die Channel-Regeln gelesen hast und dich daran
+        hältst.
+      </p>
+    </div>
+  </div>
+  }
+</div>

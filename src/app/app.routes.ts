@@ -93,6 +93,29 @@ export const routes: Routes = [
         (m) => m.DashboardComponent
       ),
     canActivate: [authGuard],
+    children: [
+      {
+        path: 'channel/:id',
+        loadComponent: () =>
+          import('./features/dashboard/pages/main/dashboard.component').then(
+            (m) => m.DashboardComponent
+          ),
+      },
+      {
+        path: 'dm/:id',
+        loadComponent: () =>
+          import('./features/dashboard/pages/main/dashboard.component').then(
+            (m) => m.DashboardComponent
+          ),
+      },
+      {
+        path: 'mailbox',
+        loadComponent: () =>
+          import('./features/dashboard/pages/main/dashboard.component').then(
+            (m) => m.DashboardComponent
+          ),
+      },
+    ],
   },
 
   // Wildcard - catch all unknown routes

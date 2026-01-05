@@ -25,19 +25,19 @@
       >
         <span class="workspace-header__profile-content">
           <span class="workspace-header__profile-name">
-            {{ currentUser?.displayName || 'User' }}
+            {{ currentUser()?.displayName || 'User' }}
           </span>
 
           <div class="workspace-header__profile-avatar">
-            @if (currentUser?.photoURL) {
+            @if (currentUser()?.photoURL) {
             <img
-              [src]="currentUser?.photoURL"
-              [alt]="currentUser?.displayName || 'User'"
+              [src]="currentUser()?.photoURL"
+              [alt]="currentUser()?.displayName || 'User'"
               class="workspace-header__avatar-img"
             />
             <img
               [src]="
-                userPresenceStore.isUserOnline()(currentUser?.uid || '')
+                userPresenceStore.isUserOnline()(currentUser()?.uid || '')
                   ? '/img/icon/profile/status-online.svg'
                   : '/img/icon/profile/status-away.svg'
               "
@@ -46,7 +46,7 @@
             />
             } @else {
             <div class="workspace-header__avatar-placeholder">
-              {{ (currentUser?.displayName || 'U').charAt(0).toUpperCase() }}
+              {{ (currentUser()?.displayName || 'U').charAt(0).toUpperCase() }}
             </div>
             }
           </div>

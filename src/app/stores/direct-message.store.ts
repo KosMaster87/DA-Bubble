@@ -141,7 +141,20 @@ export const DirectMessageStore = signalStore(
 
               patchState(store, { conversations, isLoading: false });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log(
+                  '🔓 Permission error detected - cleaning up conversations subscription'
+                );
+                if (conversationsUnsubscribe) {
+                  conversationsUnsubscribe();
+                  conversationsUnsubscribe = null;
+                }
+                patchState(store, initialState);
+                return;
+              }
+
               console.error('Error loading conversations:', error);
               patchState(store, { error: error.message, isLoading: false });
             }
@@ -210,16 +223,24 @@ export const DirectMessageStore = signalStore(
                 });
               }
 
-              patchState(store, {
-                messages: {
-                  ...store.messages(),
-                  [conversationId]: messages,
-                },
-                updateCounter: store.updateCounter() + 1,
-              });
+              // Update state with new messages
+              const newMessages = { ...store.messages(), [conversationId]: messages };
+              const newUpdateCounter = store.updateCounter() + 1;
+              patchState(store, { messages: newMessages, updateCounter: newUpdateCounter });
             },
-            (error) => {
-              console.error(`Error loading messages for ${conversationId}:`, error);
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log('🔓 Permission error detected - cleaning up DM messages subscription');
+                if (messagesUnsubscribers.has(conversationId)) {
+                  messagesUnsubscribers.get(conversationId)!();
+                  messagesUnsubscribers.delete(conversationId);
+                }
+                return;
+              }
+
+              console.error('Error loading messages for ' + conversationId + ':', error);
+              patchState(store, { error: error.message });
             }
           );
 

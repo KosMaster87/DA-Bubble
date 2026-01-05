@@ -183,8 +183,32 @@ export const MailboxStore = signalStore(
               const messages = snapshot.docs.map(convertToMailboxMessage);
               patchState(store, { messages, loading: false, error: null });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log('🔓 Permission error detected - cleaning up mailbox subscription');
+                if (unsubscribe) {
+                  unsubscribe();
+                  unsubscribe = null;
+                }
+                patchState(store, initialState);
+                return;
+              }
+
               console.error('Error in mailbox listener:', error);
+
+              // Special handling for missing index error
+              if (error.code === 'failed-precondition' && error.message?.includes('index')) {
+                console.error('❌ FIREBASE INDEX FEHLT!');
+                console.error('📋 Bitte klicke auf diesen Link um den Index zu erstellen:');
+                console.error(error.message);
+                console.error('');
+                console.error('ℹ️ Dies ist ein einmaliger Setup-Schritt (1 Klick).');
+                console.error(
+                  '   Nach der Index-Erstellung funktionieren Invitations automatisch.'
+                );
+              }
+
               patchState(store, {
                 error: error.message,
                 loading: false,

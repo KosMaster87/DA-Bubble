@@ -5,11 +5,14 @@
  */
 
 import { Component, inject, signal, ViewChild, effect, computed } from '@angular/core';
+import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs/operators';
 import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
-import { ChannalMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
+import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
 import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
 import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
 import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
@@ -48,7 +51,7 @@ export interface DMInfo {
     WorkspaceHeaderComponent,
     WorkspaceSidebarComponent,
     ChannalWelcomeComponent,
-    ChannalMailboxComponent,
+    ChannelMailboxComponent,
     ChatNewMsgComponent,
     ChannelConversationComponent,
     ChatPrivateComponent,
@@ -69,6 +72,20 @@ export class DashboardComponent {
   protected userStore = inject(UserStore);
   protected authStore = inject(AuthStore);
   protected unreadService = inject(UnreadService);
+  protected route = inject(ActivatedRoute);
+  protected router = inject(Router);
+
+  // Reactive route signal
+  private routeParams = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => ({
+        path: this.route.firstChild?.snapshot.url[0]?.path,
+        id: this.route.firstChild?.snapshot.params['id'],
+      }))
+    ),
+    { initialValue: { path: undefined, id: undefined } }
+  );
   protected currentView = signal<DashboardView>('welcome');
   protected selectedChannel = signal<ChannelInfo | null>(null);
   protected selectedDM = signal<DMInfo | null>(null);
@@ -86,13 +103,45 @@ export class DashboardComponent {
     // Default view is welcome (DABubble-welcome channel)
     this.currentView.set('welcome');
 
-    // Load messages for all channels to enable thread-unread detection
+    // Listen to route changes for deep linking (reactive)
     effect(() => {
+      const params = this.routeParams();
+      if (!params.path) return;
+
+      const { path, id } = params;
+
+      if (path === 'channel' && id) {
+        console.log('📡 Route changed to channel:', id);
+        this.showChannel(id);
+        if (this.sidebar) {
+          this.sidebar.selectChannelById(id);
+        }
+      } else if (path === 'dm' && id) {
+        console.log('📡 Route changed to DM:', id);
+        this.showDirectMessage(id);
+        if (this.sidebar) {
+          this.sidebar.selectDirectMessageById(id);
+        }
+      } else if (path === 'mailbox') {
+        console.log('📡 Route changed to mailbox');
+        this.showMailbox();
+      }
+    });
+
+    // Load messages for all channels where user is a member (for thread-unread detection)
+    effect(() => {
+      const currentUser = this.authStore.user();
+      if (!currentUser) return;
+
       const channels = this.channelStore.channels();
-      channels.forEach((channel) => {
+      const memberChannels = channels.filter((channel) =>
+        channel.members.includes(currentUser.uid)
+      );
+
+      memberChannels.forEach((channel) => {
         this.channelMessageStore.loadChannelMessages(channel.id);
       });
-      console.log('📥 Loaded messages for all channels:', channels.length);
+      console.log('📥 Loaded messages for all channels:', memberChannels.length);
     });
 
     // Watch for changes in user's directMessages array (only when IDs actually change)
@@ -149,6 +198,13 @@ export class DashboardComponent {
   }
 
   /**
+   * Open channel by ID (used by mailbox after accepting invitation)
+   */
+  openChannelById(channelId: string): void {
+    this.showChannel(channelId);
+  }
+
+  /**
    * Switch to channel view
    */
   showChannel(channelId: string): void {
@@ -157,16 +213,16 @@ export class DashboardComponent {
       this.closeThread();
     }
 
-    // Use computed signal correctly
-    const channelGetter = this.channelStore.getChannelById();
-    const channel = channelGetter ? channelGetter(channelId) : null;
-    if (!channel) return;
-
-    // Special channels - hardcoded IDs
+    // Special channels - check BEFORE trying to lookup
     if (channelId === 'mailbox') {
       this.showMailbox();
       return;
     }
+
+    // Use computed signal correctly
+    const channelGetter = this.channelStore.getChannelById();
+    const channel = channelGetter ? channelGetter(channelId) : null;
+    if (!channel) return;
 
     // DABubble-welcome channel - special view
     if (channel.name === 'DABubble-welcome') {

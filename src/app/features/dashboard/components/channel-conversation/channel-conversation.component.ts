@@ -37,6 +37,7 @@ import {
   ChannelInfoComponent,
   ChannelInfoData,
 } from '@shared/dashboard-components/channel-info/channel-info.component';
+import { ChannelAccessComponent } from '../channel-access/channel-access.component';
 import {
   UserStore,
   ChannelStore,
@@ -46,6 +47,7 @@ import {
 } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { InvitationService } from '@core/services/invitation/invitation.service';
 import { MessageType, MessageReaction } from '@core/models/message.model';
 
 export interface ChannelMessage {
@@ -81,6 +83,7 @@ export interface ChannelInfo {
     EditProfileComponent,
     AddMembersComponent,
     ChannelInfoComponent,
+    ChannelAccessComponent,
   ],
   templateUrl: './channel-conversation.component.html',
   styleUrl: './channel-conversation.component.scss',
@@ -93,6 +96,7 @@ export class ChannelConversationComponent {
   protected channelMessageStore = inject(ChannelMessageStore);
   protected authStore = inject(AuthStore);
   protected unreadService = inject(UnreadService);
+  protected invitationService = inject(InvitationService);
   threadRequested = output<{ messageId: string; parentMessage: Message }>();
   channelLeft = output<void>();
   directMessageRequested = output<string>(); // Emits userId to start DM with
@@ -114,6 +118,45 @@ export class ChannelConversationComponent {
   protected isChannelInfoOpen = signal<boolean>(false);
   protected selectedMemberId = signal<string | null>(null);
   protected isAddMembersOpen = signal<boolean>(false);
+
+  // Local state: user is currently joining this channel
+  private isJoiningChannel = signal<boolean>(false);
+
+  /**
+   * Check if current user is member of this channel
+   */
+  protected isMember = computed(() => {
+    const currentUser = this.authStore.user();
+    if (!currentUser) return false;
+
+    const channelData = this.channelStore.getChannelById()(this.channel().id);
+    if (!channelData) return false;
+
+    return channelData.members.includes(currentUser.uid);
+  });
+
+  /**
+   * Check if user should see access screen (not member AND not currently joining)
+   */
+  protected showAccessScreen = computed(() => {
+    return !this.isMember() && !this.isJoiningChannel();
+  });
+
+  /**
+   * Get channel access info for access screen
+   */
+  protected channelAccessInfo = computed(() => {
+    const channel = this.channel();
+    const channelData = this.channelStore.getChannelById()(channel.id);
+
+    return {
+      channelId: channel.id,
+      channelName: channel.name,
+      isPrivate: channel.isPrivate,
+      description: channelData?.description || channel.description,
+      rules: [], // TODO: Add channel rules to channel model
+    };
+  });
 
   /**
    * Effect: Load messages when channel changes
@@ -476,19 +519,97 @@ export class ChannelConversationComponent {
   }
 
   /**
-   * Handle members added
+   * Handle members added - SEND INVITATIONS instead of adding directly
    */
   async onMembersAdded(userIds: string[]): Promise<void> {
     const channelId = this.channel().id;
-    // TODO: Implement addMemberToChannel in ChannelStore
-    // For now, update channel members array
     const channel = this.channelStore.getChannelById()(channelId);
-    if (channel) {
-      const updatedMembers = [...new Set([...channel.members, ...userIds])];
-      await this.channelStore.updateChannel(channelId, { members: updatedMembers });
+    const currentUser = this.authStore.user();
+
+    if (!channel || !currentUser) {
+      console.error('❌ Channel or current user not found');
+      return;
     }
+
+    // Send invitation to each user
+    for (const userId of userIds) {
+      try {
+        await this.invitationService.createInvitation({
+          type: 'channel',
+          senderId: currentUser.uid,
+          recipientId: userId,
+          channelId: channel.id,
+          channelName: channel.name,
+          message: `${currentUser.displayName} lädt dich ein, dem Channel #${channel.name} beizutreten.`,
+        });
+
+        console.log('✉️ Invitation sent to user:', userId);
+      } catch (error) {
+        console.error('❌ Error sending invitation to user:', userId, error);
+      }
+    }
+
     this.isAddMembersOpen.set(false);
-    console.log('Added members to channel:', userIds);
+    console.log('✉️ Sent invitations to:', userIds.length, 'users');
+  }
+
+  /**
+   * Handle channel accepted (user joined from access screen)
+   */
+  async onChannelAccepted(channelId: string): Promise<void> {
+    console.log('✅ User accepted public channel:', channelId);
+
+    // Set joining state to hide access screen immediately
+    this.isJoiningChannel.set(true);
+
+    // Add user to channel members
+    const currentUser = this.authStore.user();
+    if (!currentUser) {
+      console.error('❌ No current user');
+      this.isJoiningChannel.set(false);
+      return;
+    }
+
+    try {
+      const channel = this.channelStore.getChannelById()(channelId);
+      if (!channel) {
+        console.error('❌ Channel not found');
+        this.isJoiningChannel.set(false);
+        return;
+      }
+
+      console.log('🔄 Adding user to channel members...', {
+        channelId,
+        currentMembers: channel.members,
+        userId: currentUser.uid,
+      });
+
+      const updatedMembers = [...new Set([...channel.members, currentUser.uid])];
+      await this.channelStore.updateChannel(channelId, {
+        members: updatedMembers,
+      });
+
+      console.log('✅ User successfully joined channel:', {
+        channelId,
+        userId: currentUser.uid,
+        memberCount: updatedMembers.length,
+      });
+
+      // Keep isJoiningChannel true - it will be reset when isMember() becomes true
+      // This prevents the access screen from re-appearing during the Firestore sync
+    } catch (error: any) {
+      console.error('❌ Error joining channel:', {
+        channelId,
+        error: error?.message || error,
+        code: error?.code,
+      });
+
+      // Reset joining state on error
+      this.isJoiningChannel.set(false);
+
+      // Show user-friendly error message
+      alert(`Fehler beim Beitreten des Kanals: ${error?.message || 'Unbekannter Fehler'}`);
+    }
   }
 
   /**

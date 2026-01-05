@@ -5,6 +5,7 @@
  */
 
 import { Component, inject, output, input, signal, computed, effect } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   ChannelStore,
   DirectMessageStore,
@@ -12,6 +13,7 @@ import {
   UserPresenceStore,
   ChannelMessageStore,
   ThreadStore,
+  MailboxStore,
 } from '@stores/index';
 import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
@@ -20,6 +22,8 @@ import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-compone
 import { ThreadUnreadPopupComponent } from '@shared/dashboard-components/thread-unread-popup/thread-unread-popup.component';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { InvitationService } from '@core/services/invitation/invitation.service';
+import { type Invitation } from '@core/models/invitation.model';
 import { type Message as PopupMessage } from '@core/models/message.model';
 import { type Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 
@@ -44,6 +48,9 @@ export class WorkspaceSidebarComponent {
   protected unreadService = inject(UnreadService);
   protected channelMessageStore = inject(ChannelMessageStore);
   protected threadStore = inject(ThreadStore);
+  protected mailboxStore = inject(MailboxStore);
+  protected invitationService = inject(InvitationService);
+  protected router = inject(Router);
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   newMessageRequested = output<void>();
@@ -57,6 +64,7 @@ export class WorkspaceSidebarComponent {
   }>();
   protected isChannelsOpen = signal(true);
   protected isDirectMessagesOpen = signal(true);
+  protected isSystemControlOpen = signal(true);
   protected isAddChannelActive = signal(false);
   protected isCreateChannelOpen = signal(false);
   protected isAddMemberAfterChannelOpen = signal(false);
@@ -70,6 +78,10 @@ export class WorkspaceSidebarComponent {
   protected pendingChannelDescription = signal<string>('');
   protected pendingChannelIsPrivate = signal<boolean>(false);
 
+  // Invitations state for mailbox badge
+  protected pendingInvitations = signal<Invitation[]>([]);
+  private invitationUnsubscribe: (() => void) | null = null;
+
   constructor() {
     // Load data from stores on initialization
     this.channelStore.loadChannels();
@@ -78,6 +90,25 @@ export class WorkspaceSidebarComponent {
     // Load DM conversations when user's directMessages change
     // Note: This is now handled by the Dashboard component to avoid duplicate effects
     // The Dashboard component watches userDirectMessages computed and calls loadConversations
+
+    // Load pending invitations for mailbox badge
+    effect(() => {
+      const currentUser = this.authStore.user();
+      if (currentUser?.uid) {
+        // Unsubscribe from previous listener
+        if (this.invitationUnsubscribe) {
+          this.invitationUnsubscribe();
+        }
+
+        // Subscribe to pending invitations
+        this.invitationUnsubscribe = this.invitationService.subscribeToPendingInvitations(
+          currentUser.uid,
+          (invitations) => {
+            this.pendingInvitations.set(invitations);
+          }
+        );
+      }
+    });
 
     // Auto-select DABubble-welcome channel when channels are loaded (only once on initial load)
     effect(() => {
@@ -103,7 +134,27 @@ export class WorkspaceSidebarComponent {
     // Track update counter to force re-compute on Firestore updates
     this.channelMessageStore.updateCounter();
 
-    const channels = this.channelStore.channels().map((ch) => {
+    // Get current user to filter channels
+    const currentUser = this.authStore.user();
+    if (!currentUser) return [];
+
+    // FILTER: Show public channels + channels where user is a member
+    // Hide: Private channels where user is NOT a member, and mailbox
+    const allChannels = this.channelStore.channels();
+    const visibleChannels = allChannels.filter((ch) => {
+      // Exclude mailbox from channels section
+      if (ch.id === 'mailbox') return false;
+
+      const isMember = ch.members.includes(currentUser.uid);
+      const isPublic = !ch.isPrivate;
+      // Show if: (public channel) OR (user is member)
+      // Hide if: (private channel AND user is NOT member)
+      return isPublic || isMember;
+    });
+
+    const channels = visibleChannels.map((ch) => {
+      // Check if user is member (for unread badge calculation)
+      const isMember = ch.members.includes(currentUser.uid);
       // Get all messages for this channel
       const messages = this.channelMessageStore.getMessagesByChannel()(ch.id);
 
@@ -154,53 +205,58 @@ export class WorkspaceSidebarComponent {
         }
       }
 
-      const hasNormalUnread = normalMessageTimestamp
-        ? this.unreadService.hasUnread(ch.id, normalMessageTimestamp)
-        : false;
+      // Only calculate unread badges for members (not for public non-member channels)
+      const hasNormalUnread =
+        isMember && normalMessageTimestamp
+          ? this.unreadService.hasUnread(ch.id, normalMessageTimestamp)
+          : false;
 
       // Thread-unread: Check if ANY message in this channel has an unread thread
       // Can be shown together with normal unread (blue + orange)
+      // Only for members
       // Force deep tracking by mapping lastThreadTimestamp
       const threadTimestamps = messages.map((m) => m.lastThreadTimestamp).filter(Boolean);
-      const hasThreadUnread = messages.some((msg) => {
-        if (!msg.lastThreadTimestamp) return false;
+      const hasThreadUnread =
+        isMember &&
+        messages.some((msg) => {
+          if (!msg.lastThreadTimestamp) return false;
 
-        // Get thread messages to check user participation
-        const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
+          // Get thread messages to check user participation
+          const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
 
-        // Check if user participated in this thread
-        const currentUserId = this.authStore.user()?.uid;
-        if (!currentUserId) return false;
+          // Check if user participated in this thread
+          const currentUserId = this.authStore.user()?.uid;
+          if (!currentUserId) return false;
 
-        const wroteThreadReply = threadMessages.some(
-          (threadMsg) => threadMsg.authorId === currentUserId
-        );
-        const wroteParentMessage = msg.authorId === currentUserId;
-        const userParticipated = wroteThreadReply || wroteParentMessage;
+          const wroteThreadReply = threadMessages.some(
+            (threadMsg) => threadMsg.authorId === currentUserId
+          );
+          const wroteParentMessage = msg.authorId === currentUserId;
+          const userParticipated = wroteThreadReply || wroteParentMessage;
 
-        // Only check for unread if user participated
-        if (!userParticipated) return false;
+          // Only check for unread if user participated
+          if (!userParticipated) return false;
 
-        const threadTime =
-          msg.lastThreadTimestamp instanceof Date
-            ? msg.lastThreadTimestamp
-            : new Date(msg.lastThreadTimestamp);
+          const threadTime =
+            msg.lastThreadTimestamp instanceof Date
+              ? msg.lastThreadTimestamp
+              : new Date(msg.lastThreadTimestamp);
 
-        // Check if this specific thread is unread
-        const isUnread = this.unreadService.hasThreadUnread(ch.id, msg.id, threadTime);
+          // Check if this specific thread is unread
+          const isUnread = this.unreadService.hasThreadUnread(ch.id, msg.id, threadTime);
 
-        if (isUnread) {
-          console.log('🟠 Thread unread detected:', {
-            channelId: ch.id,
-            channelName: ch.name,
-            messageId: msg.id,
-            threadTime,
-            content: msg.content.substring(0, 30),
-          });
-        }
+          if (isUnread) {
+            console.log('🟠 Thread unread detected:', {
+              channelId: ch.id,
+              channelName: ch.name,
+              messageId: msg.id,
+              threadTime,
+              content: msg.content.substring(0, 30),
+            });
+          }
 
-        return isUnread;
-      });
+          return isUnread;
+        });
 
       return {
         id: ch.id,
@@ -224,6 +280,15 @@ export class WorkspaceSidebarComponent {
    * Selected channel ID
    */
   protected selectedChannelId = signal<string | null>(null);
+
+  /**
+   * Check if mailbox has unread messages or pending invitations
+   */
+  protected hasMailboxUnread = computed(() => {
+    const unreadMessagesCount = this.mailboxStore.unreadCount();
+    const pendingInvitationsCount = this.pendingInvitations().length;
+    return unreadMessagesCount > 0 || pendingInvitationsCount > 0;
+  });
 
   /**
    * Direct messages from DirectMessageStore mapped to template interface
@@ -413,9 +478,43 @@ export class WorkspaceSidebarComponent {
   }
 
   /**
-   * Select a channel
+   * Toggle system control dropdown
+   */
+  toggleSystemControl(): void {
+    this.isSystemControlOpen.update((value) => !value);
+  }
+
+  /**
+   * Open legal page
+   */
+  openLegal(): void {
+    // TODO: Navigate to legal/imprint page
+    console.log('Opening legal page...');
+  }
+
+  /**
+   * Open settings
+   */
+  openSettings(): void {
+    // TODO: Open settings dialog/page
+    console.log('Opening settings...');
+  }
+
+  /**
+   * Select a channel or special view (mailbox, etc.)
+   * Handles both real channels and virtual views intelligently
    */
   selectChannel(channelId: string): void {
+    // Special virtual views (not real channels)
+    const virtualViews = ['mailbox'];
+    if (virtualViews.includes(channelId)) {
+      this.selectedChannelId.set(channelId);
+      this.channelSelected.emit(channelId);
+      this.router.navigate(['/dashboard', channelId]);
+      return;
+    }
+
+    // Real channels from Firestore
     const channel = this.channelStore.channels().find((ch) => ch.id === channelId);
     if (channel) {
       this.channelStore.selectChannel(channel);
@@ -423,14 +522,6 @@ export class WorkspaceSidebarComponent {
       this.channelSelected.emit(channelId);
       this.unreadService.markAsRead(channelId);
     }
-  }
-
-  /**
-   * Select a dummy channel
-   */
-  selectDummyChannel(channelId: string): void {
-    this.selectedChannelId.set(channelId);
-    this.channelSelected.emit(channelId);
   }
 
   /**
@@ -519,30 +610,67 @@ export class WorkspaceSidebarComponent {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
 
-    // Start with the creator as member
+    // WICHTIG: Nur der Creator wird als Member hinzugefügt
+    // Alle anderen User bekommen Invitations
     const memberIds = new Set<string>([currentUserId]);
 
-    // Add selected users
-    data.selectedUsers.forEach((user) => memberIds.add(user.id));
+    // Sammle alle User-IDs, die eingeladen werden sollen
+    const usersToInvite = new Set<string>();
 
-    // Add members from selected channels
-    data.selectedChannels.forEach((selectedChannel) => {
-      const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
-      if (channel) {
-        channel.members.forEach((memberId) => memberIds.add(memberId));
+    // User aus "selectedUsers"
+    data.selectedUsers.forEach((user) => {
+      if (user.id !== currentUserId) {
+        usersToInvite.add(user.id);
       }
     });
 
-    // Create channel via store
+    // Members aus ausgewählten Channels
+    data.selectedChannels.forEach((selectedChannel) => {
+      const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
+      if (channel) {
+        channel.members.forEach((memberId) => {
+          if (memberId !== currentUserId) {
+            usersToInvite.add(memberId);
+          }
+        });
+      }
+    });
+
+    // Create channel via store (nur mit Creator als Member)
     const newChannelId = await this.channelStore.createChannel(
       {
         name: this.pendingChannelName(),
         description: this.pendingChannelDescription(),
         isPrivate: this.pendingChannelIsPrivate(),
-        members: Array.from(memberIds),
+        members: Array.from(memberIds), // Nur der Creator
       },
       currentUserId
     );
+
+    // Sende Invitations an alle ausgewählten User
+    if (usersToInvite.size > 0) {
+      console.log(
+        `📨 Sending invitations to ${usersToInvite.size} users for channel:`,
+        this.pendingChannelName()
+      );
+
+      const invitationPromises = Array.from(usersToInvite).map((userId) =>
+        this.invitationService.createInvitation({
+          type: 'channel',
+          senderId: currentUserId,
+          recipientId: userId,
+          channelId: newChannelId,
+          channelName: this.pendingChannelName(),
+        })
+      );
+
+      try {
+        await Promise.all(invitationPromises);
+        console.log(`✅ Sent ${usersToInvite.size} invitations successfully`);
+      } catch (error) {
+        console.error('❌ Error sending invitations:', error);
+      }
+    }
 
     this.isAddMemberAfterChannelOpen.set(false);
     this.pendingChannelName.set('');
@@ -563,6 +691,15 @@ export class WorkspaceSidebarComponent {
     this.selectedDirectMessageId.set(messageId);
     this.directMessageSelected.emit(messageId);
     this.unreadService.markAsRead(messageId);
+  }
+
+  /**
+   * Public method to select a direct message by ID (for parent components)
+   */
+  selectDirectMessageById(messageId: string): void {
+    this.selectedChannelId.set(null);
+    this.selectedDirectMessageId.set(messageId);
+    this.directMessageSelected.emit(messageId);
   }
 
   /**

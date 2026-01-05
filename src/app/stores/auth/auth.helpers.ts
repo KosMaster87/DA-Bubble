@@ -141,14 +141,19 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
 
     /**
      * Handle user logged out state
+     * Cleanup user document listener to prevent permission errors
      */
     handleUserLoggedOut: (): void => {
-      // Cleanup listener
+      console.log('🔓 User logging out - cleaning up auth subscriptions...');
+
+      // Cleanup user document listener
       if (userDocListener) {
         userDocListener();
         userDocListener = null;
       }
+
       patchState(store, { user: null, isAuthenticated: false, isLoading: false });
+      console.log('✅ Auth cleanup complete');
     },
 
     /**

@@ -146,7 +146,17 @@ export const UserStore = signalStore(
               const users = this.mapUsersFromSnapshot(snapshot);
               patchState(store, { users, isLoading: false, error: null });
             },
-            (error) => {
+            (error: any) => {
+              // Auto-cleanup on permission error (user logged out)
+              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+                console.log('🔓 Permission error detected - cleaning up user subscription');
+                if (unsubscribe) {
+                  unsubscribe();
+                  unsubscribe = null;
+                }
+                patchState(store, initialState);
+                return;
+              }
               console.error('Error in users listener:', error);
               this.handleError(error, 'Failed to load users');
             }

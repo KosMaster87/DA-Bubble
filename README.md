@@ -130,10 +130,27 @@ dabubble/
 │   │   │   │   └── footer/                                # Auth Footer Component
 │   │   │   ├── guards/                                    # Route Guards
 │   │   │   │   ├── auth.guard.ts                          # Protect authenticated routes
-│   │   │   │   └── no-auth.guard.ts                       # Redirect if authenticated
+│   │   │   │   ├── no-auth.guard.ts                       # Redirect if authenticated
+│   │   │   │   └── avatar-selection.guard.ts              # Avatar selection guard
 │   │   │   ├── interceptors/                              # HTTP interceptors
-│   │   │   ├── models/                                    # Domain Models (User, Channel, Message)
+│   │   │   ├── models/                                    # Domain Models
+│   │   │   │   ├── user.model.ts                          # User entity
+│   │   │   │   ├── channel.model.ts                       # Channel entity
+│   │   │   │   ├── message.model.ts                       # Message entity
+│   │   │   │   ├── invitation.model.ts                    # Invitation entity
+│   │   │   │   ├── thread.model.ts                        # Thread entity
+│   │   │   │   └── direct-message.model.ts                # Direct message entity
 │   │   │   └── services/                                  # Core Services
+│   │   │       ├── firebase/                              # Firebase Services
+│   │   │       │   ├── firebase.service.ts                # Firebase initialization
+│   │   │       │   └── heartbeat.service.ts               # User presence heartbeat
+│   │   │       ├── invitation/                            # Invitation Management
+│   │   │       │   └── invitation.service.ts              # Channel/DM invitations
+│   │   │       ├── reaction/                              # Message Reactions
+│   │   │       │   └── reaction.service.ts                # Emoji reactions
+│   │   │       ├── unread/                                # Unread Messages
+│   │   │       │   └── unread.service.ts                  # Unread tracking
+│   │   │       ├── store-cleanup.service.ts               # Store cleanup on logout
 │   │   │       └── i18n/                                  # Internationalization
 │   │   ├── features/                                      # Feature Modules (Business Logic)
 │   │   │   ├── auth/                                      # Authentication Feature
@@ -150,7 +167,7 @@ dabubble/
 │   │   │   ├── dashboard/                                 # Main Dashboard Feature (Channels, DMs, Threads)
 │   │   │   │   ├── components/                            # Dashboard components
 │   │   │   │   │   ├── channel-conversation/              # Channel message display
-│   │   │   │   │   ├── channel-mailbox/                   # Channel list & management
+│   │   │   │   │   ├── channel-mailbox/                   # Invitation mailbox & management
 │   │   │   │   │   ├── channal-welcome/                   # Channel welcome screen
 │   │   │   │   │   ├── chat-new-msg/                      # New DM conversation
 │   │   │   │   │   ├── chat-private/                      # Private DM message display
@@ -159,13 +176,8 @@ dabubble/
 │   │   │   │   │   └── workspace-sidebar/                 # Channel/DM sidebar navigation
 │   │   │   │   ├── pages/                                 # Dashboard pages
 │   │   │   │   │   └── dashboard.component.ts             # Main dashboard orchestrator
-│   │   │   │   └── services/                              # Dashboard services (localStorage-based)
-│   │   │   │       ├── current-user.service.ts            # Current authenticated user
-│   │   │   │       ├── dummy-channels.service.ts          # Channel CRUD (dev)
-│   │   │   │       ├── dummy-chat-dm.service.ts           # DM CRUD (dev)
-│   │   │   │       ├── dummy-mailbox.service.ts           # Mailbox data (dev)
-│   │   │   │       ├── dummy-thread.service.ts            # Thread replies system
-│   │   │   │       └── dummy-users.service.ts             # User data (dev)
+│   │   │   │   └── services/                              # Dashboard services
+│   │   │   │       └── (deprecated - migrated to stores)  # Old localStorage services
 │   │   │   │
 │   │   │   └── legal/                                     # Legal Pages
 │   │   │       └── pages/                                 # Legal page components
@@ -207,18 +219,22 @@ dabubble/
 │   │   │   │   ├── auth.signup.methods.ts                 # Signup & verification
 │   │   │   │   ├── auth.password.methods.ts               # Password reset/recovery
 │   │   │   │   └── index.ts                               # Barrel export
+│   │   │   ├── channel.store.ts                           # Channel mcleanup on logout
+│   │   │   │   ├── auth.login.methods.ts                  # Login methods (Email, Google Popup)
+│   │   │   │   ├── auth.signup.methods.ts                 # Signup & verification
+│   │   │   │   ├── auth.password.methods.ts               # Password reset/recovery
+│   │   │   │   └── index.ts                               # Barrel export
 │   │   │   ├── channel.store.ts                           # Channel management store
 │   │   │   ├── channel-member.store.ts                    # Channel membership store
-│   │   │   ├── channel-message.store.ts                   # Channel messages store
-│   │   │   ├── direct-message.store.ts                    # DM store
+│   │   │   ├── channel-message.store.ts                   # Channel messages store (auto-cleanup)
+│   │   │   ├── direct-message.store.ts                    # DM conversations & messages (auto-cleanup)
+│   │   │   ├── thread.store.ts                            # Thread replies store (auto-cleanup)
+│   │   │   ├── mailbox.store.ts                           # Mailbox messages store (auto-cleanup)
 │   │   │   ├── message.store.ts                           # Message CRUD store
-│   │   │   ├── user.store.ts                              # User management store
+│   │   │   ├── user.store.ts                              # User management store (auto-cleanup)
 │   │   │   ├── user-presence.store.ts                     # User online/offline status
-│   │   │   └── index.ts                                   # Central barrel export
-│   │   ├── app.ts                                         # Root Component
-│   │   ├── app.config.ts                                  # App Configuration
-│   │   ├── app.routes.ts                                  # Route Definitions
-│   │   └── app.scss                                       # Root Styles
+│   │   │   ├── store.utils.ts                             # Store utility functions
+│   │   │   ├── STORES-README.md                           # Store architecture documentation
 │   ├── config/
 │   │   └── environments/                                  # Environment configs
 │   │       ├── env.dev.ts                                 # Dev config (not in Git)
@@ -241,11 +257,17 @@ dabubble/
 │   ├── index.html                                         # HTML entry point
 │   ├── main.ts                                            # Application bootstrap
 │   └── styles.scss                                        # Global styles entry
-├── dist/
-│   └── dabubble/
-│       └── browser/
-│           └── .htaccess                                  # Apache SPA routing (IONOS hosting)
-├── .gitignore                                             # Git ignore rules
+├── dfirebaserc                                            # Firebase project configuration
+├── firebase.json                                          # Firebase hosting configuration
+├── firestore.rules                                        # Firestore security rules
+├── firestore.indexes.json                                 # Firestore composite indexes
+├── storage.rules                                          # Cloud Storage security rules
+├── .gitignore                                             # Git ignore rules (excludes env.*.ts)
+├── angular.json                                           # Angular workspace config
+├── package.json                                           # Dependencies & scripts
+├── tsconfig.json                                          # TypeScript config
+├── tsconfig.app.json                                      # App-specific TS config
+├── THREAD-SYSTEM.md                                       # Thread architecture documentation
 ├── angular.json                                           # Angular workspace config
 ├── package.json                                           # Dependencies & scripts
 ├── tsconfig.json                                          # TypeScript config
@@ -583,34 +605,52 @@ This project is licensed under the MIT License.
 ## 🙏 Acknowledgments
 
 - Angular Team for the amazing framework
-- Firebase for backend infrastructure
-- Developer Academy for project requirements
-- Figma design team for UI/UX inspiration
-
----
-
-**Last Updated:** December 2025
-**Version:** 0.2.0 (In Active Development - Pre-Firebase Migration)
+- Firebase for bacJanuary 2026
+  **Version:** 1.0.0 (Production - Full Firebase Integration)
 
 **Recent Updates:**
 
-- ✅ **Thread System Complete** - Full implementation with DummyThreadService
+- ✅ **Firebase Migration Complete** - Full Firestore integration
+  - Real-time listeners with auto-cleanup on logout
+  - Permission error handling (no console errors on logout)
+  - Channel, DM, Thread, User stores with Firestore
+  - Invitation system with channel/DM invitations
+- ✅ **Invitation System** - Channel & DM invitation workflow
+  - Send invitations instead of direct member addition
+  - Mailbox component for invitation management
+  - Accept/decline invitation flow
+  - Auto-navigation after acceptance
+  - Firebase Rules validation
+- ✅ **Store Auto-Cleanup** - Clean logout without errors
+  - All stores detect permission errors
+  - Automatic unsubscribe on logout
+  - State reset to initial values
+  - No "Missing or insufficient permissions" errors
+- ✅ **Security Enhancement** - Channel creation security fix
+  - Only creator added as member immediately
+  - Other users receive invitations
+  - Must accept before joining channel
+- ✅ **Thread System** - Full Firestore implementation
   - Thread replies with parent message display
   - Reactive loading with effect()
-  - Event-based parent message passing
+  - Real-time updates via onSnapshot
   - Thread count and last reply timestamp
-  - localStorage persistence
-- ✅ **ConversationMessages Component** - Reusable message display
-  - Used in channels, DMs, and threads
-  - Reaction bar with styled emoticons
-  - Thread trigger with "X Answers" link
-- ✅ **Dashboard Architecture** - Complete orchestration layer
-  - Workspace sidebar with channels/DMs
-  - Dynamic content area (channel/DM/thread)
-  - Thread panel slide-in from right
-- ✅ **Dummy Services** - localStorage-based development services
-  - DummyThreadService, DummyChannelsService, DummyChatDmService
-  - Ready for Firebase migration
+- ✅ **Reaction System** - Message reactions with emojis
+  - ReactionService for toggle logic
+  - Firestore reactions array management
+  - Visual reaction bar on messages
+- ✅ **Unread Tracking** - UnreadService for message tracking
+  - lastRead timestamps per user/channel
+  - Visual unread indicators
+  - Mark as read functionality
+- ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
+- ✅ **Google OAuth** - Popup strategy (production-ready)
+- ✅ **IONOS Apache Hosting** - .htaccess SPA routing
+- ✅ **Type Safety** - No `any` types, explicit TypeScript throughout
+- ✅ **Documentation** - THREAD-SYSTEM.md, STORES-README.md
+
+**Production Ready:** Full Firebase backend with security rules ✅
+
 - ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
 - ✅ **Google OAuth** - Popup strategy (production-ready)
 - ✅ **IONOS Apache Hosting** - .htaccess SPA routing

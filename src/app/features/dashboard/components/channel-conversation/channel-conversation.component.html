@@ -1,4 +1,13 @@
 <div class="channel-conversation">
+  @if (showAccessScreen()) {
+  <!-- ACCESS SCREEN: Private channel or public channel welcome -->
+  <app-channel-access
+    [channelInfo]="channelAccessInfo()"
+    (channelAccepted)="onChannelAccepted($event)"
+  />
+  } @else {
+  <!-- NORMAL CHANNEL VIEW: User is member -->
+
   <!-- Header -->
   <div class="channel-conversation__header">
     <div class="channel-conversation__header-info">
@@ -114,4 +123,7 @@
   <div class="channel-conversation__footer">
     <app-message-box (messageSent)="sendMessage($event)" />
   </div>
+
+  }
+  <!-- End of normal channel view -->
 </div>
