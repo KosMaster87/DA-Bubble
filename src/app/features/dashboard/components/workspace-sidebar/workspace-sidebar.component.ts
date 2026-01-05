@@ -526,10 +526,12 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Public method to select a channel by ID (for parent components)
+   * Note: Does not emit event to avoid circular navigation loops
    */
   selectChannelById(channelId: string): void {
     this.selectedChannelId.set(channelId);
-    this.channelSelected.emit(channelId);
+    // Don't emit - this method is called programmatically from routing effect
+    // Emitting would cause circular event flow: route -> effect -> emit -> showChannel -> (potential re-route)
   }
 
   /**
@@ -573,29 +575,45 @@ export class WorkspaceSidebarComponent {
   /**
    * Handle add member after channel cancel - create channel without inviting members
    */
+  private isCreatingChannel = signal(false);
+
   async onCancel(): Promise<void> {
+    if (this.isCreatingChannel()) {
+      console.log('⏸️  Channel creation already in progress');
+      return;
+    }
+
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
 
-    // Create channel via store
-    const newChannelId = await this.channelStore.createChannel(
-      {
-        name: this.pendingChannelName(),
-        description: this.pendingChannelDescription(),
-        isPrivate: this.pendingChannelIsPrivate(),
-        members: [currentUserId],
-      },
-      currentUserId
-    );
+    this.isCreatingChannel.set(true);
 
-    this.isAddMemberAfterChannelOpen.set(false);
-    this.pendingChannelName.set('');
-    this.pendingChannelDescription.set('');
-    this.pendingChannelIsPrivate.set(false);
+    try {
+      // Create channel via store
+      const newChannelId = await this.channelStore.createChannel(
+        {
+          name: this.pendingChannelName(),
+          description: this.pendingChannelDescription(),
+          isPrivate: this.pendingChannelIsPrivate(),
+          members: [currentUserId],
+        },
+        currentUserId
+      );
 
-    // Auto-select the newly created channel
-    this.selectedChannelId.set(newChannelId);
-    this.channelSelected.emit(newChannelId);
+      this.isAddMemberAfterChannelOpen.set(false);
+      this.pendingChannelName.set('');
+      this.pendingChannelDescription.set('');
+      this.pendingChannelIsPrivate.set(false);
+
+      // Auto-select the newly created channel
+      this.selectedChannelId.set(newChannelId);
+      this.channelSelected.emit(newChannelId);
+    } finally {
+      // Re-enable after a short delay
+      setTimeout(() => {
+        this.isCreatingChannel.set(false);
+      }, 1000);
+    }
   }
 
   /**
@@ -607,79 +625,93 @@ export class WorkspaceSidebarComponent {
     selectedChannels: Array<{ id: string; name: string }>;
     selectedUsers: Array<{ id: string; name: string; avatar: string }>;
   }): Promise<void> {
+    if (this.isCreatingChannel()) {
+      console.log('⏸️  Channel creation already in progress');
+      return;
+    }
+
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
 
-    // WICHTIG: Nur der Creator wird als Member hinzugefügt
-    // Alle anderen User bekommen Invitations
-    const memberIds = new Set<string>([currentUserId]);
+    this.isCreatingChannel.set(true);
 
-    // Sammle alle User-IDs, die eingeladen werden sollen
-    const usersToInvite = new Set<string>();
+    try {
+      // WICHTIG: Nur der Creator wird als Member hinzugefügt
+      // Alle anderen User bekommen Invitations
+      const memberIds = new Set<string>([currentUserId]);
 
-    // User aus "selectedUsers"
-    data.selectedUsers.forEach((user) => {
-      if (user.id !== currentUserId) {
-        usersToInvite.add(user.id);
-      }
-    });
+      // Sammle alle User-IDs, die eingeladen werden sollen
+      const usersToInvite = new Set<string>();
 
-    // Members aus ausgewählten Channels
-    data.selectedChannels.forEach((selectedChannel) => {
-      const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
-      if (channel) {
-        channel.members.forEach((memberId) => {
-          if (memberId !== currentUserId) {
-            usersToInvite.add(memberId);
-          }
-        });
-      }
-    });
+      // User aus "selectedUsers"
+      data.selectedUsers.forEach((user) => {
+        if (user.id !== currentUserId) {
+          usersToInvite.add(user.id);
+        }
+      });
 
-    // Create channel via store (nur mit Creator als Member)
-    const newChannelId = await this.channelStore.createChannel(
-      {
-        name: this.pendingChannelName(),
-        description: this.pendingChannelDescription(),
-        isPrivate: this.pendingChannelIsPrivate(),
-        members: Array.from(memberIds), // Nur der Creator
-      },
-      currentUserId
-    );
+      // Members aus ausgewählten Channels
+      data.selectedChannels.forEach((selectedChannel) => {
+        const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
+        if (channel) {
+          channel.members.forEach((memberId) => {
+            if (memberId !== currentUserId) {
+              usersToInvite.add(memberId);
+            }
+          });
+        }
+      });
 
-    // Sende Invitations an alle ausgewählten User
-    if (usersToInvite.size > 0) {
-      console.log(
-        `📨 Sending invitations to ${usersToInvite.size} users for channel:`,
-        this.pendingChannelName()
+      // Create channel via store (nur mit Creator als Member)
+      const newChannelId = await this.channelStore.createChannel(
+        {
+          name: this.pendingChannelName(),
+          description: this.pendingChannelDescription(),
+          isPrivate: this.pendingChannelIsPrivate(),
+          members: Array.from(memberIds), // Nur der Creator
+        },
+        currentUserId
       );
 
-      const invitationPromises = Array.from(usersToInvite).map((userId) =>
-        this.invitationService.createInvitation({
-          type: 'channel',
-          senderId: currentUserId,
-          recipientId: userId,
-          channelId: newChannelId,
-          channelName: this.pendingChannelName(),
-        })
-      );
+      // Sende Invitations an alle ausgewählten User
+      if (usersToInvite.size > 0) {
+        console.log(
+          `📨 Sending invitations to ${usersToInvite.size} users for channel:`,
+          this.pendingChannelName()
+        );
 
-      try {
-        await Promise.all(invitationPromises);
-        console.log(`✅ Sent ${usersToInvite.size} invitations successfully`);
-      } catch (error) {
-        console.error('❌ Error sending invitations:', error);
+        const invitationPromises = Array.from(usersToInvite).map((userId) =>
+          this.invitationService.createInvitation({
+            type: 'channel',
+            senderId: currentUserId,
+            recipientId: userId,
+            channelId: newChannelId,
+            channelName: this.pendingChannelName(),
+          })
+        );
+
+        try {
+          await Promise.all(invitationPromises);
+          console.log(`✅ Sent ${usersToInvite.size} invitations successfully`);
+        } catch (error) {
+          console.error('❌ Error sending invitations:', error);
+        }
       }
+
+      this.isAddMemberAfterChannelOpen.set(false);
+      this.pendingChannelName.set('');
+      this.pendingChannelDescription.set('');
+      this.pendingChannelIsPrivate.set(false);
+
+      // Auto-select the newly created channel
+      this.selectedChannelId.set(newChannelId);
+      this.channelSelected.emit(newChannelId);
+    } finally {
+      // Re-enable after a short delay
+      setTimeout(() => {
+        this.isCreatingChannel.set(false);
+      }, 1000);
     }
-
-    this.isAddMemberAfterChannelOpen.set(false);
-    this.pendingChannelName.set('');
-    this.pendingChannelDescription.set('');
-    this.pendingChannelIsPrivate.set(false);
-
-    // Auto-select the newly created channel
-    this.selectedChannelId.set(newChannelId);
-    this.channelSelected.emit(newChannelId);
   }
 
   /**
@@ -695,11 +727,12 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Public method to select a direct message by ID (for parent components)
+   * Note: Does not emit event to avoid circular navigation loops
    */
   selectDirectMessageById(messageId: string): void {
     this.selectedChannelId.set(null);
     this.selectedDirectMessageId.set(messageId);
-    this.directMessageSelected.emit(messageId);
+    // Don't emit - this method is called programmatically from routing effect
   }
 
   /**

@@ -75,14 +75,27 @@ export class DashboardComponent {
   protected route = inject(ActivatedRoute);
   protected router = inject(Router);
 
-  // Reactive route signal
+  // Reactive route signal - parse URL directly since we use flat route structure
   private routeParams = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map(() => ({
-        path: this.route.firstChild?.snapshot.url[0]?.path,
-        id: this.route.firstChild?.snapshot.params['id'],
-      }))
+      map(() => {
+        const url = this.router.url;
+        // Parse URL: /dashboard, /dashboard/mailbox, /dashboard/channel/123, /dashboard/dm/456
+        const parts = url.split('/').filter((p) => p); // Remove empty strings
+
+        if (parts.length === 1 && parts[0] === 'dashboard') {
+          return { path: undefined, id: undefined }; // Just /dashboard → welcome
+        }
+
+        if (parts.length >= 2 && parts[0] === 'dashboard') {
+          const type = parts[1]; // 'mailbox', 'channel', or 'dm'
+          const id = parts[2]; // channel/dm ID (if exists)
+          return { path: type, id };
+        }
+
+        return { path: undefined, id: undefined };
+      })
     ),
     { initialValue: { path: undefined, id: undefined } }
   );
@@ -106,9 +119,14 @@ export class DashboardComponent {
     // Listen to route changes for deep linking (reactive)
     effect(() => {
       const params = this.routeParams();
-      if (!params.path) return;
-
       const { path, id } = params;
+
+      // /dashboard (no subpath) → show welcome
+      if (!path) {
+        console.log('📡 Route changed to dashboard (welcome)');
+        this.showWelcome();
+        return;
+      }
 
       if (path === 'channel' && id) {
         console.log('📡 Route changed to channel:', id);

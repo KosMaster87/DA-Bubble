@@ -11,10 +11,11 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
 import { routes } from './app.routes';
+import { DashboardReuseStrategy } from './core/strategies/dashboard-reuse.strategy';
 
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
@@ -28,6 +29,9 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideAnimations(),
+
+    // Custom route reuse strategy to keep Dashboard alive
+    { provide: RouteReuseStrategy, useClass: DashboardReuseStrategy },
 
     // Firebase services
     provideFirebaseApp(() => initializeApp(environment.firebase)),

@@ -193,7 +193,7 @@ export class ChannelMailboxComponent {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Navigate to channel using Router for reliable navigation
-        await this.router.navigate(['/dashboard/channel', invitation.channelId]);
+        await this.router.navigate(['/dashboard/channel/' + invitation.channelId]);
       }
 
       // If it's a DM invitation, create DM conversation

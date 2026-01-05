@@ -77,7 +77,12 @@ export class UnreadService {
         [`lastRead.${conversationId}`]: serverTimestamp(),
       });
       console.log('✅ Marked as read:', conversationId);
-    } catch (error) {
+    } catch (error: any) {
+      // Ignore transient Firestore state errors
+      if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
+        console.log('⏭️  Skipping mark-as-read due to temporary Firestore state');
+        return;
+      }
       console.error('❌ Failed to mark as read:', error);
     }
   }

@@ -229,6 +229,12 @@ export const ChannelMessageStore = signalStore(
               });
             },
             (error: any) => {
+              // Ignore transient Firestore state errors
+              if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
+                console.log('⏭️  Skipping Firestore error for channel:', channelId);
+                return;
+              }
+
               // Auto-cleanup on permission error (user logged out)
               if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
                 console.log(
