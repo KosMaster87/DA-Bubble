@@ -83,45 +83,86 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   private scrollTimeout: any;
 
   constructor() {
-    // Track when messages change
+    this.setupMessageChangeEffect();
+  }
+
+  /**
+   * Setup effect to track message changes and auto-scroll
+   */
+  private setupMessageChangeEffect = (): void => {
     effect(() => {
-      const groups = this.messageGroups();
-      const currentMessageCount = groups.reduce((sum, group) => sum + group.messages.length, 0);
+      const currentMessageCount = this.getCurrentMessageCount();
       const conversationId = this.conversationId();
       const autoScrollEnabled = this.chatScrollService.getAutoScroll(conversationId);
 
-      // console.log('📊 ConversationMessages: Effect triggered', {
-      //   conversationId,
-      //   currentMessageCount,
-      //   lastMessageCount: this.lastMessageCount,
-      //   autoScrollEnabled,
-      // });
-
-      // Scroll on initial load or when new messages arrive (only if auto-scroll is enabled)
       if (currentMessageCount !== this.lastMessageCount) {
-        if (this.lastMessageCount === 0 && currentMessageCount > 0) {
-          // Initial load - always scroll and mark as read
-          // console.log('🎯 Initial load detected - will scroll to bottom');
-          this.shouldScrollToBottom = true;
-          const latestMessageId = this.getLatestMessageId();
-          if (latestMessageId) {
-            this.chatScrollService.enterConversation(conversationId, latestMessageId);
-          }
-        } else if (currentMessageCount > this.lastMessageCount && autoScrollEnabled) {
-          // New messages arrived and auto-scroll is enabled
-          // console.log('📩 New messages arrived - will scroll to bottom');
-          this.shouldScrollToBottom = true;
-          const latestMessageId = this.getLatestMessageId();
-          if (latestMessageId) {
-            this.chatScrollService.markAsRead(conversationId, latestMessageId);
-          }
-        } else if (currentMessageCount > this.lastMessageCount && !autoScrollEnabled) {
-          // console.log('⚠️ New messages arrived but auto-scroll is OFF');
-        }
+        this.handleMessageCountChange(conversationId, currentMessageCount, autoScrollEnabled);
       }
       this.lastMessageCount = currentMessageCount;
     });
-  }
+  };
+
+  /**
+   * Get current total message count from all groups
+   */
+  private getCurrentMessageCount = (): number => {
+    const groups = this.messageGroups();
+    return groups.reduce((sum, group) => sum + group.messages.length, 0);
+  };
+
+  /**
+   * Handle message count change (initial load or new messages)
+   */
+  private handleMessageCountChange = (
+    conversationId: string,
+    currentCount: number,
+    autoScrollEnabled: boolean
+  ): void => {
+    if (this.isInitialLoad(currentCount)) {
+      this.handleInitialLoad(conversationId);
+    } else if (this.shouldAutoScrollForNewMessages(currentCount, autoScrollEnabled)) {
+      this.handleNewMessages(conversationId);
+    }
+  };
+
+  /**
+   * Check if this is initial load
+   */
+  private isInitialLoad = (currentCount: number): boolean => {
+    return this.lastMessageCount === 0 && currentCount > 0;
+  };
+
+  /**
+   * Check if should auto-scroll for new messages
+   */
+  private shouldAutoScrollForNewMessages = (
+    currentCount: number,
+    autoScrollEnabled: boolean
+  ): boolean => {
+    return currentCount > this.lastMessageCount && autoScrollEnabled;
+  };
+
+  /**
+   * Handle initial load - scroll and mark as read
+   */
+  private handleInitialLoad = (conversationId: string): void => {
+    this.shouldScrollToBottom = true;
+    const latestMessageId = this.getLatestMessageId();
+    if (latestMessageId) {
+      this.chatScrollService.enterConversation(conversationId, latestMessageId);
+    }
+  };
+
+  /**
+   * Handle new messages - scroll and mark as read
+   */
+  private handleNewMessages = (conversationId: string): void => {
+    this.shouldScrollToBottom = true;
+    const latestMessageId = this.getLatestMessageId();
+    if (latestMessageId) {
+      this.chatScrollService.markAsRead(conversationId, latestMessageId);
+    }
+  };
 
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
@@ -133,90 +174,123 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   /**
    * Scroll to bottom of messages
    */
-  private scrollToBottom(): void {
-    if (this.messagesContainer?.nativeElement) {
-      // Use setTimeout to ensure DOM is fully rendered
-      setTimeout(() => {
-        try {
-          const container = this.messagesContainer!.nativeElement;
-          const scrollHeight = container.scrollHeight;
-          const clientHeight = container.clientHeight;
-          const targetScrollTop = scrollHeight - clientHeight;
-
-          // console.log('⬇️ Attempting to scroll to bottom', {
-          //   scrollHeight,
-          //   clientHeight,
-          //   targetScrollTop,
-          //   currentScrollTop: container.scrollTop,
-          // });
-
-          if (targetScrollTop > 0) {
-            // Use smooth scrolling
-            container.scrollTo({
-              top: targetScrollTop,
-              behavior: 'instant', // instant for immediate feedback
-            });
-            this.lastScrollTop = targetScrollTop;
-            // console.log('✅ Scrolled to bottom successfully');
-          } else {
-            // console.warn('⚠️ No scrolling needed - content fits in viewport');
-          }
-        } catch (err) {
-          console.error('❌ Scroll to bottom failed:', err);
-        }
-      }, 0);
-    } else {
+  private scrollToBottom = (): void => {
+    if (!this.messagesContainer?.nativeElement) {
       console.warn('⚠️ scrollToBottom: messagesContainer not found');
+      return;
     }
-  }
+
+    setTimeout(() => this.performScroll(), 0);
+  };
+
+  /**
+   * Perform actual scroll operation
+   */
+  private performScroll = (): void => {
+    try {
+      const container = this.messagesContainer!.nativeElement;
+      const targetScrollTop = this.calculateTargetScrollTop(container);
+
+      if (targetScrollTop > 0) {
+        this.scrollToTarget(container, targetScrollTop);
+      }
+    } catch (err) {
+      console.error('❌ Scroll to bottom failed:', err);
+    }
+  };
+
+  /**
+   * Calculate target scroll position
+   */
+  private calculateTargetScrollTop = (container: HTMLElement): number => {
+    return container.scrollHeight - container.clientHeight;
+  };
+
+  /**
+   * Scroll container to target position
+   */
+  private scrollToTarget = (container: HTMLElement, targetScrollTop: number): void => {
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: 'instant',
+    });
+    this.lastScrollTop = targetScrollTop;
+  };
 
   /**
    * Handle scroll event to detect manual scrolling
    */
-  onScroll(): void {
-    if (!this.messagesContainer?.nativeElement) {
-      return;
+  protected onScroll = (): void => {
+    if (!this.messagesContainer?.nativeElement) return;
+
+    this.debounceScroll();
+  };
+
+  /**
+   * Debounce scroll event processing
+   */
+  private debounceScroll = (): void => {
+    if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => this.processScroll(), 100);
+  };
+
+  /**
+   * Process scroll position and update auto-scroll state
+   */
+  private processScroll = (): void => {
+    const container = this.messagesContainer!.nativeElement;
+    const scrollTop = container.scrollTop;
+
+    if (this.hasScrollPositionChanged(scrollTop)) {
+      this.handleScrollPositionChange(container, scrollTop);
+      this.lastScrollTop = scrollTop;
     }
+  };
 
-    // Debounce scroll events
-    if (this.scrollTimeout) {
-      clearTimeout(this.scrollTimeout);
+  /**
+   * Check if scroll position changed significantly
+   */
+  private hasScrollPositionChanged = (scrollTop: number): boolean => {
+    return Math.abs(scrollTop - this.lastScrollTop) > 5;
+  };
+
+  /**
+   * Handle scroll position change
+   */
+  private handleScrollPositionChange = (container: HTMLElement, scrollTop: number): void => {
+    const isAtBottom = this.isScrolledToBottom(container, scrollTop);
+    const conversationId = this.conversationId();
+
+    if (isAtBottom) {
+      this.handleScrolledToBottom(conversationId);
+    } else {
+      this.chatScrollService.setAutoScroll(conversationId, false);
     }
+  };
 
-    this.scrollTimeout = setTimeout(() => {
-      const container = this.messagesContainer!.nativeElement;
-      const scrollTop = container.scrollTop;
-      const scrollHeight = container.scrollHeight;
-      const clientHeight = container.clientHeight;
-      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      const isAtBottom = distanceFromBottom < 50;
-      const conversationId = this.conversationId();
+  /**
+   * Check if scrolled to bottom
+   */
+  private isScrolledToBottom = (container: HTMLElement, scrollTop: number): boolean => {
+    const distanceFromBottom = container.scrollHeight - scrollTop - container.clientHeight;
+    return distanceFromBottom < 50;
+  };
 
-      // Only change autoScrollEnabled if there was actual user interaction
-      // Check if scroll position changed from last known position
-      if (Math.abs(scrollTop - this.lastScrollTop) > 5) {
-        if (isAtBottom) {
-          // User scrolled to bottom manually - enable auto-scroll
-          this.chatScrollService.setAutoScroll(conversationId, true);
-
-          // Mark latest message as read
-          const latestMessageId = this.getLatestMessageId();
-          if (latestMessageId) {
-            this.chatScrollService.markAsRead(conversationId, latestMessageId);
-          }
-        } else {
-          // User scrolled up - disable auto-scroll
-          this.chatScrollService.setAutoScroll(conversationId, false);
-        }
-        this.lastScrollTop = scrollTop;
-      }
-    }, 100);
-  }
+  /**
+   * Handle scrolled to bottom - enable auto-scroll and mark read
+   */
+  private handleScrolledToBottom = (conversationId: string): void => {
+    this.chatScrollService.setAutoScroll(conversationId, true);
+    const latestMessageId = this.getLatestMessageId();
+    if (latestMessageId) {
+      this.chatScrollService.markAsRead(conversationId, latestMessageId);
+    }
+  };
 
   /**
    * Get the ID of the latest message
    */
-  private getLatestMessageId(): string | null {
+  private getLatestMessageId = (): string | null => {
     const groups = this.messageGroups();
     if (groups.length === 0) return null;
 
@@ -225,117 +299,115 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
     const lastMessage = lastGroup.messages[lastGroup.messages.length - 1];
     return lastMessage.id;
-  }
+  };
 
   /**
    * Handle message click
    */
-  onMessageClick(messageId: string): void {
+  protected onMessageClick = (messageId: string): void => {
     this.messageClicked.emit(messageId);
-  }
+  };
 
   /**
    * Handle avatar click
    */
-  onAvatarClick(senderId: string): void {
+  protected onAvatarClick = (senderId: string): void => {
     this.avatarClicked.emit(senderId);
-  }
+  };
 
   /**
    * Handle sender name click
    */
-  onSenderClick(senderId: string): void {
+  protected onSenderClick = (senderId: string): void => {
     this.senderClicked.emit(senderId);
-  }
+  };
 
   /**
    * Handle reaction click
    */
-  onReactionClick(messageId: string, emoji: string): void {
+  protected onReactionClick = (messageId: string, emoji: string): void => {
     this.reactionAdded.emit({ messageId, emoji });
-  }
+  };
 
   /**
    * Handle reaction bar button click
    */
-  onReactionBarClick(messageId: string, type: ReactionType): void {
+  protected onReactionBarClick = (messageId: string, type: ReactionType): void => {
     if (type === 'comment') {
       this.threadClicked.emit(messageId);
     } else if (type === 'add-reaction') {
       // Add-reaction button opens picker in ReactionBar, no need to emit
     } else {
-      // Direct emoji click (thumbs-up, checked, rocket, nerd-face)
-
       this.reactionAdded.emit({ messageId, emoji: type });
     }
-  }
+  };
 
   /**
    * Handle thread button click
    */
-  onThreadClick(messageId: string): void {
+  protected onThreadClick = (messageId: string): void => {
     this.threadClicked.emit(messageId);
-  }
+  };
 
   /**
    * Handle edit message request
    */
-  onEditMessage(messageId: string): void {
+  protected onEditMessage = (messageId: string): void => {
     this.editingMessageId.set(messageId);
-  }
+  };
 
   /**
    * Handle cancel edit
    */
-  onCancelEdit(): void {
+  protected onCancelEdit = (): void => {
     this.editingMessageId.set(null);
-  }
+  };
 
   /**
    * Handle save edited message
    */
-  onSaveEdit(messageId: string, newContent: string): void {
+  protected onSaveEdit = (messageId: string, newContent: string): void => {
     this.messageEdited.emit({ messageId, newContent });
     this.editingMessageId.set(null);
-  }
+  };
 
   /**
    * Handle delete message request
    */
-  onDeleteMessage(messageId: string): void {
+  protected onDeleteMessage = (messageId: string): void => {
     this.deleteConfirmationMessageId.set(messageId);
-  }
+  };
 
   /**
    * Handle delete confirmation cancel
    */
-  onCancelDelete(): void {
+  protected onCancelDelete = (): void => {
     this.deleteConfirmationMessageId.set(null);
-  }
+  };
 
   /**
    * Handle delete confirmation confirm
    */
-  onConfirmDelete(): void {
+  protected onConfirmDelete = (): void => {
     const messageId = this.deleteConfirmationMessageId();
     if (messageId) {
       this.messageDeleted.emit(messageId);
       this.deleteConfirmationMessageId.set(null);
     }
-  }
+  };
 
   /**
    * Check if message is being edited
    */
-  isEditing(messageId: string): boolean {
+  protected isEditing = (messageId: string): boolean => {
     return this.editingMessageId() === messageId;
-  }
+  };
 
   /**
    * Handle image load error - use fallback avatar
    */
-  onImageError(event: Event): void {
+  protected onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;
     img.src = '/img/profile/profile-0.svg';
-  }
+  };
 }

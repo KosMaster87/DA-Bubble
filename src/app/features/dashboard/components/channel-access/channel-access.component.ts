@@ -52,7 +52,7 @@ export class ChannelAccessComponent {
   /**
    * Accept and join public channel
    */
-  acceptAndJoin(): void {
+  protected acceptAndJoin = (): void => {
     const currentUser = this.authStore.user();
     const channelId = this.channelInfo().channelId;
 
@@ -64,5 +64,5 @@ export class ChannelAccessComponent {
     // Emit event - parent will handle adding user to members and hiding this screen
     this.channelAccepted.emit(channelId);
     console.log('✅ User accepted public channel:', channelId);
-  }
+  };
 }

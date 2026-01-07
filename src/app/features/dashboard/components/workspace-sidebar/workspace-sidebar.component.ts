@@ -4,26 +4,24 @@
  * @module features/dashboard/components/workspace-sidebar
  */
 
-import { Component, inject, output, input, signal, computed, effect } from '@angular/core';
-import { Router } from '@angular/router';
-import {
-  ChannelStore,
-  DirectMessageStore,
-  UserStore,
-  UserPresenceStore,
-  ChannelMessageStore,
-  ThreadStore,
-  MailboxStore,
-} from '@stores/index';
+import { Component, inject, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
 import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-components/add-member-after-add-channel/add-member-after-add-channel.component';
 import { ThreadUnreadPopupComponent } from '@shared/dashboard-components/thread-unread-popup/thread-unread-popup.component';
 import { AuthStore } from '@stores/auth';
-import { UnreadService } from '@core/services/unread/unread.service';
-import { InvitationService } from '@core/services/invitation/invitation.service';
-import { type Invitation } from '@core/models/invitation.model';
+import { UserPresenceStore } from '@stores/index';
+import { ChannelListService } from '@core/services/channel-list/channel-list.service';
+import {
+  DirectMessageListService,
+  type DirectMessageListItem,
+} from '@core/services/direct-message-list/direct-message-list.service';
+import { ChannelManagementService } from '@core/services/channel-management/channel-management.service';
+import { NavigationService } from '@core/services/navigation/navigation.service';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
+import { MailboxBadgeService } from '@core/services/mailbox-badge/mailbox-badge.service';
+import { WorkspaceInitializationService } from '@core/services/workspace-initialization/workspace-initialization.service';
 import { type Message as PopupMessage } from '@core/models/message.model';
 import { type Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 
@@ -39,18 +37,16 @@ import { type Message as ViewMessage } from '@shared/dashboard-components/conver
   styleUrl: './workspace-sidebar.component.scss',
 })
 export class WorkspaceSidebarComponent {
-  protected channelStore = inject(ChannelStore);
-  protected directMessageStore = inject(DirectMessageStore);
-  protected userStore = inject(UserStore);
-  protected userPresenceStore = inject(UserPresenceStore);
-  protected sidebarService = inject(WorkspaceSidebarService);
   protected authStore = inject(AuthStore);
-  protected unreadService = inject(UnreadService);
-  protected channelMessageStore = inject(ChannelMessageStore);
-  protected threadStore = inject(ThreadStore);
-  protected mailboxStore = inject(MailboxStore);
-  protected invitationService = inject(InvitationService);
-  protected router = inject(Router);
+  protected userPresenceStore = inject(UserPresenceStore);
+  protected channelListService = inject(ChannelListService);
+  protected directMessageListService = inject(DirectMessageListService);
+  protected channelManagementService = inject(ChannelManagementService);
+  protected navigationService = inject(NavigationService);
+  protected userTransformationService = inject(UserTransformationService);
+  protected workspaceSidebarService = inject(WorkspaceSidebarService);
+  protected mailboxBadgeService = inject(MailboxBadgeService);
+  protected workspaceInitializationService = inject(WorkspaceInitializationService);
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   isLegalActive = input<boolean>(false);
@@ -63,405 +59,45 @@ export class WorkspaceSidebarComponent {
     parentMessage: ViewMessage;
     isDirectMessage: boolean;
   }>();
-  protected isChannelsOpen = signal(true);
-  protected isDirectMessagesOpen = signal(true);
-  protected isSystemControlOpen = signal(true);
-  protected isAddChannelActive = signal(false);
-  protected isCreateChannelOpen = signal(false);
-  protected isAddMemberAfterChannelOpen = signal(false);
-
-  // Thread unread popup state
-  protected hoveredThreadUnreadId = signal<string | null>(null);
-  private hoverTimeout: any = null;
-
-  // Temporary storage for channel data between popups
-  protected pendingChannelName = signal<string>('');
-  protected pendingChannelDescription = signal<string>('');
-  protected pendingChannelIsPrivate = signal<boolean>(false);
-
-  // Invitations state for mailbox badge
-  protected pendingInvitations = signal<Invitation[]>([]);
-  private invitationUnsubscribe: (() => void) | null = null;
 
   constructor() {
-    // Load data from stores on initialization
-    this.channelStore.loadChannels();
-    this.userStore.loadUsers();
-
-    // Load DM conversations when user's directMessages change
-    // Note: This is now handled by the Dashboard component to avoid duplicate effects
-    // The Dashboard component watches userDirectMessages computed and calls loadConversations
-
-    // Load pending invitations for mailbox badge
-    effect(() => {
-      const currentUser = this.authStore.user();
-      if (currentUser?.uid) {
-        // Unsubscribe from previous listener
-        if (this.invitationUnsubscribe) {
-          this.invitationUnsubscribe();
-        }
-
-        // Subscribe to pending invitations
-        this.invitationUnsubscribe = this.invitationService.subscribeToPendingInvitations(
-          currentUser.uid,
-          (invitations) => {
-            this.pendingInvitations.set(invitations);
-          }
-        );
-      }
-    });
-
-    // Auto-select DABubble-welcome channel when channels are loaded (only once on initial load)
-    effect(() => {
-      const channels = this.channelStore.channels();
-      const currentSelected = this.selectedChannelId();
-      const currentDM = this.selectedDirectMessageId();
-
-      // Only auto-select if NOTHING is selected yet (no channel AND no DM) AND channels just loaded
-      if (!currentSelected && !currentDM && channels.length > 0) {
-        const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
-        if (welcomeChannel) {
-          this.selectedChannelId.set(welcomeChannel.id);
-          this.channelSelected.emit(welcomeChannel.id);
-        }
-      }
+    // Initialize workspace (load stores and setup auto-selection)
+    this.workspaceInitializationService.initialize((channelId) => {
+      this.channelSelected.emit(channelId);
     });
   }
 
   /**
-   * Channels from ChannelStore - sorted with DABubble-welcome first, then alphabetically
+   * Channels from ChannelListService - sorted with DABubble-welcome first, then alphabetically
+   * Includes unread badge calculation
    */
-  protected sortedChannels = computed(() => {
-    // Track update counter to force re-compute on Firestore updates
-    this.channelMessageStore.updateCounter();
-
-    // Get current user to filter channels
-    const currentUser = this.authStore.user();
-    if (!currentUser) return [];
-
-    // FILTER: Show public channels + channels where user is a member
-    // Hide: Private channels where user is NOT a member, and mailbox
-    const allChannels = this.channelStore.channels();
-    const visibleChannels = allChannels.filter((ch) => {
-      // Exclude mailbox from channels section
-      if (ch.id === 'mailbox') return false;
-
-      const isMember = ch.members.includes(currentUser.uid);
-      const isPublic = !ch.isPrivate;
-      // Show if: (public channel) OR (user is member)
-      // Hide if: (private channel AND user is NOT member)
-      return isPublic || isMember;
-    });
-
-    const channels = visibleChannels.map((ch) => {
-      // Check if user is member (for unread badge calculation)
-      const isMember = ch.members.includes(currentUser.uid);
-      // Get all messages for this channel
-      const messages = this.channelMessageStore.getMessagesByChannel()(ch.id);
-
-      // Find latest NORMAL message timestamp (from createdAt of actual messages)
-      const latestNormalMessageTime = messages.reduce((latest: Date | undefined, msg) => {
-        const msgTime = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
-        if (!latest || msgTime > latest) {
-          return msgTime;
-        }
-        return latest;
-      }, undefined);
-
-      // Find latest THREAD message timestamp (from lastThreadTimestamp)
-      const latestThreadTimestamp = messages.reduce((latest: Date | undefined, msg) => {
-        if (msg.lastThreadTimestamp) {
-          const threadTime =
-            msg.lastThreadTimestamp instanceof Date
-              ? msg.lastThreadTimestamp
-              : new Date(msg.lastThreadTimestamp);
-          if (!latest || threadTime > latest) {
-            return threadTime;
-          }
-        }
-        return latest;
-      }, undefined);
-
-      // RULE: Normal messages ALWAYS have priority over thread messages
-      // Determine the timestamp to use for normal message unread check
-      let normalMessageTimestamp: Date | undefined = latestNormalMessageTime;
-
-      // If messages array is empty/not loaded, use ch.lastMessageAt as fallback
-      // BUT only if it doesn't match the thread timestamp (meaning it's not a thread update)
-      if (!normalMessageTimestamp && ch.lastMessageAt) {
-        const lastMsgTime =
-          ch.lastMessageAt instanceof Date ? ch.lastMessageAt : new Date(ch.lastMessageAt);
-        const threadTime =
-          latestThreadTimestamp instanceof Date
-            ? latestThreadTimestamp
-            : latestThreadTimestamp
-            ? new Date(latestThreadTimestamp)
-            : undefined;
-
-        // Only use ch.lastMessageAt if it's NOT a thread update (timestamps don't match within 1 second)
-        const isThreadUpdate =
-          threadTime && Math.abs(lastMsgTime.getTime() - threadTime.getTime()) < 1000;
-        if (!isThreadUpdate) {
-          normalMessageTimestamp = lastMsgTime;
-        }
-      }
-
-      // Only calculate unread badges for members (not for public non-member channels)
-      const hasNormalUnread =
-        isMember && normalMessageTimestamp
-          ? this.unreadService.hasUnread(ch.id, normalMessageTimestamp)
-          : false;
-
-      // Thread-unread: Check if ANY message in this channel has an unread thread
-      // Can be shown together with normal unread (blue + orange)
-      // Only for members
-      // Force deep tracking by mapping lastThreadTimestamp
-      const threadTimestamps = messages.map((m) => m.lastThreadTimestamp).filter(Boolean);
-      const hasThreadUnread =
-        isMember &&
-        messages.some((msg) => {
-          if (!msg.lastThreadTimestamp) return false;
-
-          // Get thread messages to check user participation
-          const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
-
-          // Check if user participated in this thread
-          const currentUserId = this.authStore.user()?.uid;
-          if (!currentUserId) return false;
-
-          const wroteThreadReply = threadMessages.some(
-            (threadMsg) => threadMsg.authorId === currentUserId
-          );
-          const wroteParentMessage = msg.authorId === currentUserId;
-          const userParticipated = wroteThreadReply || wroteParentMessage;
-
-          // Only check for unread if user participated
-          if (!userParticipated) return false;
-
-          const threadTime =
-            msg.lastThreadTimestamp instanceof Date
-              ? msg.lastThreadTimestamp
-              : new Date(msg.lastThreadTimestamp);
-
-          // Check if this specific thread is unread
-          const isUnread = this.unreadService.hasThreadUnread(ch.id, msg.id, threadTime);
-
-          return isUnread;
-        });
-
-      return {
-        id: ch.id,
-        name: ch.name,
-        hasUnread: hasNormalUnread || false,
-        hasThreadUnread: hasThreadUnread || false,
-      };
-    });
-
-    // Separate DABubble-welcome from other channels
-    const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
-    const otherChannels = channels
-      .filter((ch) => ch.name !== 'DABubble-welcome')
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    // Return DABubble-welcome first, then sorted channels
-    return welcomeChannel ? [welcomeChannel, ...otherChannels] : otherChannels;
-  });
+  protected sortedChannels = this.channelListService.getVisibleChannels();
 
   /**
-   * Selected channel ID
+   * Selected channel ID (from NavigationService)
    */
-  protected selectedChannelId = signal<string | null>(null);
+  protected selectedChannelId = this.navigationService.getSelectedChannelId();
 
   /**
-   * Check if mailbox has unread messages or pending invitations
+   * Check if mailbox has unread messages or pending invitations (from MailboxBadgeService)
    */
-  protected hasMailboxUnread = computed(() => {
-    const unreadMessagesCount = this.mailboxStore.unreadCount();
-    const pendingInvitationsCount = this.pendingInvitations().length;
-    return unreadMessagesCount > 0 || pendingInvitationsCount > 0;
-  });
+  protected hasMailboxUnread = this.mailboxBadgeService.hasUnread;
 
   /**
-   * Direct messages from DirectMessageStore mapped to template interface
-   * Shows all DM conversations sorted alphabetically by name
+   * Direct messages from DirectMessageListService with self-DM (Notes to self) at the top
+   * Shows all DM conversations sorted alphabetically with unread badges
    */
-  protected directMessages = computed<
-    Array<{
-      id: string;
-      userId: string;
-      name: string;
-      avatar: string;
-      isOnline: boolean;
-      hasUnread: boolean;
-      hasThreadUnread: boolean;
-    }>
-  >(() => {
-    // Track update counter to force re-compute on Firestore updates
-    this.directMessageStore.updateCounter();
-
-    const currentUser = this.authStore.user();
-    if (!currentUser) return [];
-
-    const conversations = this.directMessageStore.sortedConversations();
-    const allUsers = this.userStore.users();
-    const allMessages = this.directMessageStore.messages();
-
-    // Map conversations to UI format with user info
-    const dmList = conversations.map((conv) => {
-      // Get the other participant's ID
-      // For self-conversations, both participants are the same
-      let otherUserId = conv.participants.find((id) => id !== currentUser.uid);
-
-      // If no other user found, this is a self-conversation
-      if (!otherUserId) {
-        otherUserId = currentUser.uid;
-      }
-
-      const otherUser = allUsers.find((u) => u.uid === otherUserId);
-
-      // Get all messages for this conversation
-      const messages = allMessages[conv.id] || [];
-
-      // Find latest NORMAL message timestamp (from createdAt of actual messages)
-      const latestNormalMessageTime = messages.reduce((latest: Date | undefined, msg) => {
-        const msgTime = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
-        if (!latest || msgTime > latest) {
-          return msgTime;
-        }
-        return latest;
-      }, undefined);
-
-      // Find latest THREAD message timestamp (from lastThreadTimestamp)
-      const latestThreadTimestamp = messages.reduce((latest: Date | undefined, msg) => {
-        if (msg.lastThreadTimestamp) {
-          const threadTime =
-            msg.lastThreadTimestamp instanceof Date
-              ? msg.lastThreadTimestamp
-              : new Date(msg.lastThreadTimestamp);
-          if (!latest || threadTime > latest) {
-            return threadTime;
-          }
-        }
-        return latest;
-      }, undefined);
-
-      // RULE: Normal messages ALWAYS have priority over thread messages
-      // Determine the timestamp to use for normal message unread check
-      let normalMessageTimestamp: Date | undefined = latestNormalMessageTime;
-
-      // If messages array is empty/not loaded, use conv.lastMessageAt as fallback
-      // BUT only if it doesn't match the thread timestamp (meaning it's not a thread update)
-      if (!normalMessageTimestamp && conv.lastMessageAt) {
-        const lastMsgTime =
-          conv.lastMessageAt instanceof Date ? conv.lastMessageAt : new Date(conv.lastMessageAt);
-        const threadTime =
-          latestThreadTimestamp instanceof Date
-            ? latestThreadTimestamp
-            : latestThreadTimestamp
-            ? new Date(latestThreadTimestamp)
-            : undefined;
-
-        // Only use conv.lastMessageAt if it's NOT a thread update (timestamps don't match within 1 second)
-        const isThreadUpdate =
-          threadTime && Math.abs(lastMsgTime.getTime() - threadTime.getTime()) < 1000;
-        if (!isThreadUpdate) {
-          normalMessageTimestamp = lastMsgTime;
-        }
-      }
-
-      const hasNormalUnread = normalMessageTimestamp
-        ? this.unreadService.hasUnread(conv.id, normalMessageTimestamp)
-        : false;
-
-      // Thread-unread: Check if ANY message in this conversation has an unread thread
-      // Can be shown together with normal unread (blue + orange)
-      // Force deep tracking by mapping lastThreadTimestamp
-      const threadTimestamps = messages.map((m) => m.lastThreadTimestamp).filter(Boolean);
-      const hasThreadUnread = messages.some((msg) => {
-        if (!msg.lastThreadTimestamp) return false;
-
-        // Get thread messages to check user participation
-        const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
-
-        // Check if user participated in this thread
-        const currentUserId = this.authStore.user()?.uid;
-        if (!currentUserId) return false;
-
-        const wroteThreadReply = threadMessages.some(
-          (threadMsg) => threadMsg.authorId === currentUserId
-        );
-        const wroteParentMessage = msg.authorId === currentUserId;
-        const userParticipated = wroteThreadReply || wroteParentMessage;
-
-        // Only check for unread if user participated
-        if (!userParticipated) return false;
-
-        const threadTime =
-          msg.lastThreadTimestamp instanceof Date
-            ? msg.lastThreadTimestamp
-            : new Date(msg.lastThreadTimestamp);
-
-        // Check if this specific thread is unread
-        const isUnread = this.unreadService.hasThreadUnread(conv.id, msg.id, threadTime);
-
-        return isUnread;
-      });
-
-      return {
-        id: conv.id,
-        userId: otherUserId || '',
-        name: otherUser?.displayName || 'Unknown User',
-        avatar: otherUser?.photoURL || '/img/profile/profile-0.svg',
-        isOnline: otherUser?.isOnline || false,
-        hasUnread: hasNormalUnread || false,
-        hasThreadUnread: hasThreadUnread || false,
-      };
-    });
-
-    // Sort alphabetically by name
-    const sortedList = dmList.sort((a, b) => a.name.localeCompare(b.name));
-
-    // Check if self-conversation already exists in the list
-    const selfConversationId = `${currentUser.uid}_${currentUser.uid}`;
-    const existingSelfDM = sortedList.find((dm) => dm.id === selfConversationId);
-
-    // Create or use existing self-DM entry at the top
-    const selfDM = existingSelfDM
-      ? {
-          ...existingSelfDM,
-          name: `${currentUser.displayName} (Notes)`, // Override name to show (Notes)
-        }
-      : {
-          id: `self-${currentUser.uid}`,
-          userId: currentUser.uid,
-          name: `${currentUser.displayName} (Notes)`,
-          avatar: currentUser.photoURL || '/img/profile/profile-0.svg',
-          isOnline: true,
-          hasUnread: false,
-          hasThreadUnread: false,
-        };
-
-    // Filter out the self-conversation from the regular list if it exists
-    const filteredList = sortedList.filter((dm) => dm.id !== selfConversationId);
-
-    return [selfDM, ...filteredList];
-  });
+  protected directMessages = this.directMessageListService.getConversationsWithSelfDM();
 
   /**
-   * All users from UserStore mapped to UserListItem for add-member popup
+   * All users from UserStore mapped to UserListItem for add-member popup (from UserTransformationService)
    */
-  protected allUsers = computed(() =>
-    this.userStore.users().map((user) => ({
-      id: user.uid,
-      name: user.displayName,
-      avatar: user.photoURL || '/img/profile/profile-0.svg',
-    }))
-  );
+  protected allUsers = this.userTransformationService.getUserList();
 
   /**
-   * Selected direct message ID
+   * Selected direct message ID (from NavigationService)
    */
-  protected selectedDirectMessageId = signal<string | null>(null);
+  protected selectedDirectMessageId = this.navigationService.getSelectedDirectMessageId();
 
   /**
    * Open new message view
@@ -481,29 +117,28 @@ export class WorkspaceSidebarComponent {
    * Toggle channels dropdown
    */
   toggleChannels(): void {
-    this.isChannelsOpen.update((value) => !value);
+    this.workspaceSidebarService.toggleChannels();
   }
 
   /**
    * Toggle direct messages dropdown
    */
   toggleDirectMessages(): void {
-    this.isDirectMessagesOpen.update((value) => !value);
+    this.workspaceSidebarService.toggleDirectMessages();
   }
 
   /**
    * Toggle system control dropdown
    */
   toggleSystemControl(): void {
-    this.isSystemControlOpen.update((value) => !value);
+    this.workspaceSidebarService.toggleSystemControl();
   }
 
   /**
    * Open legal page
    */
   openLegal(): void {
-    this.selectedChannelId.set('legal');
-    this.router.navigate(['/dashboard/legal']);
+    this.navigationService.navigateToLegal();
   }
 
   /**
@@ -516,26 +151,11 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Select a channel or special view (mailbox, etc.)
-   * Handles both real channels and virtual views intelligently
+   * Delegates to NavigationService for routing and state management
    */
   selectChannel(channelId: string): void {
-    // Special virtual views (not real channels)
-    const virtualViews = ['mailbox', 'legal'];
-    if (virtualViews.includes(channelId)) {
-      this.selectedChannelId.set(channelId);
-      this.channelSelected.emit(channelId);
-      this.router.navigate(['/dashboard', channelId]);
-      return;
-    }
-
-    // Real channels from Firestore
-    const channel = this.channelStore.channels().find((ch) => ch.id === channelId);
-    if (channel) {
-      this.channelStore.selectChannel(channel);
-      this.selectedChannelId.set(channelId);
-      this.channelSelected.emit(channelId);
-      this.unreadService.markAsRead(channelId);
-    }
+    this.navigationService.selectChannel(channelId);
+    this.channelSelected.emit(channelId);
   }
 
   /**
@@ -543,24 +163,21 @@ export class WorkspaceSidebarComponent {
    * Note: Does not emit event to avoid circular navigation loops
    */
   selectChannelById(channelId: string): void {
-    this.selectedChannelId.set(channelId);
-    // Don't emit - this method is called programmatically from routing effect
-    // Emitting would cause circular event flow: route -> effect -> emit -> showChannel -> (potential re-route)
+    this.navigationService.selectChannelById(channelId);
   }
 
   /**
    * Add new channel
    */
   addChannel(): void {
-    this.isAddChannelActive.update((v) => !v);
-    this.isCreateChannelOpen.set(true);
+    this.workspaceSidebarService.startAddChannel();
   }
 
   /**
    * Handle create channel close
    */
   onCreateChannelClose(): void {
-    this.isCreateChannelOpen.set(false);
+    this.workspaceSidebarService.closeCreateChannel();
   }
 
   /**
@@ -568,28 +185,18 @@ export class WorkspaceSidebarComponent {
    */
   onCreateChannel(data: { name: string; description: string; isPrivate: boolean }): void {
     // Store channel data temporarily
-    this.pendingChannelName.set(data.name);
-    this.pendingChannelDescription.set(data.description);
-    this.pendingChannelIsPrivate.set(data.isPrivate);
+    this.workspaceSidebarService.setPendingChannelData(data.name, data.description, data.isPrivate);
 
-    this.isCreateChannelOpen.set(false);
-    this.isAddMemberAfterChannelOpen.set(true);
+    this.workspaceSidebarService.closeCreateChannel();
+    this.workspaceSidebarService.openAddMemberAfterChannel();
   }
 
   /**
    * Handle add member after channel close
    */
   onClose(): void {
-    this.isAddMemberAfterChannelOpen.set(false);
-    this.pendingChannelName.set('');
-    this.pendingChannelDescription.set('');
-    this.pendingChannelIsPrivate.set(false);
+    this.workspaceSidebarService.closeAddMemberAfterChannel();
   }
-
-  /**
-   * Lock to prevent multiple simultaneous channel creation
-   */
-  private isCreatingChannel = signal(false);
 
   /**
    * Handle add member after channel create - create channel and send invitations
@@ -600,118 +207,40 @@ export class WorkspaceSidebarComponent {
     selectedChannels: Array<{ id: string; name: string }>;
     selectedUsers: Array<{ id: string; name: string; avatar: string }>;
   }): Promise<void> {
-    if (this.isCreatingChannel()) {
-      console.log('⏸️  Channel creation already in progress');
-      return;
-    }
-
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
 
-    this.isCreatingChannel.set(true);
+    // Create channel from pending data via ChannelManagementService
+    // (includes lock, cleanup, and auto-selection)
+    const newChannelId = await this.channelManagementService.createChannelFromPending(
+      data,
+      currentUserId
+    );
 
-    try {
-      // WICHTIG: Nur der Creator wird als Member hinzugefügt
-      // Alle anderen User bekommen Invitations
-      const memberIds = new Set<string>([currentUserId]);
+    if (!newChannelId) return; // Locked or failed
 
-      // Sammle alle User-IDs, die eingeladen werden sollen
-      const usersToInvite = new Set<string>();
-
-      // User aus "selectedUsers"
-      data.selectedUsers.forEach((user) => {
-        if (user.id !== currentUserId) {
-          usersToInvite.add(user.id);
-        }
-      });
-
-      // Members aus ausgewählten Channels
-      data.selectedChannels.forEach((selectedChannel) => {
-        const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
-        if (channel) {
-          channel.members.forEach((memberId) => {
-            if (memberId !== currentUserId) {
-              usersToInvite.add(memberId);
-            }
-          });
-        }
-      });
-
-      // Create channel via store (nur mit Creator als Member)
-      const newChannelId = await this.channelStore.createChannel(
-        {
-          name: this.pendingChannelName(),
-          description: this.pendingChannelDescription(),
-          isPrivate: this.pendingChannelIsPrivate(),
-          members: Array.from(memberIds), // Nur der Creator
-        },
-        currentUserId
-      );
-
-      // Sende Invitations an alle ausgewählten User
-      if (usersToInvite.size > 0) {
-        console.log(
-          `📨 Sending invitations to ${usersToInvite.size} users for channel:`,
-          this.pendingChannelName()
-        );
-
-        const invitationPromises = Array.from(usersToInvite).map((userId) =>
-          this.invitationService.createInvitation({
-            type: 'channel',
-            senderId: currentUserId,
-            recipientId: userId,
-            channelId: newChannelId,
-            channelName: this.pendingChannelName(),
-          })
-        );
-
-        try {
-          await Promise.all(invitationPromises);
-          console.log(`✅ Sent ${usersToInvite.size} invitations successfully`);
-        } catch (error) {
-          console.error('❌ Error sending invitations:', error);
-        }
-      }
-
-      this.isAddMemberAfterChannelOpen.set(false);
-      this.pendingChannelName.set('');
-      this.pendingChannelDescription.set('');
-      this.pendingChannelIsPrivate.set(false);
-
-      // Auto-select the newly created channel
-      this.selectedChannelId.set(newChannelId);
-      this.channelSelected.emit(newChannelId);
-    } finally {
-      // Re-enable after a short delay
-      setTimeout(() => {
-        this.isCreatingChannel.set(false);
-      }, 1000);
-    }
+    // Notify parent component
+    this.channelSelected.emit(newChannelId);
   }
 
   /**
-   * Select a direct message
+   * Select a direct message (handles self-DM automatically)
    */
   async selectDirectMessage(messageId: string): Promise<void> {
-    // Handle self DM (Notes to self)
-    if (messageId.startsWith('self-')) {
-      const currentUser = this.authStore.user();
-      if (!currentUser) return;
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return;
 
-      // Start a conversation with self
-      const conversation = await this.startDirectMessage(currentUser.uid);
-      if (conversation) {
-        // Emit the actual conversation ID to trigger navigation
-        this.directMessageSelected.emit(conversation.id);
-      }
-      return;
-    }
+    // Handle self-DM and get actual conversation ID via DirectMessageListService
+    const actualConversationId = await this.directMessageListService.selectConversation(
+      messageId,
+      currentUserId
+    );
 
-    // Deselect channel when DM is selected
-    this.selectedChannelId.set(null);
-    this.selectedDirectMessageId.set(messageId);
-    this.directMessageSelected.emit(messageId);
-    this.unreadService.markAsRead(messageId);
+    if (!actualConversationId) return;
+
+    // Use NavigationService for selection
+    this.navigationService.selectDirectMessage(actualConversationId);
+    this.directMessageSelected.emit(actualConversationId);
   }
 
   /**
@@ -719,16 +248,14 @@ export class WorkspaceSidebarComponent {
    * Note: Does not emit event to avoid circular navigation loops
    */
   selectDirectMessageById(messageId: string): void {
-    this.selectedChannelId.set(null);
-    this.selectedDirectMessageId.set(messageId);
-    // Don't emit - this method is called programmatically from routing effect
+    this.navigationService.selectDirectMessageById(messageId);
   }
 
   /**
    * Deselect the current direct message
    */
   deselectDirectMessage(): void {
-    this.selectedDirectMessageId.set(null);
+    this.navigationService.deselectDirectMessage();
   }
 
   /**
@@ -738,56 +265,28 @@ export class WorkspaceSidebarComponent {
    */
   async startDirectMessage(userId: string): Promise<{
     id: string;
-    participants: [string, string];
+    participants: string[];
   } | null> {
-    const currentUser = this.authStore.user();
-    if (!currentUser) {
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) {
       console.error('❌ Cannot start DM: No current user');
       return null;
     }
 
-    console.log('🚀 Starting DM conversation', {
-      currentUserId: currentUser.uid,
-      otherUserId: userId,
-      currentUserDirectMessages: currentUser.directMessages,
-    });
+    // Start conversation and auto-select via DirectMessageListService
+    // (includes navigation state update)
+    const conversation = await this.directMessageListService.startAndSelectConversation(
+      currentUserId,
+      userId
+    );
 
-    try {
-      // Start or get existing conversation
-      const conversation = await this.directMessageStore.startConversation(currentUser.uid, userId);
-
-      console.log('✅ Conversation created/found:', conversation.id);
-
-      // Don't reload conversations here - the conversation was already added to store in startConversation()
-      // The user store listener will automatically trigger loadConversations() when the user doc updates
-
-      // Load messages for this conversation
-      await this.directMessageStore.loadMessages(conversation.id);
-
-      console.log('✅ Messages loaded for conversation:', conversation.id);
-
-      // Mark as read for the user who started the conversation
-      await this.unreadService.markAsRead(conversation.id);
-
-      // Deselect channel
-      this.selectedChannelId.set(null);
-
-      // Select the conversation (don't emit here - let caller handle navigation)
-      this.selectedDirectMessageId.set(conversation.id);
-
-      console.log('✅ DM conversation opened:', conversation.id);
-
-      return conversation;
-    } catch (error) {
-      console.error('❌ Failed to start DM conversation:', error);
-      return null;
-    }
+    return conversation;
   }
 
   /**
    * Handle thread click from popup
    */
-  onThreadClick(
+  async onThreadClick(
     event: {
       messageId: string;
       parentMessage: PopupMessage;
@@ -795,79 +294,51 @@ export class WorkspaceSidebarComponent {
       isDirectMessage: boolean;
     },
     isDirectMessage: boolean
-  ): void {
-    // First, navigate to the channel or DM
+  ): Promise<void> {
+    // Emit selection event for parent component
     if (event.isDirectMessage) {
-      // Select the DM conversation
-      this.selectedDirectMessageId.set(event.conversationId);
-      this.selectedChannelId.set(null);
       this.directMessageSelected.emit(event.conversationId);
     } else {
-      // Select the channel
-      this.selectedChannelId.set(event.conversationId);
-      this.selectedDirectMessageId.set(null);
       this.channelSelected.emit(event.conversationId);
     }
 
-    // Small delay to ensure conversation is loaded before opening thread
-    setTimeout(() => {
-      // Convert PopupMessage to ViewMessage format
-      const user = this.userStore.users().find((u) => u.uid === event.parentMessage.authorId);
-      const currentUserId = this.authStore.user()?.uid;
-
-      const viewMessage: ViewMessage = {
-        id: event.parentMessage.id,
-        senderId: event.parentMessage.authorId,
-        senderName: user?.displayName || 'Unknown',
-        senderAvatar: user?.photoURL || '',
-        content: event.parentMessage.content,
-        timestamp: event.parentMessage.createdAt,
-        isOwnMessage: event.parentMessage.authorId === currentUserId,
-        reactions: event.parentMessage.reactions,
-        threadCount: event.parentMessage.threadCount,
-        lastThreadTimestamp: event.parentMessage.lastThreadTimestamp,
-        isEdited: event.parentMessage.isEdited,
-        editedAt: event.parentMessage.editedAt,
-      };
-
-      this.threadOpened.emit({
+    // Handle thread navigation and message transformation via NavigationService
+    const { viewMessage } = this.navigationService.handleThreadClick(
+      {
+        conversationId: event.conversationId,
         messageId: event.messageId,
-        parentMessage: viewMessage,
-        isDirectMessage: event.isDirectMessage,
-      });
+        message: event.parentMessage,
+      },
+      event.isDirectMessage
+    );
 
-      // Close popup
-      this.hoveredThreadUnreadId.set(null);
-    }, 100);
+    // Emit thread opened event for parent component
+    this.threadOpened.emit({
+      messageId: event.messageId,
+      parentMessage: viewMessage,
+      isDirectMessage: event.isDirectMessage,
+    });
   }
 
   /**
    * Handle mouse enter on thread unread item
    */
   onThreadUnreadMouseEnter(id: string): void {
-    if (this.hoverTimeout) {
-      clearTimeout(this.hoverTimeout);
-    }
-    this.hoveredThreadUnreadId.set(id);
+    this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
   }
 
   /**
    * Handle mouse leave on thread unread item
    */
   onThreadUnreadMouseLeave(): void {
-    // Add delay before hiding to allow moving to popup
-    this.hoverTimeout = setTimeout(() => {
-      this.hoveredThreadUnreadId.set(null);
-    }, 200);
+    this.workspaceSidebarService.onThreadUnreadMouseLeave();
   }
 
   /**
    * Cancel hover timeout (when entering popup)
    */
   onPopupMouseEnter(): void {
-    if (this.hoverTimeout) {
-      clearTimeout(this.hoverTimeout);
-    }
+    this.workspaceSidebarService.onPopupMouseEnter();
   }
 
   /**

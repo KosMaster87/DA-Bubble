@@ -26,22 +26,18 @@ export class UserListItemComponent {
   isActive = input<boolean>(false);
   itemClicked = output<string>();
 
-  constructor() {
-    // Component initialized
-  }
-
   /**
    * Handle click event
    */
-  onClick(): void {
+  protected onClick = (): void => {
     this.itemClicked.emit(this.user().id);
-  }
+  };
 
   /**
    * Handle image load error - use fallback avatar
    */
-  onImageError(event: Event): void {
+  protected onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;
     img.src = '/img/profile/profile-0.svg';
-  }
+  };
 }

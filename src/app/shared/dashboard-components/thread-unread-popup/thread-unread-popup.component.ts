@@ -17,6 +17,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ThreadStore, ChannelMessageStore, DirectMessageStore } from '@stores/index';
 import { Message } from '@core/models/message.model';
+import { DirectMessage } from '@core/models/direct-message.model';
 import { UnreadService } from '@core/services/unread/unread.service';
 
 export interface UnreadThreadInfo {
@@ -56,7 +57,13 @@ export class ThreadUnreadPopupComponent {
   protected popupStyle = signal<Record<string, string>>({});
 
   ngAfterViewInit() {
-    // Calculate popup position relative to the parent wrapper
+    this.calculatePopupPosition();
+  }
+
+  /**
+   * Calculate and set popup position relative to parent wrapper
+   */
+  private calculatePopupPosition = (): void => {
     const popupElement = this.elementRef.nativeElement as HTMLElement;
     const wrapperElement = popupElement.parentElement;
 
@@ -67,7 +74,7 @@ export class ThreadUnreadPopupComponent {
         left: `${rect.left}px`,
       });
     }
-  }
+  };
 
   /**
    * Get all unread threads for this conversation where user has participated
@@ -79,100 +86,186 @@ export class ThreadUnreadPopupComponent {
 
     if (!convId || !userId) return [];
 
-    // Get all messages for this conversation
-    const messages = isDM
+    const messages = this.getMessagesForConversation(convId, isDM);
+    const unreadThreads = this.collectUnreadThreads(messages, convId, userId);
+
+    return this.sortThreadsByMostRecent(unreadThreads);
+  });
+
+  /**
+   * Get messages for conversation (DM or channel)
+   */
+  private getMessagesForConversation = (convId: string, isDM: boolean): any[] => {
+    return isDM
       ? this.directMessageStore.messages()[convId] || []
       : this.channelMessageStore.getMessagesByChannel()(convId);
+  };
 
+  /**
+   * Collect all unread threads where user participated
+   */
+  private collectUnreadThreads = (
+    messages: any[],
+    convId: string,
+    userId: string
+  ): UnreadThreadInfo[] => {
     const unreadThreads: UnreadThreadInfo[] = [];
 
     for (const msg of messages) {
-      if (msg.lastThreadTimestamp) {
-        // Get thread messages (only if already loaded)
-        // Threads are loaded when opened, so this will work for threads user has viewed
-        const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
-
-        // Check if user participated in this thread
-        // User participated if:
-        // 1. Wrote at least one thread reply OR
-        // 2. Wrote the parent message (conversation starter)
-        const wroteThreadReply = threadMessages.some((threadMsg) => threadMsg.authorId === userId);
-        const wroteParentMessage = msg.authorId === userId;
-        const userParticipated = wroteThreadReply || wroteParentMessage;
-
-        // Only show threads where user participated
-        if (userParticipated) {
-          // Check if thread has unread messages
-          const threadTime =
-            msg.lastThreadTimestamp instanceof Date
-              ? msg.lastThreadTimestamp
-              : new Date(msg.lastThreadTimestamp);
-
-          const hasUnread = this.unreadService.hasThreadUnread(convId, msg.id, threadTime);
-
-          if (hasUnread) {
-            unreadThreads.push({
-              messageId: msg.id,
-              parentMessageContent: this.truncateContent(msg.content, 50),
-              threadCount: msg.threadCount || threadMessages.length,
-              lastThreadTimestamp: threadTime,
-              hasUnread: true,
-              userParticipated: true,
-            });
-          }
+      if (this.hasThreadActivity(msg)) {
+        const threadInfo = this.processThreadMessage(msg, convId, userId);
+        if (threadInfo) {
+          unreadThreads.push(threadInfo);
         }
       }
     }
 
-    // Sort by most recent first
-    return unreadThreads.sort(
+    return unreadThreads;
+  };
+
+  /**
+   * Check if message has thread activity
+   */
+  private hasThreadActivity = (msg: any): boolean => {
+    return !!msg.lastThreadTimestamp;
+  };
+
+  /**
+   * Process thread message and return info if unread and user participated
+   */
+  private processThreadMessage = (
+    msg: any,
+    convId: string,
+    userId: string
+  ): UnreadThreadInfo | null => {
+    const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
+
+    if (!this.didUserParticipate(msg, threadMessages, userId)) {
+      return null;
+    }
+
+    const threadTime = this.normalizeTimestamp(msg.lastThreadTimestamp);
+    const hasUnread = this.unreadService.hasThreadUnread(convId, msg.id, threadTime);
+
+    return hasUnread ? this.createThreadInfo(msg, threadMessages, threadTime) : null;
+  };
+
+  /**
+   * Check if user participated in thread
+   */
+  private didUserParticipate = (msg: any, threadMessages: any[], userId: string): boolean => {
+    const wroteThreadReply = threadMessages.some((threadMsg) => threadMsg.authorId === userId);
+    const wroteParentMessage = msg.authorId === userId;
+    return wroteThreadReply || wroteParentMessage;
+  };
+
+  /**
+   * Normalize timestamp to Date object
+   */
+  private normalizeTimestamp = (timestamp: any): Date => {
+    return timestamp instanceof Date ? timestamp : new Date(timestamp);
+  };
+
+  /**
+   * Create UnreadThreadInfo object
+   */
+  private createThreadInfo = (
+    msg: any,
+    threadMessages: any[],
+    threadTime: Date
+  ): UnreadThreadInfo => {
+    return {
+      messageId: msg.id,
+      parentMessageContent: this.truncateContent(msg.content, 50),
+      threadCount: msg.threadCount || threadMessages.length,
+      lastThreadTimestamp: threadTime,
+      hasUnread: true,
+      userParticipated: true,
+    };
+  };
+
+  /**
+   * Sort threads by most recent first
+   */
+  private sortThreadsByMostRecent = (threads: UnreadThreadInfo[]): UnreadThreadInfo[] => {
+    return threads.sort(
       (a, b) => b.lastThreadTimestamp.getTime() - a.lastThreadTimestamp.getTime()
     );
-  });
+  };
 
   /**
    * Truncate long message content
    */
-  private truncateContent(content: string, maxLength: number): string {
+  private truncateContent = (content: string, maxLength: number): string => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
-  }
+  };
 
   /**
    * Handle thread item click
    */
-  protected onThreadClick(messageId: string): void {
+  protected onThreadClick = (messageId: string): void => {
     const convId = this.conversationId();
     const isDM = this.isDirectMessage();
+    const parentMessage = this.getParentMessage(convId, messageId, isDM);
 
-    // Get the parent message
+    if (parentMessage) {
+      this.emitThreadClickEvent(messageId, parentMessage, convId, isDM);
+    }
+  };
+
+  /**
+   * Get parent message from store
+   */
+  private getParentMessage = (
+    convId: string,
+    messageId: string,
+    isDM: boolean
+  ): Message | DirectMessage | undefined => {
     const messages = isDM
       ? this.directMessageStore.messages()[convId] || []
       : this.channelMessageStore.getMessagesByChannel()(convId);
+    return messages.find((msg) => msg.id === messageId);
+  };
 
-    const parentMessage = messages.find((msg) => msg.id === messageId);
-
-    if (parentMessage) {
-      // Cast to Message type for compatibility and include conversation context
-      this.threadClicked.emit({
-        messageId,
-        parentMessage: parentMessage as Message,
-        conversationId: convId,
-        isDirectMessage: isDM,
-      });
-    }
-  }
+  /**
+   * Emit thread clicked event with message data
+   */
+  private emitThreadClickEvent = (
+    messageId: string,
+    parentMessage: Message | DirectMessage,
+    conversationId: string,
+    isDirectMessage: boolean
+  ): void => {
+    this.threadClicked.emit({
+      messageId,
+      parentMessage: parentMessage as Message,
+      conversationId,
+      isDirectMessage,
+    });
+  };
 
   /**
    * Format timestamp for display
    */
-  protected formatTime(timestamp: Date): string {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+  protected formatTime = (timestamp: Date): string => {
+    const diff = new Date().getTime() - timestamp.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    return this.getTimeLabel(minutes, hours, days, timestamp);
+  };
+
+  /**
+   * Get appropriate time label based on time differences
+   */
+  private getTimeLabel = (
+    minutes: number,
+    hours: number,
+    days: number,
+    timestamp: Date
+  ): string => {
     if (minutes < 1) return 'Gerade eben';
     if (minutes < 60) return `Vor ${minutes} Min.`;
     if (hours < 24) return `Vor ${hours} Std.`;
@@ -183,5 +276,5 @@ export class ThreadUnreadPopupComponent {
       month: '2-digit',
       year: 'numeric',
     });
-  }
+  };
 }

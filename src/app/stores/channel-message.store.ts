@@ -98,6 +98,7 @@ export const ChannelMessageStore = signalStore(
     const firestore = inject(Firestore);
     const reactionService = inject(ReactionService);
     const messageListeners = new Map<string, Unsubscribe>();
+    const pendingRetries = new Set<string>(); // Track channels with scheduled retries
     return {
       // === ENTRY POINT METHODS ===
 
@@ -181,9 +182,11 @@ export const ChannelMessageStore = signalStore(
         // Unsubscribe from previous listener for this channel
         const existingListener = messageListeners.get(channelId);
         if (existingListener) {
+          console.log('🔄 Unsubscribing existing listener for channel:', channelId);
           existingListener();
         }
 
+        console.log('📡 Creating new subscription for channel:', channelId);
         patchState(store, { isLoading: true, error: null });
 
         try {
@@ -195,6 +198,12 @@ export const ChannelMessageStore = signalStore(
           const unsubscribe = onSnapshot(
             q,
             (snapshot) => {
+              console.log(
+                '✅ Subscription successful for channel:',
+                channelId,
+                'Messages:',
+                snapshot.docs.length
+              );
               const messages = snapshot.docs.map((doc) => {
                 const data = doc.data();
                 return {
@@ -202,6 +211,7 @@ export const ChannelMessageStore = signalStore(
                   ...data,
                   createdAt: data['createdAt']?.toDate() || new Date(),
                   updatedAt: data['updatedAt']?.toDate() || new Date(),
+                  editedAt: data['editedAt']?.toDate() || undefined,
                   lastThreadTimestamp: data['lastThreadTimestamp']?.toDate() || undefined,
                   reactions: data['reactions'] || [],
                   threadCount: data['threadCount'] || 0,
@@ -221,14 +231,27 @@ export const ChannelMessageStore = signalStore(
                 return;
               }
 
-              // Auto-cleanup on permission error (user logged out)
+              // Handle permission errors - Firestore closes the subscription, so we need to retry
               if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
                 console.log(
-                  '🔓 Permission error detected - cleaning up channel messages subscription'
+                  '🔓 Permission error - will retry subscription after permissions update'
                 );
+                // Cleanup the closed subscription
                 if (messageListeners.has(channelId)) {
-                  messageListeners.get(channelId)!();
                   messageListeners.delete(channelId);
+                }
+
+                // Only schedule retry if not already pending (prevents double retries)
+                if (!pendingRetries.has(channelId)) {
+                  pendingRetries.add(channelId);
+                  // Retry after 3s to allow Security Rules cache propagation
+                  setTimeout(() => {
+                    console.log('🔄 Retrying channel messages subscription:', channelId);
+                    pendingRetries.delete(channelId);
+                    this.performLoadChannelMessages(channelId);
+                  }, 3000);
+                } else {
+                  console.log('⏭️  Retry already scheduled for channel:', channelId);
                 }
                 return;
               }

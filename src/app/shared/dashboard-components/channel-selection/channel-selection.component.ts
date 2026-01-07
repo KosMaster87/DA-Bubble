@@ -17,24 +17,9 @@ import {
   styleUrl: './channel-selection.component.scss',
 })
 export class ChannelSelectionComponent {
-  /**
-   * List of available channels
-   */
   channels = input<ChannelListItem[]>([]);
-
-  /**
-   * Search value for filtering
-   */
   searchValue = input<string>('');
-
-  /**
-   * Event when a channel is selected
-   */
   channelSelected = output<ChannelListItem>();
-
-  /**
-   * Event when closed (click outside)
-   */
   closed = output<void>();
 
   /**

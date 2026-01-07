@@ -23,7 +23,6 @@ import {
 import { MembersMiniatureComponent } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
 import { AddMemberButtonComponent } from '@shared/dashboard-components/add-member-button/add-member-button.component';
 import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
-import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 import {
   ProfileViewComponent,
   ProfileUser,
@@ -33,22 +32,23 @@ import {
   EditProfileUser,
 } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
-import {
-  ChannelInfoComponent,
-  ChannelInfoData,
-} from '@shared/dashboard-components/channel-info/channel-info.component';
+import { ChannelInfoComponent } from '@shared/dashboard-components/channel-info/channel-info.component';
 import { ChannelAccessComponent } from '../channel-access/channel-access.component';
-import {
-  UserStore,
-  ChannelStore,
-  ThreadStore,
-  MessageStore,
-  ChannelMessageStore,
-} from '@stores/index';
+import { UserStore, ChannelStore, ChannelMessageStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
-import { InvitationService } from '@core/services/invitation/invitation.service';
-import { MessageType, MessageReaction } from '@core/models/message.model';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
+import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
+import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
+import { ChannelMessageInteractionService } from '@core/services/channel-message-interaction/channel-message-interaction.service';
+import { ChannelStateService } from '@core/services/channel-state/channel-state.service';
+import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
+import { ChannelConversationUIService } from '@core/services/channel-conversation-ui/channel-conversation-ui.service';
+import {
+  ChannelDataService,
+  type ChannelInfo,
+} from '@core/services/channel-data/channel-data.service';
+import { MessageReaction } from '@core/models/message.model';
 
 export interface ChannelMessage {
   id: string;
@@ -61,14 +61,6 @@ export interface ChannelMessage {
   reactions?: MessageReaction[];
   threadCount?: number;
   lastThreadTimestamp?: Date;
-}
-
-export interface ChannelInfo {
-  id: string;
-  name: string;
-  description: string;
-  isPrivate: boolean;
-  memberCount: number;
 }
 
 @Component({
@@ -91,120 +83,77 @@ export interface ChannelInfo {
 export class ChannelConversationComponent {
   protected userStore = inject(UserStore);
   protected channelStore = inject(ChannelStore);
-  protected threadStore = inject(ThreadStore);
-  protected messageStore = inject(MessageStore);
   protected channelMessageStore = inject(ChannelMessageStore);
   protected authStore = inject(AuthStore);
   protected unreadService = inject(UnreadService);
-  protected invitationService = inject(InvitationService);
+  private userTransformation = inject(UserTransformationService);
+  private messageGrouping = inject(MessageGroupingService);
+  private profileManagement = inject(ProfileManagementService);
+  private channelMessageInteraction = inject(ChannelMessageInteractionService);
+  private channelState = inject(ChannelStateService);
+  private channelMembership = inject(ChannelMembershipService);
+  protected channelConversationUI = inject(ChannelConversationUIService);
+  private channelData = inject(ChannelDataService);
   threadRequested = output<{ messageId: string; parentMessage: Message }>();
   channelLeft = output<void>();
   directMessageRequested = output<string>(); // Emits userId to start DM with
-
-  /**
-   * Channel information
-   */
-  channel = input<ChannelInfo>({
-    id: '1',
-    name: 'Entwicklung',
-    description: 'Development team channel',
-    isPrivate: false,
-    memberCount: 5,
-  });
-
-  protected isMembersMenuOpen = signal<boolean>(false);
-  protected isProfileViewOpen = signal<boolean>(false);
-  protected isEditProfileOpen = signal<boolean>(false);
-  protected isChannelInfoOpen = signal<boolean>(false);
-  protected selectedMemberId = signal<string | null>(null);
-  protected isAddMembersOpen = signal<boolean>(false);
-
-  // Local state: user is currently joining this channel
+  channel = input.required<ChannelInfo>();
+  private channelId = computed(() => this.channel().id);
   private isJoiningChannel = signal<boolean>(false);
 
   /**
    * Check if current user is member of this channel
    */
-  protected isMember = computed(() => {
-    const currentUser = this.authStore.user();
-    if (!currentUser) return false;
+  protected isMember = this.channelData.isUserMember(this.channelId);
 
-    const channelData = this.channelStore.getChannelById()(this.channel().id);
-    if (!channelData) return false;
-
-    return channelData.members.includes(currentUser.uid);
+  /**
+   * Check if current user is channel owner
+   */
+  protected isChannelOwner = computed(() => {
+    const currentUserId = this.authStore.user()?.uid;
+    const channelData = this.currentChannelData();
+    return currentUserId && channelData ? currentUserId === channelData.createdBy : false;
   });
 
   /**
-   * Check if user should see access screen (not member AND not currently joining)
+   * Check if user should see access screen
+   * Show if: Not a member AND not the channel owner AND not currently joining
    */
   protected showAccessScreen = computed(() => {
+    // Channel owner never needs to see access screen
+    if (this.isChannelOwner()) {
+      return false;
+    }
+
+    // Show access screen if not a member and not currently joining
     return !this.isMember() && !this.isJoiningChannel();
   });
 
   /**
    * Get channel access info for access screen
    */
-  protected channelAccessInfo = computed(() => {
-    const channel = this.channel();
-    const channelData = this.channelStore.getChannelById()(channel.id);
-
-    return {
-      channelId: channel.id,
-      channelName: channel.name,
-      isPrivate: channel.isPrivate,
-      description: channelData?.description || channel.description,
-      rules: [], // TODO: Add channel rules to channel model
-    };
-  });
+  protected channelAccessInfo = this.channelData.getChannelAccessInfo(this.channel);
 
   /**
-   * Effect: Load messages when channel changes
+   * Effect: Setup channel state management
    */
   constructor() {
-    // Reset isJoiningChannel when channel changes
+    this.setupJoiningStateReset();
+    this.channelState.setupLoadMessagesEffect(this.channelId);
+    this.channelState.setupAutoMarkAsReadEffect(this.channelId);
+  }
+
+  /**
+   * Reset joining state when channel changes
+   */
+  private setupJoiningStateReset = (): void => {
     effect(() => {
-      const channelId = this.channel().id;
+      this.channelId();
       untracked(() => {
         this.isJoiningChannel.set(false);
       });
     });
-
-    effect(() => {
-      const channelId = this.channel().id;
-      if (channelId) {
-        this.channelMessageStore.loadChannelMessages(channelId);
-        // Debounce markAsRead to prevent race condition
-        setTimeout(() => {
-          this.unreadService.markAsRead(channelId);
-        }, 200);
-      }
-    });
-
-    // Auto-mark-as-read when new messages arrive in active channel
-    let previousMessageCount = 0;
-    effect(() => {
-      const channelId = this.channel().id;
-      const currentUserId = untracked(() => this.authStore.user()?.uid);
-
-      if (!channelId || !currentUserId) {
-        return;
-      }
-
-      // Get messages for current channel
-      const messages = this.channelMessageStore.getMessagesByChannel()(channelId);
-      const currentCount = messages.length;
-
-      // Only mark as read if message count increased (new message arrived)
-      if (currentCount > previousMessageCount && currentCount > 0) {
-        untracked(() => {
-          this.unreadService.markAsRead(channelId);
-        });
-      }
-
-      previousMessageCount = currentCount;
-    });
-  }
+  };
 
   /**
    * Current channel data from store (reactive to Firestore changes)
@@ -226,18 +175,14 @@ export class ChannelConversationComponent {
   /**
    * Check if current user is the channel owner
    */
-  protected isCurrentUserChannelOwner = computed(() => {
-    const channelData = this.currentChannelData();
-    const currentUserId = this.authStore.user()?.uid;
-    return channelData?.createdBy === currentUserId;
-  });
+  protected isCurrentUserChannelOwner = this.channelData.isCurrentUserOwner(this.channelId);
 
   /**
    * Check if selected user is the channel owner
    */
   protected isSelectedUserChannelOwner = computed(() => {
     const channelData = this.currentChannelData();
-    const selectedUserId = this.selectedMemberId();
+    const selectedUserId = this.channelConversationUI.getSelectedMemberId()();
     return channelData?.createdBy === selectedUserId;
   });
 
@@ -245,106 +190,32 @@ export class ChannelConversationComponent {
    * Check if viewing own profile
    */
   protected isOwnProfile = computed(() => {
-    return this.selectedMemberId() === this.authStore.user()?.uid;
+    return this.channelConversationUI.getSelectedMemberId()() === this.authStore.user()?.uid;
   });
 
   /**
    * Selected member for edit profile
    */
   protected editProfileUser = computed<EditProfileUser | null>(() => {
-    const memberId = this.selectedMemberId();
-    if (!memberId) return null;
-
-    const user = this.userStore.getUserById()(memberId);
-    if (!user) return null;
-
-    return {
-      id: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      isAdmin: false, // TODO: Implement admin flag
-    };
+    return this.userTransformation.toEditProfileUser(
+      this.channelConversationUI.getSelectedMemberId()()
+    );
   });
 
   /**
    * Channel info data for channel-info component
    */
-  protected channelInfo = computed<ChannelInfoData>(() => {
-    const ch = this.channel();
-    const channelData = this.channelStore.getChannelById()(ch.id);
-
-    if (!channelData) {
-      return {
-        id: ch.id,
-        name: ch.name,
-        description: ch.description,
-        isPrivate: false,
-        createdBy: '',
-        createdByName: 'Unknown',
-        admins: [],
-      };
-    }
-
-    // Get creator user data
-    const creator = this.userStore.getUserById()(channelData.createdBy);
-
-    // Get admin user data
-    const admins = channelData.admins.map((adminUid) => {
-      const adminUser = this.userStore.getUserById()(adminUid);
-      return {
-        uid: adminUid,
-        name: adminUser?.displayName || 'Unknown User',
-      };
-    });
-
-    return {
-      id: channelData.id,
-      name: channelData.name,
-      description: channelData.description,
-      isPrivate: channelData.isPrivate,
-      createdBy: channelData.createdBy,
-      createdByName: creator?.displayName || 'Unknown User',
-      admins,
-    };
-  });
+  protected channelInfo = this.channelData.getChannelInfoData(this.channel);
 
   /**
    * Channel members from channel's memberIds
    */
-  protected members = computed<UserListItem[]>(() => {
-    const channelData = this.channelStore.getChannelById()(this.channel().id);
-    if (!channelData || !channelData.members) return [];
-
-    return channelData.members
-      .map((memberId) => {
-        const user = this.userStore.getUserById()(memberId);
-        if (!user) return null;
-        return {
-          id: user.uid,
-          name: user.displayName,
-          avatar: user.photoURL || '/img/profile/profile-0.svg',
-        };
-      })
-      .filter((user): user is UserListItem => user !== null);
-  });
+  protected members = this.channelData.getChannelMembers(this.channelId);
 
   /**
    * Available users that are NOT yet members of this channel
    */
-  protected availableUsers = computed<UserListItem[]>(() => {
-    const channelData = this.channelStore.getChannelById()(this.channel().id);
-    const currentMemberIds = channelData?.members || [];
-
-    return this.userStore
-      .users()
-      .filter((user) => !currentMemberIds.includes(user.uid))
-      .map((user) => ({
-        id: user.uid,
-        name: user.displayName,
-        avatar: user.photoURL || '/img/profile/profile-0.svg',
-      }));
-  });
+  protected availableUsers = this.channelData.getAvailableUsers(this.channelId);
 
   /**
    * Total member count
@@ -355,20 +226,9 @@ export class ChannelConversationComponent {
    * Get selected member as ProfileUser
    */
   protected selectedMember = computed<ProfileUser | null>(() => {
-    const memberId = this.selectedMemberId();
-    if (!memberId) return null;
-
-    const user = this.userStore.getUserById()(memberId);
-    if (!user) return null;
-
-    return {
-      id: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      status: user.isOnline ? 'online' : 'offline',
-      isAdmin: false, // TODO: Implement admin flag
-    };
+    return this.userTransformation.toProfileUser(
+      this.channelConversationUI.getSelectedMemberId()()
+    );
   });
 
   /**
@@ -377,161 +237,41 @@ export class ChannelConversationComponent {
   protected messages = computed<ChannelMessage[]>(() => {
     const channelId = this.channel().id;
     const rawMessages = this.channelMessageStore.getMessagesByChannel()(channelId);
-    const currentUserId = this.authStore.user()?.uid;
-
-    return rawMessages.map((msg) => {
-      const author = this.userStore.getUserById()(msg.authorId);
-
-      return {
-        id: msg.id,
-        senderId: msg.authorId,
-        senderName: author?.displayName || 'Unknown User',
-        senderAvatar: author?.photoURL || '/img/profile/profile-0.svg',
-        content: msg.content,
-        timestamp: msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt),
-        isOwnMessage: msg.authorId === currentUserId,
-        reactions: msg.reactions,
-        threadCount: msg.threadCount,
-        lastThreadTimestamp:
-          msg.lastThreadTimestamp instanceof Date
-            ? msg.lastThreadTimestamp
-            : msg.lastThreadTimestamp
-            ? new Date(msg.lastThreadTimestamp)
-            : undefined,
-        isEdited: msg.isEdited,
-        editedAt:
-          msg.editedAt instanceof Date
-            ? msg.editedAt
-            : msg.editedAt
-            ? new Date(msg.editedAt)
-            : undefined,
-      };
-    });
+    return this.userTransformation.channelMessagesToViewMessages(rawMessages);
   });
 
-  /**
-   * Send message to channel
-   */
-  async sendMessage(content: string): Promise<void> {
-    if (!content.trim()) return;
-
-    const currentUser = this.authStore.user();
-    if (!currentUser) return;
+  /** Send message to channel */
+  sendMessage = async (content: string): Promise<void> => {
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return;
 
     const channelId = this.channel().id;
-
-    await this.channelMessageStore.sendMessage(channelId, content.trim(), currentUser.uid);
-
-    // Immediately mark as read to prevent unread flash
+    await this.channelMessageInteraction.sendMessage(channelId, content, currentUserId);
     this.unreadService.markAsRead(channelId);
-  }
+  };
 
-  /**
-   * Group messages by date
-   */
+  /** Group messages by date */
   protected messagesGroupedByDate = computed<MessageGroup[]>(() => {
-    const msgs = this.messages();
-    const groups = new Map<string, Message[]>();
-
-    msgs.forEach((msg) => {
-      const dateKey = this.getDateKey(msg.timestamp);
-      if (!groups.has(dateKey)) {
-        groups.set(dateKey, []);
-      }
-
-      groups.get(dateKey)!.push({
-        id: msg.id,
-        senderId: msg.senderId,
-        senderName: msg.senderName,
-        senderAvatar: msg.senderAvatar,
-        content: msg.content,
-        timestamp: msg.timestamp,
-        isOwnMessage: msg.isOwnMessage,
-        reactions: msg.reactions,
-        threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
-        lastThreadTimestamp: msg.lastThreadTimestamp,
-      });
-    });
-
-    return Array.from(groups.entries()).map(([dateKey, messages]) => ({
-      date: messages[0].timestamp,
-      label: this.getDateLabel(messages[0].timestamp),
-      messages,
-    }));
+    return this.messageGrouping.groupMessagesByDate(this.messages());
   });
 
-  /**
-   * Get date key for grouping (YYYY-MM-DD)
-   */
-  private getDateKey(date: Date): string {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-      d.getDate()
-    ).padStart(2, '0')}`;
-  }
-
-  /**
-   * Get date label ("Starting today" or formatted date)
-   */
-  private getDateLabel(date: Date): string {
-    const today = new Date();
-    const messageDate = new Date(date);
-
-    // Check if same day
-    if (
-      today.getFullYear() === messageDate.getFullYear() &&
-      today.getMonth() === messageDate.getMonth() &&
-      today.getDate() === messageDate.getDate()
-    ) {
-      return 'Starting today';
-    }
-
-    // Format date: "Monday, 28 December"
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    }).format(messageDate);
-  }
-
-  /**
-   * Add reaction to message
-   */
-  async addReaction(messageId: string, emojiId: string): Promise<void> {
+  /** Add reaction to message */
+  addReaction = async (messageId: string, emojiId: string): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
     const channelId = this.channel().id;
     if (!currentUserId || !channelId) return;
 
-    try {
-      await this.channelMessageStore.toggleReaction(channelId, messageId, emojiId, currentUserId);
-      console.log('✅ Reaction toggled:', messageId, emojiId);
-    } catch (error) {
-      console.error('❌ Failed to add reaction:', error);
-    }
-  }
+    await this.channelMessageInteraction.toggleReaction(
+      channelId,
+      messageId,
+      emojiId,
+      currentUserId
+    );
+  };
 
-  /**
-   * Handle add member click
-   */
-  onAddMember(): void {
-    console.log('Add member clicked');
-    this.isMembersMenuOpen.set(false);
-    this.isAddMembersOpen.set(true);
-  }
-
-  /**
-   * Handle add members close
-   */
-  onAddMembersClose(): void {
-    this.isAddMembersOpen.set(false);
-  }
-
-  /**
-   * Handle members added - SEND INVITATIONS instead of adding directly
-   */
-  async onMembersAdded(userIds: string[]): Promise<void> {
-    const channelId = this.channel().id;
-    const channel = this.channelStore.getChannelById()(channelId);
+  /** Handle members added - send invitations */
+  onMembersAdded = async (userIds: string[]): Promise<void> => {
+    const channel = this.channelStore.getChannelById()(this.channel().id);
     const currentUser = this.authStore.user();
 
     if (!channel || !currentUser) {
@@ -539,383 +279,130 @@ export class ChannelConversationComponent {
       return;
     }
 
-    // Send invitation to each user
-    for (const userId of userIds) {
-      try {
-        await this.invitationService.createInvitation({
-          type: 'channel',
-          senderId: currentUser.uid,
-          recipientId: userId,
-          channelId: channel.id,
-          channelName: channel.name,
-          message: `${currentUser.displayName} lädt dich ein, dem Channel #${channel.name} beizutreten.`,
-        });
-
-        console.log('✉️ Invitation sent to user:', userId);
-      } catch (error) {
-        console.error('❌ Error sending invitation to user:', userId, error);
-      }
-    }
-
-    this.isAddMembersOpen.set(false);
+    await this.channelMembership.sendInvitations(
+      channel.id,
+      userIds,
+      currentUser.uid,
+      currentUser.displayName,
+      channel.name
+    );
     console.log('✉️ Sent invitations to:', userIds.length, 'users');
-  }
+    this.channelConversationUI.closeAddMembers();
+  };
 
-  /**
-   * Handle channel accepted (user joined from access screen)
-   */
-  async onChannelAccepted(channelId: string): Promise<void> {
-    console.log('✅ User accepted public channel:', channelId);
-
-    // Set joining state to hide access screen immediately
+  /** Handle channel accepted (user joined from access screen) */
+  protected onChannelAccepted = async (channelId: string): Promise<void> => {
+    console.log('✅ User accepted channel rules:', channelId);
+    console.log('✅ User accepted channel rules and joining:', channelId);
     this.isJoiningChannel.set(true);
 
-    // Add user to channel members
-    const currentUser = this.authStore.user();
-    if (!currentUser) {
-      console.error('❌ No current user');
-      this.isJoiningChannel.set(false);
-      return;
-    }
-
     try {
-      const channel = this.channelStore.getChannelById()(channelId);
-      if (!channel) {
-        console.error('❌ Channel not found');
-        this.isJoiningChannel.set(false);
-        return;
-      }
-
-      console.log('🔄 Adding user to channel members...', {
-        channelId,
-        currentMembers: channel.members,
-        userId: currentUser.uid,
-      });
-
-      const updatedMembers = [...new Set([...channel.members, currentUser.uid])];
-      await this.channelStore.updateChannel(channelId, {
-        members: updatedMembers,
-      });
-
-      console.log('✅ User successfully joined channel:', {
-        channelId,
-        userId: currentUser.uid,
-        memberCount: updatedMembers.length,
-      });
-
-      // Keep isJoiningChannel true - it will be reset when isMember() becomes true
-      // This prevents the access screen from re-appearing during the Firestore sync
-    } catch (error: any) {
-      console.error('❌ Error joining channel:', {
-        channelId,
-        error: error?.message || error,
-        code: error?.code,
-      });
-
-      // Reset joining state on error
+      await this.channelMembership.joinChannelAndWaitForSync(channelId);
       this.isJoiningChannel.set(false);
-
-      // Show user-friendly error message
-      alert(`Fehler beim Beitreten des Kanals: ${error?.message || 'Unbekannter Fehler'}`);
+      console.log('✅ Join complete - access screen hidden');
+    } catch (error) {
+      console.error('❌ Error joining channel:', error);
+      this.isJoiningChannel.set(false);
     }
-  }
+  };
 
-  /**
-   * Handle view members click
-   */
-  onViewMembers(): void {
-    console.log('View members clicked');
-    this.isMembersMenuOpen.set(true);
-  }
-
-  /**
-   * Handle members menu close
-   */
-  onCloseMembersMenu(): void {
-    this.isMembersMenuOpen.set(false);
-  }
-
-  /**
-   * Handle member selection from menu
-   */
-  onMemberSelected(memberId: string): void {
-    console.log('Member selected:', memberId);
-    this.selectedMemberId.set(memberId);
-    this.isMembersMenuOpen.set(false);
-    this.isProfileViewOpen.set(true);
-  }
-
-  /**
-   * Handle profile view close
-   */
-  onProfileViewClose(): void {
-    this.isProfileViewOpen.set(false);
-    this.selectedMemberId.set(null);
-  }
-
-  /**
-   * Handle remove member from channel
-   */
-  async onRemoveMember(): Promise<void> {
-    const memberId = this.selectedMemberId();
+  /** Handle remove member from channel */
+  protected onRemoveMember = async (): Promise<void> => {
+    const memberId = this.channelConversationUI.getSelectedMemberId()();
     if (!memberId) return;
 
-    const channelId = this.channel().id;
-    const channel = this.channelStore.getChannelById()(channelId);
-    if (channel) {
-      const updatedMembers = channel.members.filter((id) => id !== memberId);
-      await this.channelStore.updateChannel(channelId, { members: updatedMembers });
-    }
-    this.isProfileViewOpen.set(false);
-    this.selectedMemberId.set(null);
-    console.log('Removed member from channel:', memberId);
-  }
+    await this.channelMembership.removeMember(this.channel().id, memberId);
+    this.channelConversationUI.closeProfileView();
+  };
 
-  /**
-   * Handle profile edit
-   */
-  onProfileEdit(): void {
-    this.isProfileViewOpen.set(false);
-    this.isEditProfileOpen.set(true);
-  }
-
-  /**
-   * Handle edit profile close
-   */
-  onEditProfileClose(): void {
-    this.isEditProfileOpen.set(false);
-  }
-
-  /**
-   * Handle edit profile save
-   */
-  async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
-    const userId = this.selectedMemberId();
+  /** Handle edit profile save */
+  protected onEditProfileSave = async (data: {
+    displayName: string;
+    isAdmin: boolean;
+  }): Promise<void> => {
+    const userId = this.channelConversationUI.getSelectedMemberId()();
     if (!userId) return;
 
     try {
-      // Check if editing own profile
-      const currentUserId = this.authStore.user()?.uid;
-      if (userId === currentUserId) {
-        // Update AuthStore for own profile (syncs to UserStore automatically)
-        await this.authStore.updateUserProfile({ displayName: data.displayName });
-      } else {
-        // Update UserStore for other users
-        await this.userStore.updateUserData(userId, {
-          displayName: data.displayName,
-          // TODO: isAdmin not in User model yet
-        });
-      }
+      await this.profileManagement.updateUserProfile(userId, data);
       console.log('✅ User profile updated:', data);
-      this.isEditProfileOpen.set(false);
+      this.channelConversationUI.closeEditProfile();
     } catch (error) {
       console.error('❌ Failed to update user profile:', error);
     }
-  }
+  };
 
-  /**
-   * Handle message click from profile
-   */
-  onProfileMessage(): void {
-    const memberId = this.selectedMemberId();
+  /** Handle message click from profile */
+  protected onProfileMessage = (): void => {
+    const memberId = this.channelConversationUI.getSelectedMemberId()();
     if (!memberId) return;
 
-    this.isProfileViewOpen.set(false);
-    console.log('Opening DM with member:', memberId);
-
-    // Emit event to open DM (will be handled by dashboard parent)
+    this.channelConversationUI.closeProfileView();
     this.directMessageRequested.emit(memberId);
-  }
+  };
 
-  /**
-   * Handle channel title click - opens channel info
-   */
-  onTitleClick(): void {
-    this.isChannelInfoOpen.set(true);
-  }
-
-  /**
-   * Handle channel info close
-   */
-  onChannelInfoClose(): void {
-    this.isChannelInfoOpen.set(false);
-  }
-
-  /**
-   * Handle channel info updated
-   */
-  async onChannelUpdated(data: {
+  /** Handle channel info updated */
+  protected onChannelUpdated = async (data: {
     name?: string;
     description?: string;
     isPrivate?: boolean;
-  }): Promise<void> {
-    const channelId = this.channel().id;
+  }): Promise<void> => {
+    await this.channelMembership.updateChannelInfo(this.channel().id, data);
+  };
 
-    const updates: { name?: string; description?: string; isPrivate?: boolean } = {};
-    if (data.name) {
-      updates.name = data.name;
-    }
-    if (data.description !== undefined) {
-      updates.description = data.description;
-    }
-    if (data.isPrivate !== undefined) {
-      updates.isPrivate = data.isPrivate;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      await this.channelStore.updateChannel(channelId, updates);
-    }
-  }
-
-  /**
-   * Handle leave channel clicked
-   */
-  async onLeaveChannel(): Promise<void> {
+  /** Handle leave channel clicked */
+  onLeaveChannel = async (): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
-    const channelData = this.channel();
-
-    if (!currentUserId || !channelData) return;
-
-    const channelId = channelData.id;
-    const channel = this.channelStore.getChannelById()(channelId);
-
-    if (!channel) return;
-
-    // Fallback check (UI button is already disabled for owners, Store also validates)
-    if (channel.createdBy === currentUserId) {
-      console.error('Channel owner cannot leave the channel');
-      return;
-    }
+    if (!currentUserId) return;
 
     try {
-      await this.channelStore.leaveChannel(channelId, currentUserId);
-      // Channel will be removed from sidebar automatically via real-time listener
-      // Navigate back to DABubble-welcome
+      await this.channelMembership.leaveChannel(this.channel().id, currentUserId);
       this.channelLeft.emit();
     } catch (error) {
-      console.error('Failed to leave channel:', error);
-      // TODO: Show error message to user
+      console.error('❌ Failed to leave channel:', error);
     }
-  }
+  };
 
-  /**
-   * Handle delete channel clicked
-   */
-  async onDeleteChannel(): Promise<void> {
+  /** Handle delete channel clicked */
+  onDeleteChannel = async (): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
     const channelData = this.channel();
-
     if (!currentUserId || !channelData) return;
 
-    const channelId = channelData.id;
-    const channel = this.channelStore.getChannelById()(channelId);
-
-    if (!channel) return;
-
-    // Only owner can delete channel
-    if (channel.createdBy !== currentUserId) {
-      console.error('Only channel owner can delete the channel');
-      return;
-    }
-
-    // TODO: Show confirmation dialog
-    const confirmed = confirm(
-      `Are you sure you want to delete the channel "${channel.name}"? This action cannot be undone.`
+    const deleted = await this.channelMembership.deleteChannel(
+      channelData.id,
+      currentUserId,
+      channelData.name
     );
-    if (!confirmed) return;
+    if (deleted) this.channelLeft.emit();
+  };
 
-    try {
-      await this.channelStore.deleteChannel(channelId);
-      // Channel will be removed from sidebar automatically via real-time listener
-      // Navigate back to DABubble-welcome
-      this.channelLeft.emit();
-    } catch (error) {
-      console.error('Failed to delete channel:', error);
-      // TODO: Show error message to user
-    }
-  }
-
-  /**
-   * Handle created by user clicked
-   */
-  onCreatedByClick(userId: string): void {
-    this.selectedMemberId.set(userId);
-    this.isChannelInfoOpen.set(false);
-    this.isProfileViewOpen.set(true);
-  }
-
-  /**
-   * Handle message click
-   */
-  onMessageClick(messageId: string): void {
-    console.log('Message clicked:', messageId);
-    // TODO: Implement message actions (edit, delete, reply)
-  }
-
-  /**
-   * Handle avatar click
-   */
-  onAvatarClick(senderId: string): void {
-    this.selectedMemberId.set(senderId);
-    this.isProfileViewOpen.set(true);
-  }
-
-  /**
-   * Handle sender name click
-   */
-  onSenderClick(senderId: string): void {
-    this.selectedMemberId.set(senderId);
-    this.isProfileViewOpen.set(true);
-  }
-
-  /**
-   * Handle reaction added
-   */
-  onReactionAdded(data: { messageId: string; emoji: string }): void {
-    console.log('Reaction added:', data);
+  /** Handle reaction added */
+  protected onReactionAdded = (data: { messageId: string; emoji: string }): void => {
     this.addReaction(data.messageId, data.emoji);
-  }
+  };
 
-  /**
-   * Handle message edited
-   */
-  async onMessageEdited(data: { messageId: string; newContent: string }): Promise<void> {
+  /** Handle message edited */
+  protected onMessageEdited = async (data: {
+    messageId: string;
+    newContent: string;
+  }): Promise<void> => {
     const channelId = this.channel().id;
-    await this.channelMessageStore.updateMessage(channelId, data.messageId, data.newContent);
-  }
+    await this.channelMessageInteraction.editMessage(channelId, data.messageId, data.newContent);
+  };
 
-  /**
-   * Handle message deleted
-   */
-  async onMessageDeleted(messageId: string): Promise<void> {
+  /** Handle message deleted */
+  protected onMessageDeleted = async (messageId: string): Promise<void> => {
     const channelId = this.channel().id;
-    try {
-      await this.channelMessageStore.deleteMessage(channelId, messageId);
-      console.log('✅ Message deleted successfully');
-    } catch (error) {
-      console.error('❌ Failed to delete message:', error);
-    }
-  }
+    await this.channelMessageInteraction.deleteMessage(channelId, messageId);
+  };
 
-  /**
-   * Handle thread click
-   */
-  onThreadClick(messageId: string): void {
-    // Find the parent message
+  /** Handle thread click */
+  protected onThreadClick = (messageId: string): void => {
     const parentMessage = this.messages().find((m) => m.id === messageId);
-    if (parentMessage) {
-      // Convert to Message type
-      const message: Message = {
-        id: parentMessage.id,
-        senderId: parentMessage.senderId,
-        senderName: parentMessage.senderName,
-        senderAvatar: parentMessage.senderAvatar,
-        content: parentMessage.content,
-        timestamp: parentMessage.timestamp,
-        isOwnMessage: parentMessage.isOwnMessage,
-        reactions: parentMessage.reactions,
-      };
-      this.threadRequested.emit({ messageId, parentMessage: message });
-    }
-  }
+    if (!parentMessage) return;
+
+    const message = this.userTransformation.channelMessageToThreadMessage(parentMessage);
+    this.threadRequested.emit({ messageId, parentMessage: message });
+  };
 }

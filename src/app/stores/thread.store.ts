@@ -102,6 +102,7 @@ export const ThreadStore = signalStore(
     const firestore = inject(Firestore);
     const reactionService = inject(ReactionService);
     const threadListeners = new Map<string, Unsubscribe>();
+    const pendingRetries = new Set<string>(); // Track threads with scheduled retries
     return {
       // === ENTRY POINT METHODS ===
 
@@ -239,6 +240,7 @@ export const ThreadStore = signalStore(
                   isEdited: data['isEdited'] || false,
                   createdAt: data['createdAt']?.toDate() || new Date(),
                   updatedAt: data['updatedAt']?.toDate() || new Date(),
+                  editedAt: data['editedAt']?.toDate() || undefined,
                 } as ThreadMessage;
               });
 
@@ -251,12 +253,27 @@ export const ThreadStore = signalStore(
               });
             },
             (error: any) => {
-              // Auto-cleanup on permission error (user logged out)
+              // Handle permission errors - Firestore closes the subscription, so we need to retry
               if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-                console.log('🔓 Permission error detected - cleaning up thread subscription');
+                console.log(
+                  '🔓 Permission error - will retry thread subscription after permissions update'
+                );
+                // Cleanup the closed subscription
                 if (threadListeners.has(listenerKey)) {
-                  threadListeners.get(listenerKey)!();
                   threadListeners.delete(listenerKey);
+                }
+
+                // Only schedule retry if not already pending (prevents double retries)
+                if (!pendingRetries.has(listenerKey)) {
+                  pendingRetries.add(listenerKey);
+                  // Retry after 3s to allow Security Rules cache propagation
+                  setTimeout(() => {
+                    console.log('🔄 Retrying thread subscription:', listenerKey);
+                    pendingRetries.delete(listenerKey);
+                    this.performLoadThreads(channelId, messageId, isDirectMessage);
+                  }, 3000);
+                } else {
+                  console.log('⏭️  Retry already scheduled for thread:', listenerKey);
                 }
                 return;
               }

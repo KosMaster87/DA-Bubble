@@ -1,4 +1,7 @@
-<aside class="workspace-sidebar" [class.workspace-sidebar--hidden]="sidebarService.isHidden()">
+<aside
+  class="workspace-sidebar"
+  [class.workspace-sidebar--hidden]="workspaceSidebarService.isHidden()"
+>
   <div class="workspace-sidebar__header">
     <div class="workspace-sidebar__branding">
       <img
@@ -29,14 +32,18 @@
         <button
           class="workspace-sidebar__section-toggle"
           (click)="toggleChannels()"
-          [attr.aria-label]="isChannelsOpen() ? 'Collapse channels' : 'Expand channels'"
+          [attr.aria-label]="
+            workspaceSidebarService.isChannelsOpen() ? 'Collapse channels' : 'Expand channels'
+          "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
             <img
               src="/img/icon/channel-bar/arrow-drop-down-default.svg"
               alt=""
               class="workspace-sidebar__dropdown-icon"
-              [class.workspace-sidebar__dropdown-icon--open]="isChannelsOpen()"
+              [class.workspace-sidebar__dropdown-icon--open]="
+                workspaceSidebarService.isChannelsOpen()
+              "
             />
           </span>
 
@@ -52,7 +59,9 @@
 
         <button
           class="workspace-sidebar__section-add"
-          [class.workspace-sidebar__section-add--active]="isAddChannelActive()"
+          [class.workspace-sidebar__section-add--active]="
+            workspaceSidebarService.isAddChannelActive()
+          "
           (click)="$event.stopPropagation(); addChannel()"
           [attr.aria-label]="'Add channel'"
         >
@@ -64,7 +73,7 @@
         </button>
       </div>
 
-      @if (isChannelsOpen()) {
+      @if (workspaceSidebarService.isChannelsOpen()) {
       <div class="workspace-sidebar__section-content workspace-sidebar__section-content--channels">
         @if (sortedChannels().length > 0) { @for (channel of sortedChannels(); track channel.id) {
         <div
@@ -91,8 +100,8 @@
             </span>
           </button>
 
-          @if (channel.hasThreadUnread && hoveredThreadUnreadId() === channel.id &&
-          authStore.user()?.uid) {
+          @if (channel.hasThreadUnread && workspaceSidebarService.hoveredThreadUnreadId() ===
+          channel.id && authStore.user()?.uid) {
           <app-thread-unread-popup
             [conversationId]="channel.id"
             [currentUserId]="authStore.user()!.uid"
@@ -128,7 +137,9 @@
           class="workspace-sidebar__section-toggle"
           (click)="toggleDirectMessages()"
           [attr.aria-label]="
-            isDirectMessagesOpen() ? 'Collapse direct messages' : 'Expand direct messages'
+            workspaceSidebarService.isDirectMessagesOpen()
+              ? 'Collapse direct messages'
+              : 'Expand direct messages'
           "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
@@ -136,7 +147,9 @@
               src="/img/icon/channel-bar/arrow-drop-down-default.svg"
               alt=""
               class="workspace-sidebar__dropdown-icon"
-              [class.workspace-sidebar__dropdown-icon--open]="isDirectMessagesOpen()"
+              [class.workspace-sidebar__dropdown-icon--open]="
+                workspaceSidebarService.isDirectMessagesOpen()
+              "
             />
           </span>
 
@@ -151,7 +164,7 @@
         </button>
       </div>
 
-      @if (isDirectMessagesOpen()) {
+      @if (workspaceSidebarService.isDirectMessagesOpen()) {
       <div class="workspace-sidebar__section-content workspace-sidebar__section-content--dm">
         @if (directMessages().length > 0) { @for (dm of directMessages(); track dm.id) {
         <div
@@ -188,7 +201,8 @@
             </span>
           </button>
 
-          @if (dm.hasThreadUnread && hoveredThreadUnreadId() === dm.id && authStore.user()?.uid) {
+          @if (dm.hasThreadUnread && workspaceSidebarService.hoveredThreadUnreadId() === dm.id &&
+          authStore.user()?.uid) {
           <app-thread-unread-popup
             [conversationId]="dm.id"
             [currentUserId]="authStore.user()!.uid"
@@ -215,7 +229,9 @@
           class="workspace-sidebar__section-toggle"
           (click)="toggleSystemControl()"
           [attr.aria-label]="
-            isSystemControlOpen() ? 'Collapse system control' : 'Expand system control'
+            workspaceSidebarService.isSystemControlOpen()
+              ? 'Collapse system control'
+              : 'Expand system control'
           "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
@@ -223,7 +239,9 @@
               src="/img/icon/channel-bar/arrow-drop-down-default.svg"
               alt=""
               class="workspace-sidebar__dropdown-icon"
-              [class.workspace-sidebar__dropdown-icon--open]="isSystemControlOpen()"
+              [class.workspace-sidebar__dropdown-icon--open]="
+                workspaceSidebarService.isSystemControlOpen()
+              "
             />
           </span>
 
@@ -238,7 +256,7 @@
         </button>
       </div>
 
-      @if (isSystemControlOpen()) {
+      @if (workspaceSidebarService.isSystemControlOpen()) {
       <div class="workspace-sidebar__section-content">
         <!-- Mailbox -->
         <button
@@ -316,15 +334,15 @@
 
   <!-- Create Channel Popup -->
   <app-create-channel
-    [isVisible]="isCreateChannelOpen()"
+    [isVisible]="workspaceSidebarService.isCreateChannelOpen()"
     (closeClicked)="onCreateChannelClose()"
     (createClicked)="onCreateChannel($event)"
   />
 
   <!-- Add Members Popup -->
-  @if (isAddMemberAfterChannelOpen()) {
+  @if (workspaceSidebarService.isAddMemberAfterChannelOpen()) {
   <app-add-member-after-add-channel
-    [channelName]="pendingChannelName()"
+    [channelName]="workspaceSidebarService.pendingChannelName()"
     [channels]="sortedChannels()"
     [users]="allUsers()"
     (closed)="onClose()"

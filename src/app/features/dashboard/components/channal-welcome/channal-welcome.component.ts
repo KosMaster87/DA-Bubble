@@ -188,15 +188,15 @@ export class ChannalWelcomeComponent {
   /**
    * Handle view members click
    */
-  onViewMembers(): void {
+  protected onViewMembers = (): void => {
     console.log('View members clicked');
     this.isMembersMenuOpen.set(true);
-  }
+  };
 
   /**
    * Handle channel owner profile view click
    */
-  onViewOwnerProfile(): void {
+  protected onViewOwnerProfile = (): void => {
     const channel = this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
     if (!channel || !channel.members || channel.members.length === 0) return;
 
@@ -204,37 +204,37 @@ export class ChannalWelcomeComponent {
     this.selectedMemberId.set(ownerId);
     this.isProfileViewOpen.set(true);
     this.isMembersMenuOpen.set(false);
-  }
+  };
 
   /**
    * Handle members menu close
    */
-  onCloseMembersMenu(): void {
+  protected onCloseMembersMenu = (): void => {
     this.isMembersMenuOpen.set(false);
-  }
+  };
 
   /**
    * Handle member selection from menu
    */
-  onMemberSelected(memberId: string): void {
+  protected onMemberSelected = (memberId: string): void => {
     console.log('Member selected:', memberId);
     this.selectedMemberId.set(memberId);
     this.isMembersMenuOpen.set(false);
     this.isProfileViewOpen.set(true);
-  }
+  };
 
   /**
    * Handle profile view close
    */
-  onProfileViewClose(): void {
+  protected onProfileViewClose = (): void => {
     this.isProfileViewOpen.set(false);
     this.selectedMemberId.set(null);
-  }
+  };
 
   /**
    * Handle remove member from channel
    */
-  async onRemoveMember(): Promise<void> {
+  protected onRemoveMember = async (): Promise<void> => {
     const memberId = this.selectedMemberId();
     if (!memberId) return;
 
@@ -247,54 +247,61 @@ export class ChannalWelcomeComponent {
     this.isProfileViewOpen.set(false);
     this.selectedMemberId.set(null);
     console.log('Removed member from channel:', memberId);
-  }
+  };
 
   /**
    * Handle profile edit
    */
-  onProfileEdit(): void {
+  protected onProfileEdit = (): void => {
     this.isProfileViewOpen.set(false);
     this.isEditProfileOpen.set(true);
-  }
+  };
 
   /**
    * Handle edit profile close
    */
-  onEditProfileClose(): void {
+  protected onEditProfileClose = (): void => {
     this.isEditProfileOpen.set(false);
-  }
+  };
 
   /**
    * Handle edit profile save
    */
-  async onEditProfileSave(data: { displayName: string; isAdmin: boolean }): Promise<void> {
+  protected onEditProfileSave = async (data: {
+    displayName: string;
+    isAdmin: boolean;
+  }): Promise<void> => {
     const userId = this.selectedMemberId();
     if (!userId) return;
 
     try {
-      // Check if editing own profile
-      const currentUserId = this.authStore.user()?.uid;
-      if (userId === currentUserId) {
-        // Update AuthStore for own profile (syncs to UserStore automatically)
-        await this.authStore.updateUserProfile({ displayName: data.displayName });
-      } else {
-        // Update UserStore for other users
-        await this.userStore.updateUserData(userId, {
-          displayName: data.displayName,
-          // TODO: isAdmin not in User model yet
-        });
-      }
+      await this.updateUserProfile(userId, data);
       console.log('✅ User profile updated:', data);
       this.isEditProfileOpen.set(false);
     } catch (error) {
       console.error('❌ Failed to update user profile:', error);
     }
-  }
+  };
+
+  /**
+   * Update user profile based on whether it's own profile or other user
+   */
+  private updateUserProfile = async (
+    userId: string,
+    data: { displayName: string; isAdmin: boolean }
+  ): Promise<void> => {
+    const currentUserId = this.authStore.user()?.uid;
+    if (userId === currentUserId) {
+      await this.authStore.updateUserProfile({ displayName: data.displayName });
+    } else {
+      await this.userStore.updateUserData(userId, { displayName: data.displayName });
+    }
+  };
 
   /**
    * Handle message click from profile
    */
-  onProfileMessage(): void {
+  protected onProfileMessage = (): void => {
     const memberId = this.selectedMemberId();
     if (!memberId) return;
 
@@ -303,5 +310,5 @@ export class ChannalWelcomeComponent {
 
     // Emit event to start DM conversation
     this.directMessageRequested.emit(memberId);
-  }
+  };
 }

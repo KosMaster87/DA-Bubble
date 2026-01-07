@@ -11,7 +11,7 @@
   <!-- Header -->
   <div class="channel-conversation__header">
     <div class="channel-conversation__header-info">
-      <h1 class="channel-conversation__title" (click)="onTitleClick()">
+      <h1 class="channel-conversation__title" (click)="channelConversationUI.openChannelInfo()">
         <img
           src="/img/icon/channel-bar/tag-default.svg"
           alt=""
@@ -22,7 +22,9 @@
           src="/img/icon/arrow_default.svg"
           alt=""
           class="channel-conversation__title-arrow"
-          [class.channel-conversation__title-arrow--open]="isChannelInfoOpen()"
+          [class.channel-conversation__title-arrow--open]="
+            channelConversationUI.getChannelInfoState()()
+          "
         />
       </h1>
       <div class="channel-conversation__description-wrapper">
@@ -37,13 +39,13 @@
       <!-- Channel Info -->
       <app-channel-info
         [channel]="channelInfo()"
-        [isVisible]="isChannelInfoOpen()"
+        [isVisible]="channelConversationUI.getChannelInfoState()()"
         [currentUserId]="authStore.user()?.uid"
-        (closeClicked)="onChannelInfoClose()"
+        (closeClicked)="channelConversationUI.closeChannelInfo()"
         (channelUpdated)="onChannelUpdated($event)"
         (leaveChannelClicked)="onLeaveChannel()"
         (deleteChannelClicked)="onDeleteChannel()"
-        (createdByClicked)="onCreatedByClick($event)"
+        (createdByClicked)="channelConversationUI.openProfileView($event)"
       />
     </div>
 
@@ -51,33 +53,33 @@
       <app-members-miniatures
         [members]="members()"
         [totalCount]="totalMemberCount()"
-        (memberClicked)="onViewMembers()"
+        (memberClicked)="channelConversationUI.openMembersMenu()"
       />
       @if (isCurrentUserChannelOwner() || isCurrentUserAdmin()) {
-      <app-add-member-button (addMemberClicked)="onAddMember()" />
+      <app-add-member-button (addMemberClicked)="channelConversationUI.openAddMembers()" />
       }
 
       <!-- Members Options Menu -->
       <app-members-options-menu
-        [isOpen]="isMembersMenuOpen()"
+        [isOpen]="channelConversationUI.getMembersMenuState()()"
         [members]="members()"
         [showAddMember]="isCurrentUserChannelOwner() || isCurrentUserAdmin()"
-        (closeClicked)="onCloseMembersMenu()"
-        (addMemberClicked)="onAddMember()"
-        (memberSelected)="onMemberSelected($event)"
+        (closeClicked)="channelConversationUI.closeMembersMenu()"
+        (addMemberClicked)="channelConversationUI.openAddMembers()"
+        (memberSelected)="channelConversationUI.openProfileView($event)"
       />
 
       <!-- Profile View -->
       @if (selectedMember()) {
       <app-profile-view
         [user]="selectedMember()!"
-        [isVisible]="isProfileViewOpen()"
+        [isVisible]="channelConversationUI.getProfileViewState()()"
         [isOwnProfile]="isOwnProfile()"
         [isChannelOwner]="isCurrentUserChannelOwner()"
         [isCurrentUserAdmin]="isCurrentUserAdmin()"
         [isSelectedUserOwner]="isSelectedUserChannelOwner()"
-        (closeClicked)="onProfileViewClose()"
-        (editClicked)="onProfileEdit()"
+        (closeClicked)="channelConversationUI.closeProfileView()"
+        (editClicked)="channelConversationUI.openEditProfile()"
         (messageClicked)="onProfileMessage()"
         (removeMemberClicked)="onRemoveMember()"
       />
@@ -87,18 +89,18 @@
       @if (editProfileUser()) {
       <app-profile-edit
         [user]="editProfileUser()!"
-        [isVisible]="isEditProfileOpen()"
-        (closeClicked)="onEditProfileClose()"
+        [isVisible]="channelConversationUI.getEditProfileState()()"
+        (closeClicked)="channelConversationUI.closeEditProfile()"
         (saveClicked)="onEditProfileSave($event)"
       />
       }
 
       <!-- Add Members -->
       <app-add-members
-        [isVisible]="isAddMembersOpen()"
+        [isVisible]="channelConversationUI.getAddMembersState()()"
         [channelName]="channel().name"
         [users]="availableUsers()"
-        (closeClicked)="onAddMembersClose()"
+        (closeClicked)="channelConversationUI.closeAddMembers()"
         (membersAdded)="onMembersAdded($event)"
       />
     </div>
@@ -109,9 +111,9 @@
     <app-conversation-messages
       [conversationId]="'channel-' + channel().id"
       [messageGroups]="messagesGroupedByDate()"
-      (messageClicked)="onMessageClick($event)"
-      (avatarClicked)="onAvatarClick($event)"
-      (senderClicked)="onSenderClick($event)"
+      (messageClicked)="onThreadClick($event)"
+      (avatarClicked)="channelConversationUI.openProfileView($event)"
+      (senderClicked)="channelConversationUI.openProfileView($event)"
       (reactionAdded)="onReactionAdded($event)"
       (threadClicked)="onThreadClick($event)"
       (messageEdited)="onMessageEdited($event)"
@@ -123,7 +125,6 @@
   <div class="channel-conversation__footer">
     <app-message-box (messageSent)="sendMessage($event)" />
   </div>
-
   }
   <!-- End of normal channel view -->
 </div>

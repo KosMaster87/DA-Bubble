@@ -138,4 +138,32 @@ export class UnreadService {
       console.error('❌ Failed to mark thread as read:', error);
     }
   }
+
+  /**
+   * Mark both thread and parent message/conversation as read
+   * Convenience method to prevent own messages from showing as unread
+   * @param conversationId Channel ID or Conversation ID
+   * @param parentMessageId Parent message ID of the thread
+   */
+  async markThreadAndParentAsRead(conversationId: string, parentMessageId: string): Promise<void> {
+    const userId = this.authStore.user()?.uid;
+    if (!userId) return;
+
+    try {
+      const userRef = doc(this.firestore, 'users', userId);
+      await updateDoc(userRef, {
+        [`lastRead.${parentMessageId}`]: serverTimestamp(),
+        [`lastRead.${conversationId}`]: serverTimestamp(),
+        [`lastRead.${conversationId}_thread_${parentMessageId}`]: serverTimestamp(),
+      });
+      console.log(`✅ Marked thread and parent as read: ${conversationId}/${parentMessageId}`);
+    } catch (error: any) {
+      // Ignore transient Firestore state errors
+      if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
+        console.log('⏭️  Skipping mark-as-read due to temporary Firestore state');
+        return;
+      }
+      console.error('❌ Failed to mark thread and parent as read:', error);
+    }
+  }
 }

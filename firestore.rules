@@ -92,7 +92,7 @@ service cloud.firestore {
                     && request.resource.data.uid == userId
                     && (
                       // Regular users must have matching email
-                      (!request.auth.token.firebase.sign_in_provider == 'anonymous'
+                      (request.auth.token.firebase.sign_in_provider != 'anonymous'
                        && request.resource.data.email == request.auth.token.email)
                       ||
                       // Guest users (anonymous) can have empty email
@@ -268,12 +268,14 @@ service cloud.firestore {
       allow create: if isAuthenticated()
                     && request.auth.uid in request.resource.data.participants
                     && (
-                      // Normal DM: 2 participants
-                      request.resource.data.participants.size() == 2
+                      // Normal DM: 2 different participants
+                      (request.resource.data.participants.size() == 2
+                       && request.resource.data.participants[0] != request.resource.data.participants[1])
                       ||
-                      // Notes DM (self-conversation): 1 participant (same user twice)
-                      (request.resource.data.participants.size() == 1
-                       && request.resource.data.participants[0] == request.auth.uid)
+                      // Notes DM (self-conversation): 2 identical UIDs
+                      (request.resource.data.participants.size() == 2
+                       && request.resource.data.participants[0] == request.auth.uid
+                       && request.resource.data.participants[1] == request.auth.uid)
                     )
                     && isConversationParticipant();
 
@@ -284,9 +286,10 @@ service cloud.firestore {
       // Allow delete for Notes DM (self-conversation) or if all participants agree
       allow delete: if isAuthenticated()
                     && (
-                      // Notes DM: user can delete their own self-conversation
-                      (resource.data.participants.size() == 1
-                       && resource.data.participants[0] == request.auth.uid)
+                      // Notes DM: user can delete their own self-conversation (2 identical UIDs)
+                      (resource.data.participants.size() == 2
+                       && resource.data.participants[0] == request.auth.uid
+                       && resource.data.participants[1] == request.auth.uid)
                       ||
                       // Regular DM: only if user is participant (for future cleanup)
                       (request.auth.uid in resource.data.participants)

@@ -67,7 +67,6 @@ export class AddMembersComponent {
    * Handle user selection
    */
   onUserSelected(user: UserListItem): void {
-    // Add user if not already selected
     const isAlreadySelected = this.selectedUsers().some((u) => u.id === user.id);
     if (!isAlreadySelected) {
       this.selectedUsers.update((users) => [...users, user]);

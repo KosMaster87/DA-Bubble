@@ -29,9 +29,14 @@ import {
   ProfileEditComponent,
   EditProfileUser,
 } from '@shared/dashboard-components/profile-edit/profile-edit.component';
-import { ThreadStore, UserStore } from '@stores/index';
+import { ThreadStore } from '@stores/thread.store';
+import { UserStore } from '@stores/user.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
+import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
+import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
+import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
 
 export interface ThreadInfo {
   channelId: string;
@@ -58,6 +63,10 @@ export class ThreadComponent {
   private authStore = inject(AuthStore);
   private userStore = inject(UserStore);
   private unreadService = inject(UnreadService);
+  private userTransformation = inject(UserTransformationService);
+  private messageGrouping = inject(MessageGroupingService);
+  private profileManagement = inject(ProfileManagementService);
+  private threadInteraction = inject(ThreadInteractionService);
 
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
@@ -75,22 +84,7 @@ export class ThreadComponent {
     if (!info?.parentMessageId) return [];
 
     const threadMessages = this.threadStore.getThreadsByMessageId()(info.parentMessageId);
-    const currentUserId = this.authStore.user()?.uid || '';
-
-    // Convert ThreadMessage to Message format with user data
-    return threadMessages.map((thread) => {
-      const user = this.userStore.getUserById()(thread.authorId);
-      return {
-        id: thread.id,
-        senderId: thread.authorId,
-        senderName: user?.displayName || 'Unknown User',
-        senderAvatar: user?.photoURL || '/img/profile/profile-0.svg',
-        content: thread.content,
-        timestamp: thread.createdAt,
-        isOwnMessage: thread.authorId === currentUserId,
-        reactions: thread.reactions || [],
-      };
-    });
+    return this.userTransformation.threadMessagesToViewMessages(threadMessages);
   });
 
   constructor() {
@@ -116,8 +110,7 @@ export class ThreadComponent {
       if (currentCount > previousReplyCount && currentCount > 0) {
         untracked(() => {
           // Mark both parent message AND thread as read
-          this.unreadService.markAsRead(info.parentMessageId);
-          this.unreadService.markThreadAsRead(info.channelId, info.parentMessageId);
+          this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
         });
       }
 
@@ -129,22 +122,7 @@ export class ThreadComponent {
    * Group replies by date
    */
   protected repliesGroupedByDate = computed<MessageGroup[]>(() => {
-    const messages = this.replies();
-    const groups = new Map<string, Message[]>();
-
-    messages.forEach((message) => {
-      const dateKey = this.getDateKey(message.timestamp);
-      if (!groups.has(dateKey)) {
-        groups.set(dateKey, []);
-      }
-      groups.get(dateKey)!.push(message);
-    });
-
-    return Array.from(groups.entries()).map(([dateKey, msgs]) => ({
-      date: msgs[0].timestamp,
-      label: this.getDateLabel(msgs[0].timestamp),
-      messages: msgs,
-    }));
+    return this.messageGrouping.groupMessagesByDate(this.replies());
   });
 
   /**
@@ -156,39 +134,14 @@ export class ThreadComponent {
    * Get the selected user's profile for profile view
    */
   protected selectedUserProfile = computed<ProfileUser | null>(() => {
-    const userId = this.selectedUserId();
-    if (!userId) return null;
-
-    const user = this.userStore.getUserById()(userId);
-    if (!user) return null;
-
-    return {
-      id: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      status: user.isOnline ? 'online' : 'offline',
-      isAdmin: false,
-    };
+    return this.userTransformation.toProfileUser(this.selectedUserId());
   });
 
   /**
    * Selected user for edit profile
    */
   protected editProfileUser = computed<EditProfileUser | null>(() => {
-    const userId = this.selectedUserId();
-    if (!userId) return null;
-
-    const user = this.userStore.getUserById()(userId);
-    if (!user) return null;
-
-    return {
-      id: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      isAdmin: false,
-    };
+    return this.userTransformation.toEditProfileUser(this.selectedUserId());
   });
 
   /**
@@ -197,40 +150,6 @@ export class ThreadComponent {
   protected isOwnProfile = computed(() => {
     return this.selectedUserId() === this.authStore.user()?.uid;
   });
-
-  /**
-   * Get date key for grouping (YYYY-MM-DD)
-   */
-  private getDateKey(date: Date): string {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-      d.getDate()
-    ).padStart(2, '0')}`;
-  }
-
-  /**
-   * Get date label ("Starting today" or formatted date)
-   */
-  private getDateLabel(date: Date): string {
-    const today = new Date();
-    const messageDate = new Date(date);
-
-    // Check if same day
-    if (
-      today.getFullYear() === messageDate.getFullYear() &&
-      today.getMonth() === messageDate.getMonth() &&
-      today.getDate() === messageDate.getDate()
-    ) {
-      return 'Starting today';
-    }
-
-    // Format date: "Monday, 28 December"
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    }).format(messageDate);
-  }
 
   /**
    * Handle close button click
@@ -260,11 +179,7 @@ export class ThreadComponent {
 
     // Mark both parent message AND parent channel/conversation as read
     // to prevent current user from seeing their own thread message as unread
-    this.unreadService.markAsRead(info.parentMessageId);
-    this.unreadService.markAsRead(info.channelId);
-
-    // Mark this specific thread as read to prevent orange border
-    this.unreadService.markThreadAsRead(info.channelId, info.parentMessageId);
+    this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
     // Replies will auto-update via computed signal
   }
 
@@ -307,19 +222,14 @@ export class ThreadComponent {
       return;
     }
 
-    try {
-      await this.threadStore.toggleReaction(
-        info.channelId,
-        info.parentMessageId,
-        data.messageId,
-        data.emoji,
-        currentUserId,
-        info.isDirectMessage || false
-      );
-      console.log('✅ Thread Reaction toggled:', data.messageId, data.emoji);
-    } catch (error) {
-      console.error('❌ Failed to add reaction:', error);
-    }
+    await this.threadInteraction.toggleReaction(
+      info.channelId,
+      info.parentMessageId,
+      data.messageId,
+      data.emoji,
+      currentUserId,
+      info.isDirectMessage || false
+    );
   }
 
   /**
@@ -327,12 +237,12 @@ export class ThreadComponent {
    */
   async onMessageEdited(data: { messageId: string; newContent: string }): Promise<void> {
     const info = this.threadInfo();
-    await this.threadStore.updateThread(
+    await this.threadInteraction.editMessage(
       info.channelId,
       info.parentMessageId,
       data.messageId,
-      { content: data.newContent },
-      info.isDirectMessage
+      data.newContent,
+      info.isDirectMessage || false
     );
   }
 
@@ -341,17 +251,12 @@ export class ThreadComponent {
    */
   async onMessageDeleted(messageId: string): Promise<void> {
     const info = this.threadInfo();
-    try {
-      await this.threadStore.deleteThread(
-        info.channelId,
-        info.parentMessageId,
-        messageId,
-        info.isDirectMessage
-      );
-      console.log('✅ Thread message deleted successfully');
-    } catch (error) {
-      console.error('❌ Failed to delete thread message:', error);
-    }
+    await this.threadInteraction.deleteMessage(
+      info.channelId,
+      info.parentMessageId,
+      messageId,
+      info.isDirectMessage || false
+    );
   }
 
   /**
@@ -395,18 +300,7 @@ export class ThreadComponent {
     if (!userId) return;
 
     try {
-      // Check if editing own profile
-      const currentUserId = this.authStore.user()?.uid;
-      if (userId === currentUserId) {
-        // Update AuthStore for own profile (syncs to UserStore automatically)
-        await this.authStore.updateUserProfile({ displayName: data.displayName });
-      } else {
-        // Update UserStore for other users
-        await this.userStore.updateUserData(userId, {
-          displayName: data.displayName,
-          // TODO: isAdmin not in User model yet
-        });
-      }
+      await this.profileManagement.updateUserProfile(userId, data);
       console.log('✅ User profile updated:', data);
     } catch (error) {
       console.error('❌ Failed to update user profile:', error);

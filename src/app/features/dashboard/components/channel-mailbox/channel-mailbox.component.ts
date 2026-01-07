@@ -10,6 +10,9 @@ import { Router } from '@angular/router';
 import { ChannelStore, MailboxStore, UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { InvitationService } from '@core/services/invitation/invitation.service';
+import { InvitationManagementService } from '@core/services/invitation-management/invitation-management.service';
+import { MailboxInteractionService } from '@core/services/mailbox-interaction/mailbox-interaction.service';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import { Invitation } from '@core/models/invitation.model';
 
 @Component({
@@ -22,9 +25,10 @@ export class ChannelMailboxComponent {
   protected channelStore = inject(ChannelStore);
   protected mailboxStore = inject(MailboxStore);
   protected authStore = inject(AuthStore);
-  protected userStore = inject(UserStore);
-  protected invitationService = inject(InvitationService);
-  protected router = inject(Router);
+  private invitationService = inject(InvitationService);
+  private invitationManagement = inject(InvitationManagementService);
+  private mailboxInteraction = inject(MailboxInteractionService);
+  private userTransformation = inject(UserTransformationService);
 
   // Output for navigation after accepting invitation
   channelSelected = output<string>();
@@ -41,16 +45,14 @@ export class ChannelMailboxComponent {
    * Get sender name for invitation
    */
   protected getSenderName = (senderId: string): string => {
-    const sender = this.userStore.getUserById()(senderId);
-    return sender?.displayName || 'Unbekannter User';
+    return this.userTransformation.getUserDisplayName(senderId, 'Unbekannter User');
   };
 
   /**
    * Get sender avatar for invitation
    */
   protected getSenderAvatar = (senderId: string): string => {
-    const sender = this.userStore.getUserById()(senderId);
-    return sender?.photoURL || '/img/profile/profile-1.png';
+    return this.userTransformation.getUserAvatar(senderId, '/img/profile/profile-1.png');
   };
 
   private invitationUnsubscribe: (() => void) | null = null;
@@ -98,144 +100,71 @@ export class ChannelMailboxComponent {
   protected loading = computed(() => this.mailboxStore.loading());
 
   /**
-   * Load invitations for the current user
+   * Load invitations for current user
    */
-  private loadInvitations(userId: string): void {
-    // Unsubscribe from previous listener
+  private loadInvitations = (userId: string): void => {
+    this.unsubscribeFromInvitations();
+    this.subscribeToInvitations(userId);
+  };
+
+  /**
+   * Unsubscribe from previous invitation listener
+   */
+  private unsubscribeFromInvitations = (): void => {
     if (this.invitationUnsubscribe) {
       this.invitationUnsubscribe();
     }
+  };
 
-    // Subscribe to real-time invitation updates
+  /**
+   * Subscribe to real-time invitation updates
+   */
+  private subscribeToInvitations = (userId: string): void => {
     this.invitationUnsubscribe = this.invitationService.subscribeToInvitations(
       userId,
       (invitations) => {
         this.invitations.set(invitations);
-        this.invitationsError.set(null); // Clear error on successful load
+        this.invitationsError.set(null);
         console.log('📬 Invitations loaded:', invitations.length);
       }
     );
-
-    // Note: Errors are logged in InvitationService with helpful instructions
-    // If index is missing, check console for setup link
-  }
+  };
 
   /**
    * Handle message click
    */
-  async onMessageClick(messageId: string): Promise<void> {
-    await this.mailboxStore.markAsRead(messageId);
-    console.log('Message clicked:', messageId);
-    // TODO: Open chat window with this message
-  }
+  onMessageClick = async (messageId: string): Promise<void> => {
+    await this.mailboxInteraction.handleMessageClick(messageId);
+  };
 
   /**
    * Accept an invitation
    */
-  async acceptInvitation(invitation: Invitation): Promise<void> {
-    try {
-      const currentUser = this.authStore.user();
-      if (!currentUser) {
-        console.error('❌ No current user');
-        return;
-      }
+  acceptInvitation = async (invitation: Invitation): Promise<void> => {
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return;
 
-      console.log('🔄 Accepting invitation...', {
-        invitationId: invitation.id,
-        type: invitation.type,
-        channelId: invitation.channelId,
-        userId: currentUser.uid,
-      });
-
-      // Accept the invitation in Firestore
-      await this.invitationService.acceptInvitation(invitation.id);
-      console.log('✅ Invitation status updated to accepted');
-
-      // If it's a channel invitation, add user to channel members
-      if (invitation.type === 'channel' && invitation.channelId) {
-        // Get channel directly from Firestore (user might not be member yet)
-        const channelDoc = await this.channelStore.getChannelById()(invitation.channelId);
-
-        // Fallback: Fetch all channels to find the one by ID
-        let channel = channelDoc;
-        if (!channel) {
-          // Try to get from store's channels array
-          const channels = this.channelStore.channels();
-          channel = channels.find((ch) => ch.id === invitation.channelId);
-        }
-
-        if (!channel) {
-          console.error('❌ Channel not found:', invitation.channelId);
-          return;
-        }
-
-        console.log('🔄 Adding user to channel members...', {
-          channelId: invitation.channelId,
-          channelName: channel.name,
-          isPrivate: channel.isPrivate,
-          currentMembers: channel.members.length,
-        });
-
-        // Add current user to channel members
-        const updatedMembers = [...new Set([...channel.members, currentUser.uid])];
-
-        await this.channelStore.updateChannel(invitation.channelId, {
-          members: updatedMembers,
-        });
-
-        console.log('✅ User successfully joined channel:', {
-          channelId: invitation.channelId,
-          channelName: channel.name,
-          newMemberCount: updatedMembers.length,
-        });
-
-        // Wait a moment for Firestore to sync
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Navigate to channel using Router for reliable navigation
-        await this.router.navigate(['/dashboard/channel/' + invitation.channelId]);
-      }
-
-      // If it's a DM invitation, create DM conversation
-      if (invitation.type === 'direct-message') {
-        // TODO: Create/open DM conversation with sender
-        console.log('✅ User accepted DM invitation from:', invitation.senderId);
-      }
-    } catch (error: any) {
-      console.error('❌ Error accepting invitation:', {
-        error: error?.message || error,
-        code: error?.code,
-        invitationId: invitation.id,
-      });
-
-      // Show user-friendly error message
-      alert(`Fehler beim Akzeptieren der Einladung: ${error?.message || 'Unbekannter Fehler'}`);
-    }
-  }
+    await this.invitationManagement.acceptInvitation(invitation, currentUserId);
+  };
 
   /**
    * Decline an invitation
    */
-  async declineInvitation(invitationId: string): Promise<void> {
-    try {
-      await this.invitationService.declineInvitation(invitationId);
-      console.log('❌ Invitation declined:', invitationId);
-    } catch (error) {
-      console.error('❌ Error declining invitation:', error);
-    }
-  }
+  declineInvitation = async (invitationId: string): Promise<void> => {
+    await this.invitationManagement.declineInvitation(invitationId);
+  };
 
   /**
    * Mark all messages as read
    */
-  async markAllAsRead(): Promise<void> {
-    await this.mailboxStore.markAllAsRead();
-  }
+  markAllAsRead = async (): Promise<void> => {
+    await this.mailboxInteraction.markAllAsRead();
+  };
 
   /**
    * Delete a message
    */
-  async deleteMessage(messageId: string): Promise<void> {
-    await this.mailboxStore.deleteMessage(messageId);
-  }
+  deleteMessage = async (messageId: string): Promise<void> => {
+    await this.mailboxInteraction.deleteMessage(messageId);
+  };
 }
