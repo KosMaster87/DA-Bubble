@@ -32,6 +32,9 @@ export class ChannelMembershipService {
 
     const updatedMembers = this.addUserToMembersList(channel.members, currentUser.uid);
     await this.updateChannelMembers(channelId, updatedMembers, currentUser.uid);
+
+    // Small delay to allow Firestore to process the update before listeners react
+    await this.delay(150);
   };
 
   /**

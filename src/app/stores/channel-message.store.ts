@@ -9,39 +9,21 @@
 
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import {
-  Firestore,
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-  Unsubscribe,
-} from '@angular/fire/firestore';
-import { Message, CreateMessageRequest, MessageType } from '@core/models/message.model';
+import { Message } from '@core/models/message.model';
 import { ReactionService } from '@core/services/reaction/reaction.service';
+import { ChannelMessageOperationsService } from '@core/services/channel-message-operations/channel-message-operations.service';
+import { ChannelMessageListenerService } from '@core/services/channel-message-listener/channel-message-listener.service';
+import { ChannelMessageStateHelper } from './helpers/channel-message-state.helper';
 
 /**
  * State interface for channel message management
  * @interface ChannelMessageState
  */
 export interface ChannelMessageState {
-  /** Messages grouped by channel ID */
   channelMessages: { [channelId: string]: Message[] };
-  /** Currently active channel ID */
   activeChannelId: string | null;
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
-  /** Update counter to force reactivity on Firestore updates */
   updateCounter: number;
 }
 
@@ -95,202 +77,91 @@ export const ChannelMessageStore = signalStore(
     }),
   })),
   withMethods((store) => {
-    const firestore = inject(Firestore);
     const reactionService = inject(ReactionService);
-    const messageListeners = new Map<string, Unsubscribe>();
-    const pendingRetries = new Set<string>(); // Track channels with scheduled retries
+    const operations = inject(ChannelMessageOperationsService);
+    const listener = inject(ChannelMessageListenerService);
+
     return {
       // === ENTRY POINT METHODS ===
 
       /**
-       * Entry point: Load messages for a specific channel with real-time updates
-       * @async
-       * @function loadChannelMessages
-       * @param {string} channelId - Channel ID to load messages for
-       * @returns {void}
+       * Entry point: Load messages for channel
+       * @param channelId - Channel ID
        */
-      loadChannelMessages(channelId: string) {
+      loadChannelMessages(channelId: string): void {
         this.performLoadChannelMessages(channelId);
       },
 
       /**
        * Entry point: Send message to channel
-       * @async
-       * @function sendMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} content - Message content
-       * @param {string} authorId - Author user ID
-       * @returns {Promise<void>}
+       * @param channelId - Channel ID
+       * @param content - Message content
+       * @param authorId - Author user ID
        */
-      async sendMessage(channelId: string, content: string, authorId: string) {
+      async sendMessage(channelId: string, content: string, authorId: string): Promise<void> {
         await this.performSendMessage(channelId, content, authorId);
       },
 
       /**
        * Entry point: Update message content
-       * @async
-       * @function updateMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} messageId - Message ID to update
-       * @param {string} content - New message content
-       * @returns {Promise<void>}
+       * @param channelId - Channel ID
+       * @param messageId - Message ID
+       * @param content - New content
        */
-      async updateMessage(channelId: string, messageId: string, content: string) {
+      async updateMessage(channelId: string, messageId: string, content: string): Promise<void> {
         await this.performUpdateMessage(channelId, messageId, content);
       },
 
       /**
        * Entry point: Delete message
-       * @async
-       * @function deleteMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} messageId - Message ID to delete
-       * @returns {Promise<void>}
+       * @param channelId - Channel ID
+       * @param messageId - Message ID
        */
-      async deleteMessage(channelId: string, messageId: string) {
+      async deleteMessage(channelId: string, messageId: string): Promise<void> {
         await this.performDeleteMessage(channelId, messageId);
       },
 
       /**
        * Entry point: Set active channel
-       * @function setActiveChannel
-       * @param {string | null} channelId - Channel ID to set as active
+       * @param channelId - Channel ID or null
        */
-      setActiveChannel(channelId: string | null) {
+      setActiveChannel(channelId: string | null): void {
         patchState(store, { activeChannelId: channelId });
       },
 
       /**
        * Entry point: Add message to channel
-       * @function addMessageToChannel
-       * @param {string} channelId - Channel ID
-       * @param {Message} message - Message to add
+       * @param channelId - Channel ID
+       * @param message - Message to add
        */
-      addMessageToChannel(channelId: string, message: Message) {
+      addMessageToChannel(channelId: string, message: Message): void {
         this.performAddMessageToChannel(channelId, message);
       },
 
       // === IMPLEMENTATION METHODS ===
 
       /**
-       * Implementation: Load channel messages from Firestore with real-time updates
-       * @function performLoadChannelMessages
-       * @param {string} channelId - Channel ID to load messages for
-       * @returns {void}
+       * Implementation: Load channel messages
+       * @param channelId - Channel ID
        */
-      performLoadChannelMessages(channelId: string) {
-        // Unsubscribe from previous listener for this channel
-        const existingListener = messageListeners.get(channelId);
-        if (existingListener) {
-          console.log('🔄 Unsubscribing existing listener for channel:', channelId);
-          existingListener();
-        }
-
-        console.log('📡 Creating new subscription for channel:', channelId);
+      performLoadChannelMessages(channelId: string): void {
         patchState(store, { isLoading: true, error: null });
-
-        try {
-          // Get messages subcollection for this channel
-          const messagesRef = collection(firestore, `channels/${channelId}/messages`);
-          const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-          // Set up real-time listener
-          const unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-              console.log(
-                '✅ Subscription successful for channel:',
-                channelId,
-                'Messages:',
-                snapshot.docs.length
-              );
-              const messages = snapshot.docs.map((doc) => {
-                const data = doc.data();
-                return {
-                  id: doc.id,
-                  ...data,
-                  createdAt: data['createdAt']?.toDate() || new Date(),
-                  updatedAt: data['updatedAt']?.toDate() || new Date(),
-                  editedAt: data['editedAt']?.toDate() || undefined,
-                  lastThreadTimestamp: data['lastThreadTimestamp']?.toDate() || undefined,
-                  reactions: data['reactions'] || [],
-                  threadCount: data['threadCount'] || 0,
-                };
-              }) as Message[];
-
-              this.updateChannelMessages(channelId, messages);
-              patchState(store, {
-                isLoading: false,
-                updateCounter: store.updateCounter() + 1,
-              });
-            },
-            (error: any) => {
-              // Ignore transient Firestore state errors
-              if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
-                console.log('⏭️  Skipping Firestore error for channel:', channelId);
-                return;
-              }
-
-              // Handle permission errors - Firestore closes the subscription, so we need to retry
-              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-                console.log(
-                  '🔓 Permission error - will retry subscription after permissions update'
-                );
-                // Cleanup the closed subscription
-                if (messageListeners.has(channelId)) {
-                  messageListeners.delete(channelId);
-                }
-
-                // Only schedule retry if not already pending (prevents double retries)
-                if (!pendingRetries.has(channelId)) {
-                  pendingRetries.add(channelId);
-                  // Retry after 3s to allow Security Rules cache propagation
-                  setTimeout(() => {
-                    console.log('🔄 Retrying channel messages subscription:', channelId);
-                    pendingRetries.delete(channelId);
-                    this.performLoadChannelMessages(channelId);
-                  }, 3000);
-                } else {
-                  console.log('⏭️  Retry already scheduled for channel:', channelId);
-                }
-                return;
-              }
-
-              this.handleError(error, 'Failed to load channel messages');
-            }
-          );
-
-          // Store unsubscribe function in private variable
-          messageListeners.set(channelId, unsubscribe);
-        } catch (error) {
-          this.handleError(error, 'Failed to setup message listener');
-        }
+        listener.setupListener(
+          channelId,
+          (messages) => this.handleMessagesLoaded(channelId, messages),
+          (error) => this.handleError(error, 'Failed to load channel messages')
+        );
       },
 
       /**
-       * Implementation: Send message to channel
-       * @async
-       * @function performSendMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} content - Message content
-       * @param {string} authorId - Author user ID
-       * @returns {Promise<void>}
+       * Implementation: Send message
+       * @param channelId - Channel ID
+       * @param content - Message content
+       * @param authorId - Author ID
        */
-      async performSendMessage(channelId: string, content: string, authorId: string) {
+      async performSendMessage(channelId: string, content: string, authorId: string): Promise<void> {
         try {
-          const messagesRef = collection(firestore, `channels/${channelId}/messages`);
-          await addDoc(messagesRef, {
-            content,
-            authorId,
-            channelId,
-            type: MessageType.TEXT,
-            attachments: [],
-            reactions: [],
-            threadCount: 0,
-            isEdited: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
+          await operations.sendMessage(channelId, content, authorId);
         } catch (error) {
           this.handleError(error, 'Failed to send message');
           throw error;
@@ -298,24 +169,14 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
-       * Implementation: Update message in Firestore
-       * @async
-       * @function performUpdateMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} messageId - Message ID to update
-       * @param {string} content - New message content
-       * @returns {Promise<void>}
+       * Implementation: Update message
+       * @param channelId - Channel ID
+       * @param messageId - Message ID
+       * @param content - New content
        */
-      async performUpdateMessage(channelId: string, messageId: string, content: string) {
+      async performUpdateMessage(channelId: string, messageId: string, content: string): Promise<void> {
         try {
-          const messageRef = doc(firestore, `channels/${channelId}/messages/${messageId}`);
-          await updateDoc(messageRef, {
-            content,
-            isEdited: true,
-            editedAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-          // onSnapshot listener will automatically update state
+          await operations.updateMessage(channelId, messageId, content);
         } catch (error) {
           this.handleError(error, 'Failed to update message');
           throw error;
@@ -324,28 +185,12 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Implementation: Delete message
-       * @function performDeleteMessage
-       * @param {string} channelId - Channel ID
-       * @param {string} messageId - Message ID to delete
-       * @returns {Promise<void>}
+       * @param channelId - Channel ID
+       * @param messageId - Message ID
        */
-      async performDeleteMessage(channelId: string, messageId: string) {
+      async performDeleteMessage(channelId: string, messageId: string): Promise<void> {
         try {
-          // Delete message document
-          const messageRef = doc(firestore, `channels/${channelId}/messages/${messageId}`);
-          await deleteDoc(messageRef);
-
-          // Delete all thread messages for this parent message
-          const threadsRef = collection(
-            firestore,
-            `channels/${channelId}/messages/${messageId}/threads`
-          );
-          const threadsSnapshot = await getDocs(threadsRef);
-          const deletePromises = threadsSnapshot.docs.map((threadDoc) => deleteDoc(threadDoc.ref));
-          await Promise.all(deletePromises);
-
-          console.log('✅ Message and thread deleted successfully');
-          // onSnapshot listener will automatically update state
+          await operations.deleteMessage(channelId, messageId);
         } catch (error) {
           this.handleError(error, 'Failed to delete message');
           throw error;
@@ -353,97 +198,55 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
-       * Implementation: Add message to channel state
-       * @function performAddMessageToChannel
-       * @param {string} channelId - Channel ID
-       * @param {Message} message - Message to add
+       * Implementation: Add message to channel
+       * @param channelId - Channel ID
+       * @param message - Message to add
        */
-      performAddMessageToChannel(channelId: string, message: Message) {
-        const channelMessages = store.channelMessages()[channelId] || [];
-        this.updateChannelMessages(channelId, [message, ...channelMessages]);
+      performAddMessageToChannel(channelId: string, message: Message): void {
+        const updated = ChannelMessageStateHelper.addMessageToChannel(
+          store.channelMessages(),
+          channelId,
+          message
+        );
+        patchState(store, { channelMessages: updated, isLoading: false });
       },
 
-      // === HELPER FUNCTIONS ===
+      // === HELPER METHODS ===
 
       /**
-       * Update channel messages in state
-       * @function updateChannelMessages
-       * @param {string} channelId - Channel ID
-       * @param {Message[]} messages - Messages to update
+       * Handle messages loaded from listener
+       * @param channelId - Channel ID
+       * @param messages - Loaded messages
        */
-      updateChannelMessages(channelId: string, messages: Message[]) {
+      handleMessagesLoaded(channelId: string, messages: Message[]): void {
+        const updated = ChannelMessageStateHelper.updateChannelMessages(
+          store.channelMessages(),
+          channelId,
+          messages
+        );
         patchState(store, {
-          channelMessages: {
-            ...store.channelMessages(),
-            [channelId]: messages,
-          },
+          channelMessages: updated,
           isLoading: false,
+          updateCounter: store.updateCounter() + 1,
         });
       },
 
       /**
-       * Update channel messages with changes
-       * @function updateChannelMessagesWithChanges
-       * @param {string} messageId - Message ID to update
-       * @param {Partial<Message>} updates - Updates to apply
-       * @returns {object} Updated channel messages
+       * Handle errors
+       * @param error - Error object
+       * @param defaultMessage - Default message
        */
-      updateChannelMessagesWithChanges(messageId: string, updates: Partial<Message>): any {
-        const updatedChannelMessages = { ...store.channelMessages() };
-        Object.keys(updatedChannelMessages).forEach((channelId) => {
-          updatedChannelMessages[channelId] = updatedChannelMessages[channelId].map((msg) =>
-            msg.id === messageId ? { ...msg, ...updates } : msg
-          );
-        });
-        return updatedChannelMessages;
-      },
-
-      /**
-       * Handle errors and update state
-       * @function handleError
-       * @param {unknown} error - Error object
-       * @param {string} defaultMessage - Default error message
-       */
-      handleError(error: unknown, defaultMessage: string) {
+      handleError(error: unknown, defaultMessage: string): void {
         const errorMessage = error instanceof Error ? error.message : defaultMessage;
         patchState(store, { error: errorMessage, isLoading: false });
       },
 
-      // === STATE MANAGEMENT HELPERS ===
-
       /**
-       * Set loading state
-       * @function setLoading
-       * @param {boolean} isLoading - Loading state
-       */
-      setLoading(isLoading: boolean) {
-        patchState(store, { isLoading });
-      },
-
-      /**
-       * Set error message
-       * @function setError
-       * @param {string | null} error - Error message or null to clear
-       */
-      setError(error: string | null) {
-        patchState(store, { error });
-      },
-
-      /**
-       * Clear error message
-       * @function clearError
-       */
-      clearError() {
-        patchState(store, { error: null });
-      },
-
-      /**
-       * Toggle reaction on a channel message
-       * @function toggleReaction
-       * @param {string} channelId - Channel ID
-       * @param {string} messageId - Message ID
-       * @param {string} emojiId - Emoji ID
-       * @param {string} userId - User ID who reacted
+       * Toggle reaction on message
+       * @param channelId - Channel ID
+       * @param messageId - Message ID
+       * @param emojiId - Emoji ID
+       * @param userId - User ID
        */
       async toggleReaction(
         channelId: string,
@@ -462,11 +265,9 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Cleanup all listeners
-       * @function destroy
        */
-      destroy() {
-        messageListeners.forEach((unsubscribe) => unsubscribe());
-        messageListeners.clear();
+      destroy(): void {
+        listener.clearAllListeners();
       },
     };
   })

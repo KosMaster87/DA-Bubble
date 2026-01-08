@@ -12,6 +12,9 @@ import { signalStore, withState, withMethods, withComputed, patchState } from '@
 import { collection, doc, addDoc, updateDoc, Firestore } from '@angular/fire/firestore';
 import { Message, CreateMessageRequest } from '@core/models/message.model';
 import { ReactionService } from '@core/services/reaction/reaction.service';
+import { updateItemInArray, prependItem } from './helpers/shared-state.helpers';
+import { getErrorMessage, logError } from './helpers/shared-error.helpers';
+import { buildMessageUpdate, buildSoftDeleteData } from './helpers/shared-firestore.helpers';
 
 // Export types for use in other modules
 export type { CreateMessageRequest };
@@ -153,9 +156,9 @@ export const MessageStore = signalStore(
       async performUpdateMessage(messageId: string, content: string) {
         try {
           const messageDoc = doc(messagesCollection, messageId);
-          const updates = { content, isEdited: true, editedAt: new Date() };
+          const updates = buildMessageUpdate(content);
           await updateDoc(messageDoc, updates);
-          this.updateMessageInState(messageId, updates);
+          this.updateMessageInState(messageId, { content, isEdited: true });
         } catch (error) {
           this.handleError(error, 'Failed to update message');
         }
@@ -171,7 +174,8 @@ export const MessageStore = signalStore(
       async performDeleteMessage(messageId: string) {
         try {
           const messageDoc = doc(messagesCollection, messageId);
-          await updateDoc(messageDoc, { content: '[Message deleted]', isEdited: true });
+          const deleteData = buildSoftDeleteData();
+          await updateDoc(messageDoc, deleteData);
           this.updateMessageInState(messageId, { content: '[Message deleted]', isEdited: true });
         } catch (error) {
           this.handleError(error, 'Failed to delete message');
@@ -188,15 +192,14 @@ export const MessageStore = signalStore(
        * @returns {Omit<Message, 'id'>} Complete message data without ID
        */
       buildMessageData(messageData: CreateMessageRequest, authorId: string): Omit<Message, 'id'> {
-        const now = new Date();
         return {
           ...messageData,
           authorId,
           attachments: messageData.attachments || [],
           reactions: [],
           isEdited: false,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         };
       },
 
@@ -207,7 +210,7 @@ export const MessageStore = signalStore(
        */
       addMessageToState(message: Message) {
         patchState(store, {
-          messages: [message, ...store.messages()],
+          messages: prependItem(store.messages(), message),
           isLoading: false,
         });
       },
@@ -219,9 +222,7 @@ export const MessageStore = signalStore(
        * @param {Partial<Message>} updates - Updates to apply
        */
       updateMessageInState(messageId: string, updates: Partial<Message>) {
-        const updatedMessages = store
-          .messages()
-          .map((msg) => (msg.id === messageId ? { ...msg, ...updates } : msg));
+        const updatedMessages = updateItemInArray(store.messages(), messageId, updates);
         patchState(store, { messages: updatedMessages, error: null });
       },
 
@@ -232,7 +233,8 @@ export const MessageStore = signalStore(
        * @param {string} defaultMessage - Default error message
        */
       handleError(error: unknown, defaultMessage: string) {
-        const errorMessage = error instanceof Error ? error.message : defaultMessage;
+        const errorMessage = getErrorMessage(error, defaultMessage);
+        logError('MessageStore', error);
         patchState(store, { error: errorMessage, isLoading: false });
       },
 

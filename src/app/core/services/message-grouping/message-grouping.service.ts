@@ -41,10 +41,13 @@ export class MessageGroupingService {
    */
   private getDateKey(date: Date): string {
     const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      return new Date().toISOString().split('T')[0];
+    }
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
       d.getDate()
     ).padStart(2, '0')}`;
-  }
+  };
 
   /**
    * Get date label ("Starting today" or formatted date)
@@ -55,6 +58,10 @@ export class MessageGroupingService {
     const today = new Date();
     const messageDate = new Date(date);
 
+    if (isNaN(messageDate.getTime())) {
+      return 'Starting today';
+    }
+
     if (this.isSameDay(today, messageDate)) {
       return 'Starting today';
     }
@@ -64,7 +71,7 @@ export class MessageGroupingService {
       day: 'numeric',
       month: 'long',
     }).format(messageDate);
-  }
+  };
 
   /**
    * Check if two dates are the same day

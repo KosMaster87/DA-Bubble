@@ -7,22 +7,10 @@
 
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import {
-  Firestore,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  getDocs,
-  deleteDoc,
-  increment,
-  onSnapshot,
-  query,
-  orderBy,
-  Unsubscribe,
-  serverTimestamp,
-} from '@angular/fire/firestore';
 import { ReactionService } from '@core/services/reaction/reaction.service';
+import { ThreadOperationsService } from './services/thread-operations.service';
+import { ThreadListenerService } from './services/thread-listener.service';
+import { ThreadStateHelper } from './helpers/thread-state.helper';
 
 /**
  * Thread message interface
@@ -99,10 +87,9 @@ export const ThreadStore = signalStore(
     }),
   })),
   withMethods((store) => {
-    const firestore = inject(Firestore);
     const reactionService = inject(ReactionService);
-    const threadListeners = new Map<string, Unsubscribe>();
-    const pendingRetries = new Set<string>(); // Track threads with scheduled retries
+    const threadOps = inject(ThreadOperationsService);
+    const threadListener = inject(ThreadListenerService);
     return {
       // === ENTRY POINT METHODS ===
 
@@ -196,8 +183,7 @@ export const ThreadStore = signalStore(
        * Clear all thread listeners
        */
       clearAllListeners(): void {
-        threadListeners.forEach((unsubscribe) => unsubscribe());
-        threadListeners.clear();
+        threadListener.clearAllListeners();
       },
 
       // === IMPLEMENTATION METHODS ===
@@ -207,86 +193,49 @@ export const ThreadStore = signalStore(
        * Path: channels/{channelId}/messages/{messageId}/threads OR direct-messages/{conversationId}/messages/{messageId}/threads
        */
       performLoadThreads(channelId: string, messageId: string, isDirectMessage?: boolean): void {
-        // Check if listener already exists for this message
-        const listenerKey = `${channelId}_${messageId}`;
-        if (threadListeners.has(listenerKey)) {
-          return; // Listener already active
-        }
-
         patchState(store, { isLoading: true, error: null });
 
         try {
-          // Determine the correct path based on message type
-          const threadsPath = isDirectMessage
-            ? `direct-messages/${channelId}/messages/${messageId}/threads`
-            : `channels/${channelId}/messages/${messageId}/threads`;
-          const threadsCollection = collection(firestore, threadsPath);
-          const threadsQuery = query(threadsCollection, orderBy('createdAt', 'asc'));
-
-          // Set up real-time listener
-          const unsubscribe = onSnapshot(
-            threadsQuery,
-            (snapshot) => {
-              const threads = snapshot.docs.map((doc) => {
-                const data = doc.data();
-                return {
-                  id: doc.id,
-                  content: data['content'],
-                  authorId: data['authorId'],
-                  parentMessageId: messageId,
-                  channelId: channelId,
-                  reactions: data['reactions'] || [],
-                  attachments: data['attachments'] || [],
-                  isEdited: data['isEdited'] || false,
-                  createdAt: data['createdAt']?.toDate() || new Date(),
-                  updatedAt: data['updatedAt']?.toDate() || new Date(),
-                  editedAt: data['editedAt']?.toDate() || undefined,
-                } as ThreadMessage;
-              });
-
-              patchState(store, {
-                threads: {
-                  ...store.threads(),
-                  [messageId]: threads,
-                },
-                isLoading: false,
-              });
-            },
-            (error: any) => {
-              // Handle permission errors - Firestore closes the subscription, so we need to retry
-              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-                console.log(
-                  '🔓 Permission error - will retry thread subscription after permissions update'
-                );
-                // Cleanup the closed subscription
-                if (threadListeners.has(listenerKey)) {
-                  threadListeners.delete(listenerKey);
-                }
-
-                // Only schedule retry if not already pending (prevents double retries)
-                if (!pendingRetries.has(listenerKey)) {
-                  pendingRetries.add(listenerKey);
-                  // Retry after 3s to allow Security Rules cache propagation
-                  setTimeout(() => {
-                    console.log('🔄 Retrying thread subscription:', listenerKey);
-                    pendingRetries.delete(listenerKey);
-                    this.performLoadThreads(channelId, messageId, isDirectMessage);
-                  }, 3000);
-                } else {
-                  console.log('⏭️  Retry already scheduled for thread:', listenerKey);
-                }
-                return;
-              }
-
-              this.handleError(error, 'Failed to load threads');
-            }
+          const success = threadListener.setupListener(
+            channelId,
+            messageId,
+            isDirectMessage,
+            (snapshot, msgId) => this.handleThreadsSnapshot(snapshot, msgId),
+            (error, key, chId, msgId, isDM) => this.handleThreadsError(error, key, chId, msgId, isDM)
           );
 
-          // Store listener for cleanup
-          threadListeners.set(listenerKey, unsubscribe);
+          if (!success) return; // Listener already exists
         } catch (error) {
           this.handleError(error, 'Failed to setup thread listener');
         }
+      },
+
+      /**
+       * Handle threads snapshot update
+       */
+      handleThreadsSnapshot(snapshot: any, messageId: string): void {
+        const threads = threadListener.mapSnapshot(snapshot, messageId);
+        const updatedThreads = ThreadStateHelper.updateThreadsFromSnapshot(store.threads(), messageId, threads);
+        patchState(store, { threads: updatedThreads, isLoading: false });
+      },
+
+      /**
+       * Handle permission errors for threads listener
+       */
+      handleThreadsError(
+        error: any,
+        listenerKey: string,
+        channelId: string,
+        messageId: string,
+        isDirectMessage?: boolean
+      ): void {
+        if (threadListener.isPermissionError(error)) {
+          threadListener.scheduleRetry(listenerKey, () =>
+            this.performLoadThreads(channelId, messageId, isDirectMessage)
+          );
+          return;
+        }
+        this.handleError(error, 'Failed to load threads');
       },
 
       /**
@@ -301,38 +250,7 @@ export const ThreadStore = signalStore(
       ): Promise<void> {
         patchState(store, { isLoading: true, error: null });
         try {
-          // Determine the correct path based on message type
-          const threadsPath = isDirectMessage
-            ? `direct-messages/${channelId}/messages/${messageId}/threads`
-            : `channels/${channelId}/messages/${messageId}/threads`;
-          const threadsCollection = collection(firestore, threadsPath);
-
-          const newThread = {
-            content,
-            authorId,
-            parentMessageId: messageId,
-            channelId,
-            reactions: [],
-            attachments: [],
-            isEdited: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
-
-          const docRef = await addDoc(threadsCollection, newThread);
-
-          // Increment threadCount in parent message and update timestamp
-          const parentMessagePath = isDirectMessage
-            ? `direct-messages/${channelId}/messages/${messageId}`
-            : `channels/${channelId}/messages/${messageId}`;
-          const parentMessageRef = doc(firestore, parentMessagePath);
-          await updateDoc(parentMessageRef, {
-            threadCount: increment(1),
-            lastThreadTimestamp: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
-
-          // onSnapshot listener will automatically update state
+          await threadOps.addThreadReply(channelId, messageId, content, authorId, isDirectMessage);
           patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to add thread reply');
@@ -350,34 +268,20 @@ export const ThreadStore = signalStore(
         isDirectMessage?: boolean
       ): Promise<void> {
         try {
-          const threadPath = isDirectMessage
-            ? `direct-messages/${channelId}/messages/${messageId}/threads`
-            : `channels/${channelId}/messages/${messageId}/threads`;
-          const threadDoc = doc(firestore, threadPath, threadId);
-
-          await updateDoc(threadDoc, {
-            ...updates,
-            updatedAt: serverTimestamp(),
-            isEdited: true,
-          });
-
-          // Update local state
-          const currentThreads = store.threads()[messageId] || [];
-          const updatedThreads = currentThreads.map((thread) =>
-            thread.id === threadId
-              ? { ...thread, ...updates, updatedAt: new Date(), isEdited: true }
-              : thread
-          );
-
-          patchState(store, {
-            threads: {
-              ...store.threads(),
-              [messageId]: updatedThreads,
-            },
-          });
+          await threadOps.updateThread(channelId, messageId, threadId, updates, isDirectMessage);
+          this.updateThreadInLocalState(messageId, threadId, updates);
         } catch (error) {
           this.handleError(error, 'Failed to update thread');
         }
+      },
+
+      /**
+       * Update thread in local state
+       */
+      updateThreadInLocalState(messageId: string, threadId: string, updates: Partial<ThreadMessage>): void {
+        const currentThreads = store.threads()[messageId] || [];
+        const updatedThreads = ThreadStateHelper.updateThreadInState(currentThreads, threadId, updates);
+        patchState(store, { threads: { ...store.threads(), [messageId]: updatedThreads } });
       },
 
       /**
@@ -390,55 +294,20 @@ export const ThreadStore = signalStore(
         isDirectMessage?: boolean
       ): Promise<void> {
         try {
-          const collectionType = isDirectMessage ? 'direct-messages' : 'channels';
-          const threadPath = `${collectionType}/${channelId}/messages/${messageId}/threads`;
-          const threadDoc = doc(firestore, threadPath, threadId);
-
-          await deleteDoc(threadDoc);
-
-          // Get remaining threads to update parent message metadata
-          const threadsRef = collection(firestore, threadPath);
-          const threadsSnapshot = await getDocs(query(threadsRef, orderBy('createdAt', 'desc')));
-          const remainingThreadCount = threadsSnapshot.size;
-
-          // Update parent message with new thread count and last timestamp
-          const parentMessageRef = doc(
-            firestore,
-            `${collectionType}/${channelId}/messages/${messageId}`
-          );
-
-          if (remainingThreadCount > 0) {
-            // Get the timestamp of the most recent remaining thread
-            const latestThread = threadsSnapshot.docs[0];
-            const latestThreadData = latestThread.data();
-
-            await updateDoc(parentMessageRef, {
-              threadCount: remainingThreadCount,
-              lastThreadTimestamp: latestThreadData['createdAt'],
-              updatedAt: serverTimestamp(),
-            });
-          } else {
-            // No threads left, reset to 0
-            await updateDoc(parentMessageRef, {
-              threadCount: 0,
-              lastThreadTimestamp: null,
-              updatedAt: serverTimestamp(),
-            });
-          }
-
-          // Update local state
-          const currentThreads = store.threads()[messageId] || [];
-          const filteredThreads = currentThreads.filter((thread) => thread.id !== threadId);
-
-          patchState(store, {
-            threads: {
-              ...store.threads(),
-              [messageId]: filteredThreads,
-            },
-          });
+          await threadOps.deleteThread(channelId, messageId, threadId, isDirectMessage);
+          this.removeThreadFromLocalState(messageId, threadId);
         } catch (error) {
           this.handleError(error, 'Failed to delete thread');
         }
+      },
+
+      /**
+       * Remove thread from local state
+       */
+      removeThreadFromLocalState(messageId: string, threadId: string): void {
+        const currentThreads = store.threads()[messageId] || [];
+        const filteredThreads = ThreadStateHelper.removeThreadFromState(currentThreads, threadId);
+        patchState(store, { threads: { ...store.threads(), [messageId]: filteredThreads } });
       },
 
       // === HELPER METHODS ===

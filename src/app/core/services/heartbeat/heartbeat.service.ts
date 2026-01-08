@@ -14,7 +14,7 @@ export class HeartbeatService {
   private firestore = inject(Firestore);
   private authStore = inject(AuthStore);
   private heartbeatInterval?: ReturnType<typeof setInterval>;
-  private readonly HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+  private readonly HEARTBEAT_INTERVAL_MS = 300000; // 5 minutes (optimized for cost)
 
   constructor() {
     /**

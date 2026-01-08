@@ -51,6 +51,7 @@
       class="dashboard__thread"
       [threadInfo]="threadInfo()!"
       (closeRequested)="closeThread()"
+      (directMessageRequested)="startDirectMessageWithUser($event)"
     />
     }
   </div>

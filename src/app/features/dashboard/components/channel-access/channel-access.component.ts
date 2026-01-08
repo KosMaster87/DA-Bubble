@@ -61,7 +61,6 @@ export class ChannelAccessComponent {
       return;
     }
 
-    // Emit event - parent will handle adding user to members and hiding this screen
     this.channelAccepted.emit(channelId);
     console.log('✅ User accepted public channel:', channelId);
   };

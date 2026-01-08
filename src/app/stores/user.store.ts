@@ -11,7 +11,6 @@ import {
   collection,
   doc,
   updateDoc,
-  getDocs,
   getDoc,
   deleteDoc,
   onSnapshot,
@@ -28,10 +27,7 @@ import { User } from '@core/models/user.model';
 const normalizeGooglePhotoURL = (photoURL: string | null | undefined): string | undefined => {
   if (!photoURL) return undefined;
 
-  // Check if it's a Google photo URL
   if (photoURL.includes('googleusercontent.com')) {
-    // Remove any existing size parameters and add =s96-c
-    // This handles both short and long Google photo URLs
     const baseUrl = photoURL.split('=')[0].split('?')[0];
     return `${baseUrl}=s96-c`;
   }

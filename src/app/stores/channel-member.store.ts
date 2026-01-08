@@ -17,11 +17,8 @@ import { Channel } from '@core/models/channel.model';
  * @interface ChannelMemberState
  */
 export interface ChannelMemberState {
-  /** Currently active channel for member operations */
   activeChannelId: string | null;
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
 }
 

@@ -103,6 +103,11 @@ export class DashboardComponent {
    * Switch to new message view
    */
   showNewMessage(): void {
+    // Close thread panel if open
+    if (this.threadManagement.isThreadOpen()) {
+      this.threadManagement.closeThread();
+    }
+
     this.dashboardState.showNewMessage();
   }
 
@@ -183,21 +188,19 @@ export class DashboardComponent {
   openThread(event: {
     messageId: string;
     parentMessage: Message;
+    conversationId?: string;
     isDirectMessage?: boolean;
   }): void {
-    // Get channel or DM name and ID
+    const isDirectMessage = event.isDirectMessage || false;
     let channelName = '';
-    let channelId = '';
-    let isDirectMessage = event.isDirectMessage || false;
+    let channelId = event.conversationId || '';
 
-    if (this.currentView() === 'channel' && this.selectedChannel()) {
-      channelName = this.selectedChannel()!.name;
-      channelId = this.selectedChannel()!.id;
-      isDirectMessage = false;
-    } else if (this.currentView() === 'direct-message' && this.selectedDM()) {
-      channelName = this.selectedDM()!.userName;
-      channelId = this.selectedDM()!.conversationId;
-      isDirectMessage = true;
+    if (channelId) {
+      channelName = this.getConversationName(channelId, isDirectMessage);
+    } else {
+      const viewData = this.getConversationFromCurrentView();
+      channelId = viewData.id;
+      channelName = viewData.name;
     }
 
     this.threadManagement.openThread(
@@ -207,6 +210,41 @@ export class DashboardComponent {
       channelName,
       isDirectMessage
     );
+  }
+
+  /**
+   * Get conversation name from stores
+   * @param conversationId - Conversation ID
+   * @param isDirectMessage - Is direct message
+   * @returns Conversation name
+   */
+  private getConversationName(conversationId: string, isDirectMessage: boolean): string {
+    if (isDirectMessage) {
+      const dm = this.dashboardState.selectedDM();
+      return dm?.userName || '';
+    }
+    const channel = this.dashboardState.selectedChannel();
+    return channel?.name || '';
+  }
+
+  /**
+   * Get conversation data from current view
+   * @returns Conversation ID and name
+   */
+  private getConversationFromCurrentView(): { id: string; name: string } {
+    if (this.currentView() === 'channel' && this.selectedChannel()) {
+      return {
+        id: this.selectedChannel()!.id,
+        name: this.selectedChannel()!.name,
+      };
+    }
+    if (this.currentView() === 'direct-message' && this.selectedDM()) {
+      return {
+        id: this.selectedDM()!.conversationId,
+        name: this.selectedDM()!.userName,
+      };
+    }
+    return { id: '', name: '' };
   }
 
   /**

@@ -8,11 +8,11 @@
  * https://firebase.google.com/docs/functions
  */
 
-import { setGlobalOptions } from 'firebase-functions';
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
-import * as logger from 'firebase-functions/logger';
+import {setGlobalOptions} from "firebase-functions";
+import {onSchedule} from "firebase-functions/v2/scheduler";
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import * as admin from "firebase-admin";
+import * as logger from "firebase-functions/logger";
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -30,30 +30,33 @@ admin.initializeApp();
 // V1 functions should each use functions.runWith({ maxInstances: 10 })
 // instead. In the v1 API, each function can only serve one request per
 // container, so this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+setGlobalOptions({maxInstances: 10});
 
 /**
  * Scheduled function to detect and mark offline users
- * Runs every 5 minutes to check for stale heartbeats (optimized for cost)
+ * Runs every 10 minutes to check for stale heartbeats (optimized for cost)
  */
 export const detectOfflineUsers = onSchedule(
   {
-    schedule: 'every 5 minutes',
-    timeZone: 'Europe/Berlin',
+    schedule: "every 10 minutes",
+    timeZone: "Europe/Berlin",
   },
   async () => {
-    logger.info('🔍 Starting offline user detection');
+    logger.info("🔍 Starting offline user detection");
 
     try {
       const db = admin.firestore();
       const now = admin.firestore.Timestamp.now();
-      const fiveMinutesAgo = new Date(now.toMillis() - 5 * 60 * 1000);
+      const tenMinutesAgo = new Date(now.toMillis() - 10 * 60 * 1000);
 
       // Query all users marked as online
-      const usersSnapshot = await db.collection('users').where('isOnline', '==', true).get();
+      const usersSnapshot = await db
+        .collection("users")
+        .where("isOnline", "==", true)
+        .get();
 
       if (usersSnapshot.empty) {
-        logger.info('✅ No online users found');
+        logger.info("✅ No online users found");
         return;
       }
 
@@ -64,15 +67,18 @@ export const detectOfflineUsers = onSchedule(
         const userData = doc.data();
         const lastHeartbeat = userData.lastHeartbeat?.toDate();
 
-        // If no heartbeat or heartbeat older than 5 minutes,
+        // If no heartbeat or heartbeat older than 10 minutes,
         // mark as offline
-        if (!lastHeartbeat || lastHeartbeat < fiveMinutesAgo) {
+        if (!lastHeartbeat || lastHeartbeat < tenMinutesAgo) {
           batch.update(doc.ref, {
             isOnline: false,
             lastSeen: lastHeartbeat || now,
           });
           offlineCount++;
-          logger.info(`👋 Marking user ${doc.id} offline ` + `(last heartbeat: ${lastHeartbeat})`);
+          logger.info(
+            `👋 Marking user ${doc.id} offline ` +
+              `(last heartbeat: ${lastHeartbeat})`
+          );
         }
       });
 
@@ -80,10 +86,10 @@ export const detectOfflineUsers = onSchedule(
         await batch.commit();
         logger.info(`✅ Marked ${offlineCount} users as offline`);
       } else {
-        logger.info('✅ All online users have recent heartbeats');
+        logger.info("✅ All online users have recent heartbeats");
       }
     } catch (error) {
-      logger.error('❌ Error detecting offline users:', error);
+      logger.error("❌ Error detecting offline users:", error);
       throw error;
     }
   }
@@ -97,8 +103,8 @@ export const detectOfflineUsers = onSchedule(
  */
 export const updateChannelLastMessage = onDocumentCreated(
   {
-    document: 'channels/{channelId}/messages/{messageId}',
-    region: 'us-central1',
+    document: "channels/{channelId}/messages/{messageId}",
+    region: "us-central1",
   },
   async (event) => {
     const channelId = event.params.channelId;
@@ -112,7 +118,10 @@ export const updateChannelLastMessage = onDocumentCreated(
     try {
       logger.info(`🔔 Trigger fired for channel ${channelId}`);
 
-      const channelRef = admin.firestore().collection('channels').doc(channelId);
+      const channelRef = admin
+        .firestore()
+        .collection("channels")
+        .doc(channelId);
 
       await channelRef.update({
         lastMessageAt: messageData.createdAt,
@@ -135,22 +144,27 @@ export const updateChannelLastMessage = onDocumentCreated(
  */
 export const updateDirectMessageLastMessage = onDocumentCreated(
   {
-    document: 'direct-messages/{conversationId}/messages/{messageId}',
-    region: 'us-central1',
+    document: "direct-messages/{conversationId}/messages/{messageId}",
+    region: "us-central1",
   },
   async (event) => {
     const conversationId = event.params.conversationId;
     const messageData = event.data?.data();
 
     if (!messageData) {
-      logger.warn(`⚠️ No message data found for conversation ${conversationId}`);
+      logger.warn(
+        `⚠️ No message data found for conversation ${conversationId}`
+      );
       return;
     }
 
     try {
       logger.info(`🔔 Trigger fired for conversation ${conversationId}`);
 
-      const conversationRef = admin.firestore().collection('direct-messages').doc(conversationId);
+      const conversationRef = admin
+        .firestore()
+        .collection("direct-messages")
+        .doc(conversationId);
 
       await conversationRef.update({
         lastMessageAt: messageData.createdAt,
@@ -173,8 +187,8 @@ export const updateDirectMessageLastMessage = onDocumentCreated(
  */
 export const updateChannelOnThreadMessage = onDocumentCreated(
   {
-    document: 'channels/{channelId}/messages/{messageId}/threads/{threadId}',
-    region: 'us-central1',
+    document: "channels/{channelId}/messages/{messageId}/threads/{threadId}",
+    region: "us-central1",
   },
   async (event) => {
     const channelId = event.params.channelId;
@@ -187,13 +201,16 @@ export const updateChannelOnThreadMessage = onDocumentCreated(
     }
 
     try {
-      logger.info(`🔔 Thread created in channel ${channelId}, ` + `message ${messageId}`);
+      logger.info(
+        `🔔 Thread created in channel ${channelId}, ` +
+          `message ${messageId}`
+      );
 
       const messageRef = admin
         .firestore()
-        .collection('channels')
+        .collection("channels")
         .doc(channelId)
-        .collection('messages')
+        .collection("messages")
         .doc(messageId);
 
       await messageRef.update({
@@ -217,8 +234,10 @@ export const updateChannelOnThreadMessage = onDocumentCreated(
  */
 export const updateDirectMessageOnThreadMessage = onDocumentCreated(
   {
-    document: 'direct-messages/{conversationId}/messages/{messageId}/' + 'threads/{threadId}',
-    region: 'us-central1',
+    document:
+      "direct-messages/{conversationId}/messages/{messageId}/" +
+      "threads/{threadId}",
+    region: "us-central1",
   },
   async (event) => {
     const conversationId = event.params.conversationId;
@@ -231,13 +250,16 @@ export const updateDirectMessageOnThreadMessage = onDocumentCreated(
     }
 
     try {
-      logger.info(`🔔 Thread created in conversation ${conversationId}, ` + `message ${messageId}`);
+      logger.info(
+        `🔔 Thread created in conversation ${conversationId}, ` +
+          `message ${messageId}`
+      );
 
       const messageRef = admin
         .firestore()
-        .collection('direct-messages')
+        .collection("direct-messages")
         .doc(conversationId)
-        .collection('messages')
+        .collection("messages")
         .doc(messageId);
 
       await messageRef.update({
@@ -255,16 +277,16 @@ export const updateDirectMessageOnThreadMessage = onDocumentCreated(
 
 /**
  * Scheduled function to cleanup expired guest users
- * Runs every 15 minutes to delete guest users whose session has expired
+ * Runs every 60 minutes to delete guest users whose session has expired
  * Guest users have a 1-hour session limit set in expiresAt field
  */
 export const cleanupExpiredGuests = onSchedule(
   {
-    schedule: 'every 15 minutes',
-    timeZone: 'Europe/Berlin',
+    schedule: "every 60 minutes",
+    timeZone: "Europe/Berlin",
   },
   async () => {
-    logger.info('🧹 Starting expired guest user cleanup');
+    logger.info("🧹 Starting expired guest user cleanup");
 
     try {
       const db = admin.firestore();
@@ -272,14 +294,14 @@ export const cleanupExpiredGuests = onSchedule(
 
       // Find all guest users whose session has expired
       const expiredGuestsQuery = db
-        .collection('users')
-        .where('isGuest', '==', true)
-        .where('expiresAt', '<=', now.toDate());
+        .collection("users")
+        .where("isGuest", "==", true)
+        .where("expiresAt", "<=", now.toDate());
 
       const expiredGuestsSnapshot = await expiredGuestsQuery.get();
 
       if (expiredGuestsSnapshot.empty) {
-        logger.info('✅ No expired guest users found');
+        logger.info("✅ No expired guest users found");
         return;
       }
 
@@ -292,7 +314,9 @@ export const cleanupExpiredGuests = onSchedule(
         const guestData = doc.data();
         const guestId = doc.id;
 
-        logger.info(`Deleting guest user: ${guestId} (${guestData.displayName})`);
+        logger.info(
+          `Deleting guest user: ${guestId} (${guestData.displayName})`
+        );
 
         // Delete Firestore user document
         batch.delete(doc.ref);
@@ -306,7 +330,10 @@ export const cleanupExpiredGuests = onSchedule(
               logger.info(`✅ Deleted auth account: ${guestId}`);
             })
             .catch((error) => {
-              logger.warn(`⚠️ Could not delete auth account ${guestId}:`, error);
+              logger.warn(
+                `⚠️ Could not delete auth account ${guestId}:`,
+                error
+              );
             })
         );
 
@@ -316,7 +343,7 @@ export const cleanupExpiredGuests = onSchedule(
           // Remove from all channels
           if (guestData.channels && Array.isArray(guestData.channels)) {
             for (const channelId of guestData.channels) {
-              const channelRef = db.collection('channels').doc(channelId);
+              const channelRef = db.collection("channels").doc(channelId);
               batch.update(channelRef, {
                 members: admin.firestore.FieldValue.arrayRemove(guestId),
                 updatedAt: now.toDate(),
@@ -326,25 +353,32 @@ export const cleanupExpiredGuests = onSchedule(
 
           // Delete Notes DM (self-conversation)
           const notesDmId = `${guestId}_${guestId}`;
-          const notesDmRef = db.collection('directMessages').doc(notesDmId);
+          const notesDmRef = db.collection("directMessages").doc(notesDmId);
           batch.delete(notesDmRef);
         } catch (cleanupError) {
-          logger.warn(`⚠️ Error cleaning up guest ${guestId} data:`, cleanupError);
+          logger.warn(
+            `⚠️ Error cleaning up guest ${guestId} data:`,
+            cleanupError
+          );
         }
       }
 
       // Commit all Firestore deletions
       await batch.commit();
-      logger.info('✅ Committed batch delete for ' + `${expiredGuestsSnapshot.size} guest users`);
+      logger.info(
+        "✅ Committed batch delete for " +
+          `${expiredGuestsSnapshot.size} guest users`
+      );
 
       // Wait for all Auth deletions to complete
       await Promise.allSettled(deleteAuthPromises);
 
       logger.info(
-        '🎉 Cleanup complete: Deleted ' + `${expiredGuestsSnapshot.size} expired guest users`
+        "🎉 Cleanup complete: Deleted " +
+          `${expiredGuestsSnapshot.size} expired guest users`
       );
     } catch (error) {
-      logger.error('❌ Error during guest user cleanup:', error);
+      logger.error("❌ Error during guest user cleanup:", error);
       throw error;
     }
   }

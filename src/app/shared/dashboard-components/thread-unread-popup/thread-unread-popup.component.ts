@@ -48,12 +48,12 @@ export class ThreadUnreadPopupComponent {
     isDirectMessage: boolean;
   }>();
 
+  private elementRef = inject(ElementRef);
+
   protected threadStore = inject(ThreadStore);
   protected channelMessageStore = inject(ChannelMessageStore);
   protected directMessageStore = inject(DirectMessageStore);
   protected unreadService = inject(UnreadService);
-  private elementRef = inject(ElementRef);
-
   protected popupStyle = signal<Record<string, string>>({});
 
   ngAfterViewInit() {

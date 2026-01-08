@@ -57,6 +57,7 @@ export class WorkspaceSidebarComponent {
   threadOpened = output<{
     messageId: string;
     parentMessage: ViewMessage;
+    conversationId: string;
     isDirectMessage: boolean;
   }>();
 
@@ -316,6 +317,7 @@ export class WorkspaceSidebarComponent {
     this.threadOpened.emit({
       messageId: event.messageId,
       parentMessage: viewMessage,
+      conversationId: event.conversationId,
       isDirectMessage: event.isDirectMessage,
     });
   }

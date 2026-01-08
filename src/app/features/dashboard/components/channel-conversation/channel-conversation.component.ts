@@ -151,6 +151,7 @@ export class ChannelConversationComponent {
       this.channelId();
       untracked(() => {
         this.isJoiningChannel.set(false);
+        this.channelConversationUI.resetAll();
       });
     });
   };

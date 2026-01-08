@@ -30,7 +30,6 @@ import {
   EditProfileUser,
 } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { ThreadStore } from '@stores/thread.store';
-import { UserStore } from '@stores/user.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
@@ -61,7 +60,6 @@ export interface ThreadInfo {
 export class ThreadComponent {
   private threadStore = inject(ThreadStore);
   private authStore = inject(AuthStore);
-  private userStore = inject(UserStore);
   private unreadService = inject(UnreadService);
   private userTransformation = inject(UserTransformationService);
   private messageGrouping = inject(MessageGroupingService);
@@ -70,8 +68,8 @@ export class ThreadComponent {
 
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
+  directMessageRequested = output<string>();
 
-  // Profile state
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);
   protected selectedUserId = signal<string | null>(null);
@@ -88,15 +86,26 @@ export class ThreadComponent {
   });
 
   constructor() {
-    // Load threads when threadInfo changes (sets up real-time listener)
+    this.setupThreadLoader();
+    this.setupAutoReadMarking();
+  }
+
+  /**
+   * Setup effect to load threads when threadInfo changes
+   */
+  private setupThreadLoader = (): void => {
     effect(() => {
       const info = this.threadInfo();
       if (info?.parentMessageId && info?.channelId) {
         this.threadStore.loadThreads(info.channelId, info.parentMessageId, info.isDirectMessage);
       }
     });
+  };
 
-    // Auto-mark thread as read when new replies arrive while thread is open
+  /**
+   * Setup effect to auto-mark thread as read when new replies arrive
+   */
+  private setupAutoReadMarking = (): void => {
     let previousReplyCount = 0;
     effect(() => {
       const info = this.threadInfo();
@@ -106,17 +115,15 @@ export class ThreadComponent {
       const replies = this.replies();
       const currentCount = replies.length;
 
-      // Only mark as read if reply count increased (new reply arrived)
       if (currentCount > previousReplyCount && currentCount > 0) {
         untracked(() => {
-          // Mark both parent message AND thread as read
           this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
         });
       }
 
       previousReplyCount = currentCount;
     });
-  }
+  };
 
   /**
    * Group replies by date
@@ -168,19 +175,15 @@ export class ThreadComponent {
     if (!currentUserId) return;
     const info = this.threadInfo();
 
-    // Add reply via store
     await this.threadStore.addThreadReply(
       info.channelId,
       info.parentMessageId,
       content.trim(),
       currentUserId,
-      info.isDirectMessage // Pass DM flag
+      info.isDirectMessage
     );
 
-    // Mark both parent message AND parent channel/conversation as read
-    // to prevent current user from seeing their own thread message as unread
     this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
-    // Replies will auto-update via computed signal
   }
 
   /**
@@ -276,12 +279,14 @@ export class ThreadComponent {
   }
 
   /**
-   * Handle profile message click
+   * Handle profile message click - opens DM with selected user
    */
   onProfileMessage(): void {
-    console.log('Send message to user:', this.selectedUserId());
+    const userId = this.selectedUserId();
+    if (!userId) return;
+
     this.isProfileViewOpen.set(false);
-    // TODO: Open DM with this user
+    this.directMessageRequested.emit(userId);
   }
 
   /**
