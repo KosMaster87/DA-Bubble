@@ -62,6 +62,27 @@ export class DashboardComponent {
     // Initialize message loading effects
     this.dashboardInit.initializeEffects();
 
+    // DEBUG: Monitor thread signals (with ID comparison to prevent infinite loop)
+    let lastIsOpen: boolean | null = null;
+    let lastChannelId: string | null = null;
+    let lastMessageId: string | null = null;
+
+    effect(() => {
+      const isOpen = this.isThreadOpen();
+      const info = this.threadInfo();
+
+      // Only log if actual values changed (not just object reference)
+      const channelId = info?.channelId || null;
+      const messageId = info?.parentMessageId || null;
+
+      if (isOpen !== lastIsOpen || channelId !== lastChannelId || messageId !== lastMessageId) {
+        console.log('🟡 Dashboard effect - isThreadOpen:', isOpen, 'threadInfo:', info);
+        lastIsOpen = isOpen;
+        lastChannelId = channelId;
+        lastMessageId = messageId;
+      }
+    });
+
     // Always show welcome on page reload and reset URL to /dashboard
     this.dashboardState.showWelcome();
 
@@ -82,15 +103,36 @@ export class DashboardComponent {
       }
 
       if (path === 'channel' && id) {
-        this.showChannel(id);
+        // Store previous channel ID BEFORE updating sidebar
+        const previousChannelId = this.navigationService.getSelectedChannelId()();
+
+        // Check if we're navigating to a thread by checking BOTH:
+        // 1. Current URL (for direct thread navigation)
+        // 2. Thread open state (to avoid closing thread that's being opened)
+        const urlHasThread = this.router.url.includes('/thread/');
+        const threadInfo = this.threadManagement.threadInfo();
+        const isOpeningThreadInSameChannel = threadInfo && threadInfo.channelId === id;
+        const shouldKeepThread = urlHasThread || isOpeningThreadInSameChannel;
+
+        // Update sidebar FIRST to ensure getSelectedChannelId() returns correct value
         if (this.sidebar) {
           this.sidebar.selectChannelById(id);
         }
-      } else if (path === 'dm' && id) {
-        this.showDirectMessage(id);
-        if (this.sidebar) {
-          this.sidebar.selectDirectMessageById(id);
+
+        // Close thread if switching to a different channel WITHOUT navigating to a thread
+        const isThreadOpen = this.threadManagement.isThreadOpen();
+        if (isThreadOpen && previousChannelId !== id && !shouldKeepThread) {
+          console.log('🔷 Closing thread because switching channels:', previousChannelId, '→', id);
+          this.threadManagement.closeThread();
         }
+
+        this.showChannel(id);
+      } else if (path === 'dm' && id) {
+      // Update sidebar FIRST to ensure getSelectedDirectMessageId() returns correct value
+      if (this.sidebar) {
+        this.sidebar.selectDirectMessageById(id);
+      }
+      this.showDirectMessage(id);
       } else if (path === 'mailbox') {
         this.showMailbox();
       } else if (path === 'legal') {
@@ -143,11 +185,6 @@ export class DashboardComponent {
    * Switch to channel view
    */
   showChannel(channelId: string): void {
-    // Close thread panel if open
-    if (this.threadManagement.isThreadOpen()) {
-      this.threadManagement.closeThread();
-    }
-
     this.dashboardState.showChannel(channelId, () => {
       if (this.sidebar) {
         this.sidebar.deselectDirectMessage();
@@ -159,9 +196,13 @@ export class DashboardComponent {
    * Switch to direct message view
    */
   showDirectMessage(conversationId: string, participants?: [string, string]): void {
-    // Close thread panel if open
-    if (this.threadManagement.isThreadOpen()) {
-      this.threadManagement.closeThread();
+    // Only close thread if switching to a different conversation
+    const threadInfo = this.threadManagement.threadInfo();
+    if (this.threadManagement.isThreadOpen() && threadInfo) {
+      // Close thread only if we're switching to a different conversation
+      if (threadInfo.channelId !== conversationId || !threadInfo.isDirectMessage) {
+        this.threadManagement.closeThread();
+      }
     }
 
     this.dashboardState.showDirectMessage(conversationId, participants);
@@ -191,6 +232,7 @@ export class DashboardComponent {
     conversationId?: string;
     isDirectMessage?: boolean;
   }): void {
+    console.log('🔴 Dashboard.openThread() called with:', event);
     const isDirectMessage = event.isDirectMessage || false;
     let channelName = '';
     let channelId = event.conversationId || '';
@@ -203,6 +245,7 @@ export class DashboardComponent {
       channelName = viewData.name;
     }
 
+    console.log('🔴 Calling threadManagement.openThread with:', { messageId: event.messageId, channelId, channelName, isDirectMessage });
     this.threadManagement.openThread(
       event.messageId,
       event.parentMessage,
@@ -210,6 +253,7 @@ export class DashboardComponent {
       channelName,
       isDirectMessage
     );
+    console.log('🔴 After openThread - isThreadOpen:', this.isThreadOpen(), 'threadInfo:', this.threadInfo());
   }
 
   /**

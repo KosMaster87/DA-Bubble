@@ -400,10 +400,13 @@ export class ChannelConversationComponent {
 
   /** Handle thread click */
   protected onThreadClick = (messageId: string): void => {
+    console.log('🔵 ChannelConversation.onThreadClick() called with messageId:', messageId);
     const parentMessage = this.messages().find((m) => m.id === messageId);
+    console.log('🔵 Found parent message:', parentMessage);
     if (!parentMessage) return;
 
     const message = this.userTransformation.channelMessageToThreadMessage(parentMessage);
+    console.log('🔵 Emitting threadRequested with:', { messageId, message });
     this.threadRequested.emit({ messageId, parentMessage: message });
   };
 }

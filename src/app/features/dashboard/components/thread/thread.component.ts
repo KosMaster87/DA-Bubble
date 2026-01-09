@@ -94,11 +94,25 @@ export class ThreadComponent {
    * Setup effect to load threads when threadInfo changes
    */
   private setupThreadLoader = (): void => {
+    let lastChannelId: string | null = null;
+    let lastMessageId: string | null = null;
+
     effect(() => {
       const info = this.threadInfo();
-      if (info?.parentMessageId && info?.channelId) {
-        this.threadStore.loadThreads(info.channelId, info.parentMessageId, info.isDirectMessage);
+      if (!info?.parentMessageId || !info?.channelId) {
+        lastChannelId = null;
+        lastMessageId = null;
+        return;
       }
+
+      // Only load if IDs actually changed (prevent infinite loop from new object references)
+      if (info.channelId === lastChannelId && info.parentMessageId === lastMessageId) {
+        return;
+      }
+
+      lastChannelId = info.channelId;
+      lastMessageId = info.parentMessageId;
+      this.threadStore.loadThreads(info.channelId, info.parentMessageId, info.isDirectMessage);
     });
   };
 

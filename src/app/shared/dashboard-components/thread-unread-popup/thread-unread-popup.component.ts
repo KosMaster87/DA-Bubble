@@ -22,6 +22,7 @@ import { UnreadService } from '@core/services/unread/unread.service';
 
 export interface UnreadThreadInfo {
   messageId: string;
+  channelId: string; // Channel ID where the thread belongs
   parentMessageContent: string; // Content of the parent message
   threadCount: number;
   lastThreadTimestamp: Date;
@@ -147,7 +148,7 @@ export class ThreadUnreadPopupComponent {
     const threadTime = this.normalizeTimestamp(msg.lastThreadTimestamp);
     const hasUnread = this.unreadService.hasThreadUnread(convId, msg.id, threadTime);
 
-    return hasUnread ? this.createThreadInfo(msg, threadMessages, threadTime) : null;
+    return hasUnread ? this.createThreadInfo(msg, threadMessages, threadTime, convId) : null;
   };
 
   /**
@@ -172,10 +173,12 @@ export class ThreadUnreadPopupComponent {
   private createThreadInfo = (
     msg: any,
     threadMessages: any[],
-    threadTime: Date
+    threadTime: Date,
+    channelId: string
   ): UnreadThreadInfo => {
     return {
       messageId: msg.id,
+      channelId: channelId,
       parentMessageContent: this.truncateContent(msg.content, 50),
       threadCount: msg.threadCount || threadMessages.length,
       lastThreadTimestamp: threadTime,
@@ -205,8 +208,15 @@ export class ThreadUnreadPopupComponent {
    * Handle thread item click
    */
   protected onThreadClick = (messageId: string): void => {
-    const convId = this.conversationId();
     const isDM = this.isDirectMessage();
+
+    // Find the thread info to get the correct channel ID
+    const threads = this.unreadThreads();
+    const threadInfo = threads.find(t => t.messageId === messageId);
+
+    if (!threadInfo) return;
+
+    const convId = threadInfo.channelId; // Use channelId from thread info
     const parentMessage = this.getParentMessage(convId, messageId, isDM);
 
     if (parentMessage) {

@@ -21,6 +21,12 @@ export class InvitationManagementService {
   private invitationService = inject(InvitationService);
   private router = inject(Router);
 
+  // Track last accepted invitation to prevent duplicate navigation
+  private lastAcceptedInvitation: { id: string; timestamp: number } | null = null;
+  private lastNavigatedChannel: { id: string; timestamp: number } | null = null;
+  private pendingNavigation: { channelId: string; timeoutId: any } | null = null;
+  private readonly DEBOUNCE_MS = 5000; // 5 seconds debounce
+
   /**
    * Accept invitation and handle channel/DM logic
    * @param invitation Invitation to accept
@@ -31,6 +37,20 @@ export class InvitationManagementService {
       console.error('❌ No current user');
       return;
     }
+
+    // Prevent duplicate acceptance within debounce window
+    const now = Date.now();
+    if (
+      this.lastAcceptedInvitation &&
+      this.lastAcceptedInvitation.id === invitation.id &&
+      now - this.lastAcceptedInvitation.timestamp < this.DEBOUNCE_MS
+    ) {
+      console.log('⏭️  Skipping duplicate invitation acceptance:', invitation.id);
+      return;
+    }
+
+    // Track this acceptance
+    this.lastAcceptedInvitation = { id: invitation.id, timestamp: now };
 
     try {
       await this.invitationService.acceptInvitation(invitation.id);
@@ -65,6 +85,20 @@ export class InvitationManagementService {
     userId: string
   ): Promise<void> => {
     if (!invitation.channelId) return;
+
+    // Prevent duplicate navigation to same channel within debounce window
+    const now = Date.now();
+    if (
+      this.lastNavigatedChannel &&
+      this.lastNavigatedChannel.id === invitation.channelId &&
+      now - this.lastNavigatedChannel.timestamp < this.DEBOUNCE_MS
+    ) {
+      console.log('⏭️  Skipping duplicate navigation to channel:', invitation.channelId);
+      return;
+    }
+
+    // Track this navigation
+    this.lastNavigatedChannel = { id: invitation.channelId, timestamp: now };
 
     console.log('📬 Navigating to channel from invitation:', invitation.channelId);
 
@@ -103,13 +137,53 @@ export class InvitationManagementService {
   };
 
   /**
-   * Navigate to channel with delay for Firestore sync
+   * Navigate to channel after delay
+   * Cancellable to prevent race conditions with manual navigation
    * @param channelId Channel ID to navigate to
    */
   private navigateToChannel = async (channelId: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    await this.router.navigate(['/dashboard/channel/' + channelId]);
+    // Cancel any pending navigation
+    if (this.pendingNavigation) {
+      clearTimeout(this.pendingNavigation.timeoutId);
+      console.log('🚫 Cancelled pending navigation to:', this.pendingNavigation.channelId);
+      this.pendingNavigation = null;
+    }
+
+    // Schedule new navigation with minimal delay
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(async () => {
+        // Check if navigation is still pending AND user hasn't navigated away
+        if (this.pendingNavigation?.channelId === channelId) {
+          const currentUrl = this.router.url;
+
+          // Only navigate if user is still on the same page (hasn't manually navigated)
+          if (currentUrl === '/dashboard' || currentUrl.includes('/dashboard/mailbox')) {
+            console.log('✅ Executing navigation to:', channelId);
+            await this.router.navigate(['/dashboard/channel/' + channelId]);
+          } else {
+            console.log('🚫 User already navigated to:', currentUrl, '- skipping invitation navigation');
+          }
+
+          this.pendingNavigation = null;
+        }
+        resolve();
+      }, 100); // Reduced from 500ms to 100ms
+
+      this.pendingNavigation = { channelId, timeoutId };
+    });
   };
+
+  /**
+   * Cancel any pending invitation-triggered navigation
+   * Call this when user manually navigates to prevent override
+   */
+  cancelPendingNavigation(): void {
+    if (this.pendingNavigation) {
+      clearTimeout(this.pendingNavigation.timeoutId);
+      console.log('🚫 User navigation - cancelled pending invitation navigation to:', this.pendingNavigation.channelId);
+      this.pendingNavigation = null;
+    }
+  }
 
   /**
    * Handle direct message invitation acceptance

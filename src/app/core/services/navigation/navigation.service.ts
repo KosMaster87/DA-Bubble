@@ -113,6 +113,7 @@ export class NavigationService {
       this.isNewMessageActive.set(false);
       this.isMailboxActive.set(false);
       this.unreadService.markAsRead(channelId);
+      this.router.navigate(['/dashboard', 'channel', channelId]);
     }
   }
 
@@ -189,9 +190,9 @@ export class NavigationService {
   async navigateToThread(conversationId: string, isDirectMessage: boolean): Promise<void> {
     // Navigate to the channel or DM
     if (isDirectMessage) {
-      this.selectDirectMessageById(conversationId);
+      this.selectDirectMessage(conversationId);
     } else {
-      this.selectChannelById(conversationId);
+      this.selectChannel(conversationId);
     }
 
     // Small delay to ensure conversation is loaded before opening thread

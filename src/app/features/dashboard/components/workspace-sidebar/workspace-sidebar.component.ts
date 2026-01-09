@@ -296,12 +296,8 @@ export class WorkspaceSidebarComponent {
     },
     isDirectMessage: boolean
   ): Promise<void> {
-    // Emit selection event for parent component
-    if (event.isDirectMessage) {
-      this.directMessageSelected.emit(event.conversationId);
-    } else {
-      this.channelSelected.emit(event.conversationId);
-    }
+    // Don't emit conversation selection - thread opening will handle navigation
+    // Emitting selection here causes thread to be closed by showChannel/showDirectMessage
 
     // Handle thread navigation and message transformation via NavigationService
     const { viewMessage } = this.navigationService.handleThreadClick(

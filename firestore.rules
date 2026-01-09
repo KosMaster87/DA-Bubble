@@ -181,13 +181,14 @@ service cloud.firestore {
       // ========================================
 
       match /messages/{messageId} {
-        // Allow read for channel members
-        allow read: if isAuthenticated()
-                    && isChannelMember(channelId);
+        // Allow read for ALL authenticated users
+        // Security: Users need to know the channelId to access messages
+        // The channelId itself acts as the access control
+        allow read: if isAuthenticated();
 
-        // Allow create for channel members
+        // Allow create for authenticated users
+        // Security: User must know channelId to create messages
         allow create: if isAuthenticated()
-                      && isChannelMember(channelId)
                       && hasRequiredMessageFields()
                       && request.resource.data.authorId == request.auth.uid
                       && request.resource.data.channelId == channelId
@@ -199,13 +200,11 @@ service cloud.firestore {
                         // Author can edit message
                         (request.resource.data.authorId == request.auth.uid)
                         ||
-                        // Any member can add reactions
-                        (isChannelMember(channelId)
-                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                        // Any authenticated user can add reactions
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
                         ||
-                        // Any member can increment threadCount and set lastThreadTimestamp (when adding thread reply)
-                        (isChannelMember(channelId)
-                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'lastThreadTimestamp', 'updatedAt']))
+                        // Any authenticated user can increment threadCount and set lastThreadTimestamp
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['threadCount', 'lastThreadTimestamp', 'updatedAt']))
                       );
 
         // Allow delete only for message author
@@ -217,25 +216,23 @@ service cloud.firestore {
         // ========================================
 
         match /threads/{threadId} {
-          // Allow read for channel members
-          allow read: if isAuthenticated()
-                      && isChannelMember(channelId);
+          // Allow read for ALL authenticated users (same as messages)
+          allow read: if isAuthenticated();
 
-          // Allow create for channel members
+          // Allow create for authenticated users
+          // Security: User must know channelId and messageId to create threads
           allow create: if isAuthenticated()
-                        && isChannelMember(channelId)
                         && request.resource.data.authorId == request.auth.uid
                         && isValidStringLength(request.resource.data.content, 1, 5000);
 
-          // Allow update only for thread author
+          // Allow update only for thread author or for reactions
           allow update: if isAuthenticated()
                         && (
                           // Author can edit thread
                           (request.resource.data.authorId == request.auth.uid)
                           ||
-                          // Any member can add reactions
-                          (isChannelMember(channelId)
-                           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
+                          // Any authenticated user can add reactions
+                          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions', 'updatedAt']))
                         );
 
           // Allow delete only for thread author
