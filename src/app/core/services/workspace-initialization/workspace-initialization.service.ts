@@ -17,6 +17,7 @@ export class WorkspaceInitializationService {
   private navigationService = inject(NavigationService);
 
   private hasInitialized = false;
+  private hasAutoSelected = false;
 
   /**
    * Initialize workspace: load stores and setup auto-selection
@@ -25,7 +26,6 @@ export class WorkspaceInitializationService {
    */
   initialize(onChannelSelected?: (channelId: string) => void): void {
     if (this.hasInitialized) {
-      console.log('⚠️  Workspace already initialized, skipping');
       return;
     }
 
@@ -37,7 +37,6 @@ export class WorkspaceInitializationService {
     this.setupAutoSelection(onChannelSelected);
 
     this.hasInitialized = true;
-    console.log('✅ Workspace initialized');
   }
 
   /**
@@ -50,11 +49,13 @@ export class WorkspaceInitializationService {
       const currentSelected = this.navigationService.getSelectedChannelId()();
       const currentDM = this.navigationService.getSelectedDirectMessageId()();
 
-      // Only auto-select if NOTHING is selected yet (no channel AND no DM) AND channels just loaded
-      if (!currentSelected && !currentDM && channels.length > 0) {
+      // Only auto-select ONCE when channels first load and nothing is selected
+      // hasAutoSelected flag prevents re-triggering on subsequent navigations
+      if (!this.hasAutoSelected && !currentSelected && !currentDM && channels.length > 0) {
         const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
         if (welcomeChannel) {
           this.navigationService.selectChannelById(welcomeChannel.id);
+          this.hasAutoSelected = true; // Prevent future auto-selections
 
           // Call optional callback for parent component
           if (onChannelSelected) {
@@ -68,9 +69,22 @@ export class WorkspaceInitializationService {
   }
 
   /**
+   * Select DABubble-welcome channel explicitly
+   * Used when navigating back to /dashboard
+   */
+  selectWelcomeChannel(): void {
+    const channels = this.channelStore.channels();
+    const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
+    if (welcomeChannel) {
+      this.navigationService.selectChannelById(welcomeChannel.id);
+    }
+  }
+
+  /**
    * Reset initialization flag (for testing/hot reload)
    */
   reset(): void {
     this.hasInitialized = false;
+    this.hasAutoSelected = false;
   }
 }

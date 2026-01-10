@@ -557,28 +557,6 @@ ng generate        # Generate components/services/etc.
 
 ---
 
-## 📖 Documentation
-
-### Project Documentation
-
-- **[Main README](README.md)** - This file, project overview
-- **[STRUCTURE-README.md](STRUCTURE-README.md)** - Detailed architecture documentation
-
-### Module Documentation
-
-- **[CORE-README.md](./src/app/core/CORE-README.md)** - Core module (AuthLayout, Guards, Services)
-- **[FEATURES-README.md](./src/app/features/FEATURES-README.md)** - Features (Auth, Chat, Channels)
-- **[LAYOUT-README.md](./src/app/layout/LAYOUT-README.md)** - Main Layout components
-- **[SHARED-README.md](./src/app/shared/SHARED-README.md)** - Shared/Reusable components
-- **[STORES-README.md](./src/app/stores/STORES-README.md)** - NgRx SignalStore architecture
-
-### Development Standards
-
-- **[Copilot Angular Standards](.github/prompts/copilot-angular.prompt.md)** - Coding conventions
-- **[Project Requirements](.github/prompts/copilot-project.prompt.md)** - Feature specifications
-
----
-
 ## 🤝 Contributing
 
 This is a student project. Contributions are not currently accepted, but feel free to fork and customize!

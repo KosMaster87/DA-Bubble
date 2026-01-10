@@ -30,7 +30,6 @@ export class InvitationHelper {
       // Get channel info
       const channel = this.channelStore.getChannelById()(channelId);
       if (!channel) {
-        console.error('❌ Channel not found:', channelId);
         return false;
       }
 
@@ -43,7 +42,6 @@ export class InvitationHelper {
         channelId
       );
       if (hasPending) {
-        console.warn('⚠️ User already has pending invitation for this channel');
         return false;
       }
 
@@ -57,15 +55,8 @@ export class InvitationHelper {
         message,
       });
 
-      console.log('✉️ Channel invitation sent:', {
-        channelId,
-        channelName: channel.name,
-        recipientId,
-      });
-
       return true;
     } catch (error) {
-      console.error('❌ Error inviting to channel:', error);
       return false;
     }
   }
@@ -87,14 +78,8 @@ export class InvitationHelper {
         message,
       });
 
-      console.log('✉️ DM invitation sent:', {
-        senderId,
-        recipientId,
-      });
-
       return true;
     } catch (error) {
-      console.error('❌ Error inviting to DM:', error);
       return false;
     }
   }
@@ -107,7 +92,6 @@ export class InvitationHelper {
       const invitations = await this.invitationService.getPendingInvitations(userId);
       return invitations.length;
     } catch (error) {
-      console.error('❌ Error getting invitation count:', error);
       return 0;
     }
   }

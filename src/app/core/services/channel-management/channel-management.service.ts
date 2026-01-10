@@ -184,8 +184,8 @@ export class ChannelManagementService {
     // Clean up pending data and close popup
     this.workspaceSidebarService.closeAddMemberAfterChannel();
 
-    // Auto-select the newly created channel
-    this.navigationService.selectChannelById(newChannelId);
+    // Navigate to the newly created channel (uses selectChannel which includes navigation)
+    this.navigationService.selectChannel(newChannelId);
 
     return newChannelId;
   }

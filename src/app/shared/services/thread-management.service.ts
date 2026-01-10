@@ -67,7 +67,6 @@ export class ThreadManagementService {
     channelName: string,
     isDirectMessage: boolean
   ): void {
-    console.log('🟢 ThreadManagement.openThread() called:', { messageId, channelId, channelName, isDirectMessage });
     this._threadMessageId.set(messageId);
     this._baseThreadInfo.set({
       channelId,
@@ -77,7 +76,6 @@ export class ThreadManagementService {
       isDirectMessage,
     });
     this._isThreadOpen.set(true);
-    console.log('🟢 After setting signals - isThreadOpen:', this._isThreadOpen(), 'threadInfo:', this.threadInfo());
 
     if (channelId && messageId) {
       this.unreadService.markThreadAndParentAsRead(channelId, messageId);
@@ -88,7 +86,6 @@ export class ThreadManagementService {
    * Close thread panel and reset thread state
    */
   closeThread(): void {
-    console.log('🟠 ThreadManagement.closeThread() called from:', new Error().stack);
     this._isThreadOpen.set(false);
     this._threadMessageId.set(null);
     this._baseThreadInfo.set(null);

@@ -79,7 +79,6 @@ export class UnreadService {
     } catch (error: any) {
       // Ignore transient Firestore state errors
       if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
-        console.log('⏭️  Skipping mark-as-read due to temporary Firestore state');
         return;
       }
       console.error('❌ Failed to mark as read:', error);
@@ -133,7 +132,6 @@ export class UnreadService {
       await updateDoc(userRef, {
         [`lastRead.${conversationId}_thread_${messageId}`]: serverTimestamp(),
       });
-      console.log(`✅ Marked thread as read: ${conversationId}/${messageId}`);
     } catch (error) {
       console.error('❌ Failed to mark thread as read:', error);
     }
@@ -156,11 +154,9 @@ export class UnreadService {
         [`lastRead.${conversationId}`]: serverTimestamp(),
         [`lastRead.${conversationId}_thread_${parentMessageId}`]: serverTimestamp(),
       });
-      console.log(`✅ Marked thread and parent as read: ${conversationId}/${parentMessageId}`);
     } catch (error: any) {
       // Ignore transient Firestore state errors
       if (error?.message?.includes('INTERNAL ASSERTION FAILED')) {
-        console.log('⏭️  Skipping mark-as-read due to temporary Firestore state');
         return;
       }
       console.error('❌ Failed to mark thread and parent as read:', error);

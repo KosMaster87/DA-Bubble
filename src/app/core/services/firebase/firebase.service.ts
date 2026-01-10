@@ -27,7 +27,4 @@ export class FirebaseService {
       console.log('✅ Storage:', this.storage ? 'Connected' : 'Not Connected');
     }
   }
-
-  // Weitere Firebase-Methoden werden hier hinzugefügt
-  // z.B. getUser(), createChannel(), sendMessage(), etc.
 }

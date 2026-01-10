@@ -111,14 +111,12 @@ export class ChannelListenerService {
     onSuccess: (channels: Channel[]) => void
   ): void => {
     if (this.isPermissionError(error)) {
-      console.log('🔓 Permission error detected - cleaning up channel subscription');
       this.clearExistingListener();
       return;
     }
 
     if (this.isFirestoreStateError(error) && this.retryCount < this.MAX_RETRIES) {
       this.retryCount++;
-      console.warn(`⚠️ Firestore state error (${this.retryCount}/${this.MAX_RETRIES}) - retrying...`);
       setTimeout(() => {
         this.clearExistingListener();
         this.unsubscribe = this.createListener(onSuccess, onError);

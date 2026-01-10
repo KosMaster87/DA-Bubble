@@ -34,7 +34,6 @@ export class InvitationManagementService {
    */
   acceptInvitation = async (invitation: Invitation, currentUserId: string): Promise<void> => {
     if (!currentUserId) {
-      console.error('❌ No current user');
       return;
     }
 
@@ -45,7 +44,6 @@ export class InvitationManagementService {
       this.lastAcceptedInvitation.id === invitation.id &&
       now - this.lastAcceptedInvitation.timestamp < this.DEBOUNCE_MS
     ) {
-      console.log('⏭️  Skipping duplicate invitation acceptance:', invitation.id);
       return;
     }
 
@@ -54,7 +52,6 @@ export class InvitationManagementService {
 
     try {
       await this.invitationService.acceptInvitation(invitation.id);
-      console.log('✅ Invitation accepted:', invitation.id);
 
       if (invitation.type === 'channel') {
         await this.handleChannelInvitation(invitation, currentUserId);
@@ -93,14 +90,11 @@ export class InvitationManagementService {
       this.lastNavigatedChannel.id === invitation.channelId &&
       now - this.lastNavigatedChannel.timestamp < this.DEBOUNCE_MS
     ) {
-      console.log('⏭️  Skipping duplicate navigation to channel:', invitation.channelId);
       return;
     }
 
     // Track this navigation
     this.lastNavigatedChannel = { id: invitation.channelId, timestamp: now };
-
-    console.log('📬 Navigating to channel from invitation:', invitation.channelId);
 
     // Only navigate - let the component/router handle channel selection
     // to avoid triggering multiple subscriptions
@@ -133,7 +127,6 @@ export class InvitationManagementService {
   ): Promise<void> => {
     const updatedMembers = [...new Set([...currentMembers, userId])];
     await this.channelStore.updateChannel(channelId, { members: updatedMembers });
-    console.log('✅ User joined channel:', channelId);
   };
 
   /**
@@ -145,7 +138,6 @@ export class InvitationManagementService {
     // Cancel any pending navigation
     if (this.pendingNavigation) {
       clearTimeout(this.pendingNavigation.timeoutId);
-      console.log('🚫 Cancelled pending navigation to:', this.pendingNavigation.channelId);
       this.pendingNavigation = null;
     }
 
@@ -159,7 +151,10 @@ export class InvitationManagementService {
           // Only navigate if user is still on the same page (hasn't manually navigated)
           if (currentUrl === '/dashboard' || currentUrl.includes('/dashboard/mailbox')) {
             console.log('✅ Executing navigation to:', channelId);
-            await this.router.navigate(['/dashboard/channel/' + channelId]);
+            // CRITICAL: Use array with separate segments, NOT concatenated string
+            // Correct: ['/dashboard', 'channel', channelId]
+            // Wrong: ['/dashboard/channel/' + channelId] → causes 404!
+            await this.router.navigate(['/dashboard', 'channel', channelId]);
           } else {
             console.log('🚫 User already navigated to:', currentUrl, '- skipping invitation navigation');
           }

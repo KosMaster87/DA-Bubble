@@ -90,30 +90,61 @@ export class DashboardStateService {
    * @returns true if channel was shown, false if not found
    */
   showChannel(channelId: string, deselectDM?: () => void): boolean {
-    // Special channels - check BEFORE trying to lookup
+    if (this.handleSpecialChannels(channelId)) return true;
+
+    const channel = this.getChannelFromStore(channelId);
+    if (!channel) return false;
+
+    if (this.isWelcomeChannel(channel)) {
+      return this.showWelcomeChannel(deselectDM);
+    }
+
+    return this.showRegularChannel(channel, deselectDM);
+  }
+
+  /**
+   * Handle special non-channel views
+   */
+  private handleSpecialChannels = (channelId: string): boolean => {
     if (channelId === 'mailbox') {
       this.showMailbox();
       return true;
     }
-
     if (channelId === 'legal') {
       this.showLegal();
       return true;
     }
+    return false;
+  };
 
-    // Get channel from store
+  /**
+   * Get channel from store by ID
+   */
+  private getChannelFromStore = (channelId: string): any | null => {
     const channelGetter = this.channelStore.getChannelById();
-    const channel = channelGetter ? channelGetter(channelId) : null;
-    if (!channel) return false;
+    return channelGetter ? channelGetter(channelId) : null;
+  };
 
-    // DABubble-welcome channel - special view
-    if (channel.name === 'DABubble-welcome') {
-      this._currentView.set('welcome');
-      if (deselectDM) deselectDM();
-      return true;
-    }
+  /**
+   * Check if channel is welcome channel
+   */
+  private isWelcomeChannel = (channel: any): boolean => {
+    return channel.name === 'DABubble-welcome';
+  };
 
-    // Regular channel
+  /**
+   * Show welcome channel view
+   */
+  private showWelcomeChannel = (deselectDM?: () => void): boolean => {
+    this._currentView.set('welcome');
+    if (deselectDM) deselectDM();
+    return true;
+  };
+
+  /**
+   * Show regular channel view
+   */
+  private showRegularChannel = (channel: any, deselectDM?: () => void): boolean => {
     this._selectedChannel.set({
       id: channel.id,
       name: channel.name,
@@ -125,7 +156,7 @@ export class DashboardStateService {
     if (deselectDM) deselectDM();
     this._currentView.set('channel');
     return true;
-  }
+  };
 
   /**
    * Show direct message by conversation ID
@@ -137,67 +168,114 @@ export class DashboardStateService {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return false;
 
-    // Get conversation from DirectMessageStore
-    let conversation = this.directMessageStore
-      .sortedConversations()
-      .find((c) => c.id === conversationId);
+    const otherUserId = this.determineOtherUser(conversationId, participants, currentUserId);
+    if (!otherUserId) return false;
 
-    // Determine other user ID
-    let otherUserId: string | undefined;
-    if (!conversation && participants) {
-      otherUserId = participants.find((id) => id !== currentUserId);
-      // If otherUserId is undefined or same as currentUserId, this is a self-DM
-      if (!otherUserId || otherUserId === currentUserId) {
-        otherUserId = currentUserId;
-      }
-      console.log('Using provided participants, otherUserId:', otherUserId);
-    } else if (conversation) {
-      otherUserId = conversation.participants.find((id) => id !== currentUserId);
-      // If no other user found, this is a self-DM
-      if (!otherUserId) {
-        otherUserId = currentUserId;
-      }
-    }
+    const otherUser = this.getUserData(otherUserId);
+    if (!otherUser) return false;
+
+    this.setDirectMessageView(conversationId, otherUserId, currentUserId, otherUser);
+    return true;
+  }
+
+  /**
+   * Determine other user ID from conversation
+   */
+  private determineOtherUser = (
+    conversationId: string,
+    participants: [string, string] | undefined,
+    currentUserId: string
+  ): string | null => {
+    const conversation = this.getConversation(conversationId);
+
+    const otherUserId = conversation
+      ? this.getOtherUserFromConversation(conversation, currentUserId)
+      : this.getOtherUserFromParticipants(participants, currentUserId);
 
     if (!otherUserId) {
-      console.error('Cannot determine other user');
-      return false;
+      return null;
     }
 
-    // Get other user's data from UserStore
-    const otherUser = this.userStore.getUserById()(otherUserId);
-    if (!otherUser) {
-      console.error('Other user not found:', otherUserId);
-      return false;
-    }
+    return otherUserId;
+  };
 
-    // For self-DM, show special title
+  /**
+   * Get conversation from store
+   */
+  private getConversation = (conversationId: string): any | undefined => {
+    return this.directMessageStore
+      .sortedConversations()
+      .find((c) => c.id === conversationId);
+  };
+
+  /**
+   * Get other user from conversation participants
+   */
+  private getOtherUserFromConversation = (
+    conversation: any,
+    currentUserId: string
+  ): string => {
+    const otherUserId = conversation.participants.find((id: string) => id !== currentUserId);
+    return otherUserId || currentUserId; // Self-DM if no other user
+  };
+
+  /**
+   * Get other user from participants array
+   */
+  private getOtherUserFromParticipants = (
+    participants: [string, string] | undefined,
+    currentUserId: string
+  ): string | null => {
+    if (!participants) return null;
+
+    const otherUserId = participants.find((id) => id !== currentUserId);
+    return otherUserId || currentUserId; // Self-DM if same user
+  };
+
+  /**
+   * Get user data from store
+   */
+  private getUserData = (userId: string): any | null => {
+    const user = this.userStore.getUserById()(userId);
+    if (!user) {
+      return null;
+    }
+    return user;
+  };
+
+  /**
+   * Set direct message view with user data
+   */
+  private setDirectMessageView = (
+    conversationId: string,
+    otherUserId: string,
+    currentUserId: string,
+    otherUser: any
+  ): void => {
+    const dmInfo = this.createDMInfo(conversationId, otherUserId, currentUserId, otherUser);
+    this._selectedDM.set(dmInfo);
+    this._currentView.set('direct-message');
+  };
+
+  /**
+   * Create DM info object
+   */
+  private createDMInfo = (
+    conversationId: string,
+    otherUserId: string,
+    currentUserId: string,
+    otherUser: any
+  ): DMInfo => {
     const isSelfDM = otherUserId === currentUserId;
     const displayName = isSelfDM ? `${otherUser.displayName} (Notes)` : otherUser.displayName;
 
-    this._selectedDM.set({
-      conversationId: conversationId,
+    return {
+      conversationId,
       userName: displayName,
       userAvatar: otherUser.photoURL || '/img/profile/profile-0.svg',
       isOnline: otherUser.isOnline,
-    });
-
-    console.log('✅ Setting currentView to direct-message', {
-      conversationId,
-      userName: otherUser.displayName,
-      selectedDMValue: this._selectedDM(),
-    });
-
-    this._currentView.set('direct-message');
-
-    console.log('📊 After setting currentView', {
-      currentView: this._currentView(),
-      selectedDM: this._selectedDM(),
-      hasSelectedDM: !!this._selectedDM(),
-    });
-
-    return true;
-  }
+    };
+  };
 
   /**
    * Navigate to DABubble-welcome channel

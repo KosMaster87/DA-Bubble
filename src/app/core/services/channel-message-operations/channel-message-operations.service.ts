@@ -119,7 +119,6 @@ export class ChannelMessageOperationsService {
   async deleteMessage(channelId: string, messageId: string): Promise<void> {
     await this.deleteMessageDocument(channelId, messageId);
     await this.deleteThreadMessages(channelId, messageId);
-    console.log('✅ Message and thread deleted successfully');
   }
 
   /**

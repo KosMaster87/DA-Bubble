@@ -104,7 +104,23 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'dashboard/channel/:id/thread/:threadId',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'dashboard/dm/:id',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'dashboard/dm/:id/thread/:threadId',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
         (m) => m.DashboardComponent

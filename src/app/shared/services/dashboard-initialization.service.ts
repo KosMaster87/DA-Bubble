@@ -52,9 +52,6 @@ export class DashboardInitializationService {
     effect(() => {
       const directMessages = this.userDirectMessages();
       if (directMessages.length > 0) {
-        console.log('🔄 User directMessages changed, reloading conversations:', {
-          count: directMessages.length,
-        });
         this.directMessageStore.loadConversations(directMessages);
       }
     });

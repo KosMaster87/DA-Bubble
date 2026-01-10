@@ -32,8 +32,6 @@ export class StoreCleanupService {
    * Should be called before user logout to prevent Firebase permission errors
    */
   cleanupAll(): void {
-    console.log('🧹 Cleaning up all store subscriptions...');
-
     try {
       // Cleanup stores that have cleanup() method
       if (typeof (this.channelStore as any).cleanup === 'function') {
@@ -60,8 +58,6 @@ export class StoreCleanupService {
       if (typeof (this.threadStore as any).destroy === 'function') {
         (this.threadStore as any).destroy();
       }
-
-      console.log('✅ All store subscriptions cleaned up');
     } catch (error) {
       console.error('❌ Error during store cleanup:', error);
     }
