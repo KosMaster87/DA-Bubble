@@ -64,11 +64,6 @@ export class DashboardComponent {
     // Initialize message loading effects
     this.dashboardInit.initializeEffects();
 
-    // DEBUG: Monitor thread signals (with ID comparison to prevent infinite loop)
-    let lastIsOpen: boolean | null = null;
-    let lastChannelId: string | null = null;
-    let lastMessageId: string | null = null;
-
     effect(() => {
       this.handleRouteChange();
     });
@@ -81,8 +76,6 @@ export class DashboardComponent {
   }
 
   /**
-   * Handle route changes for deep linking
-   *
    * FLOW DOCUMENTATION - MASTER NAVIGATION CONTROLLER:
    * BEFORE: URL changed (user clicked sidebar, thread-unread-popup, or browser back/forward)
    * TRIGGERS: Angular Router updates route params → navigationService.getRouteParams() signal changes → this effect runs
@@ -124,6 +117,12 @@ export class DashboardComponent {
       // Select DABubble-welcome channel in sidebar
       this.workspaceInit.selectWelcomeChannel();
       this.showWelcome();
+
+      // Navigate to /dashboard to ensure clean URL state after page reload
+      const currentUrl = this.router.url;
+      if (currentUrl !== '/dashboard' && !currentUrl.startsWith('/dashboard?')) {
+        this.router.navigate(['/dashboard'], { replaceUrl: true });
+      }
       return;
     }
 
