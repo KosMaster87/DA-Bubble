@@ -11,6 +11,7 @@ import { UserStore } from '@stores/user.store';
 import { AuthStore } from '@stores/auth';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ThreadManagementService } from './thread-management.service';
+import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 
 export type DashboardView =
   | 'welcome'
@@ -48,6 +49,7 @@ export class DashboardStateService {
   private authStore = inject(AuthStore);
   private navigationService = inject(NavigationService);
   private threadManagement = inject(ThreadManagementService);
+  private welcomeSelector = inject(WelcomeChannelSelectorService);
 
   // View state signals
   private _currentView = signal<DashboardView>('welcome');
@@ -290,13 +292,11 @@ export class DashboardStateService {
       this.threadManagement.closeThread();
     }
 
-    const welcomeChannel = this.channelStore
-      .channels()
-      .find((ch) => ch.name === 'DABubble-welcome');
+    const welcomeChannelId = this.welcomeSelector.findWelcomeChannelId();
 
-    if (welcomeChannel) {
-      this.navigationService.navigateToChannel(welcomeChannel.id);
-      return welcomeChannel.id;
+    if (welcomeChannelId) {
+      this.navigationService.navigateToChannel(welcomeChannelId);
+      return welcomeChannelId;
     }
 
     this.showWelcome();

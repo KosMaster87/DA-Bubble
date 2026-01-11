@@ -1,23 +1,21 @@
 /**
  * @fileoverview Workspace Initialization Service
- * @description Handles workspace data loading and initial navigation setup
+ * @description Coordinates workspace data loading and initial navigation setup
  * @module core/services/workspace-initialization
  */
 
-import { Injectable, inject, effect } from '@angular/core';
-import { ChannelStore, UserStore } from '@stores/index';
-import { NavigationService } from '@core/services/navigation/navigation.service';
+import { Injectable, inject } from '@angular/core';
+import { WorkspaceDataLoaderService } from './workspace-data-loader.service';
+import { WelcomeChannelSelectorService } from './welcome-channel-selector.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WorkspaceInitializationService {
-  private channelStore = inject(ChannelStore);
-  private userStore = inject(UserStore);
-  private navigationService = inject(NavigationService);
+  private dataLoader = inject(WorkspaceDataLoaderService);
+  private welcomeSelector = inject(WelcomeChannelSelectorService);
 
   private hasInitialized = false;
-  private hasAutoSelected = false;
 
   /**
    * Initialize workspace: load stores and setup auto-selection
@@ -29,43 +27,13 @@ export class WorkspaceInitializationService {
       return;
     }
 
-    // Load data from stores
-    this.channelStore.loadChannels();
-    this.userStore.loadUsers();
+    // Load workspace data
+    this.dataLoader.loadWorkspaceData();
 
     // Setup auto-selection for DABubble-welcome channel
-    this.setupAutoSelection(onChannelSelected);
+    this.welcomeSelector.setupAutoSelection(onChannelSelected);
 
     this.hasInitialized = true;
-  }
-
-  /**
-   * Setup auto-selection effect for DABubble-welcome channel
-   * Only triggers once when channels are loaded and nothing is selected
-   */
-  private setupAutoSelection(onChannelSelected?: (channelId: string) => void): void {
-    effect(() => {
-      const channels = this.channelStore.channels();
-      const currentSelected = this.navigationService.getSelectedChannelId()();
-      const currentDM = this.navigationService.getSelectedDirectMessageId()();
-
-      // Only auto-select ONCE when channels first load and nothing is selected
-      // hasAutoSelected flag prevents re-triggering on subsequent navigations
-      if (!this.hasAutoSelected && !currentSelected && !currentDM && channels.length > 0) {
-        const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
-        if (welcomeChannel) {
-          this.navigationService.selectChannelById(welcomeChannel.id);
-          this.hasAutoSelected = true; // Prevent future auto-selections
-
-          // Call optional callback for parent component
-          if (onChannelSelected) {
-            onChannelSelected(welcomeChannel.id);
-          }
-
-          console.log('✅ Auto-selected DABubble-welcome channel');
-        }
-      }
-    });
   }
 
   /**
@@ -73,11 +41,7 @@ export class WorkspaceInitializationService {
    * Used when navigating back to /dashboard
    */
   selectWelcomeChannel(): void {
-    const channels = this.channelStore.channels();
-    const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
-    if (welcomeChannel) {
-      this.navigationService.selectChannelById(welcomeChannel.id);
-    }
+    this.welcomeSelector.selectWelcomeChannel();
   }
 
   /**
@@ -85,6 +49,6 @@ export class WorkspaceInitializationService {
    */
   reset(): void {
     this.hasInitialized = false;
-    this.hasAutoSelected = false;
+    this.welcomeSelector.reset();
   }
 }
