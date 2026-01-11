@@ -23,6 +23,9 @@ import { ChatPrivateComponent } from '../../components/chat-private/chat-private
 import { ThreadComponent } from '../../components/thread/thread.component';
 import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import { ChannelMessageStore } from '@stores/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-message.store';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -52,6 +55,9 @@ export class DashboardComponent {
   protected workspaceInit = inject(WorkspaceInitializationService);
   protected route = inject(ActivatedRoute);
   protected router = inject(Router);
+  private channelMessageStore = inject(ChannelMessageStore);
+  private directMessageStore = inject(DirectMessageStore);
+  private userTransformation = inject(UserTransformationService);
 
   // Expose state from services for template
   protected currentView = this.dashboardState.currentView;
@@ -161,8 +167,9 @@ export class DashboardComponent {
    * 2. Check if thread should stay open (URL has /thread/ threadId parameter)
    * 3. Update sidebar to highlight the new channel
    * 4. Close thread if switching between different channels (only if thread was in previous channel)
-   * 5. Close DM thread if switching from DM to Channel (only if URL doesn't have /thread/)
+   * 5. Close DM thread if switching from DM to Channel (cross-type navigation)
    * 6. Show channel conversation
+   * 7. If URL has threadId but thread is not open, trigger thread opening after conversation loads
    *
    * AFTER: Channel conversation is displayed, sidebar updated, threads closed if needed
    * NEXT: Channel component loads messages, may open thread if URL has /thread/:threadId
@@ -184,6 +191,12 @@ export class DashboardComponent {
     this.closeThreadIfNeeded(previousChannelId, channelId, shouldKeepThread);
     this.closeDMThreadIfNeeded(); // Close DM thread when switching to Channel
     this.showChannel(channelId);
+
+    // If URL has threadId but thread is not open (e.g., from cross-type navigation via thread-unread-popup),
+    // we need to trigger thread opening after conversation loads
+    if (threadId && !this.threadManagement.isThreadOpen()) {
+      this.openThreadFromUrl(channelId, threadId, false);
+    }
   };
 
   /**
@@ -198,16 +211,9 @@ export class DashboardComponent {
    * 2. Check if thread should stay open (URL has /thread/ threadId parameter)
    * 3. Update sidebar to highlight the new DM
    * 4. Close thread if switching between different DMs (only if thread was in previous DM)
-   * 5. Close Channel thread if switching from Channel to DM (only if URL doesn't have /thread/)
-
-    console.log('[DEBUG handleDirectMessageRoute]', {
-      dmId,
-      threadId,
-      shouldKeepThread,
-      previousDmId,
-      currentThreadInfo: this.threadManagement.threadInfo()
-    });
+   * 5. Close Channel thread if switching from Channel to DM (cross-type navigation)
    * 6. Show DM conversation
+   * 7. If URL has threadId but thread is not open, trigger thread opening after conversation loads
    *
    * AFTER: DM conversation is displayed, sidebar updated, threads closed if needed
    * NEXT: DM component loads messages, may open thread if URL has /thread/:threadId
@@ -229,6 +235,12 @@ export class DashboardComponent {
     this.closeThreadIfSwitchingDMs(previousDmId, dmId, shouldKeepThread);
     this.closeChannelThreadIfNeeded(); // Close channel thread when switching to DM
     this.showDirectMessage(dmId);
+
+    // If URL has threadId but thread is not open (e.g., from cross-type navigation via thread-unread-popup),
+    // we need to trigger thread opening after conversation loads
+    if (threadId && !this.threadManagement.isThreadOpen()) {
+      this.openThreadFromUrl(dmId, threadId, true);
+    }
   };
 
   /**
@@ -399,6 +411,71 @@ export class DashboardComponent {
     this.threadManagement.closeThread();
     // Note: No need to update URL here because navigation already happened
     // The new route (without /thread/) is already active
+  }
+
+  /**
+   * Open thread from URL parameters (used for cross-type navigation via thread-unread-popup)
+   *
+   * FLOW DOCUMENTATION:
+   * BEFORE: User clicks on thread-unread-popup item for different conversation type (Channel → DM or DM → Channel)
+   * TRIGGERS: Called by handleChannelRoute() or handleDirectMessageRoute() when URL has threadId but thread is not open
+   *
+   * PROCESS:
+   * 1. Get messages from appropriate store (channel or DM)
+   * 2. Find parent message by threadId
+   * 3. Transform message to correct format
+   * 4. Call openThread() with message data
+   *
+   * CRITICAL:
+   * - This is needed because cross-type navigation closes the old thread before the new one can be opened
+   * - We need to load the parent message from the store after conversation has loaded
+   *
+   * AFTER: Thread is opened with correct parent message
+   * NEXT: Thread component loads and displays thread messages
+   */
+  private openThreadFromUrl(conversationId: string, threadId: string, isDirectMessage: boolean): void {
+    console.log('[DEBUG openThreadFromUrl]', { conversationId, threadId, isDirectMessage });
+
+    // Wait a bit for conversation to load messages
+    setTimeout(() => {
+      let parentMessage: any;
+
+      if (isDirectMessage) {
+        const messages = this.directMessageStore.messages()[conversationId] || [];
+        const dmMessage = messages.find((msg) => msg.id === threadId);
+        if (!dmMessage) {
+          console.warn('[openThreadFromUrl] DM parent message not found:', threadId);
+          return;
+        }
+        // Transform DirectMessage to ViewMessage
+        parentMessage = this.userTransformation.directMessagesToViewMessages([dmMessage])[0];
+      } else {
+        const messages = this.channelMessageStore.getMessagesByChannel()(conversationId);
+        const channelMessage = messages.find((msg) => msg.id === threadId);
+        if (!channelMessage) {
+          console.warn('[openThreadFromUrl] Channel parent message not found:', threadId);
+          return;
+        }
+        // Channel messages are already ViewMessages from the store
+        parentMessage = this.userTransformation.channelMessageToThreadMessage(channelMessage);
+      }
+
+      // Get conversation name
+      const channelName = isDirectMessage
+        ? this.dashboardState.selectedDM()?.userName || ''
+        : this.dashboardState.selectedChannel()?.name || '';
+
+      // Open thread
+      this.threadManagement.openThread(
+        threadId,
+        parentMessage,
+        conversationId,
+        channelName,
+        isDirectMessage
+      );
+
+      console.log('[DEBUG openThreadFromUrl] Thread opened successfully');
+    }, 100); // Small delay to ensure messages are loaded
   }
 
   /**
