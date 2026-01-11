@@ -9,6 +9,8 @@ import { ChannelStore } from '@stores/channel.store';
 import { DirectMessageStore } from '@stores/direct-message.store';
 import { UserStore } from '@stores/user.store';
 import { AuthStore } from '@stores/auth';
+import { NavigationService } from '@core/services/navigation/navigation.service';
+import { ThreadManagementService } from './thread-management.service';
 
 export type DashboardView =
   | 'welcome'
@@ -44,6 +46,8 @@ export class DashboardStateService {
   private directMessageStore = inject(DirectMessageStore);
   private userStore = inject(UserStore);
   private authStore = inject(AuthStore);
+  private navigationService = inject(NavigationService);
+  private threadManagement = inject(ThreadManagementService);
 
   // View state signals
   private _currentView = signal<DashboardView>('welcome');
@@ -282,11 +286,16 @@ export class DashboardStateService {
    * @returns Welcome channel ID if found, null otherwise
    */
   navigateToWelcome(): string | null {
+    if (this.threadManagement.isThreadOpen()) {
+      this.threadManagement.closeThread();
+    }
+
     const welcomeChannel = this.channelStore
       .channels()
       .find((ch) => ch.name === 'DABubble-welcome');
 
     if (welcomeChannel) {
+      this.navigationService.navigateToChannel(welcomeChannel.id);
       return welcomeChannel.id;
     }
 

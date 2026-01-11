@@ -8,6 +8,8 @@ import { User as FirebaseUser } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
 import { patchState } from '@ngrx/signals';
+import { inject } from '@angular/core';
+import { StoreCleanupService } from '@core/services/store-cleanup.service';
 import type { AuthState } from './auth.types';
 
 /**
@@ -71,7 +73,7 @@ const convertTimestampsToDate = (obj: Record<string, any>): Record<string, Date>
  * @param {Firestore} firestore - Firestore instance
  * @returns {object} Handler functions
  */
-export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
+export const createAuthStateHandlers = (store: any, firestore: Firestore, storeCleanup: StoreCleanupService) => {
   let userDocListener: Unsubscribe | null = null;
 
   return {
@@ -164,6 +166,9 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore) => {
      */
     handleUserLoggedOut: (): void => {
       console.log('🔓 User logging out - cleaning up auth subscriptions...');
+
+      // Cleanup ALL store subscriptions BEFORE logout
+      storeCleanup.cleanupAll();
 
       // Cleanup user document listener
       if (userDocListener) {

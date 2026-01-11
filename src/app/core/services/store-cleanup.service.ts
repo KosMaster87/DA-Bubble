@@ -11,6 +11,7 @@ import { MailboxStore } from '@stores/mailbox.store';
 import { DirectMessageStore } from '@stores/direct-message.store';
 import { ChannelMessageStore } from '@stores/channel-message.store';
 import { ThreadStore } from '@stores/thread.store';
+import type { CleanableStore, DestroyableStore } from '@stores/store.types';
 
 /**
  * Service to cleanup all store subscriptions
@@ -34,30 +35,14 @@ export class StoreCleanupService {
   cleanupAll(): void {
     try {
       // Cleanup stores that have cleanup() method
-      if (typeof (this.channelStore as any).cleanup === 'function') {
-        (this.channelStore as any).cleanup();
-      }
-
-      if (typeof (this.userStore as any).cleanup === 'function') {
-        (this.userStore as any).cleanup();
-      }
-
-      if (typeof (this.mailboxStore as any).cleanup === 'function') {
-        (this.mailboxStore as any).cleanup();
-      }
+      (this.channelStore as unknown as CleanableStore).cleanup();
+      (this.userStore as unknown as CleanableStore).cleanup();
+      (this.mailboxStore as unknown as CleanableStore).cleanup();
 
       // Cleanup stores that have destroy() method
-      if (typeof (this.directMessageStore as any).destroy === 'function') {
-        (this.directMessageStore as any).destroy();
-      }
-
-      if (typeof (this.channelMessageStore as any).destroy === 'function') {
-        (this.channelMessageStore as any).destroy();
-      }
-
-      if (typeof (this.threadStore as any).destroy === 'function') {
-        (this.threadStore as any).destroy();
-      }
+      (this.directMessageStore as unknown as DestroyableStore).destroy();
+      (this.channelMessageStore as unknown as DestroyableStore).destroy();
+      (this.threadStore as unknown as DestroyableStore).destroy();
     } catch (error) {
       console.error('❌ Error during store cleanup:', error);
     }

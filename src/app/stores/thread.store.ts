@@ -366,6 +366,13 @@ export const ThreadStore = signalStore(
         const threadRef = reactionService.getMessageRef(...threadsPath);
         await reactionService.toggleReaction(threadRef, emojiId, userId);
       },
+
+      /**
+       * Cleanup all listeners
+       */
+      destroy(): void {
+        threadListener.clearAllListeners();
+      },
     };
   })
 );
