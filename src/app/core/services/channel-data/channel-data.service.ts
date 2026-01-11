@@ -1,48 +1,35 @@
 /**
- * @fileoverview Channel Data Service
- * @description Provides channel-related computed data and transformations
+ * @fileoverview Channel Data Service (Facade)
+ * @description Provides unified access to channel data and transformations
  * @module core/services/channel-data
+ *
+ * @deprecated This is now a facade. Use ChannelAccessService or ChannelTransformationService directly.
+ * This facade will be kept for backward compatibility.
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
-import { ChannelStore, UserStore } from '@stores/index';
-import { AuthStore } from '@stores/auth';
+import { Injectable, inject, Signal } from '@angular/core';
+import { ChannelAccessService } from '../channel-access/channel-access.service';
 import {
-  UserTransformationService,
-  UserListItem,
-} from '../user-transformation/user-transformation.service';
+  ChannelTransformationService,
+  ChannelAccessInfo,
+  ChannelInfo,
+} from '../channel-transformation/channel-transformation.service';
 import type { ChannelInfoData } from '@shared/dashboard-components/channel-info/channel-info.component';
+import type { UserListItem } from '../user-transformation/user-transformation.service';
 
-/**
- * Channel access information for access screen
- */
-export interface ChannelAccessInfo {
-  channelId: string;
-  channelName: string;
-  isPrivate: boolean;
-  description: string;
-  rules: string[];
-}
-
-/**
- * Basic channel information
- */
-export interface ChannelInfo {
-  id: string;
-  name: string;
-  description: string;
-  isPrivate: boolean;
-  memberCount: number;
-}
+// Re-export types for backward compatibility
+export type { ChannelAccessInfo, ChannelInfo };
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChannelDataService {
-  private channelStore = inject(ChannelStore);
-  private userStore = inject(UserStore);
-  private authStore = inject(AuthStore);
-  private userTransformation = inject(UserTransformationService);
+  private access = inject(ChannelAccessService);
+  private transformation = inject(ChannelTransformationService);
+
+  // ============================================
+  // ACCESS METHODS (delegated to ChannelAccessService)
+  // ============================================
 
   /**
    * Check if user is member of channel
@@ -50,15 +37,7 @@ export class ChannelDataService {
    * @returns True if user is member
    */
   isUserMember = (channelId: Signal<string>): Signal<boolean> => {
-    return computed(() => {
-      const currentUser = this.authStore.user();
-      if (!currentUser) return false;
-
-      const channelData = this.channelStore.getChannelById()(channelId());
-      if (!channelData) return false;
-
-      return channelData.members.includes(currentUser.uid);
-    });
+    return this.access.isUserMember(channelId);
   };
 
   /**
@@ -67,12 +46,12 @@ export class ChannelDataService {
    * @returns True if current user is owner
    */
   isCurrentUserOwner = (channelId: Signal<string>): Signal<boolean> => {
-    return computed(() => {
-      const channelData = this.channelStore.getChannelById()(channelId());
-      const currentUserId = this.authStore.user()?.uid;
-      return channelData?.createdBy === currentUserId;
-    });
+    return this.access.isCurrentUserOwner(channelId);
   };
+
+  // ============================================
+  // TRANSFORMATION METHODS (delegated to ChannelTransformationService)
+  // ============================================
 
   /**
    * Get channel access info for access screen
@@ -80,18 +59,7 @@ export class ChannelDataService {
    * @returns Channel access information
    */
   getChannelAccessInfo = (channelInfo: Signal<ChannelInfo>): Signal<ChannelAccessInfo> => {
-    return computed(() => {
-      const channel = channelInfo();
-      const channelData = this.channelStore.getChannelById()(channel.id);
-
-      return {
-        channelId: channel.id,
-        channelName: channel.name,
-        isPrivate: channel.isPrivate,
-        description: channelData?.description || channel.description,
-        rules: [],
-      };
-    });
+    return this.transformation.getChannelAccessInfo(channelInfo);
   };
 
   /**
@@ -100,13 +68,7 @@ export class ChannelDataService {
    * @returns Channel info data
    */
   getChannelInfoData = (channelInfo: Signal<ChannelInfo>): Signal<ChannelInfoData> => {
-    return computed(() => {
-      const ch = channelInfo();
-      const channelData = this.channelStore.getChannelById()(ch.id);
-      return channelData
-        ? this.buildChannelInfoFromData(channelData)
-        : this.buildDefaultChannelInfo(ch);
-    });
+    return this.transformation.getChannelInfoData(channelInfo);
   };
 
   /**
@@ -115,11 +77,7 @@ export class ChannelDataService {
    * @returns Members list
    */
   getChannelMembers = (channelId: Signal<string>): Signal<UserListItem[]> => {
-    return computed(() => {
-      const channelData = this.channelStore.getChannelById()(channelId());
-      if (!channelData || !channelData.members) return [];
-      return this.userTransformation.mapMembersToListItems(channelData.members);
-    });
+    return this.transformation.getChannelMembers(channelId);
   };
 
   /**
@@ -128,55 +86,6 @@ export class ChannelDataService {
    * @returns Available users list
    */
   getAvailableUsers = (channelId: Signal<string>): Signal<UserListItem[]> => {
-    return computed(() => {
-      const channelData = this.channelStore.getChannelById()(channelId());
-      const currentMemberIds = channelData?.members || [];
-
-      return this.userStore
-        .users()
-        .filter((user) => !currentMemberIds.includes(user.uid))
-        .map((user) => ({
-          id: user.uid,
-          name: user.displayName,
-          avatar: user.photoURL || '/img/profile/profile-0.svg',
-        }));
-    });
-  };
-
-  /**
-   * Build channel info from channel data
-   * @param channelData Channel data from store
-   * @returns Channel info data
-   */
-  private buildChannelInfoFromData = (channelData: any): ChannelInfoData => {
-    const creatorName = this.userTransformation.getUserDisplayName(channelData.createdBy);
-    const admins = this.userTransformation.mapChannelAdmins(channelData.admins);
-
-    return {
-      id: channelData.id,
-      name: channelData.name,
-      description: channelData.description,
-      isPrivate: channelData.isPrivate,
-      createdBy: channelData.createdBy,
-      createdByName: creatorName,
-      admins,
-    };
-  };
-
-  /**
-   * Build default channel info when no data available
-   * @param ch Basic channel info
-   * @returns Default channel info data
-   */
-  private buildDefaultChannelInfo = (ch: ChannelInfo): ChannelInfoData => {
-    return {
-      id: ch.id,
-      name: ch.name,
-      description: ch.description,
-      isPrivate: false,
-      createdBy: '',
-      createdByName: 'Unknown',
-      admins: [],
-    };
+    return this.transformation.getAvailableUsers(channelId);
   };
 }

@@ -18,19 +18,12 @@ import { MessageBoxComponent } from '@shared/dashboard-components/message-box/me
 import {
   ConversationMessagesComponent,
   type Message,
-  type MessageGroup,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { MembersMiniatureComponent } from '@shared/dashboard-components/members-miniatures/members-miniatures.component';
 import { AddMemberButtonComponent } from '@shared/dashboard-components/add-member-button/add-member-button.component';
 import { MembersOptionsMenuComponent } from '@shared/dashboard-components/members-options-menu/members-options-menu.component';
-import {
-  ProfileViewComponent,
-  ProfileUser,
-} from '@shared/dashboard-components/profile-view/profile-view.component';
-import {
-  ProfileEditComponent,
-  EditProfileUser,
-} from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
+import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { AddMembersComponent } from '@shared/dashboard-components/add-members/add-members.component';
 import { ChannelInfoComponent } from '@shared/dashboard-components/channel-info/channel-info.component';
 import { ChannelAccessComponent } from '../channel-access/channel-access.component';
@@ -49,6 +42,8 @@ import {
   type ChannelInfo,
 } from '@core/services/channel-data/channel-data.service';
 import { MessageReaction } from '@core/models/message.model';
+import { ChannelConversationHandlersService } from '@core/services/channel-conversation-handlers/channel-conversation-handlers.service';
+import { ChannelConversationStateService } from '@core/services/channel-conversation-state/channel-conversation-state.service';
 
 export interface ChannelMessage {
   id: string;
@@ -94,26 +89,16 @@ export class ChannelConversationComponent {
   private channelMembership = inject(ChannelMembershipService);
   protected channelConversationUI = inject(ChannelConversationUIService);
   private channelData = inject(ChannelDataService);
+  private handlers = inject(ChannelConversationHandlersService);
+  private conversationState = inject(ChannelConversationStateService);
   threadRequested = output<{ messageId: string; parentMessage: Message }>();
   channelLeft = output<void>();
   directMessageRequested = output<string>(); // Emits userId to start DM with
   channel = input.required<ChannelInfo>();
   private channelId = computed(() => this.channel().id);
   private isJoiningChannel = signal<boolean>(false);
-
-  /**
-   * Check if current user is member of this channel
-   */
   protected isMember = this.channelData.isUserMember(this.channelId);
-
-  /**
-   * Check if current user is channel owner
-   */
-  protected isChannelOwner = computed(() => {
-    const currentUserId = this.authStore.user()?.uid;
-    const channelData = this.currentChannelData();
-    return currentUserId && channelData ? currentUserId === channelData.createdBy : false;
-  });
+  protected isChannelOwner = this.conversationState.getIsChannelOwner(this.channel);
 
   /**
    * Check if user should see access screen
@@ -156,13 +141,7 @@ export class ChannelConversationComponent {
     });
   };
 
-  /**
-   * Current channel data from store (reactive to Firestore changes)
-   */
-  protected currentChannelData = computed(() => {
-    const ch = this.channel();
-    return this.channelStore.getChannelById()(ch.id);
-  });
+  protected currentChannelData = this.conversationState.getCurrentChannelData(this.channel);
 
   /**
    * Check if current user is admin
@@ -173,39 +152,12 @@ export class ChannelConversationComponent {
     return false;
   });
 
-  /**
-   * Check if current user is the channel owner
-   */
   protected isCurrentUserChannelOwner = this.channelData.isCurrentUserOwner(this.channelId);
-
-  /**
-   * Check if selected user is the channel owner
-   */
-  protected isSelectedUserChannelOwner = computed(() => {
-    const channelData = this.currentChannelData();
-    const selectedUserId = this.channelConversationUI.getSelectedMemberId()();
-    return channelData?.createdBy === selectedUserId;
-  });
-
-  /**
-   * Check if viewing own profile
-   */
-  protected isOwnProfile = computed(() => {
-    return this.channelConversationUI.getSelectedMemberId()() === this.authStore.user()?.uid;
-  });
-
-  /**
-   * Selected member for edit profile
-   */
-  protected editProfileUser = computed<EditProfileUser | null>(() => {
-    return this.userTransformation.toEditProfileUser(
-      this.channelConversationUI.getSelectedMemberId()()
-    );
-  });
-
-  /**
-   * Channel info data for channel-info component
-   */
+  protected isSelectedUserChannelOwner = this.conversationState.getIsSelectedUserChannelOwner(
+    this.channel
+  );
+  protected isOwnProfile = this.conversationState.getIsOwnProfile();
+  protected editProfileUser = this.conversationState.getEditProfileUser();
   protected channelInfo = this.channelData.getChannelInfoData(this.channel);
 
   /**
@@ -218,44 +170,11 @@ export class ChannelConversationComponent {
    */
   protected availableUsers = this.channelData.getAvailableUsers(this.channelId);
 
-  /**
-   * Total member count
-   */
   protected totalMemberCount = computed(() => this.members().length);
-
-  /**
-   * Get selected member as ProfileUser
-   */
-  protected selectedMember = computed<ProfileUser | null>(() => {
-    return this.userTransformation.toProfileUser(
-      this.channelConversationUI.getSelectedMemberId()()
-    );
-  });
-
-  /**
-   * Real channel messages from ChannelMessageStore
-   */
-  protected messages = computed<ChannelMessage[]>(() => {
-    const channelId = this.channel().id;
-    const rawMessages = this.channelMessageStore.getMessagesByChannel()(channelId);
-    return this.userTransformation.channelMessagesToViewMessages(rawMessages);
-  });
-
-  /**
-   * Check if there are more messages to load
-   */
-  protected hasMoreMessages = computed(() => {
-    const channelId = this.channel().id;
-    return this.channelMessageStore.hasMoreMessages()[channelId] ?? false;
-  });
-
-  /**
-   * Check if older messages are loading
-   */
-  protected loadingOlderMessages = computed(() => {
-    const channelId = this.channel().id;
-    return this.channelMessageStore.loadingOlderMessages()[channelId] ?? false;
-  });
+  protected selectedMember = this.conversationState.getSelectedMember();
+  protected messages = this.conversationState.getMessages(this.channel);
+  protected hasMoreMessages = this.conversationState.getHasMoreMessages(this.channel);
+  protected loadingOlderMessages = this.conversationState.getLoadingOlderMessages(this.channel);
 
   /**
    * Load older messages for pagination
@@ -269,16 +188,20 @@ export class ChannelConversationComponent {
   sendMessage = async (content: string): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
+    await this.sendChannelMessage(this.channel().id, content, currentUserId);
+  };
 
-    const channelId = this.channel().id;
-    await this.channelMessageInteraction.sendMessage(channelId, content, currentUserId);
+  /** Send message and mark as read */
+  private sendChannelMessage = async (
+    channelId: string,
+    content: string,
+    userId: string
+  ): Promise<void> => {
+    await this.channelMessageInteraction.sendMessage(channelId, content, userId);
     this.unreadService.markAsRead(channelId);
   };
 
-  /** Group messages by date */
-  protected messagesGroupedByDate = computed<MessageGroup[]>(() => {
-    return this.messageGrouping.groupMessagesByDate(this.messages());
-  });
+  protected messagesGroupedByDate = this.conversationState.getMessagesGroupedByDate(this.channel);
 
   /** Add reaction to message */
   addReaction = async (messageId: string, emojiId: string): Promise<void> => {
@@ -296,48 +219,23 @@ export class ChannelConversationComponent {
 
   /** Handle members added - send invitations */
   onMembersAdded = async (userIds: string[]): Promise<void> => {
-    const channel = this.channelStore.getChannelById()(this.channel().id);
-    const currentUser = this.authStore.user();
-
-    if (!channel || !currentUser) {
-      console.error('❌ Channel or current user not found');
-      return;
-    }
-
-    await this.channelMembership.sendInvitations(
-      channel.id,
-      userIds,
-      currentUser.uid,
-      currentUser.displayName,
-      channel.name
-    );
-    console.log('✉️ Sent invitations to:', userIds.length, 'users');
-    this.channelConversationUI.closeAddMembers();
+    await this.handlers.handleMembersAdded(this.channel().id, userIds);
   };
 
   /** Handle channel accepted (user joined from access screen) */
   protected onChannelAccepted = async (channelId: string): Promise<void> => {
-    console.log('✅ User accepted channel rules:', channelId);
-    console.log('✅ User accepted channel rules and joining:', channelId);
-    this.isJoiningChannel.set(true);
-
-    try {
-      await this.channelMembership.joinChannelAndWaitForSync(channelId);
-      this.isJoiningChannel.set(false);
-      console.log('✅ Join complete - access screen hidden');
-    } catch (error) {
-      console.error('❌ Error joining channel:', error);
-      this.isJoiningChannel.set(false);
-    }
+    await this.handlers.handleChannelAccepted(
+      channelId,
+      () => this.isJoiningChannel.set(true),
+      () => this.isJoiningChannel.set(false)
+    );
   };
 
   /** Handle remove member from channel */
   protected onRemoveMember = async (): Promise<void> => {
     const memberId = this.channelConversationUI.getSelectedMemberId()();
     if (!memberId) return;
-
-    await this.channelMembership.removeMember(this.channel().id, memberId);
-    this.channelConversationUI.closeProfileView();
+    await this.handlers.handleRemoveMember(this.channel().id, memberId);
   };
 
   /** Handle edit profile save */
@@ -347,14 +245,7 @@ export class ChannelConversationComponent {
   }): Promise<void> => {
     const userId = this.channelConversationUI.getSelectedMemberId()();
     if (!userId) return;
-
-    try {
-      await this.profileManagement.updateUserProfile(userId, data);
-      console.log('✅ User profile updated:', data);
-      this.channelConversationUI.closeEditProfile();
-    } catch (error) {
-      console.error('❌ Failed to update user profile:', error);
-    }
+    await this.handlers.handleEditProfileSave(userId, data);
   };
 
   /** Handle message click from profile */
@@ -372,20 +263,15 @@ export class ChannelConversationComponent {
     description?: string;
     isPrivate?: boolean;
   }): Promise<void> => {
-    await this.channelMembership.updateChannelInfo(this.channel().id, data);
+    await this.handlers.handleChannelUpdated(this.channel().id, data);
   };
 
   /** Handle leave channel clicked */
   onLeaveChannel = async (): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
-
-    try {
-      await this.channelMembership.leaveChannel(this.channel().id, currentUserId);
-      this.channelLeft.emit();
-    } catch (error) {
-      console.error('❌ Failed to leave channel:', error);
-    }
+    const success = await this.handlers.handleLeaveChannel(this.channel().id, currentUserId);
+    if (success) this.channelLeft.emit();
   };
 
   /** Handle delete channel clicked */
@@ -393,8 +279,7 @@ export class ChannelConversationComponent {
     const currentUserId = this.authStore.user()?.uid;
     const channelData = this.channel();
     if (!currentUserId || !channelData) return;
-
-    const deleted = await this.channelMembership.deleteChannel(
+    const deleted = await this.handlers.handleDeleteChannel(
       channelData.id,
       currentUserId,
       channelData.name
@@ -424,13 +309,19 @@ export class ChannelConversationComponent {
 
   /** Handle thread click */
   protected onThreadClick = (messageId: string): void => {
-    console.log('🔵 ChannelConversation.onThreadClick() called with messageId:', messageId);
-    const parentMessage = this.messages().find((m) => m.id === messageId);
-    console.log('🔵 Found parent message:', parentMessage);
+    const parentMessage = this.findParentMessage(messageId);
     if (!parentMessage) return;
+    this.emitThreadRequest(messageId, parentMessage);
+  };
 
+  /** Find parent message by ID */
+  private findParentMessage = (messageId: string): ChannelMessage | undefined => {
+    return this.messages().find((m) => m.id === messageId);
+  };
+
+  /** Emit thread request with message */
+  private emitThreadRequest = (messageId: string, parentMessage: ChannelMessage): void => {
     const message = this.userTransformation.channelMessageToThreadMessage(parentMessage);
-    console.log('🔵 Emitting threadRequested with:', { messageId, message });
     this.threadRequested.emit({ messageId, parentMessage: message });
   };
 }
