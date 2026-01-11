@@ -88,6 +88,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Setup effect to track message changes and auto-scroll
+   * @description Monitors message count changes and triggers auto-scroll when appropriate
+   * @returns void
    */
   private setupMessageChangeEffect = (): void => {
     effect(() => {
@@ -104,6 +106,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Get current total message count from all groups
+   * @description Calculates total number of messages across all message groups
+   * @returns Total message count
    */
   private getCurrentMessageCount = (): number => {
     const groups = this.messageGroups();
@@ -112,6 +116,11 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message count change (initial load or new messages)
+   * @description Determines if this is initial load or new messages and triggers appropriate handling
+   * @param conversationId - Unique identifier for the conversation
+   * @param currentCount - Current total message count
+   * @param autoScrollEnabled - Whether auto-scroll is currently enabled
+   * @returns void
    */
   private handleMessageCountChange = (
     conversationId: string,
@@ -127,6 +136,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if this is initial load
+   * @description Determines if messages are being loaded for the first time
+   * @param currentCount - Current total message count
+   * @returns True if this is the initial load (previous count was 0)
    */
   private isInitialLoad = (currentCount: number): boolean => {
     return this.lastMessageCount === 0 && currentCount > 0;
@@ -134,6 +146,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if should auto-scroll for new messages
+   * @description Determines if new messages should trigger auto-scroll based on count change and user preference
+   * @param currentCount - Current total message count
+   * @param autoScrollEnabled - Whether auto-scroll is currently enabled
+   * @returns True if new messages arrived and auto-scroll is enabled
    */
   private shouldAutoScrollForNewMessages = (
     currentCount: number,
@@ -144,6 +160,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle initial load - scroll and mark as read
+   * @description Triggers scroll to bottom and marks latest message as read on initial load
+   * @param conversationId - Unique identifier for the conversation
+   * @returns void
    */
   private handleInitialLoad = (conversationId: string): void => {
     this.shouldScrollToBottom = true;
@@ -155,6 +174,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle new messages - scroll and mark as read
+   * @description Triggers scroll to bottom and marks latest message as read when new messages arrive
+   * @param conversationId - Unique identifier for the conversation
+   * @returns void
    */
   private handleNewMessages = (conversationId: string): void => {
     this.shouldScrollToBottom = true;
@@ -164,6 +186,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
     }
   };
 
+  /**
+   * Angular lifecycle hook - runs after view is checked
+   * @description Performs pending scroll operations after view updates
+   */
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
@@ -173,6 +199,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Scroll to bottom of messages
+   * @description Initiates scroll operation to bottom of message container with validation
+   * @returns void
    */
   private scrollToBottom = (): void => {
     if (!this.messagesContainer?.nativeElement) {
@@ -185,6 +213,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Perform actual scroll operation
+   * @description Executes the scroll to bottom with error handling
+   * @returns void
    */
   private performScroll = (): void => {
     try {
@@ -201,6 +231,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Calculate target scroll position
+   * @description Calculates the scroll position needed to reach the bottom of the container
+   * @param container - HTML element containing the messages
+   * @returns Target scroll position in pixels
    */
   private calculateTargetScrollTop = (container: HTMLElement): number => {
     return container.scrollHeight - container.clientHeight;
@@ -208,6 +241,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Scroll container to target position
+   * @description Executes the scroll operation with instant behavior and updates last scroll position
+   * @param container - HTML element containing the messages
+   * @param targetScrollTop - Target scroll position in pixels
+   * @returns void
    */
   private scrollToTarget = (container: HTMLElement, targetScrollTop: number): void => {
     container.scrollTo({
@@ -219,6 +256,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle scroll event to detect manual scrolling
+   * @description Event handler triggered on container scroll, initiates debounced processing
+   * @returns void
    */
   protected onScroll = (): void => {
     if (!this.messagesContainer?.nativeElement) return;
@@ -228,6 +267,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Debounce scroll event processing
+   * @description Delays scroll processing by 100ms to avoid excessive calculations
+   * @returns void
    */
   private debounceScroll = (): void => {
     if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
@@ -236,6 +277,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Process scroll position and update auto-scroll state
+   * @description Analyzes current scroll position and updates auto-scroll state if position changed significantly
+   * @returns void
    */
   private processScroll = (): void => {
     const container = this.messagesContainer!.nativeElement;
@@ -249,6 +292,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if scroll position changed significantly
+   * @description Compares current scroll position with last known position (threshold: 5px)
+   * @param scrollTop - Current scroll position in pixels
+   * @returns True if position changed by more than 5 pixels
    */
   private hasScrollPositionChanged = (scrollTop: number): boolean => {
     return Math.abs(scrollTop - this.lastScrollTop) > 5;
@@ -256,6 +302,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle scroll position change
+   * @description Determines if user scrolled to bottom and updates auto-scroll state accordingly
+   * @param container - HTML element containing the messages
+   * @param scrollTop - Current scroll position in pixels
+   * @returns void
    */
   private handleScrollPositionChange = (container: HTMLElement, scrollTop: number): void => {
     const isAtBottom = this.isScrolledToBottom(container, scrollTop);
@@ -270,6 +320,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if scrolled to bottom
+   * @description Determines if user is within 50px of the bottom of the container
+   * @param container - HTML element containing the messages
+   * @param scrollTop - Current scroll position in pixels
+   * @returns True if within 50px of bottom
    */
   private isScrolledToBottom = (container: HTMLElement, scrollTop: number): boolean => {
     const distanceFromBottom = container.scrollHeight - scrollTop - container.clientHeight;
@@ -278,6 +332,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle scrolled to bottom - enable auto-scroll and mark read
+   * @description Enables auto-scroll and marks latest message as read when user reaches bottom
+   * @param conversationId - Unique identifier for the conversation
+   * @returns void
    */
   private handleScrolledToBottom = (conversationId: string): void => {
     this.chatScrollService.setAutoScroll(conversationId, true);
@@ -289,6 +346,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Get the ID of the latest message
+   * @description Retrieves the ID of the most recent message from the last group
+   * @returns Message ID or null if no messages exist
    */
   private getLatestMessageId = (): string | null => {
     const groups = this.messageGroups();
@@ -303,6 +362,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message click
+   * @description Emits message click event with message ID
+   * @param messageId - Unique identifier of the clicked message
+   * @returns void
    */
   protected onMessageClick = (messageId: string): void => {
     this.messageClicked.emit(messageId);
@@ -310,20 +372,34 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle avatar click
+   * @description Emits avatar click event with sender ID and stops event propagation
+   * @param senderId - Unique identifier of the message sender
+   * @param event - DOM click event
+   * @returns void
    */
-  protected onAvatarClick = (senderId: string): void => {
+  protected onAvatarClick = (senderId: string, event: Event): void => {
+    event.stopPropagation(); // Prevent message click event from firing
     this.avatarClicked.emit(senderId);
   };
 
   /**
    * Handle sender name click
+   * @description Emits sender click event with sender ID and stops event propagation
+   * @param senderId - Unique identifier of the message sender
+   * @param event - DOM click event
+   * @returns void
    */
-  protected onSenderClick = (senderId: string): void => {
+  protected onSenderClick = (senderId: string, event: Event): void => {
+    event.stopPropagation(); // Prevent message click event from firing
     this.senderClicked.emit(senderId);
   };
 
   /**
    * Handle reaction click
+   * @description Emits reaction added event with message ID and emoji
+   * @param messageId - Unique identifier of the message
+   * @param emoji - Emoji string to add as reaction
+   * @returns void
    */
   protected onReactionClick = (messageId: string, emoji: string): void => {
     this.reactionAdded.emit({ messageId, emoji });
@@ -331,6 +407,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle reaction bar button click
+   * @description Routes reaction bar clicks to appropriate handlers (thread, add-reaction, or emoji)
+   * @param messageId - Unique identifier of the message
+   * @param type - Type of reaction bar action (comment, add-reaction, or emoji)
+   * @returns void
    */
   protected onReactionBarClick = (messageId: string, type: ReactionType): void => {
     if (type === 'comment') {
@@ -344,6 +424,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle thread button click
+   * @description Emits thread click event with message ID
+   * @param messageId - Unique identifier of the message to open thread for
+   * @returns void
    */
   protected onThreadClick = (messageId: string): void => {
     this.threadClicked.emit(messageId);
@@ -351,6 +434,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle edit message request
+   * @description Activates edit mode for the specified message
+   * @param messageId - Unique identifier of the message to edit
+   * @returns void
    */
   protected onEditMessage = (messageId: string): void => {
     this.editingMessageId.set(messageId);
@@ -358,6 +444,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle cancel edit
+   * @description Deactivates edit mode without saving changes
+   * @returns void
    */
   protected onCancelEdit = (): void => {
     this.editingMessageId.set(null);
@@ -365,6 +453,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle save edited message
+   * @description Emits message edited event and deactivates edit mode
+   * @param messageId - Unique identifier of the edited message
+   * @param newContent - Updated message content
+   * @returns void
    */
   protected onSaveEdit = (messageId: string, newContent: string): void => {
     this.messageEdited.emit({ messageId, newContent });
@@ -373,6 +465,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete message request
+   * @description Shows delete confirmation modal for the specified message
+   * @param messageId - Unique identifier of the message to delete
+   * @returns void
    */
   protected onDeleteMessage = (messageId: string): void => {
     this.deleteConfirmationMessageId.set(messageId);
@@ -380,6 +475,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation cancel
+   * @description Closes delete confirmation modal without deleting
+   * @returns void
    */
   protected onCancelDelete = (): void => {
     this.deleteConfirmationMessageId.set(null);
@@ -387,6 +484,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation confirm
+   * @description Emits message deleted event and closes confirmation modal
+   * @returns void
    */
   protected onConfirmDelete = (): void => {
     const messageId = this.deleteConfirmationMessageId();
@@ -398,6 +497,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if message is being edited
+   * @description Determines if the specified message is currently in edit mode
+   * @param messageId - Unique identifier of the message to check
+   * @returns True if message is being edited
    */
   protected isEditing = (messageId: string): boolean => {
     return this.editingMessageId() === messageId;
@@ -405,6 +507,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle image load error - use fallback avatar
+   * @description Replaces failed avatar image with default fallback image
+   * @param event - DOM error event from image element
+   * @returns void
    */
   protected onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;

@@ -34,7 +34,7 @@
       [class.conversation-messages__message--other]="!message.isOwnMessage"
       (click)="onMessageClick(message.id)"
     >
-      <div class="conversation-messages__message-avatar" (click)="onAvatarClick(message.senderId)">
+      <div class="conversation-messages__message-avatar" (click)="onAvatarClick(message.senderId, $event)">
         <img
           [src]="message.senderAvatar"
           [alt]="message.senderName"
@@ -56,14 +56,14 @@
           </span>
           <button
             class="conversation-messages__message-sender"
-            (click)="onSenderClick(message.senderId)"
+            (click)="onSenderClick(message.senderId, $event)"
           >
             {{ message.senderName }}
           </button>
           } @else {
           <button
             class="conversation-messages__message-sender"
-            (click)="onSenderClick(message.senderId)"
+            (click)="onSenderClick(message.senderId, $event)"
           >
             {{ message.senderName }}
           </button>

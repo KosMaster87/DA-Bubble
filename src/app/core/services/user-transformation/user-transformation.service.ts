@@ -7,6 +7,8 @@
 import { Injectable, inject, computed, Signal } from '@angular/core';
 import { UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
+import { ChannelMessageStore } from '@stores/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-message.store';
 import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
 import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import type { Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
@@ -29,6 +31,8 @@ export interface UserListItem {
 export class UserTransformationService {
   private userStore = inject(UserStore);
   private authStore = inject(AuthStore);
+  private channelMessageStore = inject(ChannelMessageStore);
+  private directMessageStore = inject(DirectMessageStore);
 
   /**
    * Transform user to ProfileUser
@@ -288,5 +292,37 @@ export class UserTransformationService {
       isOwnMessage: channelMessage.isOwnMessage,
       reactions: channelMessage.reactions,
     };
+  };
+
+  /**
+   * Load DM parent message for thread
+   * @param conversationId DM conversation ID
+   * @param threadId Thread message ID
+   * @returns ViewMessage or null
+   */
+  loadDMParentMessage = (conversationId: string, threadId: string): ViewMessage | null => {
+    const messages = this.directMessageStore.messages()[conversationId] || [];
+    const dmMessage = messages.find((msg) => msg.id === threadId);
+    if (!dmMessage) {
+      console.warn('[loadDMParentMessage] DM parent message not found:', threadId);
+      return null;
+    }
+    return this.directMessagesToViewMessages([dmMessage])[0];
+  };
+
+  /**
+   * Load channel parent message for thread
+   * @param conversationId Channel ID
+   * @param threadId Thread message ID
+   * @returns ViewMessage or null
+   */
+  loadChannelParentMessage = (conversationId: string, threadId: string): ViewMessage | null => {
+    const messages = this.channelMessageStore.getMessagesByChannel()(conversationId);
+    const channelMessage = messages.find((msg) => msg.id === threadId);
+    if (!channelMessage) {
+      console.warn('[loadChannelParentMessage] Channel parent message not found:', threadId);
+      return null;
+    }
+    return this.channelMessageToThreadMessage(channelMessage);
   };
 }
