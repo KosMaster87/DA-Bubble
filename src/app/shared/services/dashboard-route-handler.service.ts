@@ -107,7 +107,12 @@ export class DashboardRouteHandlerService {
 
     this.navigationService.selectChannelById(channelId);
     this.threadCoordinator.closeThreadIfNeeded(previousId, channelId, shouldKeepThread, false);
-    this.threadCoordinator.closeDMThreadIfNeeded();
+
+    // Only close DM threads if we're not about to open a channel thread
+    if (!shouldKeepThread) {
+      this.threadCoordinator.closeDMThreadIfNeeded();
+    }
+
     showChannel(channelId);
 
     if (threadId) {
@@ -129,7 +134,12 @@ export class DashboardRouteHandlerService {
 
     this.navigationService.selectDirectMessageById(dmId);
     this.threadCoordinator.closeThreadIfNeeded(previousId, dmId, shouldKeepThread, true);
-    this.threadCoordinator.closeChannelThreadIfNeeded();
+
+    // Only close channel threads if we're not about to open a DM thread
+    if (!shouldKeepThread) {
+      this.threadCoordinator.closeChannelThreadIfNeeded();
+    }
+
     showDirectMessage(dmId);
 
     if (threadId) {

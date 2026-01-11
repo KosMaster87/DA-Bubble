@@ -51,8 +51,22 @@ export class ChannelManagementService {
     creatorId: string,
     inviteUserIds: Set<string>
   ): Promise<string> {
-    // Create channel with only creator as member
-    const newChannelId = await this.channelStore.createChannel(
+    const newChannelId = await this.createChannel(channelData, creatorId);
+    await this.sendInvitations(inviteUserIds, creatorId, newChannelId, channelData.name);
+    return newChannelId;
+  }
+
+  /**
+   * Create channel in store
+   * @param channelData Channel data
+   * @param creatorId Creator user ID
+   * @returns New channel ID
+   */
+  private async createChannel(
+    channelData: { name: string; description: string; isPrivate: boolean },
+    creatorId: string
+  ): Promise<string> {
+    return await this.channelStore.createChannel(
       {
         name: channelData.name,
         description: channelData.description,
@@ -61,33 +75,87 @@ export class ChannelManagementService {
       },
       creatorId
     );
+  }
 
-    // Send invitations to all selected users
-    if (inviteUserIds.size > 0) {
-      console.log(
-        `📨 Sending invitations to ${inviteUserIds.size} users for channel:`,
-        channelData.name
-      );
+  /**
+   * Send invitations to users
+   * @param inviteUserIds User IDs to invite
+   * @param senderId Sender user ID
+   * @param channelId Channel ID
+   * @param channelName Channel name
+   */
+  private async sendInvitations(
+    inviteUserIds: Set<string>,
+    senderId: string,
+    channelId: string,
+    channelName: string
+  ): Promise<void> {
+    if (inviteUserIds.size === 0) return;
 
-      const invitationPromises = Array.from(inviteUserIds).map((userId) =>
-        this.invitationService.createInvitation({
-          type: 'channel',
-          senderId: creatorId,
-          recipientId: userId,
-          channelId: newChannelId,
-          channelName: channelData.name,
-        })
-      );
+    this.logInvitationStart(inviteUserIds.size, channelName);
+    await this.sendInvitationPromises(inviteUserIds, senderId, channelId, channelName);
+  }
 
-      try {
-        await Promise.all(invitationPromises);
-        console.log(`✅ Sent ${inviteUserIds.size} invitations successfully`);
-      } catch (error) {
-        console.error('❌ Error sending invitations:', error);
-      }
+  /**
+   * Log invitation sending start
+   * @param count Number of invitations
+   * @param channelName Channel name
+   */
+  private logInvitationStart(count: number, channelName: string): void {
+    console.log(`📨 Sending invitations to ${count} users for channel:`, channelName);
+  }
+
+  /**
+   * Send invitation promises
+   * @param inviteUserIds User IDs to invite
+   * @param senderId Sender ID
+   * @param channelId Channel ID
+   * @param channelName Channel name
+   */
+  private async sendInvitationPromises(
+    inviteUserIds: Set<string>,
+    senderId: string,
+    channelId: string,
+    channelName: string
+  ): Promise<void> {
+    const invitationPromises = this.buildInvitationPromises(
+      inviteUserIds,
+      senderId,
+      channelId,
+      channelName
+    );
+
+    try {
+      await Promise.all(invitationPromises);
+      console.log(`✅ Sent ${inviteUserIds.size} invitations successfully`);
+    } catch (error) {
+      console.error('❌ Error sending invitations:', error);
     }
+  }
 
-    return newChannelId;
+  /**
+   * Build invitation promises for all users
+   * @param inviteUserIds User IDs to invite
+   * @param senderId Sender ID
+   * @param channelId Channel ID
+   * @param channelName Channel name
+   * @returns Array of promises
+   */
+  private buildInvitationPromises(
+    inviteUserIds: Set<string>,
+    senderId: string,
+    channelId: string,
+    channelName: string
+  ): Promise<string>[] {
+    return Array.from(inviteUserIds).map((userId) =>
+      this.invitationService.createInvitation({
+        type: 'channel',
+        senderId: senderId,
+        recipientId: userId,
+        channelId: channelId,
+        channelName: channelName,
+      })
+    );
   }
 
   /**
@@ -107,51 +175,95 @@ export class ChannelManagementService {
     memberData: CreateChannelWithMembersData,
     currentUserId: string
   ): Promise<string | null> {
-    // Check lock
-    if (this._isCreating()) {
-      console.log('⏸️  Channel creation already in progress');
-      return null;
-    }
-
-    this._isCreating.set(true);
+    if (!this.acquireLock()) return null;
 
     try {
-      // Collect all user IDs to invite (excluding current user)
-      const usersToInvite = new Set<string>();
-
-      // Users from "selectedUsers"
-      memberData.selectedUsers.forEach((user) => {
-        if (user.id !== currentUserId) {
-          usersToInvite.add(user.id);
-        }
-      });
-
-      // Members from selected channels
-      memberData.selectedChannels.forEach((selectedChannel) => {
-        const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
-        if (channel) {
-          channel.members.forEach((memberId) => {
-            if (memberId !== currentUserId) {
-              usersToInvite.add(memberId);
-            }
-          });
-        }
-      });
-
-      // Create channel with invitations
-      const newChannelId = await this.createChannelWithInvitations(
-        channelData,
-        currentUserId,
-        usersToInvite
-      );
-
-      return newChannelId;
+      const usersToInvite = this.collectUsersToInvite(memberData, currentUserId);
+      return await this.createChannelWithInvitations(channelData, currentUserId, usersToInvite);
     } finally {
-      // Re-enable after a short delay
-      setTimeout(() => {
-        this._isCreating.set(false);
-      }, 1000);
+      this.releaseLock();
     }
+  }
+
+  /**
+   * Acquire creation lock
+   * @returns True if lock acquired, false if already locked
+   */
+  private acquireLock(): boolean {
+    if (this._isCreating()) {
+      console.log('⏸️  Channel creation already in progress');
+      return false;
+    }
+    this._isCreating.set(true);
+    return true;
+  }
+
+  /**
+   * Release creation lock after delay
+   */
+  private releaseLock(): void {
+    setTimeout(() => {
+      this._isCreating.set(false);
+    }, 1000);
+  }
+
+  /**
+   * Collect all user IDs to invite from member data
+   * @param memberData Selected users and channels
+   * @param currentUserId Current user ID to exclude
+   * @returns Set of user IDs to invite
+   */
+  private collectUsersToInvite(
+    memberData: CreateChannelWithMembersData,
+    currentUserId: string
+  ): Set<string> {
+    const usersToInvite = new Set<string>();
+
+    this.addSelectedUsers(memberData.selectedUsers, currentUserId, usersToInvite);
+    this.addChannelMembers(memberData.selectedChannels, currentUserId, usersToInvite);
+
+    return usersToInvite;
+  }
+
+  /**
+   * Add selected users to invite set
+   * @param selectedUsers Users selected for invitation
+   * @param currentUserId Current user ID to exclude
+   * @param usersToInvite Set to add user IDs to
+   */
+  private addSelectedUsers(
+    selectedUsers: Array<{ id: string; name: string; avatar: string }>,
+    currentUserId: string,
+    usersToInvite: Set<string>
+  ): void {
+    selectedUsers.forEach((user) => {
+      if (user.id !== currentUserId) {
+        usersToInvite.add(user.id);
+      }
+    });
+  }
+
+  /**
+   * Add members from selected channels to invite set
+   * @param selectedChannels Channels whose members should be invited
+   * @param currentUserId Current user ID to exclude
+   * @param usersToInvite Set to add user IDs to
+   */
+  private addChannelMembers(
+    selectedChannels: Array<{ id: string; name: string }>,
+    currentUserId: string,
+    usersToInvite: Set<string>
+  ): void {
+    selectedChannels.forEach((selectedChannel) => {
+      const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
+      if (channel) {
+        channel.members.forEach((memberId) => {
+          if (memberId !== currentUserId) {
+            usersToInvite.add(memberId);
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -165,14 +277,12 @@ export class ChannelManagementService {
     memberData: CreateChannelWithMembersData,
     currentUserId: string
   ): Promise<string | null> {
-    // Get pending channel data from WorkspaceSidebarService
     const channelData = {
       name: this.workspaceSidebarService.pendingChannelName(),
       description: this.workspaceSidebarService.pendingChannelDescription(),
       isPrivate: this.workspaceSidebarService.pendingChannelIsPrivate(),
     };
 
-    // Create channel with members (includes lock)
     const newChannelId = await this.createChannelWithMembers(
       channelData,
       memberData,
@@ -181,10 +291,7 @@ export class ChannelManagementService {
 
     if (!newChannelId) return null;
 
-    // Clean up pending data and close popup
     this.workspaceSidebarService.closeAddMemberAfterChannel();
-
-    // Navigate to the newly created channel (uses selectChannel which includes navigation)
     this.navigationService.selectChannel(newChannelId);
 
     return newChannelId;
