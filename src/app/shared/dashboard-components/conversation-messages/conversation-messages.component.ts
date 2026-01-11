@@ -8,7 +8,6 @@ import {
   Component,
   input,
   output,
-  signal,
   ViewChild,
   ElementRef,
   AfterViewChecked,
@@ -20,7 +19,12 @@ import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reactio
 import { MessageEdit } from '../message-edit/message-edit';
 import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
 import { DeleteMessageModalComponent } from '../delete-message-modal/delete-message-modal.component';
-import { ChatScrollService } from '../../services';
+import {
+  ChatScrollService,
+  MessageScrollCoordinatorService,
+  MessageInteractionService,
+  MessageHelperService,
+} from '../../services';
 import { UserPresenceStore } from '../../../stores';
 import { MessageReaction } from '@core/models/message.model';
 
@@ -54,6 +58,7 @@ export interface MessageGroup {
     ReactionCountingComponent,
     DeleteMessageModalComponent,
   ],
+  providers: [MessageScrollCoordinatorService, MessageInteractionService, MessageHelperService],
   templateUrl: './conversation-messages.component.html',
   styleUrl: './conversation-messages.component.scss',
 })
@@ -73,14 +78,13 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   messageDeleted = output<string>();
 
   private chatScrollService = inject(ChatScrollService);
+  private scrollCoordinator = inject(MessageScrollCoordinatorService);
+  private interactionService = inject(MessageInteractionService);
+  private messageHelper = inject(MessageHelperService);
   protected userPresenceStore = inject(UserPresenceStore);
 
-  protected editingMessageId = signal<string | null>(null);
-  protected deleteConfirmationMessageId = signal<string | null>(null);
-  private shouldScrollToBottom = false;
-  private lastMessageCount = 0;
-  private lastScrollTop = 0;
-  private scrollTimeout: any;
+  protected editingMessageId = this.interactionService.getEditingMessageId();
+  protected deleteConfirmationMessageId = this.interactionService.getDeleteConfirmationMessageId();
 
   constructor() {
     this.setupMessageChangeEffect();
@@ -93,25 +97,15 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    */
   private setupMessageChangeEffect = (): void => {
     effect(() => {
-      const currentMessageCount = this.getCurrentMessageCount();
+      const currentMessageCount = this.messageHelper.getCurrentMessageCount(this.messageGroups());
       const conversationId = this.conversationId();
       const autoScrollEnabled = this.chatScrollService.getAutoScroll(conversationId);
 
-      if (currentMessageCount !== this.lastMessageCount) {
+      if (currentMessageCount !== this.scrollCoordinator.getLastMessageCount()) {
         this.handleMessageCountChange(conversationId, currentMessageCount, autoScrollEnabled);
       }
-      this.lastMessageCount = currentMessageCount;
+      this.scrollCoordinator.updateLastMessageCount(currentMessageCount);
     });
-  };
-
-  /**
-   * Get current total message count from all groups
-   * @description Calculates total number of messages across all message groups
-   * @returns Total message count
-   */
-  private getCurrentMessageCount = (): number => {
-    const groups = this.messageGroups();
-    return groups.reduce((sum, group) => sum + group.messages.length, 0);
   };
 
   /**
@@ -127,62 +121,17 @@ export class ConversationMessagesComponent implements AfterViewChecked {
     currentCount: number,
     autoScrollEnabled: boolean
   ): void => {
-    if (this.isInitialLoad(currentCount)) {
-      this.handleInitialLoad(conversationId);
-    } else if (this.shouldAutoScrollForNewMessages(currentCount, autoScrollEnabled)) {
-      this.handleNewMessages(conversationId);
-    }
-  };
+    const result = this.scrollCoordinator.handleMessageCountChange(
+      conversationId,
+      currentCount,
+      autoScrollEnabled
+    );
 
-  /**
-   * Check if this is initial load
-   * @description Determines if messages are being loaded for the first time
-   * @param currentCount - Current total message count
-   * @returns True if this is the initial load (previous count was 0)
-   */
-  private isInitialLoad = (currentCount: number): boolean => {
-    return this.lastMessageCount === 0 && currentCount > 0;
-  };
-
-  /**
-   * Check if should auto-scroll for new messages
-   * @description Determines if new messages should trigger auto-scroll based on count change and user preference
-   * @param currentCount - Current total message count
-   * @param autoScrollEnabled - Whether auto-scroll is currently enabled
-   * @returns True if new messages arrived and auto-scroll is enabled
-   */
-  private shouldAutoScrollForNewMessages = (
-    currentCount: number,
-    autoScrollEnabled: boolean
-  ): boolean => {
-    return currentCount > this.lastMessageCount && autoScrollEnabled;
-  };
-
-  /**
-   * Handle initial load - scroll and mark as read
-   * @description Triggers scroll to bottom and marks latest message as read on initial load
-   * @param conversationId - Unique identifier for the conversation
-   * @returns void
-   */
-  private handleInitialLoad = (conversationId: string): void => {
-    this.shouldScrollToBottom = true;
-    const latestMessageId = this.getLatestMessageId();
-    if (latestMessageId) {
-      this.chatScrollService.enterConversation(conversationId, latestMessageId);
-    }
-  };
-
-  /**
-   * Handle new messages - scroll and mark as read
-   * @description Triggers scroll to bottom and marks latest message as read when new messages arrive
-   * @param conversationId - Unique identifier for the conversation
-   * @returns void
-   */
-  private handleNewMessages = (conversationId: string): void => {
-    this.shouldScrollToBottom = true;
-    const latestMessageId = this.getLatestMessageId();
-    if (latestMessageId) {
-      this.chatScrollService.markAsRead(conversationId, latestMessageId);
+    if (result.shouldScroll) {
+      const latestMessageId = this.messageHelper.getLatestMessageId(this.messageGroups());
+      if (latestMessageId) {
+        this.chatScrollService.enterConversation(conversationId, latestMessageId);
+      }
     }
   };
 
@@ -191,68 +140,11 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @description Performs pending scroll operations after view updates
    */
   ngAfterViewChecked(): void {
-    if (this.shouldScrollToBottom) {
-      this.scrollToBottom();
-      this.shouldScrollToBottom = false;
+    if (this.scrollCoordinator.shouldScroll()) {
+      this.scrollCoordinator.scrollToBottom(this.messagesContainer);
+      this.scrollCoordinator.resetScrollFlag();
     }
   }
-
-  /**
-   * Scroll to bottom of messages
-   * @description Initiates scroll operation to bottom of message container with validation
-   * @returns void
-   */
-  private scrollToBottom = (): void => {
-    if (!this.messagesContainer?.nativeElement) {
-      console.warn('⚠️ scrollToBottom: messagesContainer not found');
-      return;
-    }
-
-    setTimeout(() => this.performScroll(), 0);
-  };
-
-  /**
-   * Perform actual scroll operation
-   * @description Executes the scroll to bottom with error handling
-   * @returns void
-   */
-  private performScroll = (): void => {
-    try {
-      const container = this.messagesContainer!.nativeElement;
-      const targetScrollTop = this.calculateTargetScrollTop(container);
-
-      if (targetScrollTop > 0) {
-        this.scrollToTarget(container, targetScrollTop);
-      }
-    } catch (err) {
-      console.error('❌ Scroll to bottom failed:', err);
-    }
-  };
-
-  /**
-   * Calculate target scroll position
-   * @description Calculates the scroll position needed to reach the bottom of the container
-   * @param container - HTML element containing the messages
-   * @returns Target scroll position in pixels
-   */
-  private calculateTargetScrollTop = (container: HTMLElement): number => {
-    return container.scrollHeight - container.clientHeight;
-  };
-
-  /**
-   * Scroll container to target position
-   * @description Executes the scroll operation with instant behavior and updates last scroll position
-   * @param container - HTML element containing the messages
-   * @param targetScrollTop - Target scroll position in pixels
-   * @returns void
-   */
-  private scrollToTarget = (container: HTMLElement, targetScrollTop: number): void => {
-    container.scrollTo({
-      top: targetScrollTop,
-      behavior: 'instant',
-    });
-    this.lastScrollTop = targetScrollTop;
-  };
 
   /**
    * Handle scroll event to detect manual scrolling
@@ -262,102 +154,21 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   protected onScroll = (): void => {
     if (!this.messagesContainer?.nativeElement) return;
 
-    this.debounceScroll();
+    this.scrollCoordinator.debounceScroll(() => {
+      this.scrollCoordinator.processScroll(this.messagesContainer, this.conversationId());
+      this.updateReadStatus();
+    });
   };
 
   /**
-   * Debounce scroll event processing
-   * @description Delays scroll processing by 100ms to avoid excessive calculations
-   * @returns void
+   * Update read status if scrolled to bottom
    */
-  private debounceScroll = (): void => {
-    if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-    this.scrollTimeout = setTimeout(() => this.processScroll(), 100);
-  };
-
-  /**
-   * Process scroll position and update auto-scroll state
-   * @description Analyzes current scroll position and updates auto-scroll state if position changed significantly
-   * @returns void
-   */
-  private processScroll = (): void => {
-    const container = this.messagesContainer!.nativeElement;
-    const scrollTop = container.scrollTop;
-
-    if (this.hasScrollPositionChanged(scrollTop)) {
-      this.handleScrollPositionChange(container, scrollTop);
-      this.lastScrollTop = scrollTop;
-    }
-  };
-
-  /**
-   * Check if scroll position changed significantly
-   * @description Compares current scroll position with last known position (threshold: 5px)
-   * @param scrollTop - Current scroll position in pixels
-   * @returns True if position changed by more than 5 pixels
-   */
-  private hasScrollPositionChanged = (scrollTop: number): boolean => {
-    return Math.abs(scrollTop - this.lastScrollTop) > 5;
-  };
-
-  /**
-   * Handle scroll position change
-   * @description Determines if user scrolled to bottom and updates auto-scroll state accordingly
-   * @param container - HTML element containing the messages
-   * @param scrollTop - Current scroll position in pixels
-   * @returns void
-   */
-  private handleScrollPositionChange = (container: HTMLElement, scrollTop: number): void => {
-    const isAtBottom = this.isScrolledToBottom(container, scrollTop);
+  private updateReadStatus = (): void => {
     const conversationId = this.conversationId();
-
-    if (isAtBottom) {
-      this.handleScrolledToBottom(conversationId);
-    } else {
-      this.chatScrollService.setAutoScroll(conversationId, false);
-    }
-  };
-
-  /**
-   * Check if scrolled to bottom
-   * @description Determines if user is within 50px of the bottom of the container
-   * @param container - HTML element containing the messages
-   * @param scrollTop - Current scroll position in pixels
-   * @returns True if within 50px of bottom
-   */
-  private isScrolledToBottom = (container: HTMLElement, scrollTop: number): boolean => {
-    const distanceFromBottom = container.scrollHeight - scrollTop - container.clientHeight;
-    return distanceFromBottom < 50;
-  };
-
-  /**
-   * Handle scrolled to bottom - enable auto-scroll and mark read
-   * @description Enables auto-scroll and marks latest message as read when user reaches bottom
-   * @param conversationId - Unique identifier for the conversation
-   * @returns void
-   */
-  private handleScrolledToBottom = (conversationId: string): void => {
-    this.chatScrollService.setAutoScroll(conversationId, true);
-    const latestMessageId = this.getLatestMessageId();
-    if (latestMessageId) {
+    const latestMessageId = this.messageHelper.getLatestMessageId(this.messageGroups());
+    if (latestMessageId && this.chatScrollService.getAutoScroll(conversationId)) {
       this.chatScrollService.markAsRead(conversationId, latestMessageId);
     }
-  };
-
-  /**
-   * Get the ID of the latest message
-   * @description Retrieves the ID of the most recent message from the last group
-   * @returns Message ID or null if no messages exist
-   */
-  private getLatestMessageId = (): string | null => {
-    const groups = this.messageGroups();
-    if (groups.length === 0) return null;
-
-    const lastGroup = groups[groups.length - 1];
-    if (lastGroup.messages.length === 0) return null;
-
-    const lastMessage = lastGroup.messages[lastGroup.messages.length - 1];
-    return lastMessage.id;
   };
 
   /**
@@ -439,7 +250,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns void
    */
   protected onEditMessage = (messageId: string): void => {
-    this.editingMessageId.set(messageId);
+    this.interactionService.startEdit(messageId);
   };
 
   /**
@@ -448,7 +259,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns void
    */
   protected onCancelEdit = (): void => {
-    this.editingMessageId.set(null);
+    this.interactionService.cancelEdit();
   };
 
   /**
@@ -460,7 +271,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    */
   protected onSaveEdit = (messageId: string, newContent: string): void => {
     this.messageEdited.emit({ messageId, newContent });
-    this.editingMessageId.set(null);
+    this.interactionService.completeEdit();
   };
 
   /**
@@ -470,7 +281,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns void
    */
   protected onDeleteMessage = (messageId: string): void => {
-    this.deleteConfirmationMessageId.set(messageId);
+    this.interactionService.showDeleteConfirmation(messageId);
   };
 
   /**
@@ -479,7 +290,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns void
    */
   protected onCancelDelete = (): void => {
-    this.deleteConfirmationMessageId.set(null);
+    this.interactionService.cancelDelete();
   };
 
   /**
@@ -488,10 +299,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns void
    */
   protected onConfirmDelete = (): void => {
-    const messageId = this.deleteConfirmationMessageId();
+    const messageId = this.interactionService.getDeleteMessageId();
     if (messageId) {
       this.messageDeleted.emit(messageId);
-      this.deleteConfirmationMessageId.set(null);
+      this.interactionService.completeDeletion();
     }
   };
 
@@ -502,7 +313,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
    * @returns True if message is being edited
    */
   protected isEditing = (messageId: string): boolean => {
-    return this.editingMessageId() === messageId;
+    return this.interactionService.isEditing(messageId);
   };
 
   /**

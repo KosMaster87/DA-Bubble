@@ -113,10 +113,10 @@ export class ChannalWelcomeComponent {
       .map((memberId) => {
         const user = this.userStore.getUserById()(memberId);
         if (!user) {
-          console.log('⚠️ User not found in UserStore:', {
-            memberId,
-            totalUsersInStore: this.userStore.users().length,
-          });
+          // console.log('⚠️ User not found in UserStore:', {
+          //   memberId,
+          //   totalUsersInStore: this.userStore.users().length,
+          // });
           return null;
         }
         return {
