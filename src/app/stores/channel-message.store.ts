@@ -9,6 +9,7 @@
 
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
+import { QuerySnapshot, DocumentData } from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
 import { ReactionService } from '@core/services/reaction/reaction.service';
 import { ChannelMessageOperationsService } from '@core/services/channel-message-operations/channel-message-operations.service';
@@ -25,6 +26,8 @@ export interface ChannelMessageState {
   isLoading: boolean;
   error: string | null;
   updateCounter: number;
+  hasMoreMessages: { [channelId: string]: boolean };
+  loadingOlderMessages: { [channelId: string]: boolean };
 }
 
 /**
@@ -37,7 +40,14 @@ const initialState: ChannelMessageState = {
   isLoading: false,
   error: null,
   updateCounter: 0,
+  hasMoreMessages: {},
+  loadingOlderMessages: {},
 };
+
+/**
+ * Store snapshots for pagination outside of reactive state
+ */
+const channelSnapshots = new Map<string, QuerySnapshot<DocumentData>>();
 
 /**
  * Channel message management store with Firestore integration
@@ -148,7 +158,7 @@ export const ChannelMessageStore = signalStore(
         patchState(store, { isLoading: true, error: null });
         listener.setupListener(
           channelId,
-          (messages) => this.handleMessagesLoaded(channelId, messages),
+          (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot),
           (error) => this.handleError(error, 'Failed to load channel messages')
         );
       },
@@ -217,8 +227,10 @@ export const ChannelMessageStore = signalStore(
        * Handle messages loaded from listener
        * @param channelId - Channel ID
        * @param messages - Loaded messages
+       * @param snapshot - Firestore snapshot for pagination
        */
-      handleMessagesLoaded(channelId: string, messages: Message[]): void {
+      handleMessagesLoaded(channelId: string, messages: Message[], snapshot: QuerySnapshot<DocumentData>): void {
+        channelSnapshots.set(channelId, snapshot);
         const updated = ChannelMessageStateHelper.updateChannelMessages(
           store.channelMessages(),
           channelId,
@@ -228,7 +240,62 @@ export const ChannelMessageStore = signalStore(
           channelMessages: updated,
           isLoading: false,
           updateCounter: store.updateCounter() + 1,
+          hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: messages.length >= 100 },
         });
+      },
+
+      /**
+       * Load older messages for pagination
+       * @param channelId - Channel ID
+       */
+      async loadOlderMessages(channelId: string): Promise<void> {
+        const snapshot = channelSnapshots.get(channelId);
+        if (!snapshot || store.loadingOlderMessages()[channelId]) {
+          return;
+        }
+
+        const firstDoc = snapshot.docs[0];
+        if (!firstDoc) {
+          patchState(store, {
+            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
+          });
+          return;
+        }
+
+        patchState(store, {
+          loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: true },
+        });
+
+        try {
+          const olderMessages = await operations.loadOlderMessages(channelId, firstDoc);
+
+          if (olderMessages.length === 0) {
+            patchState(store, {
+              hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
+              loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
+            });
+            return;
+          }
+
+          const currentMessages = store.channelMessages()[channelId] || [];
+          const allMessages = [...olderMessages, ...currentMessages];
+          const updated = ChannelMessageStateHelper.updateChannelMessages(
+            store.channelMessages(),
+            channelId,
+            allMessages
+          );
+
+          patchState(store, {
+            channelMessages: updated,
+            loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
+            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: olderMessages.length >= 100 },
+          });
+        } catch (error) {
+          this.handleError(error, 'Failed to load older messages');
+          patchState(store, {
+            loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
+          });
+        }
       },
 
       /**

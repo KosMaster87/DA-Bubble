@@ -33,20 +33,25 @@ export class DashboardInitializationService {
    * Should be called in component constructor
    */
   initializeEffects(): void {
+    // REMOVED: Loading messages for all channels to reduce Firestore reads
+    // Messages are now loaded on-demand when user opens a channel
+    // This prevents 100+ unnecessary listeners and reduces costs dramatically
+
     // Load messages for all channels where user is a member (for thread-unread detection)
-    effect(() => {
-      const currentUser = this.authStore.user();
-      if (!currentUser) return;
-
-      const channels = this.channelStore.channels();
-      const memberChannels = channels.filter((channel) =>
-        channel.members.includes(currentUser.uid)
-      );
-
-      memberChannels.forEach((channel) => {
-        this.channelMessageStore.loadChannelMessages(channel.id);
-      });
-    });
+    // ❌ DISABLED: Too many Firestore reads! Only load active channel messages.
+    // effect(() => {
+    //   const currentUser = this.authStore.user();
+    //   if (!currentUser) return;
+    //
+    //   const channels = this.channelStore.channels();
+    //   const memberChannels = channels.filter((channel) =>
+    //     channel.members.includes(currentUser.uid)
+    //   );
+    //
+    //   memberChannels.forEach((channel) => {
+    //     this.channelMessageStore.loadChannelMessages(channel.id);
+    //   });
+    // });
 
     // Watch for changes in user's directMessages array (only when IDs actually change)
     effect(() => {
@@ -56,12 +61,15 @@ export class DashboardInitializationService {
       }
     });
 
+    // REMOVED: Loading messages for all DM conversations to reduce Firestore reads
+    // Messages are now loaded on-demand when user opens a DM
     // Load messages for all DM conversations to enable thread-unread detection
-    effect(() => {
-      const conversations = this.directMessageStore.conversations();
-      conversations.forEach((conversation) => {
-        this.directMessageStore.loadMessages(conversation.id);
-      });
-    });
+    // ❌ DISABLED: Too many Firestore reads! Only load active DM messages.
+    // effect(() => {
+    //   const conversations = this.directMessageStore.conversations();
+    //   conversations.forEach((conversation) => {
+    //     this.directMessageStore.loadMessages(conversation.id);
+    //   });
+    // });
   }
 }

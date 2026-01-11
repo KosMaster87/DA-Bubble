@@ -30,6 +30,15 @@
 
   <!-- Messages Area -->
   <div class="chat-private__messages">
+    @if (hasMoreMessages()) {
+    <button
+      class="chat-private__load-more"
+      (click)="loadOlderMessages()"
+      [disabled]="loadingOlderMessages()"
+    >
+      {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
+    </button>
+    }
     <app-conversation-messages
       [conversationId]="'dm-' + dmInfo().conversationId"
       [messageGroups]="messagesGroupedByDate()"

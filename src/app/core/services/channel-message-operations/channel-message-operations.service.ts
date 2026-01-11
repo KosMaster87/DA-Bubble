@@ -13,10 +13,15 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  query,
+  orderBy,
+  limit,
+  startAfter,
   serverTimestamp,
   CollectionReference,
   DocumentData,
   Timestamp,
+  QueryDocumentSnapshot,
 } from '@angular/fire/firestore';
 import { Message, MessageType } from '@core/models/message.model';
 
@@ -145,4 +150,27 @@ export class ChannelMessageOperationsService {
     const deletePromises = threadsSnapshot.docs.map((threadDoc) => deleteDoc(threadDoc.ref));
     await Promise.all(deletePromises);
   };
+
+  /**
+   * Load older messages for pagination
+   * @param channelId - Channel ID
+   * @param lastMessage - Last message snapshot to paginate from
+   * @param limitCount - Number of messages to load (default 100)
+   * @returns Array of older messages
+   */
+  async loadOlderMessages(
+    channelId: string,
+    lastMessage: QueryDocumentSnapshot<DocumentData>,
+    limitCount: number = 100
+  ): Promise<Message[]> {
+    const messagesRef = this.getMessagesCollectionRef(channelId);
+    const q = query(
+      messagesRef,
+      orderBy('createdAt', 'desc'),
+      startAfter(lastMessage),
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => this.mapMessageDocument(doc.id, doc.data())).reverse();
+  }
 }

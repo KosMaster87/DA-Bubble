@@ -5,12 +5,13 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { Firestore, query, orderBy, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
+import { Firestore, query, orderBy, limit, onSnapshot, Unsubscribe, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
 import { ChannelMessageOperationsService } from '../channel-message-operations/channel-message-operations.service';
 
 export interface SnapshotResult {
   messages: Message[];
+  snapshot: QuerySnapshot<DocumentData>;
   error?: string;
 }
 
@@ -30,12 +31,12 @@ export class ChannelMessageListenerService {
   /**
    * Setup real-time listener for channel messages
    * @param channelId - Channel ID
-   * @param onSuccess - Success callback with messages
+   * @param onSuccess - Success callback with messages and snapshot
    * @param onError - Error callback
    */
   setupListener(
     channelId: string,
-    onSuccess: (messages: Message[]) => void,
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
     onError: (error: string) => void
   ): void {
     const existingTimer = this.debounceTimers.get(channelId);
@@ -73,11 +74,12 @@ export class ChannelMessageListenerService {
    */
   private createListener = (
     channelId: string,
-    onSuccess: (messages: Message[]) => void,
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
     onError: (error: string) => void
   ): Unsubscribe => {
     const messagesRef = this.operations.getMessagesCollectionRef(channelId);
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+    // Load only last 100 messages to reduce Firestore reads
+    const q = query(messagesRef, orderBy('createdAt', 'asc'), limit(100));
 
     return onSnapshot(
       q,
@@ -87,7 +89,7 @@ export class ChannelMessageListenerService {
 
         const timer = setTimeout(() => {
           const messages = this.mapSnapshot(snapshot);
-          onSuccess(messages);
+          onSuccess(messages, snapshot);
           this.retryCounters.set(channelId, 0);
           this.debounceTimers.delete(`snapshot-${channelId}`);
         }, 50);
@@ -120,7 +122,7 @@ export class ChannelMessageListenerService {
     error: any,
     channelId: string,
     onError: (msg: string) => void,
-    onSuccess: (messages: Message[]) => void
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void
   ): void => {
     if (this.isFirestoreStateError(error)) {
       this.handleFirestoreStateError(error, channelId, onSuccess, onError);
@@ -145,7 +147,7 @@ export class ChannelMessageListenerService {
   private handleFirestoreStateError = (
     error: any,
     channelId: string,
-    onSuccess: (messages: Message[]) => void,
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
     onError: (msg: string) => void
   ): void => {
     const retryCount = this.retryCounters.get(channelId) || 0;

@@ -9,8 +9,13 @@ import {
   query,
   where,
   orderBy,
+  limit,
+  startAfter,
+  getDocs,
   onSnapshot as firestoreOnSnapshot,
   Unsubscribe,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from '@angular/fire/firestore';
 import { DirectMessage } from '@core/models/direct-message.model';
 
@@ -47,9 +52,11 @@ export const setupMessagesFirestoreListener = (
   if (messagesUnsubscribers.has(conversationId)) {
     messagesUnsubscribers.get(conversationId)!();
   }
+  // Load only last 100 messages to reduce Firestore reads
   const q = query(
     collection(firestore, 'direct-messages', conversationId, 'messages'),
-    orderBy('createdAt', 'asc')
+    orderBy('createdAt', 'asc'),
+    limit(100)
   );
   return firestoreOnSnapshot(q, snapshotHandler, errorHandler);
 };
@@ -65,3 +72,33 @@ export const filterMessagesWithThreads = (messages: DirectMessage[]): DirectMess
  */
 export const isPermissionError = (error: any): boolean =>
   error.code === 'permission-denied' || error.message?.includes('permissions');
+
+/**
+ * Load older messages for pagination
+ */
+export const loadOlderDMMessages = async (
+  firestore: Firestore,
+  conversationId: string,
+  lastMessage: QueryDocumentSnapshot<DocumentData>,
+  limitCount: number = 100
+): Promise<DirectMessage[]> => {
+  const q = query(
+    collection(firestore, 'direct-messages', conversationId, 'messages'),
+    orderBy('createdAt', 'desc'),
+    startAfter(lastMessage),
+    limit(limitCount)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data()['createdAt']?.toDate() || new Date(),
+      updatedAt: doc.data()['updatedAt']?.toDate() || new Date(),
+      editedAt: doc.data()['editedAt']?.toDate(),
+      lastThreadTimestamp: doc.data()['lastThreadTimestamp']?.toDate(),
+      reactions: doc.data()['reactions'] || [],
+      threadCount: doc.data()['threadCount'] || 0,
+    } as DirectMessage))
+    .reverse();
+};

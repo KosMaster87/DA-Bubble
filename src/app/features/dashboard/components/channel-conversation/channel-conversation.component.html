@@ -108,6 +108,15 @@
 
   <!-- Messages Area -->
   <div class="channel-conversation__messages">
+    @if (hasMoreMessages()) {
+    <button
+      class="channel-conversation__load-more"
+      (click)="loadOlderMessages()"
+      [disabled]="loadingOlderMessages()"
+    >
+      {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
+    </button>
+    }
     <app-conversation-messages
       [conversationId]="'channel-' + channel().id"
       [messageGroups]="messagesGroupedByDate()"

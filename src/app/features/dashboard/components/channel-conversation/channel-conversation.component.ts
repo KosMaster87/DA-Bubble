@@ -241,6 +241,30 @@ export class ChannelConversationComponent {
     return this.userTransformation.channelMessagesToViewMessages(rawMessages);
   });
 
+  /**
+   * Check if there are more messages to load
+   */
+  protected hasMoreMessages = computed(() => {
+    const channelId = this.channel().id;
+    return this.channelMessageStore.hasMoreMessages()[channelId] ?? false;
+  });
+
+  /**
+   * Check if older messages are loading
+   */
+  protected loadingOlderMessages = computed(() => {
+    const channelId = this.channel().id;
+    return this.channelMessageStore.loadingOlderMessages()[channelId] ?? false;
+  });
+
+  /**
+   * Load older messages for pagination
+   */
+  protected loadOlderMessages = async (): Promise<void> => {
+    const channelId = this.channel().id;
+    await this.channelMessageStore.loadOlderMessages(channelId);
+  };
+
   /** Send message to channel */
   sendMessage = async (content: string): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;

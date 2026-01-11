@@ -13,6 +13,8 @@ import {
   updateDoc,
   serverTimestamp,
   Unsubscribe,
+  QuerySnapshot,
+  DocumentData,
 } from '@angular/fire/firestore';
 import { ThreadStore } from './thread.store';
 import {
@@ -35,6 +37,7 @@ import {
   setupConversationsFirestoreListener,
   setupMessagesFirestoreListener,
   filterMessagesWithThreads,
+  loadOlderDMMessages,
 } from './helpers/direct-message-listener.helpers';
 import {
   filterConversationsById,
@@ -54,6 +57,8 @@ export interface DirectMessageState {
   isLoading: boolean;
   error: string | null;
   updateCounter: number;
+  hasMoreMessages: { [conversationId: string]: boolean };
+  loadingOlderMessages: { [conversationId: string]: boolean };
 }
 
 const initialState: DirectMessageState = {
@@ -63,6 +68,8 @@ const initialState: DirectMessageState = {
   isLoading: false,
   error: null,
   updateCounter: 0,
+  hasMoreMessages: {},
+  loadingOlderMessages: {},
 };
 
 export const DirectMessageStore = signalStore(
@@ -88,6 +95,7 @@ export const DirectMessageStore = signalStore(
     const reactionService = inject(ReactionService);
     const threadStore = inject(ThreadStore);
     let conversationsUnsubscribe: Unsubscribe | null = null;
+    let messagesSnapshots: Map<string, QuerySnapshot<DocumentData>> = new Map();
     let messagesUnsubscribers: Map<string, Unsubscribe> = new Map();
     let conversationsDebounceTimer: any = null;
     let conversationsRetryCount = 0;
@@ -160,6 +168,7 @@ export const DirectMessageStore = signalStore(
     };
 
     const handleMessagesSnapshot = (conversationId: string, snapshot: any) => {
+      messagesSnapshots.set(conversationId, snapshot);
       if (messagesDebounceTimers.has(conversationId)) {
         clearTimeout(messagesDebounceTimers.get(conversationId));
       }
@@ -169,6 +178,7 @@ export const DirectMessageStore = signalStore(
         patchState(store, {
           messages: { ...store.messages(), [conversationId]: messages },
           updateCounter: store.updateCounter() + 1,
+          hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: messages.length >= 100 },
         });
       }, SNAPSHOT_DEBOUNCE_MS);
       messagesDebounceTimers.set(conversationId, snapshotTimer);
@@ -374,7 +384,50 @@ export const DirectMessageStore = signalStore(
         removeConversationFromState(conversationId);
         cleanupMessageListener(conversationId);
       },
+      async loadOlderMessages(conversationId: string): Promise<void> {
+        const snapshot = messagesSnapshots.get(conversationId);
+        if (!snapshot || store.loadingOlderMessages()[conversationId]) {
+          return;
+        }
 
+        const firstDoc = snapshot.docs[0];
+        if (!firstDoc) {
+          patchState(store, {
+            hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: false },
+          });
+          return;
+        }
+
+        patchState(store, {
+          loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: true },
+        });
+
+        try {
+          const olderMessages = await loadOlderDMMessages(firestore, conversationId, firstDoc);
+
+          if (olderMessages.length === 0) {
+            patchState(store, {
+              hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: false },
+              loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: false },
+            });
+            return;
+          }
+
+          const currentMessages = store.messages()[conversationId] || [];
+          const allMessages = [...olderMessages, ...currentMessages];
+
+          patchState(store, {
+            messages: { ...store.messages(), [conversationId]: allMessages },
+            loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: false },
+            hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: olderMessages.length >= 100 },
+          });
+        } catch (error) {
+          logError('loadOlderMessages', error);
+          patchState(store, {
+            loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: false },
+          });
+        }
+      },
       destroy: (): void => {
         clearAllDebounceTimers();
         clearAllListeners();

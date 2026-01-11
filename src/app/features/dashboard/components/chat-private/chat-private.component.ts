@@ -115,6 +115,30 @@ export class ChatPrivateComponent {
   });
 
   /**
+   * Check if there are more messages to load
+   */
+  protected hasMoreMessages = computed(() => {
+    const conversationId = this.dmInfo().conversationId;
+    return this.directMessageStore.hasMoreMessages()[conversationId] ?? false;
+  });
+
+  /**
+   * Check if older messages are loading
+   */
+  protected loadingOlderMessages = computed(() => {
+    const conversationId = this.dmInfo().conversationId;
+    return this.directMessageStore.loadingOlderMessages()[conversationId] ?? false;
+  });
+
+  /**
+   * Load older messages for pagination
+   */
+  protected loadOlderMessages = async (): Promise<void> => {
+    const conversationId = this.dmInfo().conversationId;
+    await this.directMessageStore.loadOlderMessages(conversationId);
+  };
+
+  /**
    * Group messages by date
    */
   protected messagesGroupedByDate = computed<MessageGroup[]>(() => {

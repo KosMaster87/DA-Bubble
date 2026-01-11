@@ -112,6 +112,30 @@
     }
   }
 
+  &__load-more {
+    margin: var(--space-4) auto;
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
   &__message {
     @include mix.flex(row, flex-start, flex-start);
     gap: var(--space-3);
