@@ -5,6 +5,7 @@
     @include mix.flex(row, space-between, center);
     gap: 1rem;
     max-width: 100%;
+    padding: 0.2rem 0.2rem; // TEST
 
     @include mix.tablet-landscape {
       gap: 1.5rem;
@@ -19,10 +20,19 @@
     flex-shrink: 0;
   }
 
+  &__back {
+    flex-shrink: 0;
+  }
+
   &__search {
     position: relative;
     flex: 1;
     max-width: 400px;
+
+    // Hide on mobile
+    @media screen and (max-width: 767px) {
+      display: none;
+    }
 
     @include mix.tablet-landscape {
       max-width: 500px;
@@ -90,6 +100,11 @@
       font-size: 1.4rem;
       color: var(--text-primary, #000);
       transition: color 0.2s;
+
+      // Hide on mobile
+      @media screen and (max-width: 767px) {
+        display: none;
+      }
     }
 
     &:hover &-name {
@@ -101,10 +116,16 @@
     }
 
     &-avatar {
-      width: 42px;
-      height: 42px;
+      width: clamp(1.8rem, 3vw + 1rem, 2.5rem);
+      height: clamp(1.8rem, 3vw + 1rem, 2.5rem);
       position: relative;
       flex-shrink: 0;
+
+      // Desktop size
+      @media screen and (min-width: 768px) {
+        width: 42px;
+        height: 42px;
+      }
     }
   }
 

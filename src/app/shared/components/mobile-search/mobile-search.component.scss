@@ -1,0 +1,51 @@
+@use '../../../../styles/mixins' as mix;
+
+.mobile-search {
+  position: relative;
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--container-bg);
+
+  // Only visible on mobile
+  display: none;
+
+  @media screen and (max-width: 767px) {
+    display: block;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.5rem 2.5rem 0.5rem 0.875rem;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s;
+    background-color: var(--input-bg, #fff);
+
+    &:focus {
+      border-color: var(--primary-color, #444df2);
+      box-shadow: 0 0 0 2px rgba(68, 77, 242, 0.1);
+    }
+
+    &::placeholder {
+      color: var(--text-secondary, #999);
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    right: calc(var(--space-4) + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    transition: filter 0.2s;
+  }
+
+  &__input:focus ~ &__icon {
+    filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
+      brightness(98%) contrast(92%);
+  }
+}

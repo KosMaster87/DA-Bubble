@@ -18,6 +18,11 @@
   z-index: var(--z-sidebar-toggle);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 
+  // Hide on mobile
+  @media screen and (max-width: 767px) {
+    display: none;
+  }
+
   &:hover {
     background-color: var(--input-bg);
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);

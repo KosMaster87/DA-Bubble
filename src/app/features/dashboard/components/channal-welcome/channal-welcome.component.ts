@@ -39,6 +39,7 @@ export class ChannalWelcomeComponent {
   protected authStore = inject(AuthStore);
 
   directMessageRequested = output<string>(); // Emits userId to start DM with
+  backRequested = output<void>(); // For mobile back navigation
 
   protected isMembersMenuOpen = signal<boolean>(false);
   protected isProfileViewOpen = signal<boolean>(false);

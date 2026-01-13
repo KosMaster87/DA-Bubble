@@ -4,11 +4,12 @@
  * @module features/dashboard/components/workspace-header
  */
 
-import { Component, inject, signal, output, computed } from '@angular/core';
+import { Component, inject, signal, output, computed, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 import { UserPresenceStore } from '@stores/index';
 import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
+import { BackToWorkspaceComponent } from '@shared/components/back-to-workspace/back-to-workspace.component';
 import { UserOptionsMenuComponent } from '@shared/dashboard-components';
 import {
   ProfileViewComponent,
@@ -23,6 +24,7 @@ import {
   selector: 'app-workspace-header',
   imports: [
     DABubbleLogoComponent,
+    BackToWorkspaceComponent,
     UserOptionsMenuComponent,
     ProfileViewComponent,
     ProfileEditComponent,
@@ -38,7 +40,12 @@ export class WorkspaceHeaderComponent {
   protected isProfileViewOpen = signal(false);
   protected isEditProfileOpen = signal(false);
 
+  // Inputs for mobile view state
+  isMobileView = input<boolean>(false);
+  showBackToWorkspace = input<boolean>(false);
+
   mailboxRequested = output<void>();
+  backToWorkspaceRequested = output<void>();
 
   /**
    * Get current user from AuthStore

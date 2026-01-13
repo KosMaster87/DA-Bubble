@@ -15,6 +15,10 @@
   gap: var(--space-8);
   position: relative;
 
+  @media screen and (max-width: 767px) {
+    gap: var(--space-2);
+  }
+
   // CRITICAL: Must use flex to fill parent container, not height: 100%
   // Parent is a flex container, so flex: 1 takes the defined space
   flex: 1;
@@ -50,6 +54,10 @@
     padding: var(--space-5) var(--space-10);
     transition: background-color 0.2s ease;
 
+    @media screen and (max-width: 767px) {
+      padding: var(--space-2) var(--space-2);
+    }
+
     &:hover {
       background-color: #eceefe;
 
@@ -63,6 +71,10 @@
       .conversation-messages__reaction-bar {
         left: var(--space-10);
         right: auto;
+
+        @media screen and (max-width: 767px) {
+          left: var(--space-2);
+        }
       }
     }
 
@@ -70,6 +82,10 @@
       .conversation-messages__reaction-bar {
         right: var(--space-10);
         left: auto;
+
+        @media screen and (max-width: 767px) {
+          right: var(--space-2);
+        }
       }
     }
   }
@@ -82,6 +98,12 @@
     border: 1px solid #adb0d9;
     padding: 1.5rem;
     border-radius: 1.5rem;
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-2);
+      padding: var(--space-3);
+      border-radius: 1rem;
+    }
 
     &:hover {
       border-color: #535bf131;
@@ -97,6 +119,13 @@
       .conversation-messages__message-text {
         background-color: #535af1;
         color: #fff;
+        border-radius: 1rem 0 1rem 1rem;
+      }
+    }
+
+    &--other {
+      .conversation-messages__message-text {
+        border-radius: 0 1rem 1rem 1rem;
       }
     }
   }
@@ -118,6 +147,11 @@
     flex-shrink: 0;
     cursor: pointer;
 
+    @media screen and (max-width: 767px) {
+      width: 32px;
+      height: 32px;
+    }
+
     img {
       width: 100%;
       height: 100%;
@@ -130,11 +164,19 @@
     flex-direction: column;
     gap: var(--space-2);
     width: 100%;
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-1);
+    }
   }
 
   &__message-header {
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-1);
+    }
   }
 
   &__message-sender {
@@ -147,6 +189,10 @@
     cursor: pointer;
     transition: color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+    }
+
     &:hover {
       color: var(--primary-color, #444df2);
     }
@@ -155,6 +201,11 @@
   &__message-time {
     font-size: 0.75rem;
     color: var(--text-secondary);
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.6875rem;
+      padding-top: 0.1rem;
+    }
   }
 
   &__message-text {
@@ -166,6 +217,11 @@
     margin: 0;
     word-wrap: break-word;
     max-width: fit-content;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+      padding: var(--space-2);
+    }
   }
 
   // Footer wrapper for reactions and thread link
@@ -174,6 +230,10 @@
     flex-direction: column;
     gap: var(--space-2);
     margin-top: var(--space-1);
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-1);
+    }
   }
 
   &__thread-link {
@@ -189,6 +249,11 @@
     transition: color 0.2s;
     width: fit-content;
 
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+      gap: var(--space-1);
+    }
+
     &:hover {
       color: #444bc7;
       text-decoration: underline;
@@ -203,5 +268,10 @@
     color: var(--text-secondary);
     font-weight: 400;
     font-size: 0.75rem;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.6875rem;
+      padding-top: 0.1rem;
+    }
   }
 }

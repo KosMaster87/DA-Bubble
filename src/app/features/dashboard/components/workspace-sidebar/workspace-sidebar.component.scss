@@ -11,6 +11,13 @@
   border-radius: 1.9rem;
   overflow: hidden;
 
+  // Mobile: Full width, no border radius
+  @media screen and (max-width: 767px) {
+    width: 100%;
+    border-radius: 0;
+    border-right: none;
+  }
+
   @include mix.tablet-landscape {
     width: 240px;
   }
@@ -35,6 +42,11 @@
     @include mix.flex(row, space-between, center);
     padding: var(--space-4);
     flex-shrink: 0;
+
+    // Hide on mobile
+    @media screen and (max-width: 767px) {
+      display: none;
+    }
 
     @include mix.tablet-landscape {
       padding: var(--space-5) var(--space-4);
@@ -164,6 +176,11 @@
     height: 16px;
     flex-shrink: 0;
     position: relative;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   &__workspace-icon {
@@ -172,6 +189,11 @@
     display: block;
     object-fit: contain;
     transition: filter 0.2s;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
 
     .workspace-sidebar__section-toggle:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
@@ -186,6 +208,12 @@
     flex-shrink: 0;
     position: relative;
     margin-right: var(--space-2);
+
+    @media screen and (max-width: 767px) {
+      width: 10px;
+      height: 10px;
+      margin-right: var(--space-1);
+    }
   }
 
   &__dropdown-icon {
@@ -193,6 +221,11 @@
     height: 12px;
     transform: rotate(-90deg);
     transition: filter 0.2s;
+
+    @media screen and (max-width: 767px) {
+      width: 10px;
+      height: 10px;
+    }
 
     &--open {
       transform: rotate(0deg);
@@ -210,6 +243,10 @@
     color: var(--text-primary, #000);
     transition: color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+    }
+
     .workspace-sidebar__section-toggle:hover & {
       color: #535af1;
     }
@@ -226,6 +263,11 @@
     transition: background-color 0.2s;
     position: relative;
 
+    @media screen and (max-width: 767px) {
+      width: 28px;
+      height: 28px;
+    }
+
     &:hover {
       background-color: #eceefe;
     }
@@ -239,6 +281,11 @@
     width: 12px;
     height: 12px;
     transition: filter 0.2s;
+
+    @media screen and (max-width: 767px) {
+      width: 10px;
+      height: 10px;
+    }
 
     // Hover state (not when active)
     .workspace-sidebar__section-add:hover:not(.workspace-sidebar__section-add--active) & {
@@ -322,6 +369,11 @@
     border-left: 3px solid transparent;
     position: relative;
 
+    @media screen and (max-width: 767px) {
+      gap: 0.5rem;
+      padding: 0.375rem 1rem 0.375rem calc(0.5rem - 3px);
+    }
+
     .workspace-sidebar__item:hover & {
       background-color: #eceefe;
     }
@@ -375,6 +427,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   &__item-icon {
@@ -382,6 +439,11 @@
     height: 16px;
     flex-shrink: 0;
     transition: filter 0.2s;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
 
     .workspace-sidebar__item:hover &,
     .workspace-sidebar__item--active & {
@@ -397,6 +459,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+    }
   }
 
   &__item-avatar-wrapper {
@@ -410,6 +476,11 @@
     border-radius: 50%;
     flex-shrink: 0;
     object-fit: cover;
+
+    @media screen and (max-width: 767px) {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   &__status-badge {
@@ -420,6 +491,12 @@
     height: 12px;
     border-radius: 50%;
     border: 2px solid var(--container-bg, #fff);
+
+    @media screen and (max-width: 767px) {
+      width: 10px;
+      height: 10px;
+      border-width: 1.5px;
+    }
   }
 
   &__item--dm {
@@ -447,6 +524,11 @@
     border-radius: 2rem;
     transition: background-color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      gap: 0.5rem;
+      padding: 0.375rem 0.5rem;
+    }
+
     .workspace-sidebar__add-channel-btn:hover & {
       background-color: #eceefe;
     }
@@ -460,6 +542,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   &__add-channel-icon {
@@ -467,6 +554,11 @@
     height: 16px;
     flex-shrink: 0;
     transition: filter 0.2s;
+
+    @media screen and (max-width: 767px) {
+      width: 14px;
+      height: 14px;
+    }
 
     .workspace-sidebar__add-channel-btn:hover & {
       filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
@@ -478,6 +570,10 @@
     font-size: 1rem;
     font-weight: 400;
     color: var(--text-primary, #000);
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+    }
   }
 
   &__empty {

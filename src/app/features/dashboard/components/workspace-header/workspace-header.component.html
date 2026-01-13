@@ -1,9 +1,18 @@
 <header class="workspace-header">
   <div class="workspace-header__content">
-    <!-- Logo -->
+    <!-- Logo (normal view or mobile sidebar) -->
+    @if (!isMobileView() || !showBackToWorkspace()) {
     <div class="workspace-header__logo">
       <app-dabubble-logo />
     </div>
+    }
+
+    <!-- Back to Workspace (mobile content/thread view) -->
+    @if (isMobileView() && showBackToWorkspace()) {
+    <div class="workspace-header__back">
+      <app-back-to-workspace (backClicked)="backToWorkspaceRequested.emit()" />
+    </div>
+    }
 
     <!-- Search Bar -->
     <div class="workspace-header__search">

@@ -72,6 +72,7 @@ export class ChatPrivateComponent {
     parentMessage: Message;
     isDirectMessage?: boolean;
   }>();
+  backRequested = output<void>(); // For mobile back navigation
 
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);

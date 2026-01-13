@@ -14,6 +14,12 @@
   gap: var(--space-2);
   overflow: hidden;
 
+  // Mobile: No padding and gap
+  @media screen and (max-width: 767px) {
+    padding: 0;
+    gap: 0;
+  }
+
   @include mix.tablet-landscape {
     padding: var(--space-4);
     gap: var(--space-3);
@@ -38,6 +44,12 @@
     overflow: hidden;
     gap: var(--space-2);
     transition: gap 0.3s ease;
+    position: relative;
+
+    // Mobile: Stack views absolutely, show one at a time
+    @media screen and (max-width: 767px) {
+      gap: 0;
+    }
 
     @include mix.tablet-landscape {
       gap: var(--space-3);
@@ -56,6 +68,12 @@
       grid-template-columns: auto 1fr 400px;
       gap: var(--space-2);
 
+      // Mobile: Still stack absolutely
+      @media screen and (max-width: 767px) {
+        display: flex;
+        gap: 0;
+      }
+
       @include mix.tablet-landscape {
         grid-template-columns: auto 1fr 450px;
         gap: var(--space-3);
@@ -70,17 +88,73 @@
 
   &__sidebar {
     flex-shrink: 0;
+
+    // Mobile: Full screen, absolutely positioned
+    @media screen and (max-width: 767px) {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+
+      &--mobile-visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
   }
 
   &__content {
     flex: 1;
     overflow: hidden;
     border-radius: 1.9rem;
+
+    // Mobile: Full screen, absolutely positioned
+    @media screen and (max-width: 767px) {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 0;
+
+      &--mobile-visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
   }
 
   &__thread {
     width: 100%;
     overflow: hidden;
     border-radius: 1.9rem;
+
+    // Mobile: Full screen, absolutely positioned with highest z-index
+    @media screen and (max-width: 767px) {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      border-radius: 0;
+
+      &--mobile-visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
   }
 }

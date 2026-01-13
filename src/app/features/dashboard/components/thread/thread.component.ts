@@ -69,6 +69,7 @@ export class ThreadComponent {
   threadInfo = input.required<ThreadInfo>();
   closeRequested = output<void>();
   directMessageRequested = output<string>();
+  backRequested = output<void>(); // For mobile back navigation
 
   protected isProfileViewOpen = signal<boolean>(false);
   protected isEditProfileOpen = signal<boolean>(false);

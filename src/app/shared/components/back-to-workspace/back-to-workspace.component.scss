@@ -1,18 +1,31 @@
 @use '../../../../styles/mixins' as mix;
 
-.logo {
+.back-to-workspace {
   @include mix.flex(row, center, center);
   gap: var(--space-2);
   padding: var(--space-2);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.2s;
 
-  &__image {
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &__arrow {
+    width: 24px;
+    height: 24px;
+    filter: var(--icon-filter);
+  }
+
+  &__logo {
     width: clamp(1.8rem, 3vw + 1rem, 2.5rem);
     height: auto;
-
-    // Desktop size
-    @media screen and (min-width: 768px) {
-      width: clamp(2.2rem, 5vw + 1.5rem, 3.5rem);
-    }
   }
 
   &__text {
@@ -21,10 +34,5 @@
     font-weight: 700;
     color: var(--primary-color);
     margin: 0;
-
-    // Desktop size
-    @media screen and (min-width: 768px) {
-      font-size: clamp(0.75rem, 2vw + 1rem, 2rem);
-    }
   }
 }

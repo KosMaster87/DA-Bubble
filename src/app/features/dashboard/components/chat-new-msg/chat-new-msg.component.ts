@@ -4,7 +4,7 @@
  * @module features/dashboard/components/chat-new-msg
  */
 
-import { Component } from '@angular/core';
+import { Component, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 
@@ -15,6 +15,8 @@ import { MessageBoxComponent } from '@shared/dashboard-components/message-box/me
   styleUrl: './chat-new-msg.component.scss',
 })
 export class ChatNewMsgComponent {
+  backRequested = output<void>(); // For mobile back navigation
+
   protected searchQuery = '';
 
   /**

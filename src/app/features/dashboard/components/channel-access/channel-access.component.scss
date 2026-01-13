@@ -7,6 +7,13 @@
   max-width: 600px;
   margin: 0 auto;
   text-align: center;
+  height: 100%;
+  overflow-y: auto;
+
+  @media screen and (max-width: 767px) {
+    padding: var(--space-4) var(--space-3);
+    justify-content: flex-start;
+  }
 
   &__private,
   &__public {
@@ -16,10 +23,19 @@
   &__icon {
     margin-bottom: 2rem;
 
+    @media screen and (max-width: 767px) {
+      margin-bottom: 1rem;
+    }
+
     img {
       width: 80px;
       height: 80px;
       opacity: 0.6;
+
+      @media screen and (max-width: 767px) {
+        width: 50px;
+        height: 50px;
+      }
     }
   }
 
@@ -28,6 +44,11 @@
     font-weight: 700;
     color: #444df2;
     margin-bottom: 1.5rem;
+
+    @media screen and (max-width: 767px) {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
   }
 
   &__description {
@@ -35,12 +56,22 @@
     color: #535353;
     margin-bottom: 2rem;
     line-height: 1.6;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.9375rem;
+      margin-bottom: 1rem;
+    }
   }
 
   &__message {
     font-size: 1.125rem;
     color: #686868;
     margin-bottom: 2rem;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.9375rem;
+      margin-bottom: 1rem;
+    }
   }
 
   &__info {
@@ -49,6 +80,11 @@
     padding: 2rem;
     margin-bottom: 2rem;
     text-align: left;
+
+    @media screen and (max-width: 767px) {
+      padding: var(--space-3);
+      margin-bottom: 1rem;
+    }
 
     p {
       margin-bottom: 1rem;
@@ -91,11 +127,21 @@
     margin-bottom: 2rem;
     text-align: left;
 
+    @media screen and (max-width: 767px) {
+      padding: var(--space-3);
+      margin-bottom: 1rem;
+    }
+
     h2 {
       font-size: 1.25rem;
       font-weight: 700;
       color: #444df2;
       margin-bottom: 1rem;
+
+      @media screen and (max-width: 767px) {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
     }
 
     ul {
@@ -108,6 +154,12 @@
         position: relative;
         color: #535353;
         line-height: 1.6;
+
+        @media screen and (max-width: 767px) {
+          padding: 0.5rem 0;
+          padding-left: 1.5rem;
+          font-size: 0.875rem;
+        }
 
         &:before {
           content: '✓';
@@ -136,6 +188,11 @@
     cursor: pointer;
     transition: all 0.2s;
 
+    @media screen and (max-width: 767px) {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9375rem;
+    }
+
     &:hover {
       background-color: #535af1;
       transform: translateY(-2px);
@@ -151,6 +208,10 @@
     font-size: 0.875rem;
     color: #686868;
     font-style: italic;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+    }
 
     p {
       margin: 0;

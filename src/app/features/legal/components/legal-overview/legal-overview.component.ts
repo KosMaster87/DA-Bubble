@@ -4,7 +4,7 @@
  * @module LegalOverviewComponent
  */
 
-import { Component, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 
@@ -25,6 +25,8 @@ interface LegalLink {
 export class LegalOverviewComponent {
   private router = inject(Router);
   private authStore = inject(AuthStore);
+
+  backRequested = output<void>(); // For mobile back navigation
 
   protected legalLinks: LegalLink[] = [
     {

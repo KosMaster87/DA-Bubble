@@ -1,0 +1,36 @@
+@use '../../../../styles/mixins' as mix;
+
+.mobile-back-button {
+  @include mix.flex(row, center, center);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+
+  // Only visible on mobile
+  display: none;
+
+  @media screen and (max-width: 767px) {
+    display: flex;
+  }
+
+  &:hover {
+    background-color: var(--hover-bg, #eceefe);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &__icon {
+    width: 24px;
+    height: 24px;
+    transform: rotate(180deg);
+    filter: var(--icon-filter);
+  }
+}

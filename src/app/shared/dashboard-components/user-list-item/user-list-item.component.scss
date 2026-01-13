@@ -26,6 +26,11 @@
     border-radius: 2rem;
     transition: background-color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem 0.375rem 0.5rem;
+    }
+
     .user-list-item:hover & {
       background-color: #eceefe;
     }
@@ -46,6 +51,11 @@
     border-radius: 50%;
     flex-shrink: 0;
     object-fit: cover;
+
+    @media screen and (max-width: 767px) {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   &__status-badge {
@@ -56,6 +66,12 @@
     height: 12px;
     border-radius: 50%;
     border: 2px solid var(--container-bg, #fff);
+
+    @media screen and (max-width: 767px) {
+      width: 10px;
+      height: 10px;
+      border-width: 1.5px;
+    }
   }
 
   &__name {
@@ -66,5 +82,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+    }
   }
 }
