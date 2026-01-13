@@ -47,9 +47,14 @@ export class WorkspaceSidebarComponent {
   protected workspaceSidebarService = inject(WorkspaceSidebarService);
   protected mailboxBadgeService = inject(MailboxBadgeService);
   protected workspaceInitializationService = inject(WorkspaceInitializationService);
+
+  // Inputs
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   isLegalActive = input<boolean>(false);
+  isMobileView = input<boolean>(false);
+
+  // Outputs
   newMessageRequested = output<void>();
   mailboxRequested = output<void>();
   channelSelected = output<string>();
@@ -185,9 +190,7 @@ export class WorkspaceSidebarComponent {
    * Handle create channel submit
    */
   onCreateChannel(data: { name: string; description: string; isPrivate: boolean }): void {
-    // Store channel data temporarily
     this.workspaceSidebarService.setPendingChannelData(data.name, data.description, data.isPrivate);
-
     this.workspaceSidebarService.closeCreateChannel();
     this.workspaceSidebarService.openAddMemberAfterChannel();
   }
@@ -239,7 +242,6 @@ export class WorkspaceSidebarComponent {
 
     if (!actualConversationId) return;
 
-    // Use NavigationService for selection
     this.navigationService.selectDirectMessage(actualConversationId);
     this.directMessageSelected.emit(actualConversationId);
   }

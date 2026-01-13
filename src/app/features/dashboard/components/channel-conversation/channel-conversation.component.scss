@@ -7,11 +7,19 @@
   background-color: var(--container-bg);
   overflow: hidden;
 
+  @media screen and (max-width: 767px) {
+    border-radius: 0;
+  }
+
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-4) var(--space-6);
     box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
+
+    @media screen and (max-width: 767px) {
+      padding: var(--space-2) var(--space-3);
+    }
 
     @include mix.tablet-landscape {
       padding: var(--space-5) var(--space-6);
@@ -43,6 +51,11 @@
     cursor: pointer;
     transition: color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      font-size: 1.125rem;
+      gap: var(--space-1);
+    }
+
     &:hover {
       color: var(--primary-color);
     }
@@ -61,6 +74,11 @@
     height: 24px;
     filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
       brightness(98%) contrast(92%);
+
+    @media screen and (max-width: 767px) {
+      width: 18px;
+      height: 18px;
+    }
   }
 
   &__title-arrow {
@@ -84,6 +102,10 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-1);
+    }
   }
 
   &__privacy-badge {
@@ -92,12 +114,21 @@
     color: var(--primary-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+      letter-spacing: 0.3px;
+    }
   }
 
   &__description {
     font-size: 1rem;
     color: var(--text-secondary);
     margin: 0;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+    }
   }
 
   &__messages {
@@ -287,6 +318,10 @@
 
   &__footer {
     padding: var(--space-5) var(--space-16);
+
+    @media screen and (max-width: 767px) {
+      padding: var(--space-1) var(--space-1);
+    }
   }
 
   // Override profile-view positioning when shown in channel-conversation

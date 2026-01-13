@@ -13,6 +13,10 @@
     box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 
+    @media screen and (max-width: 767px) {
+      padding: var(--space-2) var(--space-3);
+    }
+
     @include mix.tablet-landscape {
       padding: var(--space-5) var(--space-6);
     }
@@ -28,6 +32,10 @@
 
   &__title-wrapper {
     margin-bottom: var(--space-1);
+
+    @media screen and (max-width: 767px) {
+      margin-bottom: var(--space-0);
+    }
   }
 
   &__title {
@@ -35,6 +43,10 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+
+    @media screen and (max-width: 767px) {
+      font-size: 1.125rem;
+    }
 
     @include mix.tablet-landscape {
       font-size: 1.35rem;
@@ -50,12 +62,20 @@
     font-weight: 600;
     color: #535af1;
     margin: 0;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+    }
   }
 
   &__reply-count {
     font-size: 0.875rem;
     color: var(--text-secondary);
     margin: 0;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+    }
   }
 
   &__close-btn {
@@ -101,6 +121,10 @@
   &__parent {
     padding: var(--space-6) var(--space-10);
     background-color: #f8f9fa;
+
+    @media screen and (max-width: 767px) {
+      padding: var(--space-3) var(--space-2);
+    }
   }
 
   &__parent-label {
@@ -110,11 +134,21 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: var(--space-3);
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.6875rem;
+      letter-spacing: 0.3px;
+      margin-bottom: var(--space-2);
+    }
   }
 
   &__parent-message {
     display: flex;
     gap: var(--space-3);
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-2);
+    }
   }
 
   &__parent-avatar {
@@ -123,6 +157,11 @@
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
+
+    @media screen and (max-width: 767px) {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   &__parent-content {
@@ -134,6 +173,11 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
     margin-bottom: var(--space-1);
+
+    @media screen and (max-width: 767px) {
+      gap: var(--space-1);
+      margin-bottom: var(--space-0);
+    }
   }
 
   &__parent-name {
@@ -146,6 +190,10 @@
     cursor: pointer;
     transition: color 0.2s;
 
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+    }
+
     &:hover {
       color: var(--primary-color, #444df2);
     }
@@ -154,6 +202,10 @@
   &__parent-time {
     font-size: 0.75rem;
     color: var(--text-secondary);
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.6875rem;
+    }
   }
 
   &__parent-text {
@@ -164,16 +216,29 @@
     border-radius: 1rem;
     margin: 0;
     word-wrap: break-word;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.875rem;
+      padding: var(--space-2);
+    }
   }
 
   &__divider {
     height: 1px;
     background-color: var(--border-color);
     margin-top: var(--space-4);
+
+    @media screen and (max-width: 767px) {
+      margin-top: var(--space-2);
+    }
   }
 
   &__footer {
     padding: var(--space-5) var(--space-16);
+
+    @media screen and (max-width: 767px) {
+      padding: var(--space-1) var(--space-1);
+    }
   }
 
   // Override profile-view positioning when shown in thread

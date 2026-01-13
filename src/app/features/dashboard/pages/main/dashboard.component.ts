@@ -4,11 +4,12 @@
  * @module features/dashboard/pages/main/dashboard
  */
 
-import { Component, inject, ViewChild, effect, untracked } from '@angular/core';
+import { Component, inject, ViewChild, effect, untracked, signal, computed, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
+import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { DashboardStateService } from '@shared/services/dashboard-state.service';
 import { DashboardInitializationService } from '@shared/services/dashboard-initialization.service';
@@ -30,6 +31,7 @@ import { type Message } from '@shared/dashboard-components/conversation-messages
   imports: [
     WorkspaceHeaderComponent,
     WorkspaceSidebarComponent,
+    MobileSearchComponent,
     ChannalWelcomeComponent,
     ChannelMailboxComponent,
     ChatNewMsgComponent,
@@ -61,6 +63,21 @@ export class DashboardComponent {
   protected isThreadOpen = this.threadManagement.isThreadOpen;
   protected threadInfo = this.threadManagement.threadInfo;
 
+  // Mobile view state management
+  protected isMobileView = signal<boolean>(false);
+  protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
+
+  // Computed: Should show each section on mobile
+  protected showSidebarMobile = computed(() =>
+    !this.isMobileView() || this.mobileActiveView() === 'sidebar'
+  );
+  protected showContentMobile = computed(() =>
+    !this.isMobileView() || this.mobileActiveView() === 'content'
+  );
+  protected showThreadMobile = computed(() =>
+    !this.isMobileView() || this.mobileActiveView() === 'thread'
+  );
+
   /**
    * Component initialization
    * @description Initializes dashboard effects and sets up route listener
@@ -68,7 +85,74 @@ export class DashboardComponent {
   constructor() {
     this.dashboardInit.initializeEffects();
     this.setupRouteListener();
+    this.checkMobileView();
+    this.setupMobileViewEffects();
   }
+
+  /**
+   * Listen to window resize events
+   * @description Updates mobile view state on window resize
+   */
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkMobileView();
+  }
+
+  /**
+   * Check if current viewport is mobile
+   * @description Updates isMobileView signal based on window width
+   */
+  private checkMobileView(): void {
+    this.isMobileView.set(window.innerWidth < 768);
+  }
+
+  /**
+   * Setup mobile view effects
+   * @description Watches for view changes and updates mobile active view
+   */
+  private setupMobileViewEffects(): void {
+    // When thread opens on mobile, switch to thread view
+    effect(() => {
+      if (this.isMobileView() && this.isThreadOpen()) {
+        untracked(() => this.mobileActiveView.set('thread'));
+      }
+    });
+
+
+    // When view changes to content (channel/DM), switch to content view on mobile
+    // BUT: Only if thread is NOT open (otherwise thread view takes priority)
+    effect(() => {
+      const view = this.currentView();
+      if (this.isMobileView() &&
+          !this.isThreadOpen() &&
+          (view === 'channel' || view === 'direct-message' ||
+           view === 'chat-new-msg' || view === 'mailbox' ||
+           view === 'legal' || view === 'welcome')) {
+        untracked(() => this.mobileActiveView.set('content'));
+      }
+    });
+  }
+
+  //   // When view changes to content (channel/DM), switch to content view on mobile
+  //   // BUT: Only if user explicitly selected something (not on initial load)
+  //   effect(() => {
+  //     const view = this.currentView();
+  //     const isMobile = this.isMobileView();
+  //     const currentMobileView = this.mobileActiveView();
+
+  //     // Only switch to content if:
+  //     // 1. We are on mobile
+  //     // 2. A channel or DM is selected (not welcome)
+  //     // 3. OR user explicitly requested a specific view (new-msg, mailbox, legal)
+  //     if (isMobile && currentMobileView === 'sidebar') {
+  //       if (view === 'channel' || view === 'direct-message' ||
+  //           view === 'chat-new-msg' || view === 'mailbox' ||
+  //           view === 'legal') {
+  //         untracked(() => this.mobileActiveView.set('content'));
+  //       }
+  //     }
+  //   });
+  // }
 
   /**
    * Setup route parameter listener
@@ -211,6 +295,32 @@ export class DashboardComponent {
    */
   closeThread = (): void => {
     this.threadCoordinator.closeThread();
+    // On mobile, return to content view when thread closes
+    if (this.isMobileView()) {
+      this.mobileActiveView.set('content');
+    }
+  };
+
+  /**
+   * Navigate back to sidebar on mobile
+   * @description Returns to sidebar view on mobile devices
+   * @returns void
+   */
+  backToSidebar = (): void => {
+    this.mobileActiveView.set('sidebar');
+    // Close thread if open
+    if (this.isThreadOpen()) {
+      this.closeThread();
+    }
+  };
+
+  /**
+   * Navigate back to content on mobile
+   * @description Returns to content view from thread on mobile devices
+   * @returns void
+   */
+  backToContent = (): void => {
+    this.mobileActiveView.set('content');
   };
 
   /**

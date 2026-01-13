@@ -94,6 +94,8 @@ export class ChannelConversationComponent {
   threadRequested = output<{ messageId: string; parentMessage: Message }>();
   channelLeft = output<void>();
   directMessageRequested = output<string>(); // Emits userId to start DM with
+  backRequested = output<void>(); // For mobile back navigation
+
   channel = input.required<ChannelInfo>();
   private channelId = computed(() => this.channel().id);
   private isJoiningChannel = signal<boolean>(false);

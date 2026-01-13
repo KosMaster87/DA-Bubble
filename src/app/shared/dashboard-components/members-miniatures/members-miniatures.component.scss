@@ -10,6 +10,11 @@
   border-radius: 2rem;
   transition: background-color 0.2s;
 
+  // Hide on mobile
+  @media screen and (max-width: 767px) {
+    display: none;
+  }
+
   &:hover,
   &:active {
     background-color: #eceefe;

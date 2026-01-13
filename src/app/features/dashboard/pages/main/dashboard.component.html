@@ -1,7 +1,18 @@
 <div class="dashboard">
   <app-workspace-menu-toggle />
 
-  <app-workspace-header class="dashboard__header" (mailboxRequested)="showMailbox()" />
+  <app-workspace-header
+    class="dashboard__header"
+    [isMobileView]="isMobileView()"
+    [showBackToWorkspace]="isMobileView() && mobileActiveView() !== 'sidebar'"
+    (mailboxRequested)="showMailbox()"
+    (backToWorkspaceRequested)="backToSidebar()"
+  />
+
+  <!-- Mobile Search (only visible on mobile when sidebar is active) -->
+  @if (isMobileView() && mobileActiveView() === 'sidebar') {
+  <app-mobile-search class="dashboard__mobile-search" />
+  }
 
   <div
     class="dashboard__main"
@@ -11,9 +22,11 @@
     <app-workspace-sidebar
       #sidebar
       class="dashboard__sidebar"
+      [class.dashboard__sidebar--mobile-visible]="showSidebarMobile()"
       [isNewMessageActive]="currentView() === 'chat-new-msg'"
       [isMailboxActive]="currentView() === 'mailbox'"
       [isLegalActive]="currentView() === 'legal'"
+      [isMobileView]="isMobileView()"
       (newMessageRequested)="showNewMessage()"
       (mailboxRequested)="showMailbox()"
       (channelSelected)="showChannel($event)"
@@ -24,34 +37,55 @@
     @if (currentView() === 'welcome') {
     <app-channal-welcome
       class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
+      (backRequested)="backToSidebar()"
     />
     } @else if (currentView() === 'chat-new-msg') {
-    <app-chat-new-msg class="dashboard__content" />
+    <app-chat-new-msg
+      class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
+      (backRequested)="backToSidebar()"
+    />
     } @else if (currentView() === 'mailbox') {
-    <app-channel-mailbox class="dashboard__content" (channelSelected)="openChannelById($event)" />
+    <app-channel-mailbox
+      class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
+      (channelSelected)="openChannelById($event)"
+      (backRequested)="backToSidebar()"
+    />
     } @else if (currentView() === 'legal') {
-    <app-legal-overview class="dashboard__content" />
+    <app-legal-overview
+      class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
+      (backRequested)="backToSidebar()"
+    />
     } @else if (currentView() === 'channel' && selectedChannel()) {
     <app-channel-conversation
       class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
       [channel]="selectedChannel()!"
       (threadRequested)="openThread($event)"
       (channelLeft)="onChannelLeft()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
+      (backRequested)="backToSidebar()"
     />
     } @else if (currentView() === 'direct-message' && selectedDM()) {
     <app-chat-private
       class="dashboard__content"
+      [class.dashboard__content--mobile-visible]="showContentMobile()"
       [dmInfo]="selectedDM()!"
       (threadRequested)="openThread($event)"
+      (backRequested)="backToSidebar()"
     />
     } @if (isThreadOpen() && threadInfo()) {
     <app-thread
       class="dashboard__thread"
+      [class.dashboard__thread--mobile-visible]="showThreadMobile()"
       [threadInfo]="threadInfo()!"
       (closeRequested)="closeThread()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
+      (backRequested)="backToContent()"
     />
     }
   </div>

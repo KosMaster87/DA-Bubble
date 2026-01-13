@@ -32,6 +32,7 @@ export class ChannelMailboxComponent {
 
   // Output for navigation after accepting invitation
   channelSelected = output<string>();
+  backRequested = output<void>(); // For mobile back navigation
 
   // Invitations state
   protected invitations = signal<Invitation[]>([]);
