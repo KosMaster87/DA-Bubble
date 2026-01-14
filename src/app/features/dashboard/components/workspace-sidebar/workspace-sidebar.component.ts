@@ -74,7 +74,7 @@ export class WorkspaceSidebarComponent {
   }
 
   /**
-   * Channels from ChannelListService - sorted with DABubble-welcome first, then alphabetically
+   * Channels from ChannelListService - sorted with DABubble-welcome first, Let's Bubble second, then alphabetically
    * Includes unread badge calculation
    */
   protected sortedChannels = this.channelListService.getVisibleChannels();

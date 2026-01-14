@@ -187,14 +187,20 @@ export class ChannelListService {
   }
 
   /**
-   * Sort channels (DABubble-welcome first, then alphabetically)
+   * Sort channels (DABubble-welcome first, Let's Bubble second, then alphabetically)
    */
   private sortChannels(channels: ChannelListItem[]): ChannelListItem[] {
     const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
+    const letsBubbleChannel = channels.find((ch) => ch.name === "Let's Bubble");
     const otherChannels = channels
-      .filter((ch) => ch.name !== 'DABubble-welcome')
+      .filter((ch) => ch.name !== 'DABubble-welcome' && ch.name !== "Let's Bubble")
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    return welcomeChannel ? [welcomeChannel, ...otherChannels] : otherChannels;
+    const result: ChannelListItem[] = [];
+    if (welcomeChannel) result.push(welcomeChannel);
+    if (letsBubbleChannel) result.push(letsBubbleChannel);
+    result.push(...otherChannels);
+
+    return result;
   }
 }

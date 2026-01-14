@@ -50,11 +50,20 @@
     </div>
 
     <div class="channel-conversation__header-actions">
+      @if ((currentChannelData()?.name || channel().name) === 'Let\'s Bubble') {
+      <app-members-miniatures
+        [members]="members()"
+        [totalCount]="totalMemberCount()"
+        (memberClicked)="channelConversationUI.openMembersMenu()"
+        class="members-miniatures--mobile-visible"
+      />
+      } @else {
       <app-members-miniatures
         [members]="members()"
         [totalCount]="totalMemberCount()"
         (memberClicked)="channelConversationUI.openMembersMenu()"
       />
+      }
       @if (isCurrentUserChannelOwner() || isCurrentUserAdmin()) {
       <app-add-member-button (addMemberClicked)="channelConversationUI.openAddMembers()" />
       }
@@ -120,7 +129,6 @@
     <app-conversation-messages
       [conversationId]="'channel-' + channel().id"
       [messageGroups]="messagesGroupedByDate()"
-      (messageClicked)="onThreadClick($event)"
       (avatarClicked)="channelConversationUI.openProfileView($event)"
       (senderClicked)="channelConversationUI.openProfileView($event)"
       (reactionAdded)="onReactionAdded($event)"

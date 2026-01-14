@@ -52,7 +52,7 @@ export class AddMemberAfterAddChannelComponent {
    */
   availableChannels = computed<ChannelListItem[]>(() => {
     const selectedIds = this.selectedChannels().map((c) => c.id);
-    const systemChannels = ['Mailbox', 'DABubble-welcome'];
+    const systemChannels = ['Mailbox', 'DABubble welcome', "Let's Bubble"];
     return this.channels().filter(
       (channel) => !selectedIds.includes(channel.id) && !systemChannels.includes(channel.name)
     );

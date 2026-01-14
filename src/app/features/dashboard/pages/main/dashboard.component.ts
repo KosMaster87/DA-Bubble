@@ -290,12 +290,13 @@ export class DashboardComponent {
 
   /**
    * Close thread
+   * On mobile, return to content view when thread closes
    * @description Delegates thread closing to thread coordinator service
    * @returns void
    */
   closeThread = (): void => {
     this.threadCoordinator.closeThread();
-    // On mobile, return to content view when thread closes
+
     if (this.isMobileView()) {
       this.mobileActiveView.set('content');
     }
@@ -308,7 +309,7 @@ export class DashboardComponent {
    */
   backToSidebar = (): void => {
     this.mobileActiveView.set('sidebar');
-    // Close thread if open
+
     if (this.isThreadOpen()) {
       this.closeThread();
     }
