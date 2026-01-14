@@ -14,6 +14,7 @@ import { ThreadManagementService } from './thread-management.service';
 import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 
 export type DashboardView =
+  | 'none' // No content view (sidebar only, for mobile)
   | 'welcome'
   | 'chat-new-msg'
   | 'mailbox'
@@ -52,7 +53,7 @@ export class DashboardStateService {
   private welcomeSelector = inject(WelcomeChannelSelectorService);
 
   // View state signals
-  private _currentView = signal<DashboardView>('welcome');
+  private _currentView = signal<DashboardView>('none');
   private _selectedChannel = signal<ChannelInfo | null>(null);
   private _selectedDM = signal<DMInfo | null>(null);
 
@@ -60,6 +61,15 @@ export class DashboardStateService {
   readonly currentView = this._currentView.asReadonly();
   readonly selectedChannel = this._selectedChannel.asReadonly();
   readonly selectedDM = this._selectedDM.asReadonly();
+
+  /**
+   * Clear all views and selections (for mobile back to sidebar)
+   */
+  clearAllViews(): void {
+    this._currentView.set('none'); // No content view
+    this._selectedChannel.set(null);
+    this._selectedDM.set(null);
+  }
 
   /**
    * Show welcome view

@@ -316,25 +316,30 @@ export class DashboardComponent {
 
   /**
    * Navigate back to sidebar on mobile
-   * @description Returns to sidebar view on mobile devices, clears selection and shows sidebar
+   * @description Returns to sidebar view on mobile devices, closes thread/channel and shows only sidebar
    * @returns void
    */
   backToSidebar = (): void => {
+    // Set sidebar view FIRST before closing thread
     this.mobileActiveView.set('sidebar');
 
-    // Close thread if open
+    // Close thread if open (but don't let it reset to 'content')
     if (this.isThreadOpen()) {
-      this.closeThread();
+      this.threadCoordinator.closeThread();
+      // Don't call this.closeThread() which would set mobileActiveView to 'content'
     }
 
-    // Clear selection to allow re-selecting the same channel/DM
+    // Clear all views and selections (sets view to 'none')
+    this.dashboardState.clearAllViews();
+
+    // Clear navigation state
     this.navigationService.clearSelection();
 
     // Suppress auto-selection of welcome channel
     this.welcomeSelector.suppressAutoSelection();
 
-    // Do NOT navigate - just change mobile view state
-    // This allows user to stay on current URL and re-select channels
+    // Navigate to dashboard root to prevent route handler from re-activating channel view
+    this.router.navigate(['/dashboard']);
   };
 
   /**
