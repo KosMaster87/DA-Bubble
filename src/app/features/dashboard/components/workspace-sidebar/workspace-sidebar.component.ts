@@ -160,6 +160,9 @@ export class WorkspaceSidebarComponent {
    * Delegates to NavigationService for routing and state management
    */
   selectChannel(channelId: string): void {
+    // Reset auto-select suppression on manual channel selection
+    this.workspaceInitializationService.resetAutoSelectSuppression();
+
     this.navigationService.selectChannel(channelId);
     this.channelSelected.emit(channelId);
   }
@@ -233,6 +236,9 @@ export class WorkspaceSidebarComponent {
   async selectDirectMessage(messageId: string): Promise<void> {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
+
+    // Reset auto-select suppression on manual DM selection
+    this.workspaceInitializationService.resetAutoSelectSuppression();
 
     // Handle self-DM and get actual conversation ID via DirectMessageListService
     const actualConversationId = await this.directMessageListService.selectConversation(

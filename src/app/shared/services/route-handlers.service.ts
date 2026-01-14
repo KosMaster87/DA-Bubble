@@ -8,6 +8,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { WorkspaceInitializationService } from '@core/services/workspace-initialization/workspace-initialization.service';
+import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 import { DashboardThreadCoordinatorService } from './dashboard-thread-coordinator.service';
 
 @Injectable({ providedIn: 'root' })
@@ -15,6 +16,7 @@ export class RouteHandlersService {
   private router = inject(Router);
   private navigationService = inject(NavigationService);
   private workspaceInit = inject(WorkspaceInitializationService);
+  private welcomeSelector = inject(WelcomeChannelSelectorService);
   private threadCoordinator = inject(DashboardThreadCoordinatorService);
 
   /**
@@ -23,9 +25,14 @@ export class RouteHandlersService {
    */
   handleDashboardRoot = (showWelcome: () => void): void => {
     this.threadCoordinator.closeThreadIfOpen();
-    this.workspaceInit.selectWelcomeChannel();
-    showWelcome();
-    this.ensureCleanDashboardUrl();
+
+    // Only select welcome channel if auto-select is not suppressed (user didn't manually return to sidebar)
+    if (!this.welcomeSelector.isAutoSelectSuppressed()) {
+      this.workspaceInit.selectWelcomeChannel();
+      showWelcome();
+      this.ensureCleanDashboardUrl();
+    }
+    // If suppressed, do nothing - just show sidebar without selecting a channel
   };
 
   /**

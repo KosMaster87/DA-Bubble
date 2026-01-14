@@ -45,6 +45,13 @@ export class WorkspaceInitializationService {
   }
 
   /**
+   * Reset auto-select suppression (allow user to navigate normally after back-to-sidebar)
+   */
+  resetAutoSelectSuppression(): void {
+    this.welcomeSelector.resetSuppression();
+  }
+
+  /**
    * Reset initialization flag (for testing/hot reload)
    */
   reset(): void {

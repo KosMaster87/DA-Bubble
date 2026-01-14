@@ -16,6 +16,7 @@ import { DashboardInitializationService } from '@shared/services/dashboard-initi
 import { ThreadManagementService } from '@shared/services/thread-management.service';
 import { DashboardRouteHandlerService } from '@shared/services/dashboard-route-handler.service';
 import { DashboardThreadCoordinatorService } from '@shared/services/dashboard-thread-coordinator.service';
+import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
 import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
@@ -55,6 +56,7 @@ export class DashboardComponent {
   protected router = inject(Router);
   private routeHandler = inject(DashboardRouteHandlerService);
   private threadCoordinator = inject(DashboardThreadCoordinatorService);
+  private welcomeSelector = inject(WelcomeChannelSelectorService);
 
   // Expose state from services for template
   protected currentView = this.dashboardState.currentView;
@@ -238,6 +240,11 @@ export class DashboardComponent {
    * @returns void
    */
   showChannel = (channelId: string): void => {
+    // On mobile, switch to content view when channel is selected
+    if (this.isMobileView()) {
+      this.mobileActiveView.set('content');
+    }
+
     this.dashboardState.showChannel(channelId, () => {
       if (this.sidebar) this.sidebar.deselectDirectMessage();
     });
@@ -251,6 +258,11 @@ export class DashboardComponent {
    * @returns void
    */
   showDirectMessage = (conversationId: string, participants?: [string, string]): void => {
+    // On mobile, switch to content view when DM is selected
+    if (this.isMobileView()) {
+      this.mobileActiveView.set('content');
+    }
+
     this.dashboardState.showDirectMessage(conversationId, participants);
   };
 
@@ -304,15 +316,25 @@ export class DashboardComponent {
 
   /**
    * Navigate back to sidebar on mobile
-   * @description Returns to sidebar view on mobile devices
+   * @description Returns to sidebar view on mobile devices, clears selection and shows sidebar
    * @returns void
    */
   backToSidebar = (): void => {
     this.mobileActiveView.set('sidebar');
 
+    // Close thread if open
     if (this.isThreadOpen()) {
       this.closeThread();
     }
+
+    // Clear selection to allow re-selecting the same channel/DM
+    this.navigationService.clearSelection();
+
+    // Suppress auto-selection of welcome channel
+    this.welcomeSelector.suppressAutoSelection();
+
+    // Do NOT navigate - just change mobile view state
+    // This allows user to stay on current URL and re-select channels
   };
 
   /**
