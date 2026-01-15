@@ -7,6 +7,12 @@
   background-color: var(--container-bg);
   overflow: hidden;
 
+  // Allow scrolling when showing access screen
+  &:has(app-channel-access) {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   @media screen and (max-width: 767px) {
     border-radius: 0;
   }

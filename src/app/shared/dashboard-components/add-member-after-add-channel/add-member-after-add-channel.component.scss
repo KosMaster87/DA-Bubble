@@ -6,6 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: var(--z-modal);
   @include mix.flex(row, center, center);
 
