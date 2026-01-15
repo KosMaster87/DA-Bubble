@@ -64,7 +64,7 @@
         (memberClicked)="channelConversationUI.openMembersMenu()"
       />
       }
-      @if (isCurrentUserChannelOwner() || isCurrentUserAdmin()) {
+      @if (shouldShowAddMemberButton()) {
       <app-add-member-button (addMemberClicked)="channelConversationUI.openAddMembers()" />
       }
 

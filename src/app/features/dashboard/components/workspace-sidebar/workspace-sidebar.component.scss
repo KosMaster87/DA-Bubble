@@ -311,6 +311,7 @@
     padding-left: calc(var(--space-3) + 12px + var(--space-2));
     padding-right: var(--space-5);
     overflow-y: auto;
+    overflow-x: hidden;
     gap: var(--space-2);
     @include mix.custom-scrollbar(6px, transparent, var(--border-color));
 
@@ -338,16 +339,19 @@
   // Item wrapper for popup positioning
   &__item-wrapper {
     position: relative;
+    width: 100%;
+    min-width: 0;
   }
 
   &__item {
     @include mix.flex(row, flex-start, center);
-    width: auto;
+    width: 100%;
     padding: 0;
     border: none;
     background: transparent;
     cursor: pointer;
     text-align: left;
+    min-width: 0;
 
     &--active {
       .workspace-sidebar__item-content {
@@ -368,6 +372,8 @@
     transition: background-color 0.2s;
     border-left: 3px solid transparent;
     position: relative;
+    width: 100%;
+    min-width: 0; // Important for text-overflow to work
 
     @media screen and (max-width: 767px) {
       gap: 0.5rem;
@@ -459,6 +465,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex: 1;
+    min-width: 0; // Important for flex items with text-overflow
 
     @media screen and (max-width: 767px) {
       font-size: 0.875rem;

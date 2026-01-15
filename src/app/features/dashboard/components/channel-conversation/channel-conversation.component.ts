@@ -158,6 +158,23 @@ export class ChannelConversationComponent {
   protected isSelectedUserChannelOwner = this.conversationState.getIsSelectedUserChannelOwner(
     this.channel
   );
+
+  /**
+   * Check if add member button should be shown:
+   * - Channel must be public
+   * - Must NOT be DABubble-welcome or Let's Bubble
+   */
+  protected shouldShowAddMemberButton = computed(() => {
+    const channelData = this.currentChannelData() || this.channel();
+    const isPublic = !channelData.isPrivate;
+    const channelName = channelData.name;
+    const isSpecialChannel =
+      channelName === 'DABubble-welcome' ||
+      channelName === "Let's Bubble";
+
+    return isPublic && !isSpecialChannel;
+  });
+
   protected isOwnProfile = this.conversationState.getIsOwnProfile();
   protected editProfileUser = this.conversationState.getEditProfileUser();
   protected channelInfo = this.channelData.getChannelInfoData(this.channel);
