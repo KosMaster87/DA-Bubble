@@ -49,6 +49,19 @@ export class NavigationService {
   }
 
   /**
+   * Handle page reload - Navigate to dashboard on F5
+   */
+  handlePageReload(): void {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (navigation?.type !== 'reload') return;
+
+    const currentUrl = this.router.url;
+    if (currentUrl !== '/dashboard' && !currentUrl.startsWith('/dashboard?')) {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }
+  }
+
+  /**
    * Get selected channel ID signal (read-only)
    */
   getSelectedChannelId() {

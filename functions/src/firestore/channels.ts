@@ -3,6 +3,50 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
 /**
+ * Get channel reference
+ * @param {string} channelId - The channel ID
+ * @return {admin.firestore.DocumentReference} Channel document reference
+ */
+const getChannelRef = (
+  channelId: string
+): admin.firestore.DocumentReference => {
+  return admin.firestore().collection("channels").doc(channelId);
+};
+
+/**
+ * Update channel with new message data
+ * @param {admin.firestore.DocumentReference} channelRef - Channel reference
+ * @param {admin.firestore.DocumentData} messageData - Message data
+ * @return {Promise<void>} Promise that resolves when update completes
+ */
+const updateChannelOnMessage = async (
+  channelRef: admin.firestore.DocumentReference,
+  messageData: admin.firestore.DocumentData
+): Promise<void> => {
+  await channelRef.update({
+    lastMessageAt: messageData.createdAt,
+    unreadCount: admin.firestore.FieldValue.increment(1),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+};
+
+/**
+ * Update channel on thread message
+ * @param {admin.firestore.DocumentReference} channelRef - Channel reference
+ * @param {admin.firestore.DocumentData} messageData - Thread message data
+ * @return {Promise<void>} Promise that resolves when update completes
+ */
+const updateChannelOnThread = async (
+  channelRef: admin.firestore.DocumentReference,
+  messageData: admin.firestore.DocumentData
+): Promise<void> => {
+  await channelRef.update({
+    lastMessageAt: messageData.createdAt,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+};
+
+/**
  * Cloud Function: Update Channel on new message (Combined)
  * Triggers when a new message is created in a channel's messages subcollection.
  * Updates the parent channel document with:
@@ -23,29 +67,15 @@ export const updateChannelOnNewMessage = onDocumentCreated(
     const messageData = event.data?.data();
 
     if (!messageData) {
-      logger.warn(`⚠️ No message data found for channel ${channelId}`);
+      logger.warn(`No message data for channel ${channelId}`);
       return;
     }
 
     try {
-      logger.info(`🔔 Updating channel ${channelId} on new message`);
-
-      const channelRef = admin
-        .firestore()
-        .collection("channels")
-        .doc(channelId);
-
-      await channelRef.update({
-        lastMessageAt: messageData.createdAt,
-        unreadCount: admin.firestore.FieldValue.increment(1),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logger.info(
-        `✅ Updated channel ${channelId}: lastMessageAt + unreadCount`
-      );
+      const channelRef = getChannelRef(channelId);
+      await updateChannelOnMessage(channelRef, messageData);
     } catch (error) {
-      logger.error(`❌ Error updating channel ${channelId}:`, error);
+      logger.error(`Error updating channel ${channelId}:`, error);
       throw error;
     }
   }
@@ -66,30 +96,15 @@ export const updateChannelOnThreadMessage = onDocumentCreated(
     const messageData = event.data?.data();
 
     if (!messageData) {
-      logger.warn(
-        `⚠️ No thread message data found for channel ${channelId}`
-      );
+      logger.warn(`No thread message data for channel ${channelId}`);
       return;
     }
 
     try {
-      logger.info(`🧵 Thread reply in channel ${channelId}`);
-
-      const channelRef = admin
-        .firestore()
-        .collection("channels")
-        .doc(channelId);
-
-      await channelRef.update({
-        lastMessageAt: messageData.createdAt,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      logger.info(
-        `✅ Updated channel ${channelId} on thread reply`
-      );
+      const channelRef = getChannelRef(channelId);
+      await updateChannelOnThread(channelRef, messageData);
     } catch (error) {
-      logger.error(`❌ Error updating channel ${channelId}:`, error);
+      logger.error(`Error updating channel ${channelId}:`, error);
       throw error;
     }
   }

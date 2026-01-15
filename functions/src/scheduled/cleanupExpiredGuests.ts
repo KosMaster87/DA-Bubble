@@ -3,6 +3,74 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 
 /**
+ * Fetch expired guest users from Firestore
+ * @param {admin.firestore.Firestore} db - Firestore instance
+ * @param {admin.firestore.Timestamp} now - Current timestamp
+ * @return {Promise<admin.firestore.QuerySnapshot>} Query snapshot
+ */
+const fetchExpiredGuests = async (
+  db: admin.firestore.Firestore,
+  now: admin.firestore.Timestamp
+): Promise<admin.firestore.QuerySnapshot> => {
+  return await db
+    .collection("users")
+    .where("isGuest", "==", true)
+    .where("expiresAt", "<", now)
+    .get();
+};
+
+/**
+ * Delete user from Firebase Auth
+ * @param {string} userId - User ID to delete
+ * @return {Promise<void>} Promise that resolves when deleted
+ */
+const deleteAuthUser = async (userId: string): Promise<void> => {
+  try {
+    await admin.auth().deleteUser(userId);
+  } catch (error) {
+    logger.error(`Error deleting auth user ${userId}:`, error);
+  }
+};
+
+/**
+ * Process guest deletions in batch
+ * @param {admin.firestore.QuerySnapshot} guestsSnapshot - Guest users
+ * @param {admin.firestore.WriteBatch} batch - Firestore batch
+ * @return {Promise<void>[]} Array of deletion promises
+ */
+const processGuestDeletions = (
+  guestsSnapshot: admin.firestore.QuerySnapshot,
+  batch: admin.firestore.WriteBatch
+): Promise<void>[] => {
+  const deleteAuthPromises: Promise<void>[] = [];
+
+  guestsSnapshot.forEach((doc) => {
+    batch.delete(doc.ref);
+    deleteAuthPromises.push(deleteAuthUser(doc.id));
+  });
+
+  return deleteAuthPromises;
+};
+
+/**
+ * Execute cleanup of expired guests
+ * @param {admin.firestore.QuerySnapshot} guestsSnapshot - Guest users
+ * @param {admin.firestore.WriteBatch} batch - Firestore batch
+ * @return {Promise<void>} Promise that resolves when cleanup done
+ */
+const executeCleanup = async (
+  guestsSnapshot: admin.firestore.QuerySnapshot,
+  batch: admin.firestore.WriteBatch
+): Promise<void> => {
+  const deleteAuthPromises = processGuestDeletions(guestsSnapshot, batch);
+
+  await batch.commit();
+  await Promise.allSettled(deleteAuthPromises);
+
+  logger.info(`✅ Deleted ${guestsSnapshot.size} expired guest users`);
+};
+
+/**
  * Scheduled function to cleanup expired guest accounts
  * Runs daily at 2 AM to delete guests past their expiration date
  */
@@ -17,63 +85,17 @@ export const cleanupExpiredGuests = onSchedule(
     try {
       const db = admin.firestore();
       const now = admin.firestore.Timestamp.now();
+      const guestsSnapshot = await fetchExpiredGuests(db, now);
 
-      // Query guests with expiresAt < now
-      const expiredGuestsSnapshot = await db
-        .collection("users")
-        .where("isGuest", "==", true)
-        .where("expiresAt", "<", now)
-        .get();
-
-      if (expiredGuestsSnapshot.empty) {
-        logger.info("✅ No expired guest users found");
+      if (guestsSnapshot.empty) {
+        logger.info("✅ No expired guests found");
         return;
       }
 
-      logger.info(
-        `🗑️ Found ${expiredGuestsSnapshot.size} expired guest users`
-      );
-
       const batch = db.batch();
-      const deleteAuthPromises: Promise<void>[] = [];
-
-      expiredGuestsSnapshot.forEach((doc) => {
-        const userId = doc.id;
-        logger.info(`🗑️ Deleting expired guest: ${userId}`);
-
-        // Delete Firestore document
-        batch.delete(doc.ref);
-
-        // Delete from Firebase Auth
-        deleteAuthPromises.push(
-          admin
-            .auth()
-            .deleteUser(userId)
-            .then(() => {
-              logger.info(`✅ Deleted auth user: ${userId}`);
-            })
-            .catch((error) => {
-              logger.error(`❌ Error deleting auth user ${userId}:`, error);
-            })
-        );
-      });
-
-      // Commit Firestore batch
-      await batch.commit();
-      logger.info(
-        `✅ Deleted Firestore documents for ` +
-          `${expiredGuestsSnapshot.size} guest users`
-      );
-
-      // Wait for all Auth deletions to complete
-      await Promise.allSettled(deleteAuthPromises);
-
-      logger.info(
-        "🎉 Cleanup complete: Deleted " +
-          `${expiredGuestsSnapshot.size} expired guest users`
-      );
+      await executeCleanup(guestsSnapshot, batch);
     } catch (error) {
-      logger.error("❌ Error during guest user cleanup:", error);
+      logger.error("❌ Error during cleanup:", error);
       throw error;
     }
   }

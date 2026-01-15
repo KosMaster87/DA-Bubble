@@ -2,7 +2,8 @@
  * Cloud Functions for DABubble
  *
  * This file serves as the main entry point for all Cloud Functions.
- * Individual functions are organized in separate modules for better maintainability.
+ * Individual functions are organized in separate modules for better
+ * maintainability.
  *
  * @see /src/scheduled - Scheduled functions (cron jobs)
  * @see /src/firestore - Firestore trigger functions
