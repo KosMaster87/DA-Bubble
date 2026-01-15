@@ -353,10 +353,17 @@
   &__announcement-badge {
     background-color: #535af1;
     color: #fff;
-    padding: 0.125rem 0.5rem;
+    padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
+
+    @media screen and (max-width: 767px) {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
   }
 
   &__announcement-time {
