@@ -58,6 +58,7 @@
     <app-legal-overview
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [isMobileView]="isMobileView()"
       (backRequested)="backToSidebar()"
     />
     } @else if (currentView() === 'channel' && selectedChannel()) {
