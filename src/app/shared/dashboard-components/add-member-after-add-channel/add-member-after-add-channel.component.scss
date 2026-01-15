@@ -10,6 +10,18 @@
   z-index: var(--z-modal);
   @include mix.flex(row, center, center);
 
+  @media (max-width: 767px) {
+    align-items: flex-end;
+  }
+
+  &--closing {
+    @media (max-width: 767px) {
+      .add-member-after-channel__overlay {
+        animation: fadeOut 0.3s ease-out;
+      }
+    }
+  }
+
   &__overlay {
     position: absolute;
     top: 0;
@@ -18,6 +30,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     cursor: pointer;
+    animation: fadeIn 0.3s ease-out;
   }
 
   &__content {
@@ -27,6 +40,29 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-out;
     z-index: 1;
+
+    @media (max-width: 767px) {
+      width: 100%;
+      border-radius: 1.5rem 1.5rem 0 0;
+      animation: slideUp 0.3s ease-out;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease-out;
+    }
+
+    &--dragging {
+      @media (max-width: 767px) {
+        transition: none;
+      }
+    }
+
+    &--closing {
+      @media (max-width: 767px) {
+        transition: transform 0.3s ease-out;
+        transform: translateY(100%) !important;
+      }
+    }
   }
 
   @keyframes fadeIn {
@@ -40,9 +76,58 @@
     }
   }
 
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  &__handle-wrapper {
+    display: none;
+
+    @media (max-width: 767px) {
+      @include mix.flex(row, center, center);
+      padding: var(--space-3) 0;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y;
+    }
+  }
+
+  &__handle {
+    @media (max-width: 767px) {
+      width: 4rem;
+      height: 0.5rem;
+      background-color: var(--border-color, #e0e0e0);
+      border-radius: 0.25rem;
+    }
+  }
+
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-2) var(--space-3);
+    }
   }
 
   &__title {
@@ -83,6 +168,18 @@
     @include mix.flex(column, flex-start, stretch);
     gap: var(--space-4);
     padding: 0 var(--space-6) var(--space-6);
+
+    @media (max-width: 767px) {
+      padding: 0 var(--space-4) var(--space-4);
+      gap: var(--space-3);
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 480px) {
+      padding: 0 var(--space-3) var(--space-3);
+    }
   }
 
   &__radio-row {
@@ -309,5 +406,15 @@
     @include mix.flex(row, flex-end, center);
     gap: var(--space-4);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+      gap: var(--space-2);
+    }
   }
 }

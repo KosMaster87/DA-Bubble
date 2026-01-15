@@ -47,6 +47,12 @@ export class AddMemberAfterAddChannelComponent {
   selectedUsers = signal<UserListItem[]>([]);
   isUserSelectionOpen = signal<boolean>(false);
 
+  // Touch drag state
+  protected isDragging = signal(false);
+  protected dragStartY = 0;
+  protected currentTranslateY = signal(0);
+  protected isClosing = signal(false);
+
   /**
    * Available channels that are NOT yet selected and NOT system channels
    */
@@ -113,14 +119,64 @@ export class AddMemberAfterAddChannelComponent {
    * Handle overlay click
    */
   onOverlayClick(): void {
-    this.closed.emit();
+    this.triggerClose();
   }
 
   /**
    * Handle close button click
    */
   onClose(): void {
-    this.closed.emit();
+    this.triggerClose();
+  }
+
+  /**
+   * Trigger closing animation
+   */
+  triggerClose(): void {
+    this.isClosing.set(true);
+    setTimeout(() => {
+      this.closed.emit();
+    }, 300);
+  }
+
+  /**
+   * Handle touch start for drag gesture
+   */
+  onTouchStart(event: TouchEvent): void {
+    this.dragStartY = event.touches[0].clientY;
+    this.isDragging.set(true);
+  }
+
+  /**
+   * Handle touch move for drag gesture
+   */
+  onTouchMove(event: TouchEvent): void {
+    if (!this.isDragging()) return;
+
+    const currentY = event.touches[0].clientY;
+    const deltaY = currentY - this.dragStartY;
+
+    // Only allow dragging down
+    if (deltaY > 0) {
+      this.currentTranslateY.set(deltaY);
+    }
+  }
+
+  /**
+   * Handle touch end for drag gesture
+   */
+  onTouchEnd(): void {
+    if (!this.isDragging()) return;
+
+    this.isDragging.set(false);
+
+    // If dragged down more than 100px, close the modal
+    if (this.currentTranslateY() > 100) {
+      this.triggerClose();
+    } else {
+      // Snap back to original position
+      this.currentTranslateY.set(0);
+    }
   }
 
   /**

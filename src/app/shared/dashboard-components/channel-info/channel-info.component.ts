@@ -4,11 +4,13 @@
  * @module shared/dashboard-components/channel-info
  */
 
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output, signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
 import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
 import { CheckboxPrivateChannelComponent } from '../checkbox-private-channel/checkbox-private-channel.component';
+import { UserListItemComponent } from '../user-list-item/user-list-item.component';
+import { ChannelDataService } from '@core/services/channel-data/channel-data.service';
 
 export interface ChannelInfoData {
   id: string;
@@ -22,11 +24,19 @@ export interface ChannelInfoData {
 
 @Component({
   selector: 'app-channel-info',
-  imports: [FormsModule, BtnActionComponent, BtnDeleteComponent, CheckboxPrivateChannelComponent],
+  imports: [
+    FormsModule,
+    BtnActionComponent,
+    BtnDeleteComponent,
+    CheckboxPrivateChannelComponent,
+    UserListItemComponent,
+  ],
   templateUrl: './channel-info.component.html',
   styleUrl: './channel-info.component.scss',
 })
 export class ChannelInfoComponent {
+  private channelDataService = inject(ChannelDataService);
+
   channel = input.required<ChannelInfoData>();
   isVisible = input<boolean>(false);
   currentUserId = input<string>();
@@ -36,11 +46,20 @@ export class ChannelInfoComponent {
   leaveChannelClicked = output<void>();
   deleteChannelClicked = output<void>();
   createdByClicked = output<string>();
+  memberClicked = output<string>();
 
   protected isEditingName = signal(false);
   protected isEditingDescription = signal(false);
   protected editedName = signal('');
   protected editedDescription = signal('');
+
+  /**
+   * Get channel members list
+   */
+  protected members = computed(() => {
+    const channelId = computed(() => this.channel().id);
+    return this.channelDataService.getChannelMembers(channelId)();
+  });
 
   /**
    * Handle close button click
@@ -122,6 +141,13 @@ export class ChannelInfoComponent {
    */
   onAdminClick(adminUid: string): void {
     this.createdByClicked.emit(adminUid);
+  }
+
+  /**
+   * Handle member click
+   */
+  onMemberClick(memberId: string): void {
+    this.memberClicked.emit(memberId);
   }
 
   /**

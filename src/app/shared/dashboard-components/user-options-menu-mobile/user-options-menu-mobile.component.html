@@ -1,0 +1,55 @@
+@if (isVisible()) {
+<div class="user-options-menu-mobile" [class.user-options-menu-mobile--closing]="isClosing()">
+  <div class="user-options-menu-mobile__overlay" (click)="onClose()"></div>
+  <div
+    class="user-options-menu-mobile__sheet"
+    [class.user-options-menu-mobile__sheet--dragging]="isDragging()"
+    [class.user-options-menu-mobile__sheet--closing]="isClosing()"
+    [style.transform]="'translateY(' + currentTranslateY() + 'px)'"
+  >
+    <!-- Drag Handle -->
+    <div
+      class="user-options-menu-mobile__handle-wrapper"
+      (click)="onHandleClick()"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+      (touchend)="onTouchEnd()"
+    >
+      <div class="user-options-menu-mobile__handle"></div>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="user-options-menu-mobile__content">
+      <button class="user-options-menu-mobile__item" (click)="onProfileClick()">
+        <img
+          src="/img/icon/profile/account-circle-default.svg"
+          alt=""
+          class="user-options-menu-mobile__icon"
+        />
+        <span>Profil</span>
+      </button>
+
+      <button class="user-options-menu-mobile__item" (click)="onMailboxClick()">
+        <img
+          src="/img/icon/profile/mail-default.svg"
+          alt=""
+          class="user-options-menu-mobile__icon"
+        />
+        <span>Mailbox</span>
+      </button>
+
+      <button
+        class="user-options-menu-mobile__item user-options-menu-mobile__item--danger"
+        (click)="onLogoutClick()"
+      >
+        <img
+          src="/img/icon/profile/logout-default.svg"
+          alt=""
+          class="user-options-menu-mobile__icon"
+        />
+        <span>Log-out</span>
+      </button>
+    </div>
+  </div>
+</div>
+}

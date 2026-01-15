@@ -6,6 +6,18 @@
   right: 0;
   z-index: var(--z-popup);
 
+  @media (max-width: 767px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
   &__overlay {
     position: fixed;
     top: 0;
@@ -25,6 +37,21 @@
     border-radius: 1.5rem 0 1.5rem 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     animation: slideDown 0.2s ease-out;
+
+    @media (max-width: 767px) {
+      min-width: auto;
+      width: calc(100% - 2rem);
+      max-width: 500px;
+      border-radius: 1.5rem;
+      min-height: 50vh;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      width: calc(100% - 1rem);
+    }
   }
 
   @keyframes slideDown {
@@ -41,6 +68,11 @@
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-4);
+    flex-shrink: 0;
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+    }
   }
 
   &__title {
@@ -48,6 +80,15 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0 0 0 var(--space-4);
+
+    @media (max-width: 767px) {
+      font-size: 1.25rem;
+      margin: 0 0 0 var(--space-2);
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.125rem;
+    }
   }
 
   &__close-btn {
@@ -61,6 +102,10 @@
     border-radius: 50%;
     cursor: pointer;
     transition: background-color 0.2s;
+
+    @media (max-width: 767px) {
+      margin: 0 var(--space-2) 0 0;
+    }
 
     &:hover {
       background-color: #eceefe;
@@ -82,11 +127,27 @@
     @include mix.flex(column, flex-start, stretch);
     gap: var(--space-4);
     padding: var(--space-8);
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+      gap: var(--space-3);
+      overflow-y: auto;
+      flex: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+    }
   }
 
   &__channel-row {
     @include mix.flex(row, flex-start, center);
     gap: var(--space-3);
+
+    @media (max-width: 480px) {
+      gap: var(--space-2);
+    }
   }
 
   &__channel-icon {
@@ -101,6 +162,10 @@
     font-size: 1rem;
     font-weight: 600;
     color: #797ef3;
+
+    @media (max-width: 480px) {
+      font-size: 0.9375rem;
+    }
   }
 
   &__selected-users-container {
@@ -113,6 +178,14 @@
     max-height: calc(3 * (22px + var(--space-2) + var(--space-1) * 2 + 2px));
     overflow-y: auto;
     @include mix.custom-scrollbar(4px, transparent, var(--border-color));
+
+    @media (max-width: 767px) {
+      max-height: 150px;
+    }
+
+    @media (max-width: 480px) {
+      gap: var(--space-1);
+    }
   }
 
   &__user-chip-wrapper {
@@ -140,6 +213,10 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+
+    @media (max-width: 480px) {
+      font-size: 0.8125rem;
+    }
   }
 
   &__user-chip-remove {
@@ -177,5 +254,10 @@
   &__footer {
     @include mix.flex(row, center, center);
     padding: var(--space-4);
+    flex-shrink: 0;
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+    }
   }
 }

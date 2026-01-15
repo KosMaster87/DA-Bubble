@@ -6,6 +6,12 @@
   left: 0;
   z-index: var(--z-dropdown);
 
+  @media (max-width: 767px) {
+    // Position dropdown above the input field on mobile
+    top: auto;
+    bottom: calc(100% + var(--space-1));
+  }
+
   &__overlay {
     position: fixed;
     top: 0;

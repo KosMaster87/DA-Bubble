@@ -10,7 +10,7 @@ import { AuthStore } from '@stores/auth';
 import { UserPresenceStore } from '@stores/index';
 import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
 import { BackToWorkspaceComponent } from '@shared/components/back-to-workspace/back-to-workspace.component';
-import { UserOptionsMenuComponent } from '@shared/dashboard-components';
+import { UserOptionsMenuComponent, UserOptionsMenuMobileComponent } from '@shared/dashboard-components';
 import {
   ProfileViewComponent,
   ProfileUser,
@@ -26,6 +26,7 @@ import {
     DABubbleLogoComponent,
     BackToWorkspaceComponent,
     UserOptionsMenuComponent,
+    UserOptionsMenuMobileComponent,
     ProfileViewComponent,
     ProfileEditComponent,
   ],

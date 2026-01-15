@@ -5,6 +5,7 @@
  */
 
 export { UserOptionsMenuComponent } from './user-options-menu/user-options-menu.component';
+export { UserOptionsMenuMobileComponent } from './user-options-menu-mobile/user-options-menu-mobile.component';
 export { WorkspaceMenuToggleComponent } from './workspace-menu-toggle/workspace-menu-toggle.component';
 export { MessageBoxComponent } from './message-box/message-box.component';
 export { ChannelInfoComponent, type ChannelInfoData } from './channel-info/channel-info.component';

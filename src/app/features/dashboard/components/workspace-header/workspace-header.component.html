@@ -69,6 +69,8 @@
         </span>
       </button>
 
+      <!-- Desktop Menu -->
+      @if (!isMobileView()) {
       <app-user-options-menu
         [isVisible]="isOptionsOpen()"
         (profileClicked)="onProfileClick()"
@@ -76,6 +78,18 @@
         (logoutClicked)="logout()"
         (closeClicked)="toggleOptions()"
       />
+      }
+
+      <!-- Mobile Menu -->
+      @if (isMobileView()) {
+      <app-user-options-menu-mobile
+        [isVisible]="isOptionsOpen()"
+        (profileClicked)="onProfileClick()"
+        (mailboxClicked)="onMailboxClick()"
+        (logoutClicked)="logout()"
+        (closeClicked)="isOptionsOpen.set(false)"
+      />
+      }
 
       @if (profileUser) {
       <app-profile-view

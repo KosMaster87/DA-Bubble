@@ -133,6 +133,24 @@
           </div>
         </div>
       </div>
+
+      <!-- Members Section (Mobile Only) -->
+      <div class="channel-info__section channel-info__section--members">
+        <div class="channel-info__content-wrapper">
+          <div class="channel-info__section-header">
+            <label class="channel-info__label">Members ({{ members().length }})</label>
+          </div>
+
+          <div class="channel-info__members-list">
+            @for (member of members(); track member.id) {
+            <app-user-list-item
+              [user]="member"
+              (itemClicked)="onMemberClick($event)"
+            />
+            }
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Footer -->
