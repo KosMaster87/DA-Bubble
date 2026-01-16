@@ -52,14 +52,14 @@
               alt=""
               class="channel-info__input-icon"
             />
-            <input
-              type="text"
+            <textarea
               class="channel-info__input"
               [(ngModel)]="editedName"
               [placeholder]="channel().name"
-              (keydown.enter)="onSaveName()"
+              rows="1"
+              (keydown.enter)="$event.preventDefault(); onSaveName()"
               (keydown.escape)="isEditingName.set(false)"
-            />
+            ></textarea>
           </div>
         </div>
       </div>

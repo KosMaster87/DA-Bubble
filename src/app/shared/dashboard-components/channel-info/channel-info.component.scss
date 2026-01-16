@@ -184,6 +184,10 @@
 
     .channel-info__section--editing & {
       transform: translate(-12px, -20px);
+
+      @media (max-width: 767px) {
+        transform: translate(0, 0);
+      }
     }
   }
 
@@ -192,6 +196,10 @@
 
     .channel-info__section--editing & {
       transform: translate(12px, -20px);
+
+      @media (max-width: 767px) {
+        transform: translate(0, 0);
+      }
     }
   }
 
@@ -277,44 +285,58 @@
   // Input (Edit Mode)
   &__input-wrapper {
     position: relative;
-    @include mix.flex(row, flex-start, center);
+    @include mix.flex(row, flex-start, flex-start);
+    gap: var(--space-2);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 1.5rem;
+    padding: var(--space-2) var(--space-3);
+
+    @media (max-width: 480px) {
+      gap: var(--space-1);
+      padding: var(--space-2) var(--space-2);
+    }
 
     .channel-info__section--editing & {
       opacity: 1;
       pointer-events: all;
     }
+
+    &:focus-within {
+      border-color: var(--primary-color, #444df2);
+      box-shadow: 0 0 0 3px rgba(68, 77, 242, 0.1);
+    }
   }
 
   &__input-icon {
-    position: absolute;
-    left: var(--space-4);
     width: 14px;
     height: 14px;
-    pointer-events: none;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+
+    @media (max-width: 480px) {
+      width: 12px;
+      height: 12px;
+      margin-top: 0.21rem;
+    }
   }
 
   &__input {
-    width: 100%;
-    padding: var(--space-2) var(--space-2) var(--space-2)
-      calc(var(--space-2) + 20px + var(--space-2));
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 1.5rem;
+    flex: 1;
+    min-width: 0;
+    border: none;
     font-size: 1rem;
     outline: none;
-    transition: all 0.2s;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
+    background: transparent;
+    padding: 0;
 
     @media (max-width: 480px) {
       font-size: 0.9375rem;
-      padding: var(--space-1-5) var(--space-1-5) var(--space-1-5)
-        calc(var(--space-1-5) + 20px + var(--space-1-5));
-    }
-
-    &:focus {
-      border-color: var(--primary-color, #444df2);
-      box-shadow: 0 0 0 3px rgba(68, 77, 242, 0.1);
     }
 
     &::placeholder {
