@@ -197,7 +197,14 @@
                   class="workspace-sidebar__status-badge"
                 />
               </span>
-              <span class="workspace-sidebar__item-name">{{ dm.name }}</span>
+              <span class="workspace-sidebar__item-name">
+                @if (dm.name.includes('(Notes)')) {
+                  <span class="workspace-sidebar__item-name-text">{{ dm.name.replace(' (Notes)', '') }}</span>
+                  <span class="workspace-sidebar__item-name-suffix">(Notes)</span>
+                } @else {
+                  {{ dm.name }}
+                }
+              </span>
             </span>
           </button>
 
@@ -331,6 +338,20 @@
       }
     </div>
   </div>
+
+  <!-- Floating New Message Button (Mobile) -->
+  <button
+    class="workspace-sidebar__floating-btn"
+    [class.workspace-sidebar__floating-btn--active]="isNewMessageActive()"
+    (click)="openNewMessage()"
+    [attr.aria-label]="'Open new message'"
+  >
+    <img
+      src="/img/icon/channel-bar/multi-edit-default.svg"
+      alt=""
+      class="workspace-sidebar__floating-btn-icon"
+    />
+  </button>
 
   <!-- Create Channel Popup -->
   <app-create-channel

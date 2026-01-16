@@ -1,0 +1,45 @@
+<div class="search-results-dropdown">
+  <!-- Overlay -->
+  <div class="search-results-dropdown__overlay" (click)="onOverlayClick()"></div>
+
+  <!-- Content -->
+  <div class="search-results-dropdown__content" (click)="$event.stopPropagation()">
+    <!-- Body -->
+    <div class="search-results-dropdown__body">
+      <!-- Channel Results -->
+      @if (channelResults().length > 0) {
+        <div class="search-results-dropdown__section">
+          <div class="search-results-dropdown__section-title">Channels</div>
+          @for (channel of channelResults(); track channel.id) {
+            <app-channel-list-item [channel]="channel" (itemClicked)="onChannelClick($event)" />
+          }
+        </div>
+      }
+
+      <!-- User Results -->
+      @if (userResults().length > 0) {
+        <div class="search-results-dropdown__section">
+          <div class="search-results-dropdown__section-title">Users</div>
+          @for (user of userResults(); track user.id) {
+            <app-user-list-item [user]="user" (itemClicked)="onUserClick($event)" />
+          }
+        </div>
+      }
+
+      <!-- Message Search Results -->
+      @if (messageResults().length > 0) {
+        <div class="search-results-dropdown__section">
+          <div class="search-results-dropdown__section-title">Messages</div>
+          @for (message of messageResults(); track message.id) {
+            <app-message-search-item [item]="message" (itemClicked)="onMessageClick($event)" />
+          }
+        </div>
+      }
+
+      <!-- Empty state -->
+      @if (channelResults().length === 0 && userResults().length === 0 && messageResults().length === 0) {
+        <p class="search-results-dropdown__empty">No results found</p>
+      }
+    </div>
+  </div>
+</div>

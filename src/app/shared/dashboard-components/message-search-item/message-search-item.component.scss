@@ -1,0 +1,61 @@
+@use '../../../../styles/mixins' as mix;
+
+.message-search-item {
+  @include mix.flex(row, flex-start, center);
+  width: 100%;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: left;
+
+  &:hover {
+    background: var(--hover-bg);
+  }
+
+  &--active {
+    background: var(--active-bg);
+  }
+
+  &__icon {
+    @include mix.flex(row, center, center);
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+
+    img {
+      width: 1.5rem;
+      height: 1.5rem;
+      filter: var(--icon-filter);
+    }
+  }
+
+  &__content {
+    @include mix.flex(column, flex-start, flex-start);
+    flex: 1;
+    min-width: 0;
+    gap: 0.25rem;
+  }
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+  }
+
+  &__description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+  }
+}

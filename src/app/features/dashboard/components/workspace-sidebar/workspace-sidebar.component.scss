@@ -145,6 +145,56 @@
     @include mix.custom-scrollbar(6px, transparent, var(--border-color));
   }
 
+  // Floating New Message Button (Mobile Only)
+  &__floating-btn {
+    display: none;
+
+    @media screen and (max-width: 767px) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      bottom: var(--space-4);
+      right: var(--space-4);
+      width: 45px;
+      height: 45px;
+      border: none;
+      background: var(--primary-color, #444df2);
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(68, 77, 242, 0.3);
+      cursor: pointer;
+      z-index: 1000;
+      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+
+      &:hover {
+        background-color: #535af1;
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(68, 77, 242, 0.4);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &--active {
+        background-color: #535af1;
+      }
+    }
+
+    // Hide when sidebar is hidden on mobile
+    .workspace-sidebar--hidden & {
+      @media screen and (max-width: 767px) {
+        display: none;
+      }
+    }
+  }
+
+  &__floating-btn-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1); // Make icon white
+  }
+
   &__section {
     display: flex;
     flex-direction: column;
@@ -467,10 +517,26 @@
     white-space: nowrap;
     flex: 1;
     min-width: 0; // Important for flex items with text-overflow
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 
     @media screen and (max-width: 767px) {
       font-size: 0.875rem;
     }
+  }
+
+  &__item-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  &__item-name-suffix {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   &__item-avatar-wrapper {
