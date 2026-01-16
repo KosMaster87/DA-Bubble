@@ -48,19 +48,28 @@
       max-height: 90vh;
       display: flex;
       flex-direction: column;
-      transition: transform 0.3s ease-out;
+      transition: transform 0.3s ease-out, max-height 0.3s ease-out;
+    }
+
+    &--expanded {
+      @media (max-width: 767px) {
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+      }
     }
 
     &--dragging {
       @media (max-width: 767px) {
         transition: none;
+        max-height: var(--drag-height, 100vh);
       }
     }
 
     &--closing {
       @media (max-width: 767px) {
         transition: transform 0.3s ease-out;
-        transform: translateY(100%) !important;
+        transform: translateY(100%);
       }
     }
   }
@@ -175,6 +184,10 @@
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+
+      .add-member-after-channel__content--expanded & {
+        overflow-y: visible;
+      }
     }
 
     @media (max-width: 480px) {
@@ -274,6 +287,11 @@
     margin-left: calc(24px + var(--space-3));
     position: relative;
     width: 80%;
+
+    @media (max-width: 767px) {
+      margin-left: 0;
+      width: 100%;
+    }
   }
 
   &__selected-channels-container {
@@ -291,6 +309,8 @@
 
   &__channel-chip-wrapper {
     @include mix.flex(row, flex-start, flex-start);
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__channel-chip {
@@ -300,12 +320,19 @@
     background-color: #eceefe;
     border-radius: 1.5rem;
     border: 1px solid #535af1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__channel-chip-name {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
 
   &__channel-chip-remove {
@@ -350,6 +377,8 @@
 
   &__user-chip-wrapper {
     @include mix.flex(row, flex-start, flex-start);
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__user-chip {
@@ -359,6 +388,8 @@
     background-color: #eceefe;
     border-radius: 1.5rem;
     border: 1px solid #535af1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__user-chip-avatar {
@@ -373,6 +404,11 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
 
   &__user-chip-remove {

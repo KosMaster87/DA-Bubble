@@ -52,6 +52,15 @@ export class AddMemberAfterAddChannelComponent {
   protected dragStartY = 0;
   protected currentTranslateY = signal(0);
   protected isClosing = signal(false);
+  protected isManuallyExpanded = signal(false);
+  protected dragHeightPercentage = signal<number | null>(null);
+
+  /**
+   * Check if any dropdown is open or manually expanded (for mobile expansion)
+   */
+  isExpanded = computed<boolean>(() => {
+    return this.isChannelSelectionOpen() || this.isUserSelectionOpen() || this.isManuallyExpanded();
+  });
 
   /**
    * Available channels that are NOT yet selected and NOT system channels
@@ -88,6 +97,7 @@ export class AddMemberAfterAddChannelComponent {
   openChannelSelection(): void {
     if (this.selectedOption() === 'all') {
       this.isChannelSelectionOpen.set(true);
+      this.isManuallyExpanded.set(true);
     }
   }
 
@@ -97,6 +107,7 @@ export class AddMemberAfterAddChannelComponent {
   openUserSelection(): void {
     if (this.selectedOption() === 'specific') {
       this.isUserSelectionOpen.set(true);
+      this.isManuallyExpanded.set(true);
     }
   }
 
@@ -156,9 +167,24 @@ export class AddMemberAfterAddChannelComponent {
     const currentY = event.touches[0].clientY;
     const deltaY = currentY - this.dragStartY;
 
-    // Only allow dragging down
+    // Dead zone to prevent jittering when dragging near starting position
+    if (Math.abs(deltaY) < 5) {
+      return;
+    }
+
+    // Dragging down - for closing (move element down)
     if (deltaY > 0) {
       this.currentTranslateY.set(deltaY);
+      this.dragHeightPercentage.set(null);
+    }
+    // Dragging up - for expanding height (keep position, grow height)
+    else {
+      this.currentTranslateY.set(0);
+      // Start at 90vh, increase to 100vh based on drag distance
+      // Every 100px of upward drag increases height by 10vh
+      const additionalHeight = Math.abs(deltaY) / 100 * 10;
+      const newHeight = Math.min(90 + additionalHeight, 100);
+      this.dragHeightPercentage.set(newHeight);
     }
   }
 
@@ -169,13 +195,22 @@ export class AddMemberAfterAddChannelComponent {
     if (!this.isDragging()) return;
 
     this.isDragging.set(false);
+    const deltaY = this.currentTranslateY();
 
     // If dragged down more than 100px, close the modal
-    if (this.currentTranslateY() > 100) {
+    if (deltaY > 100) {
       this.triggerClose();
-    } else {
-      // Snap back to original position
+    }
+    // If dragged up more than 50px, expand to full height
+    else if (deltaY < -50) {
+      this.isManuallyExpanded.set(true);
       this.currentTranslateY.set(0);
+      this.dragHeightPercentage.set(null);
+    }
+    // Otherwise snap back to original position
+    else {
+      this.currentTranslateY.set(0);
+      this.dragHeightPercentage.set(null);
     }
   }
 

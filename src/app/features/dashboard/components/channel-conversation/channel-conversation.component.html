@@ -17,7 +17,9 @@
           alt=""
           class="channel-conversation__title-icon"
         />
-        {{ currentChannelData()?.name || channel().name }}
+        <span class="channel-conversation__title-text">
+          {{ currentChannelData()?.name || channel().name }}
+        </span>
         <img
           src="/img/icon/arrow_default.svg"
           alt=""

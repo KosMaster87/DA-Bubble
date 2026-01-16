@@ -7,7 +7,9 @@
     class="add-member-after-channel__content"
     [class.add-member-after-channel__content--dragging]="isDragging()"
     [class.add-member-after-channel__content--closing]="isClosing()"
+    [class.add-member-after-channel__content--expanded]="isExpanded()"
     [style.transform]="'translateY(' + currentTranslateY() + 'px)'"
+    [style.--drag-height]="dragHeightPercentage() ? dragHeightPercentage() + 'vh' : null"
   >
     <!-- Drag Handle (Mobile) -->
     <div

@@ -8,6 +8,7 @@
   background: transparent;
   cursor: pointer;
   text-align: left;
+  min-width: 0;
 
   &--active {
     .channel-list-item__content {
@@ -25,6 +26,8 @@
     padding: 0.5rem 1.5rem 0.5rem 0.75rem;
     border-radius: 2rem;
     transition: background-color 0.2s;
+    min-width: 0;
+    width: 100%;
 
     .channel-list-item:hover & {
       background-color: #eceefe;

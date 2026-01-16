@@ -1,7 +1,7 @@
 @if (isVisible()) {
 <div class="add-members">
   <div class="add-members__overlay" (click)="onClose()"></div>
-  <div class="add-members__content">
+  <div class="add-members__content" [class.add-members__content--expanded]="isExpanded()">
     <!-- Header -->
     <div class="add-members__header">
       <h2 class="add-members__title">Add members</h2>

@@ -27,6 +27,13 @@ export class AddMembersComponent {
   protected selectedUsers = signal<UserListItem[]>([]);
 
   /**
+   * Check if dropdown is open for mobile expansion
+   */
+  isExpanded = computed(() => {
+    return this.isUserSelectionOpen();
+  });
+
+  /**
    * Show user dropdown when selection is open
    */
   showUserDropdown = computed(() => {
