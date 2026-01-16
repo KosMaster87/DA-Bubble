@@ -54,7 +54,7 @@
     }
   </div>
 
-  @if (!isInThread()) {
+  @if (!isInThread() && !hideComment()) {
   <button
     class="reaction-bar__button"
     type="button"

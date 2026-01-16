@@ -4,9 +4,11 @@
  * @module features/dashboard/components/chat-new-msg
  */
 
-import { Component, output } from '@angular/core';
+import { Component, output, inject, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { UserStore } from '@stores/user.store';
+import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 
 @Component({
   selector: 'app-chat-new-msg',
@@ -15,9 +17,21 @@ import { MessageBoxComponent } from '@shared/dashboard-components/message-box/me
   styleUrl: './chat-new-msg.component.scss',
 })
 export class ChatNewMsgComponent {
+  private userStore = inject(UserStore);
   backRequested = output<void>(); // For mobile back navigation
 
   protected searchQuery = '';
+
+  /**
+   * All workspace users for message-box mentions
+   */
+  protected allUsers = computed<UserListItem[]>(() => {
+    return this.userStore.users().map(user => ({
+      id: user.uid,
+      name: user.displayName,
+      avatar: user.photoURL || '',
+    }));
+  });
 
   /**
    * Handle message send

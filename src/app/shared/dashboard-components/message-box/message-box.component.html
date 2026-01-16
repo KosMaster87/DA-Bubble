@@ -11,31 +11,52 @@
 
   <div class="message-box__actions">
     <div class="message-box__actions-left">
-      <button
-        class="message-box__action-btn"
-        [class.message-box__action-btn--active]="isEmojiPickerOpen()"
-        (click)="openEmojiPicker()"
-        [attr.aria-label]="'Add emoji'"
-      >
-        <img
-          src="/img/icon/chat/add-reaction-default.svg"
-          alt=""
-          class="message-box__action-icon"
-        />
-      </button>
+      <div class="message-box__emoji-wrapper">
+        <button
+          class="message-box__action-btn"
+          [class.message-box__action-btn--active]="isEmojiPickerOpen()"
+          (click)="openEmojiPicker()"
+          [attr.aria-label]="'Add emoji'"
+        >
+          <img
+            src="/img/icon/chat/add-reaction-default.svg"
+            alt=""
+            class="message-box__action-icon"
+          />
+        </button>
 
-      <button
-        class="message-box__action-btn"
-        [class.message-box__action-btn--active]="isMentionPickerOpen()"
-        (click)="openMentionPicker()"
-        [attr.aria-label]="'Mention user'"
-      >
-        <img
-          src="/img/icon/chat/alternate-email-default.svg"
-          alt=""
-          class="message-box__action-icon"
-        />
-      </button>
+        @if (isEmojiPickerOpen()) {
+          <app-reaction-bar
+            [messageType]="'other'"
+            [hideComment]="true"
+            (reactionClicked)="onEmojiReaction($event)"
+          />
+        }
+      </div>
+
+      <div class="message-box__mention-wrapper">
+        <button
+          class="message-box__action-btn"
+          [class.message-box__action-btn--active]="isUserSelectionOpen()"
+          (click)="openMentionPicker()"
+          [attr.aria-label]="'Mention user'"
+        >
+          <img
+            src="/img/icon/chat/alternate-email-default.svg"
+            alt=""
+            class="message-box__action-icon"
+          />
+        </button>
+
+        @if (isUserSelectionOpen()) {
+          <app-user-selection
+            [users]="availableUsers()"
+            [searchValue]="userSearchValue()"
+            (userSelected)="onUserSelected($event)"
+            (closed)="onUserSelectionClosed()"
+          />
+        }
+      </div>
     </div>
 
     <button

@@ -42,7 +42,6 @@
     }
 
     &--closing {
-      // Smooth transition to bottom from current position
       transition: transform 0.3s ease-out;
       transform: translateY(100%) !important;
     }

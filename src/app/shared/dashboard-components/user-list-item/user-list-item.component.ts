@@ -11,6 +11,7 @@ export interface UserListItem {
   id: string;
   name: string;
   avatar: string;
+  status?: string;
 }
 
 @Component({

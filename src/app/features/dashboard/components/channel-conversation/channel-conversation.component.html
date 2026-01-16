@@ -143,7 +143,7 @@
 
   <!-- Footer with Message Box -->
   <div class="channel-conversation__footer">
-    <app-message-box (messageSent)="sendMessage($event)" />
+    <app-message-box [users]="memberListItems()" (messageSent)="sendMessage($event)" />
   </div>
   }
   <!-- End of normal channel view -->

@@ -30,12 +30,15 @@ import {
   EditProfileUser,
 } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import { ThreadStore } from '@stores/thread.store';
+import { ChannelStore } from '@stores/channel.store';
+import { UserStore } from '@stores/user.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
 import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
+import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 
 export interface ThreadInfo {
   channelId: string;
@@ -59,6 +62,8 @@ export interface ThreadInfo {
 })
 export class ThreadComponent {
   private threadStore = inject(ThreadStore);
+  private channelStore = inject(ChannelStore);
+  private userStore = inject(UserStore);
   private authStore = inject(AuthStore);
   private unreadService = inject(UnreadService);
   private userTransformation = inject(UserTransformationService);
@@ -84,6 +89,47 @@ export class ThreadComponent {
 
     const threadMessages = this.threadStore.getThreadsByMessageId()(info.parentMessageId);
     return this.userTransformation.threadMessagesToViewMessages(threadMessages);
+  });
+
+  /**
+   * Thread participants (channel members or DM participant) for message-box mentions
+   */
+  protected threadParticipants = computed<UserListItem[]>(() => {
+    const info = this.threadInfo();
+    if (!info?.channelId) return [];
+
+    // For DM threads, get the other participant from replies
+    if (info.isDirectMessage) {
+      const replies = this.replies();
+      if (replies.length === 0) return [];
+
+      const currentUserId = this.authStore.user()?.uid;
+      const otherUser = replies.find(r => r.senderId !== currentUserId);
+      if (!otherUser) return [];
+
+      return [{
+        id: otherUser.senderId,
+        name: otherUser.senderName,
+        avatar: otherUser.senderAvatar,
+      }];
+    }
+
+    // For channel threads, get channel members
+    const channel = this.channelStore.channels().find(c => c.id === info.channelId);
+    if (!channel?.members) return [];
+
+    const allUsers = this.userStore.users();
+    return channel.members
+      .map((memberId: string) => {
+        const user = allUsers.find(u => u.uid === memberId);
+        if (!user) return null;
+        return {
+          id: user.uid,
+          name: user.displayName,
+          avatar: user.photoURL || '',
+        } as UserListItem;
+      })
+      .filter((u): u is UserListItem => u !== null);
   });
 
   constructor() {

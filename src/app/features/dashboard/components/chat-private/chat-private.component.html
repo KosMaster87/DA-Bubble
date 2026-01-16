@@ -54,6 +54,6 @@
 
   <!-- Footer with Message Box -->
   <div class="chat-private__footer">
-    <app-message-box (messageSent)="sendMessage($event)" />
+    <app-message-box [users]="dmParticipantList()" (messageSent)="sendMessage($event)" />
   </div>
 </div>

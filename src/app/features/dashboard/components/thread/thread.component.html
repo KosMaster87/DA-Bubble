@@ -62,7 +62,7 @@
 
   <!-- Footer with Message Box -->
   <div class="thread__footer">
-    <app-message-box (messageSent)="sendReply($event)" />
+    <app-message-box [users]="threadParticipants()" (messageSent)="sendReply($event)" />
   </div>
 
   <!-- Profile View -->

@@ -107,6 +107,20 @@ export class ChatPrivateComponent {
   });
 
   /**
+   * DM participant as list for message-box mention
+   */
+  protected dmParticipantList = computed<UserListItem[]>(() => {
+    const otherUserId = this.getOtherUserId();
+    if (!otherUserId) return []; // Self-DM has no other participant
+
+    return [{
+      id: otherUserId,
+      name: this.dmInfo().userName,
+      avatar: this.dmInfo().userAvatar,
+    }];
+  });
+
+  /**
    * Messages from DirectMessageStore
    */
   protected messages = computed<Message[]>(() => {

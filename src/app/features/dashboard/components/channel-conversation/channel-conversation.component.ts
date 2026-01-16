@@ -185,6 +185,13 @@ export class ChannelConversationComponent {
   protected members = this.channelData.getChannelMembers(this.channelId);
 
   /**
+   * Transform members to UserListItem format for message-box
+   */
+  protected memberListItems = computed(() => {
+    return this.members(); // Already in correct format
+  });
+
+  /**
    * Available users that are NOT yet members of this channel
    */
   protected availableUsers = this.channelData.getAvailableUsers(this.channelId);

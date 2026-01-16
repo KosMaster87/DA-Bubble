@@ -25,6 +25,6 @@
   </div>
 
   <div class="chat-new-msg__footer">
-    <app-message-box (messageSent)="onMessageSent($event)" />
+    <app-message-box [users]="allUsers()" (messageSent)="onMessageSent($event)" />
   </div>
 </div>
