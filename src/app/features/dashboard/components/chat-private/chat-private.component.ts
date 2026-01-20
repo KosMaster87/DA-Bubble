@@ -5,7 +5,7 @@
  */
 
 import { Component, signal, input, inject, computed, output } from '@angular/core';
-import { DirectMessageStore, UserStore, ThreadStore, MessageStore } from '@stores/index';
+import { DirectMessageStore, UserStore, ThreadStore, MessageStore, ChannelStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
@@ -14,6 +14,7 @@ import { ProfileManagementService } from '@core/services/profile-management/prof
 import { DirectMessageInteractionService } from '@core/services/direct-message-interaction/direct-message-interaction.service';
 import { DirectMessageStateService } from '@core/services/direct-message-state/direct-message-state.service';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
 import {
   ConversationMessagesComponent,
   type Message,
@@ -31,6 +32,7 @@ import {
   UserListItemComponent,
   UserListItem,
 } from '@shared/dashboard-components/user-list-item/user-list-item.component';
+import { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 
 export interface DMInfo {
   conversationId: string;
@@ -56,6 +58,7 @@ export class ChatPrivateComponent {
   protected userStore = inject(UserStore);
   protected threadStore = inject(ThreadStore);
   protected messageStore = inject(MessageStore);
+  protected channelStore = inject(ChannelStore);
   protected authStore = inject(AuthStore);
   protected unreadService = inject(UnreadService);
   private userTransformation = inject(UserTransformationService);
@@ -130,6 +133,38 @@ export class ChatPrivateComponent {
   });
 
   /**
+   * Messages formatted for search in MessageBox
+   */
+  protected searchableMessages = computed<MessageSearchItem[]>(() => {
+    const conversationId = this.dmInfo().conversationId;
+    const userName = this.dmInfo().userName;
+
+    return this.messages()
+      .map(msg => ({
+        id: `${conversationId}_${msg.id}`,
+        displayName: `@${userName}`,
+        description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
+        type: 'dm' as const
+      }))
+      .sort((a, b) => {
+        const msgA = this.messages().find(m => m.id === a.id.split('_')[1]);
+        const msgB = this.messages().find(m => m.id === b.id.split('_')[1]);
+        if (!msgA || !msgB) return 0;
+        return msgB.timestamp.getTime() - msgA.timestamp.getTime();
+      });
+  });
+
+  /**
+   * Public channels formatted for message-box channel mentions
+   */
+  protected channelListItems = computed<ChannelListItem[]>(() => {
+    return this.channelStore.getPublicChannels().map((ch) => ({
+      id: ch.id,
+      name: ch.name,
+    }));
+  });
+
+  /**
    * Check if there are more messages to load
    */
   protected hasMoreMessages = computed(() => {
@@ -193,6 +228,25 @@ export class ChatPrivateComponent {
     const conversationId = this.dmInfo().conversationId;
     await this.directMessageStore.sendMessage(conversationId, currentUserId, content.trim());
     this.unreadService.markAsRead(conversationId);
+  };
+
+  /**
+   * Scroll to a specific message
+   */
+  scrollToMessage = (messageId: string): void => {
+    // Extract the actual message ID from the format "conversationId_messageId"
+    const actualMessageId = messageId.split('_')[1];
+
+    // Small delay to ensure DOM is updated
+    setTimeout(() => {
+      const messageElement = document.querySelector(`[data-message-id="${actualMessageId}"]`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Optional: Add highlight effect
+        messageElement.classList.add('highlight');
+        setTimeout(() => messageElement.classList.remove('highlight'), 2000);
+      }
+    }, 100);
   };
 
   /**

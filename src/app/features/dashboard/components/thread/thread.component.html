@@ -62,7 +62,13 @@
 
   <!-- Footer with Message Box -->
   <div class="thread__footer">
-    <app-message-box [users]="threadParticipants()" (messageSent)="sendReply($event)" />
+    <app-message-box
+      [users]="threadParticipants()"
+      [channels]="channelListItems()"
+      [messages]="searchableReplies()"
+      (messageSent)="sendReply($event)"
+      (messageSelected)="scrollToMessage($event)"
+    />
   </div>
 
   <!-- Profile View -->

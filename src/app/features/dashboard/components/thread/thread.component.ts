@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
 import {
   ConversationMessagesComponent,
   type Message,
@@ -39,6 +40,7 @@ import { MessageGroupingService } from '@core/services/message-grouping/message-
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
 import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
 import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
+import { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 
 export interface ThreadInfo {
   channelId: string;
@@ -92,6 +94,33 @@ export class ThreadComponent {
   });
 
   /**
+   * Replies formatted for search in MessageBox
+   */
+  protected searchableReplies = computed<MessageSearchItem[]>(() => {
+    const info = this.threadInfo();
+    if (!info) return [];
+
+    const displayName = info.isDirectMessage
+      ? `@${info.channelName}`
+      : `#${info.channelName}`;
+    const containerId = info.isDirectMessage ? info.parentMessageId : info.channelId;
+
+    return this.replies()
+      .map(msg => ({
+        id: `${containerId}_${msg.id}`,
+        displayName,
+        description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
+        type: info.isDirectMessage ? 'dm' as const : 'channel' as const
+      }))
+      .sort((a, b) => {
+        const msgA = this.replies().find(m => m.id === a.id.split('_')[1]);
+        const msgB = this.replies().find(m => m.id === b.id.split('_')[1]);
+        if (!msgA || !msgB) return 0;
+        return msgB.timestamp.getTime() - msgA.timestamp.getTime();
+      });
+  });
+
+  /**
    * Thread participants (channel members or DM participant) for message-box mentions
    */
   protected threadParticipants = computed<UserListItem[]>(() => {
@@ -130,6 +159,16 @@ export class ThreadComponent {
         } as UserListItem;
       })
       .filter((u): u is UserListItem => u !== null);
+  });
+
+  /**
+   * Public channels formatted for message-box channel mentions
+   */
+  protected channelListItems = computed<ChannelListItem[]>(() => {
+    return this.channelStore.getPublicChannels().map((ch) => ({
+      id: ch.id,
+      name: ch.name,
+    }));
   });
 
   constructor() {
@@ -246,6 +285,25 @@ export class ThreadComponent {
 
     this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
   }
+
+  /**
+   * Scroll to a specific message in thread
+   */
+  scrollToMessage = (messageId: string): void => {
+    // Extract the actual message ID from the format "containerId_messageId"
+    const actualMessageId = messageId.split('_')[1];
+
+    // Small delay to ensure DOM is updated
+    setTimeout(() => {
+      const messageElement = document.querySelector(`[data-message-id="${actualMessageId}"]`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Optional: Add highlight effect
+        messageElement.classList.add('highlight');
+        setTimeout(() => messageElement.classList.remove('highlight'), 2000);
+      }
+    }, 100);
+  };
 
   /**
    * Handle message click

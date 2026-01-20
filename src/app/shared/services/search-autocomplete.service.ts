@@ -142,31 +142,20 @@ export class SearchAutocompleteService {
     const prefix = this.searchPrefix();
     const term = this.searchTerm();
 
-    console.log('searchMessages - prefix:', prefix, 'term:', term, 'length:', term.length);
-
     // Only search messages if prefix is $ or no prefix (and term length >= 3)
-    if (prefix === '#' || prefix === '@') {
-      console.log('searchMessages - skipped due to prefix');
-      return [];
-    }
-    if (!term || term.length < 3) {
-      console.log('searchMessages - skipped due to term length');
-      return [];
-    }
+    if (prefix === '#' || prefix === '@') return [];
+    if (!term || term.length < 3) return [];
 
     const results: { result: SearchResult; date: Date }[] = [];
 
     // Search in channel messages
     const channelMessagesObj = this.channelMessageStore.channelMessages();
-    console.log('searchMessages - channelMessagesObj:', Object.keys(channelMessagesObj).length, 'channels');
     const allChannelMessages: any[] = [];
 
     // Flatten all channel messages with dates
     Object.entries(channelMessagesObj).forEach(([channelId, messages]) => {
-      console.log(`Channel ${channelId} has ${messages.length} messages`);
       messages.forEach((msg: any) => {
         if (msg.content?.toLowerCase().includes(term)) {
-          console.log('Found matching message:', msg.content);
           allChannelMessages.push({
             ...msg,
             channelId,
@@ -175,8 +164,6 @@ export class SearchAutocompleteService {
         }
       });
     });
-
-    console.log('searchMessages - found', allChannelMessages.length, 'matching channel messages');
 
     // Sort by date (newest first) and take top 5
     allChannelMessages.sort((a, b) => {
@@ -206,15 +193,12 @@ export class SearchAutocompleteService {
 
     // Search in direct messages
     const directMessagesObj = this.directMessageStore.messages();
-    console.log('searchMessages - directMessagesObj:', Object.keys(directMessagesObj).length, 'conversations');
     const allDirectMessages: any[] = [];
 
     // Flatten all direct messages with dates
     Object.entries(directMessagesObj).forEach(([conversationId, messages]) => {
-      console.log(`Conversation ${conversationId} has ${messages.length} messages`);
       messages.forEach((msg: any) => {
         if (msg.content?.toLowerCase().includes(term)) {
-          console.log('Found matching DM:', msg.content);
           allDirectMessages.push({
             ...msg,
             conversationId,
@@ -223,8 +207,6 @@ export class SearchAutocompleteService {
         }
       });
     });
-
-    console.log('searchMessages - found', allDirectMessages.length, 'matching DMs');
 
     // Sort by date (newest first) and take top 5
     allDirectMessages.sort((a, b) => {
@@ -260,8 +242,6 @@ export class SearchAutocompleteService {
 
     // Sort all results by date (newest first) and take top 5
     results.sort((a, b) => b.date.getTime() - a.date.getTime());
-
-    console.log('searchMessages - total results:', results.length);
 
     return results.slice(0, 5).map(r => r.result);
   });

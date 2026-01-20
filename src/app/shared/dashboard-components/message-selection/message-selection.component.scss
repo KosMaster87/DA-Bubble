@@ -25,18 +25,23 @@
   &__content {
     position: relative;
     background-color: var(--container-bg, #fff);
-    border-radius: 1.5rem;
-    width: 400px;
-    max-width: 90vw;
+    border-radius: 0 1.5rem 1.5rem 1.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 220px;
+    min-width: 250px;
+    width: max-content;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     cursor: default;
   }
 
   &__body {
-    max-height: 300px;
+    flex: 1;
     overflow-y: auto;
-    padding: var(--space-3);
+    padding: var(--space-2);
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
@@ -44,7 +49,7 @@
   }
 
   &__empty {
-    padding: 2rem 1rem;
+    padding: 1rem;
     text-align: center;
     color: var(--text-secondary, #999);
     font-size: 0.875rem;

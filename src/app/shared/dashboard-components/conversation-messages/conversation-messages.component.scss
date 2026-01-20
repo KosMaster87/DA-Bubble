@@ -67,6 +67,11 @@
       }
     }
 
+    // Highlight effect when scrolled to from search
+    &.highlight {
+      animation: highlightPulse 2s ease-in-out;
+    }
+
     &--own {
       .conversation-messages__reaction-bar {
         left: var(--space-10);
@@ -273,5 +278,15 @@
       font-size: 0.6875rem;
       padding-top: 0.1rem;
     }
+  }
+}
+
+// Keyframe animation for highlight effect
+@keyframes highlightPulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(68, 75, 199, 0.15);
   }
 }

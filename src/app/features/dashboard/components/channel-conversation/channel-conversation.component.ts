@@ -15,6 +15,8 @@ import {
   untracked,
 } from '@angular/core';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
+import { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 import {
   ConversationMessagesComponent,
   type Message,
@@ -156,7 +158,7 @@ export class ChannelConversationComponent {
 
   protected isCurrentUserChannelOwner = this.channelData.isCurrentUserOwner(this.channelId);
   protected isSelectedUserChannelOwner = this.conversationState.getIsSelectedUserChannelOwner(
-    this.channel
+    this.channel,
   );
 
   /**
@@ -168,9 +170,7 @@ export class ChannelConversationComponent {
     const channelData = this.currentChannelData() || this.channel();
     const isPublic = !channelData.isPrivate;
     const channelName = channelData.name;
-    const isSpecialChannel =
-      channelName === 'DABubble-welcome' ||
-      channelName === "Let's Bubble";
+    const isSpecialChannel = channelName === 'DABubble-welcome' || channelName === "Let's Bubble";
 
     return isPublic && !isSpecialChannel;
   });
@@ -192,6 +192,19 @@ export class ChannelConversationComponent {
   });
 
   /**
+   * Public channels formatted for message-box channel mentions
+   */
+  protected channelListItems = computed<ChannelListItem[]>(() => {
+    return this.channelStore
+      .getPublicChannels()
+      .filter((ch) => ch.id !== this.channel().id) // Exclude current channel
+      .map((ch) => ({
+        id: ch.id,
+        name: ch.name,
+      }));
+  });
+
+  /**
    * Available users that are NOT yet members of this channel
    */
   protected availableUsers = this.channelData.getAvailableUsers(this.channelId);
@@ -201,6 +214,29 @@ export class ChannelConversationComponent {
   protected messages = this.conversationState.getMessages(this.channel);
   protected hasMoreMessages = this.conversationState.getHasMoreMessages(this.channel);
   protected loadingOlderMessages = this.conversationState.getLoadingOlderMessages(this.channel);
+
+  /**
+   * Messages formatted for search in MessageBox
+   */
+  protected searchableMessages = computed<MessageSearchItem[]>(() => {
+    const channelId = this.channel().id;
+    const channelName = this.channel().name;
+
+    return this.messages()
+      .map((msg) => ({
+        id: `${channelId}_${msg.id}`,
+        displayName: `#${channelName}`,
+        description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
+        type: 'channel' as const,
+      }))
+      .sort((a, b) => {
+        // Sort by timestamp descending (newest first)
+        const msgA = this.messages().find((m) => m.id === a.id.split('_')[1]);
+        const msgB = this.messages().find((m) => m.id === b.id.split('_')[1]);
+        if (!msgA || !msgB) return 0;
+        return msgB.timestamp.getTime() - msgA.timestamp.getTime();
+      });
+  });
 
   /**
    * Load older messages for pagination
@@ -221,10 +257,29 @@ export class ChannelConversationComponent {
   private sendChannelMessage = async (
     channelId: string,
     content: string,
-    userId: string
+    userId: string,
   ): Promise<void> => {
     await this.channelMessageInteraction.sendMessage(channelId, content, userId);
     this.unreadService.markAsRead(channelId);
+  };
+
+  /**
+   * Scroll to a specific message
+   */
+  scrollToMessage = (messageId: string): void => {
+    // Extract the actual message ID from the format "channelId_messageId"
+    const actualMessageId = messageId.split('_')[1];
+
+    // Small delay to ensure DOM is updated
+    setTimeout(() => {
+      const messageElement = document.querySelector(`[data-message-id="${actualMessageId}"]`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Optional: Add highlight effect
+        messageElement.classList.add('highlight');
+        setTimeout(() => messageElement.classList.remove('highlight'), 2000);
+      }
+    }, 100);
   };
 
   protected messagesGroupedByDate = this.conversationState.getMessagesGroupedByDate(this.channel);
@@ -239,7 +294,7 @@ export class ChannelConversationComponent {
       channelId,
       messageId,
       emojiId,
-      currentUserId
+      currentUserId,
     );
   };
 
@@ -253,7 +308,7 @@ export class ChannelConversationComponent {
     await this.handlers.handleChannelAccepted(
       channelId,
       () => this.isJoiningChannel.set(true),
-      () => this.isJoiningChannel.set(false)
+      () => this.isJoiningChannel.set(false),
     );
   };
 
@@ -308,7 +363,7 @@ export class ChannelConversationComponent {
     const deleted = await this.handlers.handleDeleteChannel(
       channelData.id,
       currentUserId,
-      channelData.name
+      channelData.name,
     );
     if (deleted) this.channelLeft.emit();
   };

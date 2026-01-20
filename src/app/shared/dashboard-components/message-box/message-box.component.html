@@ -2,8 +2,9 @@
   <div class="message-box__input-wrapper">
     <textarea
       class="message-box__input"
-      [(ngModel)]="message"
-      placeholder="Type a message..."
+      [ngModel]="message()"
+      (ngModelChange)="message.set($event); onMessageInput()"
+      placeholder="Type a message... (#channel, @user, $search)"
       rows="1"
       (keydown.enter)="$event.preventDefault(); sendMessage()"
     ></textarea>
@@ -57,12 +58,35 @@
           />
         }
       </div>
+
+      <!-- Channel Selection Popup (# prefix) -->
+      @if (showChannelSelection()) {
+        <div class="message-box__channel-search-wrapper">
+          <app-channel-selection
+            [channels]="filteredChannels()"
+            [searchValue]="searchTerm()"
+            (channelSelected)="onChannelSelected($event)"
+            (closed)="onChannelSelectionClosed()"
+          />
+        </div>
+      }
+
+      <!-- Message Search Popup ($ prefix) -->
+      @if (showMessageSearch()) {
+        <div class="message-box__message-search-wrapper">
+          <app-message-selection
+            [messages]="filteredMessages()"
+            (messageSelected)="onMessageResultSelected($event)"
+            (closed)="onMessageSearchClosed()"
+          />
+        </div>
+      }
     </div>
 
     <button
       class="message-box__send-btn"
       (click)="sendMessage()"
-      [disabled]="!message.trim()"
+      [disabled]="!message().trim()"
       [attr.aria-label]="'Send message'"
     >
       <img src="/img/icon/chat/send-default.svg" alt="" class="message-box__send-icon" />

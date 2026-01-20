@@ -340,6 +340,7 @@
   </div>
 
   <!-- Floating New Message Button (Mobile) -->
+  @if (!workspaceSidebarService.isCreateChannelOpen() && !workspaceSidebarService.isAddMemberAfterChannelOpen()) {
   <button
     class="workspace-sidebar__floating-btn"
     [class.workspace-sidebar__floating-btn--active]="isNewMessageActive()"
@@ -352,6 +353,7 @@
       class="workspace-sidebar__floating-btn-icon"
     />
   </button>
+  }
 
   <!-- Create Channel Popup -->
   <app-create-channel

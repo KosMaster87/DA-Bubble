@@ -15,6 +15,7 @@
     class="conversation-messages__message-wrapper"
     [class.conversation-messages__message-wrapper--own]="message.isOwnMessage"
     [class.conversation-messages__message-wrapper--other]="!message.isOwnMessage"
+    [attr.data-message-id]="message.id"
   >
     <!-- Reaction Bar -->
     <div class="conversation-messages__reaction-bar">

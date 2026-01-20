@@ -8,7 +8,7 @@
       <input
         type="text"
         class="chat-new-msg__search-input"
-        placeholder="#channel, @user, $message"
+        placeholder="#channel, @user"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event); onSearch()"
       />
@@ -32,15 +32,6 @@
           (closed)="onDropdownClose()"
         />
       }
-
-      <!-- Message Selection Popup ($ prefix) -->
-      @if (showMessageSelection()) {
-        <app-message-selection
-          [messages]="messageResults()"
-          (messageSelected)="onMessageResultSelected($event)"
-          (closed)="onDropdownClose()"
-        />
-      }
     </div>
   </div>
 
@@ -51,6 +42,6 @@
   </div>
 
   <div class="chat-new-msg__footer">
-    <app-message-box [users]="allUsers()" (messageSent)="onMessageSent($event)" />
+    <app-message-box [users]="allUsers()" [channels]="channelListItems()" (messageSent)="onMessageSent($event)" />
   </div>
 </div>
