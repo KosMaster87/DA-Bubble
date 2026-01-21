@@ -58,10 +58,8 @@ export const ChannelMemberStore = signalStore(
     const channelsCollection = collection(firestore, 'channels');
 
     return {
-      // === ENTRY POINT METHODS ===
-
       /**
-       * Entry point: Add member to channel
+       * Add member to channel
        * @async
        * @function addMember
        * @param {string} channelId - Channel ID
@@ -69,85 +67,10 @@ export const ChannelMemberStore = signalStore(
        * @returns {Promise<void>}
        */
       async addMember(channelId: string, userId: string) {
-        await this.performAddMember(channelId, userId);
-      },
-
-      /**
-       * Entry point: Remove member from channel
-       * @async
-       * @function removeMember
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to remove
-       * @returns {Promise<void>}
-       */
-      async removeMember(channelId: string, userId: string) {
-        await this.performRemoveMember(channelId, userId);
-      },
-
-      /**
-       * Entry point: Add admin to channel
-       * @async
-       * @function addAdmin
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to promote to admin
-       * @returns {Promise<void>}
-       */
-      async addAdmin(channelId: string, userId: string) {
-        await this.performAddAdmin(channelId, userId);
-      },
-
-      /**
-       * Entry point: Remove admin from channel
-       * @async
-       * @function removeAdmin
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to demote from admin
-       * @returns {Promise<void>}
-       */
-      async removeAdmin(channelId: string, userId: string) {
-        await this.performRemoveAdmin(channelId, userId);
-      },
-
-      /**
-       * Entry point: Check if user is member of channel
-       * @async
-       * @function isUserMember
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to check
-       * @returns {Promise<boolean>} True if user is member
-       */
-      async isUserMember(channelId: string, userId: string): Promise<boolean> {
-        return await this.performCheckMembership(channelId, userId);
-      },
-
-      /**
-       * Entry point: Check if user is admin of channel
-       * @async
-       * @function isUserAdmin
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to check
-       * @returns {Promise<boolean>} True if user is admin
-       */
-      async isUserAdmin(channelId: string, userId: string): Promise<boolean> {
-        return await this.performCheckAdmin(channelId, userId);
-      },
-
-      // === IMPLEMENTATION METHODS ===
-
-      /**
-       * Implementation: Add member to channel in Firestore
-       * @async
-       * @function performAddMember
-       * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to add
-       * @returns {Promise<void>}
-       */
-      async performAddMember(channelId: string, userId: string) {
         patchState(store, { isLoading: true, error: null });
         try {
           const channel = await this.getChannelById(channelId);
-          const updatedMembers = [...channel.members, userId];
-          await this.updateChannelMembers(channelId, updatedMembers);
+          await this.updateChannelMembers(channelId, [...channel.members, userId]);
           patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to add member');
@@ -155,19 +78,18 @@ export const ChannelMemberStore = signalStore(
       },
 
       /**
-       * Implementation: Remove member from channel in Firestore
+       * Remove member from channel
        * @async
-       * @function performRemoveMember
+       * @function removeMember
        * @param {string} channelId - Channel ID
        * @param {string} userId - User ID to remove
        * @returns {Promise<void>}
        */
-      async performRemoveMember(channelId: string, userId: string) {
+      async removeMember(channelId: string, userId: string) {
         patchState(store, { isLoading: true, error: null });
         try {
           const channel = await this.getChannelById(channelId);
-          const updatedMembers = channel.members.filter((id) => id !== userId);
-          await this.updateChannelMembers(channelId, updatedMembers);
+          await this.updateChannelMembers(channelId, channel.members.filter((id) => id !== userId));
           patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to remove member');
@@ -175,19 +97,18 @@ export const ChannelMemberStore = signalStore(
       },
 
       /**
-       * Implementation: Add admin to channel in Firestore
+       * Add admin to channel
        * @async
-       * @function performAddAdmin
+       * @function addAdmin
        * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to promote
+       * @param {string} userId - User ID to promote to admin
        * @returns {Promise<void>}
        */
-      async performAddAdmin(channelId: string, userId: string) {
+      async addAdmin(channelId: string, userId: string) {
         patchState(store, { isLoading: true, error: null });
         try {
           const channel = await this.getChannelById(channelId);
-          const updatedAdmins = [...channel.admins, userId];
-          await this.updateChannelAdmins(channelId, updatedAdmins);
+          await this.updateChannelAdmins(channelId, [...channel.admins, userId]);
           patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to add admin');
@@ -195,19 +116,18 @@ export const ChannelMemberStore = signalStore(
       },
 
       /**
-       * Implementation: Remove admin from channel in Firestore
+       * Remove admin from channel
        * @async
-       * @function performRemoveAdmin
+       * @function removeAdmin
        * @param {string} channelId - Channel ID
-       * @param {string} userId - User ID to demote
+       * @param {string} userId - User ID to demote from admin
        * @returns {Promise<void>}
        */
-      async performRemoveAdmin(channelId: string, userId: string) {
+      async removeAdmin(channelId: string, userId: string) {
         patchState(store, { isLoading: true, error: null });
         try {
           const channel = await this.getChannelById(channelId);
-          const updatedAdmins = channel.admins.filter((id) => id !== userId);
-          await this.updateChannelAdmins(channelId, updatedAdmins);
+          await this.updateChannelAdmins(channelId, channel.admins.filter((id) => id !== userId));
           patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to remove admin');
@@ -215,14 +135,14 @@ export const ChannelMemberStore = signalStore(
       },
 
       /**
-       * Implementation: Check if user is member of channel
+       * Check if user is member of channel
        * @async
-       * @function performCheckMembership
+       * @function isUserMember
        * @param {string} channelId - Channel ID
        * @param {string} userId - User ID to check
        * @returns {Promise<boolean>} True if user is member
        */
-      async performCheckMembership(channelId: string, userId: string): Promise<boolean> {
+      async isUserMember(channelId: string, userId: string): Promise<boolean> {
         try {
           const channel = await this.getChannelById(channelId);
           return channel.members.includes(userId);
@@ -233,14 +153,14 @@ export const ChannelMemberStore = signalStore(
       },
 
       /**
-       * Implementation: Check if user is admin of channel
+       * Check if user is admin of channel
        * @async
-       * @function performCheckAdmin
+       * @function isUserAdmin
        * @param {string} channelId - Channel ID
        * @param {string} userId - User ID to check
        * @returns {Promise<boolean>} True if user is admin
        */
-      async performCheckAdmin(channelId: string, userId: string): Promise<boolean> {
+      async isUserAdmin(channelId: string, userId: string): Promise<boolean> {
         try {
           const channel = await this.getChannelById(channelId);
           return channel.admins.includes(userId);
@@ -306,42 +226,19 @@ export const ChannelMemberStore = signalStore(
         patchState(store, { error: errorMessage, isLoading: false });
       },
 
-      // === STATE MANAGEMENT HELPERS ===
+      // === STATE MANAGEMENT ===
 
-      /**
-       * Set active channel ID
-       * @function setActiveChannel
-       * @param {string | null} channelId - Channel ID or null
-       */
-      setActiveChannel(channelId: string | null) {
-        patchState(store, { activeChannelId: channelId });
-      },
+      /** Set active channel ID @function setActiveChannel @param {string | null} channelId */
+      setActiveChannel: (channelId: string | null) => patchState(store, { activeChannelId: channelId }),
 
-      /**
-       * Set loading state
-       * @function setLoading
-       * @param {boolean} isLoading - Loading state
-       */
-      setLoading(isLoading: boolean) {
-        patchState(store, { isLoading });
-      },
+      /** Set loading state @function setLoading @param {boolean} isLoading */
+      setLoading: (isLoading: boolean) => patchState(store, { isLoading }),
 
-      /**
-       * Set error message
-       * @function setError
-       * @param {string | null} error - Error message or null to clear
-       */
-      setError(error: string | null) {
-        patchState(store, { error });
-      },
+      /** Set error message @function setError @param {string | null} error */
+      setError: (error: string | null) => patchState(store, { error }),
 
-      /**
-       * Clear error message
-       * @function clearError
-       */
-      clearError() {
-        patchState(store, { error: null });
-      },
+      /** Clear error message @function clearError */
+      clearError: () => patchState(store, { error: null }),
     };
   })
 );

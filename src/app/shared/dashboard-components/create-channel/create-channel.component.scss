@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .create-channel {
   position: fixed;
@@ -6,6 +6,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: var(--z-modal);
   @include mix.flex(row, center, center);
 
@@ -28,6 +29,15 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-out;
     z-index: 1;
+
+    @media (max-width: 767px) {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+    }
   }
 
   @keyframes fadeIn {
@@ -44,6 +54,15 @@
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+    }
   }
 
   &__title {
@@ -51,6 +70,14 @@
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
+
+    @media (max-width: 767px) {
+      font-size: 1.5rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.25rem;
+    }
   }
 
   &__close-btn {
@@ -84,6 +111,19 @@
     @include mix.flex(column, flex-start, stretch);
     gap: var(--space-6);
     padding: var(--space-6);
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+      gap: var(--space-4);
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+      gap: var(--space-3);
+    }
   }
 
   &__info {
@@ -91,6 +131,10 @@
     line-height: 1.5;
     color: var(--text-primary);
     margin: 0;
+
+    @media (max-width: 480px) {
+      font-size: 0.9375rem;
+    }
   }
 
   &__field {
@@ -118,5 +162,14 @@
   &__footer {
     @include mix.flex(row, flex-end, center);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+    }
   }
 }

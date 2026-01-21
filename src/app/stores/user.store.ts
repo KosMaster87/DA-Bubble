@@ -1,39 +1,13 @@
 /**
  * @fileoverview User Store for DABubble Application
- * @description NgRx SignalStore for managing user state with Firestore integration
+ * @description NgRx SignalStore for managing user state
  * @module UserStore
  */
 
 import { computed, inject } from '@angular/core';
 import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import {
-  Firestore,
-  collection,
-  doc,
-  updateDoc,
-  getDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-} from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
-
-/**
- * Normalize Google profile photo URL to a shorter, stable format
- * @param photoURL - The original photo URL from Google
- * @returns Normalized photo URL or undefined
- */
-const normalizeGooglePhotoURL = (photoURL: string | null | undefined): string | undefined => {
-  if (!photoURL) return undefined;
-
-  if (photoURL.includes('googleusercontent.com')) {
-    const baseUrl = photoURL.split('=')[0].split('?')[0];
-    return `${baseUrl}=s96-c`;
-  }
-
-  return photoURL;
-};
+import { UserService } from '@core/services/user/user.service';
 
 /**
  * User management state interface
@@ -73,108 +47,23 @@ export const UserStore = signalStore(
     ),
   })),
   withMethods((store) => {
-    const firestore = inject(Firestore);
-    const usersCollection = collection(firestore, 'users');
+    const userService = inject(UserService);
     let unsubscribe: (() => void) | null = null;
 
     return {
-      // === ENTRY POINT METHODS ===
+      // === PUBLIC METHODS ===
 
       /**
-       * Entry point: Load all users from Firestore
-       * @async
-       * @function loadUsers
-       * @returns {Promise<void>}
+       * Load all users with real-time updates
        */
       async loadUsers() {
-        await this.performLoad();
-      },
-
-      /**
-       * Entry point: Create new user
-       * @async
-       * @function createUser
-       * @param {User} userData - User data to create
-       * @returns {Promise<void>}
-       */
-      async createUser(userData: User) {
-        await this.performCreate(userData);
-      },
-
-      /**
-       * Entry point: Update user data
-       * @async
-       * @function updateUserData
-       * @param {string} uid - User ID to update
-       * @param {Partial<User>} updates - Data to update
-       * @returns {Promise<void>}
-       */
-      async updateUserData(uid: string, updates: Partial<User>) {
-        await this.performUpdate(uid, updates);
-      },
-
-      /**
-       * Entry point: Delete user
-       * @async
-       * @function deleteUser
-       * @param {string} uid - User ID to delete
-       * @returns {Promise<void>}
-       */
-      async deleteUser(uid: string) {
-        await this.performDelete(uid);
-      },
-
-      /**
-       * Entry point: Fetch user by ID from Firestore
-       * @async
-       * @function fetchUserById
-       * @param {string} uid - User ID to fetch
-       * @returns {Promise<User | null>} User data or null if not found
-       */
-      async fetchUserById(uid: string): Promise<User | null> {
-        return await this.performGetById(uid);
-      },
-
-      // === IMPLEMENTATION METHODS ===
-
-      /**
-       * Implementation: Load all users from Firestore with real-time updates
-       * @async
-       * @function performLoad
-       * @returns {Promise<void>}
-       */
-      async performLoad() {
-        // Unsubscribe from previous listener if exists
-        if (unsubscribe) {
-          unsubscribe();
-          unsubscribe = null;
-        }
-
+        this.cleanup();
         patchState(store, { isLoading: true });
-        try {
-          // Set up real-time listener for users
-          const q = query(usersCollection, orderBy('createdAt', 'desc'));
 
-          unsubscribe = onSnapshot(
-            q,
-            (snapshot) => {
-              const users = this.mapUsersFromSnapshot(snapshot);
-              patchState(store, { users, isLoading: false, error: null });
-            },
-            (error: any) => {
-              // Auto-cleanup on permission error (user logged out)
-              if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-                console.log('🔓 Permission error detected - cleaning up user subscription');
-                if (unsubscribe) {
-                  unsubscribe();
-                  unsubscribe = null;
-                }
-                patchState(store, initialState);
-                return;
-              }
-              console.error('Error in users listener:', error);
-              this.handleError(error, 'Failed to load users');
-            }
+        try {
+          unsubscribe = userService.setupUsersListener(
+            (users) => this.handleUsersSuccess(users),
+            (error) => this.handleUsersError(error)
           );
         } catch (error) {
           this.handleError(error, 'Failed to load users');
@@ -182,65 +71,36 @@ export const UserStore = signalStore(
       },
 
       /**
-       * Cleanup when store is destroyed
+       * Create new user
        */
-      cleanup(): void {
-        if (unsubscribe) {
-          unsubscribe();
-          unsubscribe = null;
-        }
-        patchState(store, initialState);
-      },
-
-      /**
-       * Implementation: Create new user in Firestore
-       * @async
-       * @function performCreate
-       * @param {User} userData - User data to create
-       * @returns {Promise<void>}
-       */
-      async performCreate(userData: User) {
+      async createUser(userData: User) {
         patchState(store, { isLoading: true, error: null });
         try {
-          const userDoc = doc(usersCollection, userData.uid);
-          const userWithTimestamps = this.addTimestamps(userData);
-          await updateDoc(userDoc, { ...userWithTimestamps });
-          patchState(store, { users: [...store.users(), userWithTimestamps], isLoading: false });
+          await userService.createUser(userData);
+          patchState(store, { isLoading: false });
         } catch (error) {
           this.handleError(error, 'Failed to create user');
         }
       },
 
       /**
-       * Implementation: Update user data in Firestore
-       * @async
-       * @function performUpdate
-       * @param {string} uid - User ID to update
-       * @param {Partial<User>} updates - Data to update
-       * @returns {Promise<void>}
+       * Update user data
        */
-      async performUpdate(uid: string, updates: Partial<User>) {
+      async updateUserData(uid: string, updates: Partial<User>) {
         try {
-          const userDoc = doc(usersCollection, uid);
-          const updatesWithTimestamp = { ...updates, updatedAt: new Date() };
-          await updateDoc(userDoc, updatesWithTimestamp);
-          this.updateUserInState(uid, updatesWithTimestamp);
+          await userService.updateUser(uid, updates);
+          this.updateUserInState(uid, { ...updates, updatedAt: new Date() });
         } catch (error) {
           this.handleError(error, 'Failed to update user');
         }
       },
 
       /**
-       * Implementation: Delete user from Firestore
-       * @async
-       * @function performDelete
-       * @param {string} uid - User ID to delete
-       * @returns {Promise<void>}
+       * Delete user
        */
-      async performDelete(uid: string) {
+      async deleteUser(uid: string) {
         try {
-          const userDoc = doc(usersCollection, uid);
-          await deleteDoc(userDoc);
+          await userService.deleteUser(uid);
           this.removeUserFromState(uid);
         } catch (error) {
           this.handleError(error, 'Failed to delete user');
@@ -248,58 +108,49 @@ export const UserStore = signalStore(
       },
 
       /**
-       * Implementation: Get user by ID from Firestore
-       * @async
-       * @function performGetById
-       * @param {string} uid - User ID to get
-       * @returns {Promise<User | null>} User data or null if not found
+       * Fetch user by ID from Firestore
        */
-      async performGetById(uid: string): Promise<User | null> {
+      async fetchUserById(uid: string): Promise<User | null> {
         try {
-          const userDoc = doc(usersCollection, uid);
-          const snapshot = await getDoc(userDoc);
-          return snapshot.exists() ? ({ uid, ...snapshot.data() } as User) : null;
+          return await userService.getUserById(uid);
         } catch (error) {
           this.handleError(error, 'Failed to get user');
           return null;
         }
       },
 
-      // === HELPER FUNCTIONS ===
+      /**
+       * Cleanup when store is destroyed
+       */
+      cleanup() {
+        if (unsubscribe) {
+          unsubscribe();
+          unsubscribe = null;
+        }
+      },
+
+      // === PRIVATE HELPER METHODS ===
 
       /**
-       * Map Firestore snapshot to User array
-       * @function mapUsersFromSnapshot
-       * @param {any} snapshot - Firestore query snapshot
-       * @returns {User[]} Array of user objects
+       * Handle successful users load
        */
-      mapUsersFromSnapshot(snapshot: any): User[] {
-        return snapshot.docs.map((doc: any) => {
-          const data = doc.data();
-          const originalPhotoURL = data.photoURL;
-          const normalizedPhotoURL = normalizeGooglePhotoURL(data.photoURL);
-
-          return {
-            uid: doc.id,
-            ...data,
-            photoURL: normalizedPhotoURL,
-          } as User;
-        });
+      handleUsersSuccess(users: User[]) {
+        patchState(store, { users, isLoading: false, error: null });
       },
 
       /**
-       * Add timestamps to user data
-       * @function addTimestamps
-       * @param {User} userData - User data to add timestamps to
-       * @returns {User} User data with timestamps
+       * Handle users listener error
        */
-      addTimestamps(userData: User): User {
-        const now = new Date();
-        return {
-          ...userData,
-          createdAt: userData.createdAt || now,
-          updatedAt: now,
-        };
+      handleUsersError(error: any) {
+        if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+          console.log('🔓 Permission error - cleaning up user subscription');
+          this.cleanup();
+          patchState(store, initialState);
+          return;
+        }
+
+        console.error('Error in users listener:', error);
+        this.handleError(error, 'Failed to load users');
       },
 
       /**

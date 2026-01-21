@@ -7,14 +7,15 @@
 export interface Message {
   id: string;
   content: string;
-  authorId: string; // User UID
-  channelId?: string; // For channel messages
-  recipientId?: string; // For direct messages
+  authorId: string;
+  channelId?: string;
+  recipientId?: string;
   type: MessageType;
   attachments: MessageAttachment[];
   reactions: MessageReaction[];
-  threadCount?: number; // Number of thread replies
-  lastThreadTimestamp?: Date; // Timestamp of last thread reply
+  mentionedUserIds?: string[];
+  threadCount?: number;
+  lastThreadTimestamp?: Date;
   isEdited: boolean;
   editedAt?: Date;
   createdAt: Date;
@@ -39,7 +40,7 @@ export interface MessageAttachment {
 
 export interface MessageReaction {
   emoji: string;
-  users: string[]; // User UIDs who reacted
+  users: string[];
   count: number;
 }
 

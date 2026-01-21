@@ -12,9 +12,6 @@ import { ThreadStore } from '@stores/thread.store';
 import { AuthStore } from '@stores/auth';
 import { ConversationLoaderService } from '@core/services/conversation-loader/conversation-loader.service';
 
-/**
- * Service for managing message interactions
- */
 @Injectable({
   providedIn: 'root',
 })
@@ -31,9 +28,9 @@ export class MessageInteractionService {
 
   /**
    * Send message to channel
-   * @param channelId - Channel ID
-   * @param content - Message content
-   * @returns Promise that resolves when message is sent
+   * @param {string} channelId - Channel ID
+   * @param {string} content - Message content
+   * @returns {Promise<void>} Promise that resolves when message is sent
    */
   async sendChannelMessage(channelId: string, content: string): Promise<void> {
     const currentUser = this.authStore.user();
@@ -42,16 +39,15 @@ export class MessageInteractionService {
     }
 
     await this.channelMessageStore.sendMessage(channelId, content.trim(), currentUser.uid);
-
-    // Mark as read immediately after sending
     this.conversationLoader.markAsReadImmediate(channelId);
   }
 
   /**
    * Edit channel message
-   * @param channelId - Channel ID
-   * @param messageId - Message ID
-   * @param newContent - New message content
+   * @param {string} channelId - Channel ID
+   * @param {string} messageId - Message ID
+   * @param {string} newContent - New message content
+   * @returns {Promise<void>} Promise that resolves when message is edited
    */
   async editChannelMessage(
     channelId: string,
@@ -63,8 +59,9 @@ export class MessageInteractionService {
 
   /**
    * Delete channel message
-   * @param channelId - Channel ID
-   * @param messageId - Message ID
+   * @param {string} channelId - Channel ID
+   * @param {string} messageId - Message ID
+   * @returns {Promise<void>} Promise that resolves when message is deleted
    */
   async deleteChannelMessage(channelId: string, messageId: string): Promise<void> {
     await this.channelMessageStore.deleteMessage(channelId, messageId);
@@ -72,9 +69,10 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on channel message
-   * @param channelId - Channel ID
-   * @param messageId - Message ID
-   * @param emojiId - Emoji ID
+   * @param {string} channelId - Channel ID
+   * @param {string} messageId - Message ID
+   * @param {string} emojiId - Emoji ID
+   * @returns {Promise<void>} Promise that resolves when reaction is toggled
    */
   async toggleChannelMessageReaction(
     channelId: string,
@@ -95,9 +93,9 @@ export class MessageInteractionService {
 
   /**
    * Send direct message
-   * @param conversationId - Conversation ID
-   * @param content - Message content
-   * @returns Promise that resolves when message is sent
+   * @param {string} conversationId - Conversation ID
+   * @param {string} content - Message content
+   * @returns {Promise<void>} Promise that resolves when message is sent
    */
   async sendDirectMessage(conversationId: string, content: string): Promise<void> {
     const currentUser = this.authStore.user();
@@ -106,16 +104,15 @@ export class MessageInteractionService {
     }
 
     await this.directMessageStore.sendMessage(conversationId, content.trim(), currentUser.uid);
-
-    // Mark as read immediately after sending
     this.conversationLoader.markAsReadImmediate(conversationId);
   }
 
   /**
    * Edit direct message
-   * @param conversationId - Conversation ID
-   * @param messageId - Message ID
-   * @param newContent - New message content
+   * @param {string} conversationId - Conversation ID
+   * @param {string} messageId - Message ID
+   * @param {string} newContent - New message content
+   * @returns {Promise<void>} Promise that resolves when message is edited
    */
   async editDirectMessage(
     conversationId: string,
@@ -127,8 +124,9 @@ export class MessageInteractionService {
 
   /**
    * Delete direct message
-   * @param conversationId - Conversation ID
-   * @param messageId - Message ID
+   * @param {string} conversationId - Conversation ID
+   * @param {string} messageId - Message ID
+   * @returns {Promise<void>} Promise that resolves when message is deleted
    */
   async deleteDirectMessage(conversationId: string, messageId: string): Promise<void> {
     await this.directMessageStore.deleteMessage(conversationId, messageId);
@@ -136,9 +134,10 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on direct message
-   * @param conversationId - Conversation ID
-   * @param messageId - Message ID
-   * @param emojiId - Emoji ID
+   * @param {string} conversationId - Conversation ID
+   * @param {string} messageId - Message ID
+   * @param {string} emojiId - Emoji ID
+   * @returns {Promise<void>} Promise that resolves when reaction is toggled
    */
   async toggleDirectMessageReaction(
     conversationId: string,
@@ -164,10 +163,11 @@ export class MessageInteractionService {
 
   /**
    * Send thread reply
-   * @param channelId - Channel or DM ID
-   * @param messageId - Parent message ID
-   * @param content - Reply content
-   * @param isDirectMessage - Whether this is a DM thread
+   * @param {string} channelId - Channel or DM ID
+   * @param {string} messageId - Parent message ID
+   * @param {string} content - Reply content
+   * @param {boolean} [isDirectMessage] - Whether this is a DM thread
+   * @returns {Promise<void>} Promise that resolves when reply is sent
    */
   async sendThreadReply(
     channelId: string,
@@ -187,18 +187,17 @@ export class MessageInteractionService {
       currentUser.uid,
       isDirectMessage
     );
-
-    // Mark thread as read immediately after sending
     this.conversationLoader.markAsReadImmediate(messageId);
   }
 
   /**
    * Edit thread reply
-   * @param channelId - Channel or DM ID
-   * @param messageId - Parent message ID
-   * @param threadId - Thread message ID
-   * @param newContent - New content
-   * @param isDirectMessage - Whether this is a DM thread
+   * @param {string} channelId - Channel or DM ID
+   * @param {string} messageId - Parent message ID
+   * @param {string} threadId - Thread message ID
+   * @param {string} newContent - New content
+   * @param {boolean} [isDirectMessage] - Whether this is a DM thread
+   * @returns {Promise<void>} Promise that resolves when reply is edited
    */
   async editThreadReply(
     channelId: string,
@@ -218,10 +217,11 @@ export class MessageInteractionService {
 
   /**
    * Delete thread reply
-   * @param channelId - Channel or DM ID
-   * @param messageId - Parent message ID
-   * @param threadId - Thread message ID
-   * @param isDirectMessage - Whether this is a DM thread
+   * @param {string} channelId - Channel or DM ID
+   * @param {string} messageId - Parent message ID
+   * @param {string} threadId - Thread message ID
+   * @param {boolean} [isDirectMessage] - Whether this is a DM thread
+   * @returns {Promise<void>} Promise that resolves when reply is deleted
    */
   async deleteThreadReply(
     channelId: string,
@@ -234,11 +234,12 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on thread reply
-   * @param channelId - Channel or DM ID
-   * @param messageId - Parent message ID
-   * @param threadId - Thread message ID
-   * @param emojiId - Emoji ID
-   * @param isDirectMessage - Whether this is a DM thread
+   * @param {string} channelId - Channel or DM ID
+   * @param {string} messageId - Parent message ID
+   * @param {string} threadId - Thread message ID
+   * @param {string} emojiId - Emoji ID
+   * @param {boolean} [isDirectMessage] - Whether this is a DM thread
+   * @returns {Promise<void>} Promise that resolves when reaction is toggled
    */
   async toggleThreadReaction(
     channelId: string,

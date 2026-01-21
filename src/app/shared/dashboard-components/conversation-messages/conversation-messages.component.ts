@@ -18,6 +18,7 @@ import { DatePipe } from '@angular/common';
 import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
 import { MessageEdit } from '../message-edit/message-edit';
 import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
+import { MessageContentComponent } from '../message-content/message-content.component';
 import { DeleteMessageModalComponent } from '../delete-message-modal/delete-message-modal.component';
 import {
   ChatScrollService,
@@ -56,6 +57,7 @@ export interface MessageGroup {
     ReactionBarComponent,
     MessageEdit,
     ReactionCountingComponent,
+    MessageContentComponent,
     DeleteMessageModalComponent,
   ],
   providers: [MessageScrollCoordinatorService, MessageInteractionService, MessageHelperService],
@@ -65,7 +67,7 @@ export interface MessageGroup {
 export class ConversationMessagesComponent implements AfterViewChecked {
   @ViewChild('messagesContainer', { read: ElementRef }) messagesContainer?: ElementRef;
 
-  conversationId = input.required<string>(); // Format: 'channel-{id}', 'thread-{id}', 'dm-{id}'
+  conversationId = input.required<string>();
   messageGroups = input.required<MessageGroup[]>();
   isInThread = input<boolean>(false);
   messageClicked = output<string>();
@@ -76,6 +78,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   threadClicked = output<string>();
   messageEdited = output<{ messageId: string; newContent: string }>();
   messageDeleted = output<string>();
+  mentionClicked = output<string>();
+  channelMentionClicked = output<string>();
 
   private chatScrollService = inject(ChatScrollService);
   private scrollCoordinator = inject(MessageScrollCoordinatorService);
@@ -86,14 +90,17 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   protected editingMessageId = this.interactionService.getEditingMessageId();
   protected deleteConfirmationMessageId = this.interactionService.getDeleteConfirmationMessageId();
 
+  /**
+   * Constructor - initializes component effects
+   */
   constructor() {
     this.setupMessageChangeEffect();
   }
 
   /**
    * Setup effect to track message changes and auto-scroll
-   * @description Monitors message count changes and triggers auto-scroll when appropriate
-   * @returns void
+   * Monitors message count changes and triggers auto-scroll when appropriate
+   * @returns {void}
    */
   private setupMessageChangeEffect = (): void => {
     effect(() => {
@@ -110,11 +117,11 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message count change (initial load or new messages)
-   * @description Determines if this is initial load or new messages and triggers appropriate handling
-   * @param conversationId - Unique identifier for the conversation
-   * @param currentCount - Current total message count
-   * @param autoScrollEnabled - Whether auto-scroll is currently enabled
-   * @returns void
+   * Determines if this is initial load or new messages and triggers appropriate handling
+   * @param {string} conversationId - Unique identifier for the conversation
+   * @param {number} currentCount - Current total message count
+   * @param {boolean} autoScrollEnabled - Whether auto-scroll is currently enabled
+   * @returns {void}
    */
   private handleMessageCountChange = (
     conversationId: string,
@@ -137,7 +144,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Angular lifecycle hook - runs after view is checked
-   * @description Performs pending scroll operations after view updates
+   * Performs pending scroll operations after view updates
+   * @returns {void}
    */
   ngAfterViewChecked(): void {
     if (this.scrollCoordinator.shouldScroll()) {
@@ -148,8 +156,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle scroll event to detect manual scrolling
-   * @description Event handler triggered on container scroll, initiates debounced processing
-   * @returns void
+   * Event handler triggered on container scroll, initiates debounced processing
+   * @returns {void}
    */
   protected onScroll = (): void => {
     if (!this.messagesContainer?.nativeElement) return;
@@ -162,6 +170,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Update read status if scrolled to bottom
+   * @returns {void}
    */
   private updateReadStatus = (): void => {
     const conversationId = this.conversationId();
@@ -173,9 +182,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message click
-   * @description Emits message click event with message ID
-   * @param messageId - Unique identifier of the clicked message
-   * @returns void
+   * Emits message click event with message ID
+   * @param {string} messageId - Unique identifier of the clicked message
+   * @returns {void}
    */
   protected onMessageClick = (messageId: string): void => {
     this.messageClicked.emit(messageId);
@@ -183,10 +192,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle avatar click
-   * @description Emits avatar click event with sender ID and stops event propagation
-   * @param senderId - Unique identifier of the message sender
-   * @param event - DOM click event
-   * @returns void
+   * Emits avatar click event with sender ID and stops event propagation
+   * @param {string} senderId - Unique identifier of the message sender
+   * @param {Event} event - DOM click event
+   * @returns {void}
    */
   protected onAvatarClick = (senderId: string, event: Event): void => {
     event.stopPropagation(); // Prevent message click event from firing
@@ -195,10 +204,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle sender name click
-   * @description Emits sender click event with sender ID and stops event propagation
-   * @param senderId - Unique identifier of the message sender
-   * @param event - DOM click event
-   * @returns void
+   * Emits sender click event with sender ID and stops event propagation
+   * @param {string} senderId - Unique identifier of the message sender
+   * @param {Event} event - DOM click event
+   * @returns {void}
    */
   protected onSenderClick = (senderId: string, event: Event): void => {
     event.stopPropagation(); // Prevent message click event from firing
@@ -207,10 +216,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle reaction click
-   * @description Emits reaction added event with message ID and emoji
-   * @param messageId - Unique identifier of the message
-   * @param emoji - Emoji string to add as reaction
-   * @returns void
+   * Emits reaction added event with message ID and emoji
+   * @param {string} messageId - Unique identifier of the message
+   * @param {string} emoji - Emoji string to add as reaction
+   * @returns {void}
    */
   protected onReactionClick = (messageId: string, emoji: string): void => {
     this.reactionAdded.emit({ messageId, emoji });
@@ -218,26 +227,24 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle reaction bar button click
-   * @description Routes reaction bar clicks to appropriate handlers (thread, add-reaction, or emoji)
-   * @param messageId - Unique identifier of the message
-   * @param type - Type of reaction bar action (comment, add-reaction, or emoji)
-   * @returns void
+   * Routes reaction bar clicks to appropriate handlers (thread, add-reaction, or emoji)
+   * @param {string} messageId - Unique identifier of the message
+   * @param {ReactionType} type - Type of reaction bar action (comment, add-reaction, or emoji)
+   * @returns {void}
    */
   protected onReactionBarClick = (messageId: string, type: ReactionType): void => {
     if (type === 'comment') {
       this.threadClicked.emit(messageId);
-    } else if (type === 'add-reaction') {
-      // Add-reaction button opens picker in ReactionBar, no need to emit
-    } else {
+    } else if (type !== 'add-reaction') {
       this.reactionAdded.emit({ messageId, emoji: type });
     }
   };
 
   /**
    * Handle thread button click
-   * @description Emits thread click event with message ID
-   * @param messageId - Unique identifier of the message to open thread for
-   * @returns void
+   * Emits thread click event with message ID
+   * @param {string} messageId - Unique identifier of the message to open thread for
+   * @returns {void}
    */
   protected onThreadClick = (messageId: string): void => {
     this.threadClicked.emit(messageId);
@@ -245,9 +252,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle edit message request
-   * @description Activates edit mode for the specified message
-   * @param messageId - Unique identifier of the message to edit
-   * @returns void
+   * Activates edit mode for the specified message
+   * @param {string} messageId - Unique identifier of the message to edit
+   * @returns {void}
    */
   protected onEditMessage = (messageId: string): void => {
     this.interactionService.startEdit(messageId);
@@ -255,8 +262,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle cancel edit
-   * @description Deactivates edit mode without saving changes
-   * @returns void
+   * Deactivates edit mode without saving changes
+   * @returns {void}
    */
   protected onCancelEdit = (): void => {
     this.interactionService.cancelEdit();
@@ -264,10 +271,10 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle save edited message
-   * @description Emits message edited event and deactivates edit mode
-   * @param messageId - Unique identifier of the edited message
-   * @param newContent - Updated message content
-   * @returns void
+   * Emits message edited event and deactivates edit mode
+   * @param {string} messageId - Unique identifier of the edited message
+   * @param {string} newContent - Updated message content
+   * @returns {void}
    */
   protected onSaveEdit = (messageId: string, newContent: string): void => {
     this.messageEdited.emit({ messageId, newContent });
@@ -276,9 +283,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete message request
-   * @description Shows delete confirmation modal for the specified message
-   * @param messageId - Unique identifier of the message to delete
-   * @returns void
+   * Shows delete confirmation modal for the specified message
+   * @param {string} messageId - Unique identifier of the message to delete
+   * @returns {void}
    */
   protected onDeleteMessage = (messageId: string): void => {
     this.interactionService.showDeleteConfirmation(messageId);
@@ -286,8 +293,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation cancel
-   * @description Closes delete confirmation modal without deleting
-   * @returns void
+   * Closes delete confirmation modal without deleting
+   * @returns {void}
    */
   protected onCancelDelete = (): void => {
     this.interactionService.cancelDelete();
@@ -295,8 +302,8 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation confirm
-   * @description Emits message deleted event and closes confirmation modal
-   * @returns void
+   * Emits message deleted event and closes confirmation modal
+   * @returns {void}
    */
   protected onConfirmDelete = (): void => {
     const messageId = this.interactionService.getDeleteMessageId();
@@ -308,9 +315,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if message is being edited
-   * @description Determines if the specified message is currently in edit mode
-   * @param messageId - Unique identifier of the message to check
-   * @returns True if message is being edited
+   * Determines if the specified message is currently in edit mode
+   * @param {string} messageId - Unique identifier of the message to check
+   * @returns {boolean} True if message is being edited
    */
   protected isEditing = (messageId: string): boolean => {
     return this.interactionService.isEditing(messageId);
@@ -318,9 +325,9 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle image load error - use fallback avatar
-   * @description Replaces failed avatar image with default fallback image
-   * @param event - DOM error event from image element
-   * @returns void
+   * Replaces failed avatar image with default fallback image
+   * @param {Event} event - DOM error event from image element
+   * @returns {void}
    */
   protected onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;

@@ -89,43 +89,56 @@ export const createSignupMethods = (
       await setDoc(doc(firestore, 'users', credential.user.uid), userDoc);
       console.log('✅ Firestore user document created successfully!');
 
-      // Add user to DABubble-Welcome channel (create if not exists)
-      try {
-        const welcomeChannelQuery = query(
-          collection(firestore, 'channels'),
-          where('name', '==', 'DABubble-welcome')
-        );
-        const welcomeSnapshot = await getDocs(welcomeChannelQuery);
+      // Add user to default channels (DABubble-welcome and Let's Bubble)
+      const defaultChannels = [
+        {
+          name: 'DABubble-welcome',
+          description: 'Welcome to DABubble! General announcements and introductions.',
+        },
+        {
+          name: "Let's Bubble",
+          description: 'Connect with all DABubble users! Share ideas, ask questions, and collaborate.',
+        },
+      ];
 
-        if (!welcomeSnapshot.empty) {
-          // DABubble-Welcome exists - add user as member
-          const welcomeChannel = welcomeSnapshot.docs[0];
-          const channelRef = doc(firestore, 'channels', welcomeChannel.id);
-          await updateDoc(channelRef, {
-            members: arrayUnion(credential.user.uid),
-            updatedAt: new Date(),
-          });
-          console.log('✅ User added to DABubble-Welcome channel');
-        } else {
-          // DABubble-Welcome doesn't exist - create it with this user as creator
-          const welcomeChannelData = {
-            name: 'DABubble-welcome',
-            description: 'Welcome to DABubble! General announcements and introductions.',
-            isPrivate: false,
-            createdBy: credential.user.uid,
-            members: [credential.user.uid],
-            admins: [credential.user.uid],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            lastMessageAt: new Date(),
-            messageCount: 0,
-          };
-          await setDoc(doc(collection(firestore, 'channels')), welcomeChannelData);
-          console.log('✅ DABubble-Welcome channel created with first user as admin');
+      for (const channelConfig of defaultChannels) {
+        try {
+          const channelQuery = query(
+            collection(firestore, 'channels'),
+            where('name', '==', channelConfig.name)
+          );
+          const channelSnapshot = await getDocs(channelQuery);
+
+          if (!channelSnapshot.empty) {
+            // Channel exists - add user as member
+            const channel = channelSnapshot.docs[0];
+            const channelRef = doc(firestore, 'channels', channel.id);
+            await updateDoc(channelRef, {
+              members: arrayUnion(credential.user.uid),
+              updatedAt: new Date(),
+            });
+            console.log(`✅ User added to ${channelConfig.name} channel`);
+          } else {
+            // Channel doesn't exist - create it with this user as creator
+            const channelData = {
+              name: channelConfig.name,
+              description: channelConfig.description,
+              isPrivate: false,
+              createdBy: credential.user.uid,
+              members: [credential.user.uid],
+              admins: [credential.user.uid],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              lastMessageAt: new Date(),
+              messageCount: 0,
+            };
+            await setDoc(doc(collection(firestore, 'channels')), channelData);
+            console.log(`✅ ${channelConfig.name} channel created with first user as admin`);
+          }
+        } catch (channelError) {
+          console.warn(`⚠️ Could not add user to ${channelConfig.name} channel:`, channelError);
+          // Don't fail signup if channel addition fails
         }
-      } catch (channelError) {
-        console.warn('⚠️ Could not add user to DABubble-Welcome channel:', channelError);
-        // Don't fail signup if channel addition fails
       }
 
       // Send verification email

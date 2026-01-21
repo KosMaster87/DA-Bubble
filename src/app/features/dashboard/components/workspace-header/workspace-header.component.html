@@ -69,6 +69,8 @@
         </span>
       </button>
 
+      <!-- Desktop Menu -->
+      @if (!isMobileView()) {
       <app-user-options-menu
         [isVisible]="isOptionsOpen()"
         (profileClicked)="onProfileClick()"
@@ -76,10 +78,22 @@
         (logoutClicked)="logout()"
         (closeClicked)="toggleOptions()"
       />
+      }
 
-      @if (profileUser) {
+      <!-- Mobile Menu -->
+      @if (isMobileView()) {
+      <app-user-options-menu-mobile
+        [isVisible]="isOptionsOpen()"
+        (profileClicked)="onProfileClick()"
+        (mailboxClicked)="onMailboxClick()"
+        (logoutClicked)="logout()"
+        (closeClicked)="isOptionsOpen.set(false)"
+      />
+      }
+
+      @if (profileUser()) {
       <app-profile-view
-        [user]="profileUser"
+        [user]="profileUser()!"
         [isVisible]="isProfileViewOpen()"
         [isOwnProfile]="true"
         [isChannelOwner]="false"
@@ -89,9 +103,9 @@
         (editClicked)="onProfileEdit()"
         (messageClicked)="onProfileMessage()"
       />
-      } @if (editProfileUser) {
+      } @if (editProfileUser()) {
       <app-profile-edit
-        [user]="editProfileUser"
+        [user]="editProfileUser()!"
         [isVisible]="isEditProfileOpen()"
         (closeClicked)="onEditProfileClose()"
         (saveClicked)="onProfileSave($event)"

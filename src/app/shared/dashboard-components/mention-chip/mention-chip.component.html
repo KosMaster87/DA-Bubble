@@ -1,0 +1,16 @@
+<div class="mention-chip" [class.mention-chip--channel]="data().type === 'channel'">
+  @if (data().type === 'user') {
+    <img class="mention-chip__avatar" [src]="data().avatar || '/img/profile/default-avatar.png'" [alt]="data().name" />
+  } @else {
+    <span class="mention-chip__hash">#</span>
+  }
+  <span class="mention-chip__name">{{ data().name }}</span>
+  <button
+    class="mention-chip__remove"
+    (click)="onRemove($event)"
+    type="button"
+    aria-label="Remove"
+  >
+    <img src="/img/icon/window/close-default.svg" alt="Remove" />
+  </button>
+</div>

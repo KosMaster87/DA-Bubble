@@ -57,12 +57,20 @@
       (reactionAdded)="onReactionAdded($event)"
       (messageEdited)="onMessageEdited($event)"
       (messageDeleted)="onMessageDeleted($event)"
+      (mentionClicked)="openProfileView($event)"
+      (channelMentionClicked)="onChannelMentionClick($event)"
     />
   </div>
 
   <!-- Footer with Message Box -->
   <div class="thread__footer">
-    <app-message-box (messageSent)="sendReply($event)" />
+    <app-message-box
+      [users]="threadParticipants()"
+      [channels]="channelListItems()"
+      [messages]="searchableReplies()"
+      (messageSent)="sendReply($event)"
+      (messageSelected)="scrollToMessage($event)"
+    />
   </div>
 
   <!-- Profile View -->
@@ -85,5 +93,16 @@
     (closeClicked)="onEditProfileClose()"
     (saveClicked)="onEditProfileSave($event)"
   />
+  }
+
+  <!-- Channel View -->
+  @if (selectedChannelId()) {
+    <app-channel-view
+      [channelId]="selectedChannelId()!"
+      [isVisible]="isChannelViewOpen()"
+      (closeClicked)="onChannelViewClose()"
+      (joinClicked)="onChannelViewJoin($event)"
+      (navigateClicked)="onChannelViewNavigate($event)"
+    />
   }
 </div>

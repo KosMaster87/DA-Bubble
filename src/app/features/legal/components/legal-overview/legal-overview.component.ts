@@ -4,7 +4,7 @@
  * @module LegalOverviewComponent
  */
 
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 
@@ -26,6 +26,7 @@ export class LegalOverviewComponent {
   private router = inject(Router);
   private authStore = inject(AuthStore);
 
+  isMobileView = input<boolean>(false); // Input from parent to know if mobile
   backRequested = output<void>(); // For mobile back navigation
 
   protected legalLinks: LegalLink[] = [
@@ -68,9 +69,15 @@ export class LegalOverviewComponent {
   }
 
   /**
-   * Navigate back to dashboard
+   * Navigate back to dashboard or sidebar (on mobile)
    */
-  goBack(): void {
-    this.router.navigate(['/dashboard']);
+  goBack() {
+    if (this.isMobileView()) {
+      // On mobile: emit event for parent to handle (back to sidebar)
+      this.backRequested.emit();
+    } else {
+      // On desktop: navigate directly to dashboard
+      this.router.navigate(['/dashboard']);
+    }
   }
 }

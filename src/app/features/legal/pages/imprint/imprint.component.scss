@@ -1,4 +1,4 @@
-@use '../../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .imprint {
   @include mix.flex-center;

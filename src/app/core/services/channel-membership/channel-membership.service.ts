@@ -10,9 +10,6 @@ import { ChannelStore } from '@stores/channel.store';
 import { AuthStore } from '@stores/auth';
 import { InvitationService } from '@core/services/invitation/invitation.service';
 
-/**
- * Service for managing channel membership operations
- */
 @Injectable({
   providedIn: 'root',
 })
@@ -29,11 +26,8 @@ export class ChannelMembershipService {
   joinChannel = async (channelId: string): Promise<void> => {
     const currentUser = this.getCurrentUser();
     const channel = this.getChannelOrThrow(channelId);
-
     const updatedMembers = this.addUserToMembersList(channel.members, currentUser.uid);
     await this.updateChannelMembers(channelId, updatedMembers, currentUser.uid);
-
-    // Small delay to allow Firestore to process the update before listeners react
     await this.delay(150);
   };
 
@@ -80,7 +74,6 @@ export class ChannelMembershipService {
     userId: string
   ): Promise<void> => {
     await this.channelStore.updateChannel(channelId, { members });
-    console.log('✅ User joined channel:', { channelId, userId, memberCount: members.length });
   };
 
   /**
@@ -90,7 +83,6 @@ export class ChannelMembershipService {
    */
   waitForMembershipSync = async (channelId: string, userId: string): Promise<void> => {
     const maxAttempts = 10;
-    console.log('⏳ Waiting for membership sync...', { channelId, userId });
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const synced = await this.checkMembershipSynced(channelId, userId, attempt, maxAttempts);
@@ -100,8 +92,6 @@ export class ChannelMembershipService {
       }
       if (attempt < maxAttempts) await this.delay(300);
     }
-
-    console.warn(`⚠️ Membership sync timeout after ${maxAttempts} attempts`);
   };
 
   /**
@@ -123,16 +113,11 @@ export class ChannelMembershipService {
       const storeUpdated = this.isUserInStoreChannel(channelId, userId);
 
       if (firestoreUpdated && storeUpdated) {
-        console.log(`✅ Membership confirmed (attempt ${attempt}/${maxAttempts})`);
         return true;
       }
 
-      console.log(
-        `⏳ Sync attempt ${attempt}/${maxAttempts} - Firestore: ${firestoreUpdated}, Store: ${storeUpdated}`
-      );
       return false;
     } catch (error) {
-      console.error(`❌ Error checking sync (attempt ${attempt}):`, error);
       return false;
     }
   };
@@ -173,9 +158,7 @@ export class ChannelMembershipService {
    */
   private waitForSecurityRulesCache = async (): Promise<void> => {
     const delayMs = 2000;
-    console.log(`⏳ Waiting ${delayMs}ms for Security Rules cache...`);
     await this.delay(delayMs);
-    console.log('✅ Ready - Security Rules cache updated (retries will handle any delays)');
   };
 
   /**
@@ -194,7 +177,6 @@ export class ChannelMembershipService {
     const currentUser = this.getCurrentUser();
     await this.joinChannel(channelId);
     await this.waitForMembershipSync(channelId, currentUser.uid);
-    console.log('✅ Membership sync complete - user can access channel features');
   };
 
   /**
@@ -210,7 +192,6 @@ export class ChannelMembershipService {
     if (!channel) return;
 
     if (channel.createdBy === userIdToUse) {
-      console.error('❌ Channel owner cannot leave');
       return;
     }
 
@@ -245,7 +226,6 @@ export class ChannelMembershipService {
     if (!channel) return false;
 
     if (channel.createdBy !== userId) {
-      console.error('❌ Only owner can delete channel');
       return false;
     }
     return true;
@@ -272,7 +252,6 @@ export class ChannelMembershipService {
       await this.channelStore.deleteChannel(channelId);
       return true;
     } catch (error) {
-      console.error('❌ Failed to delete channel:', error);
       return false;
     }
   };
@@ -288,7 +267,6 @@ export class ChannelMembershipService {
 
     const updatedMembers = channel.members.filter((id) => id !== memberId);
     await this.channelStore.updateChannel(channelId, { members: updatedMembers });
-    console.log('✅ Removed member from channel:', memberId);
   };
 
   /**
@@ -316,9 +294,7 @@ export class ChannelMembershipService {
           channelName,
           message: `${senderName} lädt dich ein, dem Channel #${channelName} beizutreten.`,
         });
-        console.log('✉️ Invitation sent to user:', userId);
       } catch (error) {
-        console.error('❌ Error sending invitation to user:', userId, error);
       }
     }
   };

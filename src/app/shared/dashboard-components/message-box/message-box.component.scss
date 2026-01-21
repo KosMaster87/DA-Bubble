@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .message-box {
   @include mix.flex(column, flex-start, stretch);
@@ -7,11 +7,21 @@
   border-radius: 1.25rem;
   padding: var(--space-3) var(--space-4);
   gap: var(--space-2);
+  position: relative;
 
   @media screen and (max-width: 767px) {
     padding: var(--space-2) var(--space-2);
     gap: var(--space-0);
     border-radius: 1rem;
+  }
+
+  &__chips {
+    @include mix.flex(row, flex-start, center);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--space-1);
   }
 
   &__input-wrapper {
@@ -32,7 +42,7 @@
     transition: border-color 0.2s;
 
     @media screen and (max-width: 767px) {
-      min-height: 36px;
+      min-height: 60px;
       padding: var(--space-2);
       font-size: 0.875rem;
       border-radius: 1rem;
@@ -63,6 +73,79 @@
 
     @media screen and (max-width: 767px) {
       gap: var(--space-1);
+    }
+  }
+
+  &__emoji-wrapper {
+    position: static;
+
+    ::ng-deep .reaction-bar {
+      position: absolute !important;
+      bottom: 100% !important;
+      left: 1.8rem !important;
+      right: auto !important;
+      top: auto !important;
+      margin-bottom: -0.8rem !important;
+    }
+
+    ::ng-deep .reaction-bar--other .reaction-bar__emoji-picker {
+      bottom: 115% !important;
+      left: 0rem !important;
+      border-radius: 1.875rem 1.875rem 1.875rem 0 !important;
+    }
+  }
+
+  &__mention-wrapper {
+    position: static;
+
+    ::ng-deep .user-selection {
+      position: absolute !important;
+      bottom: 100% !important;
+      left: 1.8rem !important;
+      right: 0 !important;
+      top: auto !important;
+      margin-bottom: -0.8rem !important;
+      width: max-content !important;
+    }
+
+    ::ng-deep .user-selection__content {
+      border-radius: 1.5rem 1.5rem 1.5rem 0;
+    }
+  }
+
+  &__channel-search-wrapper {
+    position: static;
+
+    ::ng-deep .channel-selection {
+      position: absolute !important;
+      bottom: 100% !important;
+      left: 1.8rem !important;
+      right: auto !important;
+      top: auto !important;
+      margin-bottom: -0.8rem !important;
+      width: max-content !important;
+    }
+
+    ::ng-deep .channel-selection__content {
+      border-radius: 1.5rem 1.5rem 1.5rem 0;
+    }
+  }
+
+  &__message-search-wrapper {
+    position: static;
+
+    ::ng-deep .message-selection {
+      position: absolute !important;
+      bottom: 100% !important;
+      left: 1.8rem !important;
+      right: auto !important;
+      top: auto !important;
+      margin-bottom: -0.8rem !important;
+      width: max-content !important;
+    }
+
+    ::ng-deep .message-selection__content {
+      border-radius: 1.5rem 1.5rem 1.5rem 0;
     }
   }
 

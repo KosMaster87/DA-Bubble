@@ -1,139 +1,169 @@
 <div class="channel-conversation">
   @if (showAccessScreen()) {
-  <!-- ACCESS SCREEN: Private channel or public channel welcome -->
-  <app-channel-access
-    [channelInfo]="channelAccessInfo()"
-    (channelAccepted)="onChannelAccepted($event)"
-  />
+    <!-- ACCESS SCREEN: Private channel or public channel welcome -->
+    <app-channel-access
+      [channelInfo]="channelAccessInfo()"
+      (channelAccepted)="onChannelAccepted($event)"
+    />
   } @else {
-  <!-- NORMAL CHANNEL VIEW: User is member -->
+    <!-- NORMAL CHANNEL VIEW: User is member -->
 
-  <!-- Header -->
-  <div class="channel-conversation__header">
-    <div class="channel-conversation__header-info">
-      <h1 class="channel-conversation__title" (click)="channelConversationUI.openChannelInfo()">
-        <img
-          src="/img/icon/channel-bar/tag-default.svg"
-          alt=""
-          class="channel-conversation__title-icon"
+    <!-- Header -->
+    <div class="channel-conversation__header">
+      <div class="channel-conversation__header-info">
+        <h1 class="channel-conversation__title" (click)="channelConversationUI.openChannelInfo()">
+          <img
+            src="/img/icon/channel-bar/tag-default.svg"
+            alt=""
+            class="channel-conversation__title-icon"
+          />
+          <span class="channel-conversation__title-text">
+            {{ currentChannelData()?.name || channel().name }}
+          </span>
+          <img
+            src="/img/icon/arrow_default.svg"
+            alt=""
+            class="channel-conversation__title-arrow"
+            [class.channel-conversation__title-arrow--open]="
+              channelConversationUI.getChannelInfoState()()
+            "
+          />
+        </h1>
+        <div class="channel-conversation__description-wrapper">
+          <span class="channel-conversation__privacy-badge">
+            {{ (currentChannelData()?.isPrivate ?? channel().isPrivate) ? 'Private' : 'Public' }}
+          </span>
+          <p class="channel-conversation__description">
+            {{ currentChannelData()?.description || channel().description }}
+          </p>
+        </div>
+
+        <!-- Channel Info -->
+        <app-channel-info
+          [channel]="channelInfo()"
+          [isVisible]="channelConversationUI.getChannelInfoState()()"
+          [currentUserId]="authStore.user()?.uid"
+          (closeClicked)="channelConversationUI.closeChannelInfo()"
+          (channelUpdated)="onChannelUpdated($event)"
+          (leaveChannelClicked)="onLeaveChannel()"
+          (deleteChannelClicked)="onDeleteChannel()"
+          (createdByClicked)="channelConversationUI.openProfileView($event)"
+          (memberClicked)="channelConversationUI.openProfileView($event)"
         />
-        {{ currentChannelData()?.name || channel().name }}
-        <img
-          src="/img/icon/arrow_default.svg"
-          alt=""
-          class="channel-conversation__title-arrow"
-          [class.channel-conversation__title-arrow--open]="
-            channelConversationUI.getChannelInfoState()()
-          "
-        />
-      </h1>
-      <div class="channel-conversation__description-wrapper">
-        <span class="channel-conversation__privacy-badge">
-          {{ currentChannelData()?.isPrivate ?? channel().isPrivate ? 'Private' : 'Public' }}
-        </span>
-        <p class="channel-conversation__description">
-          {{ currentChannelData()?.description || channel().description }}
-        </p>
       </div>
 
-      <!-- Channel Info -->
-      <app-channel-info
-        [channel]="channelInfo()"
-        [isVisible]="channelConversationUI.getChannelInfoState()()"
-        [currentUserId]="authStore.user()?.uid"
-        (closeClicked)="channelConversationUI.closeChannelInfo()"
-        (channelUpdated)="onChannelUpdated($event)"
-        (leaveChannelClicked)="onLeaveChannel()"
-        (deleteChannelClicked)="onDeleteChannel()"
-        (createdByClicked)="channelConversationUI.openProfileView($event)"
+      <div class="channel-conversation__header-actions">
+        @if ((currentChannelData()?.name || channel().name) === "Let's Bubble") {
+          <app-members-miniatures
+            [members]="members()"
+            [totalCount]="totalMemberCount()"
+            (memberClicked)="channelConversationUI.openMembersMenu()"
+            class="members-miniatures--mobile-visible"
+          />
+        } @else {
+          <app-members-miniatures
+            [members]="members()"
+            [totalCount]="totalMemberCount()"
+            (memberClicked)="channelConversationUI.openMembersMenu()"
+          />
+        }
+        @if (shouldShowAddMemberButton()) {
+          <app-add-member-button (addMemberClicked)="channelConversationUI.openAddMembers()" />
+        }
+
+        <!-- Members Options Menu -->
+        <app-members-options-menu
+          [isOpen]="channelConversationUI.getMembersMenuState()()"
+          [members]="members()"
+          [showAddMember]="isCurrentUserChannelOwner()"
+          (closeClicked)="channelConversationUI.closeMembersMenu()"
+          (addMemberClicked)="channelConversationUI.openAddMembers()"
+          (memberSelected)="channelConversationUI.openProfileView($event)"
+        />
+
+        <!-- Profile View -->
+        @if (selectedMember()) {
+          <app-profile-view
+            [user]="selectedMember()!"
+            [isVisible]="channelConversationUI.getProfileViewState()()"
+            [isOwnProfile]="isOwnProfile()"
+            [isChannelOwner]="isCurrentUserChannelOwner()"
+            [isCurrentUserAdmin]="false"
+            [isSelectedUserOwner]="isSelectedUserChannelOwner()"
+            (closeClicked)="channelConversationUI.closeProfileView()"
+            (editClicked)="channelConversationUI.openEditProfile()"
+            (messageClicked)="onProfileMessage()"
+            (removeMemberClicked)="onRemoveMember()"
+          />
+        }
+
+        <!-- Edit Profile -->
+        @if (editProfileUser()) {
+          <app-profile-edit
+            [user]="editProfileUser()!"
+            [isVisible]="channelConversationUI.getEditProfileState()()"
+            (closeClicked)="channelConversationUI.closeEditProfile()"
+            (saveClicked)="onEditProfileSave($event)"
+          />
+        }
+
+        <!-- Add Members -->
+        <app-add-members
+          [isVisible]="channelConversationUI.getAddMembersState()()"
+          [channelName]="channel().name"
+          [users]="availableUsers()"
+          (closeClicked)="channelConversationUI.closeAddMembers()"
+          (membersAdded)="onMembersAdded($event)"
+        />
+
+        <!-- Channel View -->
+        @if (selectedChannelId()) {
+          <app-channel-view
+            [channelId]="selectedChannelId()!"
+            [isVisible]="isChannelViewOpen()"
+            (closeClicked)="channelViewService.closeChannelView()"
+            (joinClicked)="onChannelViewJoin($event)"
+            (navigateClicked)="onChannelViewJoin($event)"
+          />
+        }
+      </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="channel-conversation__messages">
+      @if (hasMoreMessages()) {
+        <button
+          class="channel-conversation__load-more"
+          (click)="loadOlderMessages()"
+          [disabled]="loadingOlderMessages()"
+        >
+          {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
+        </button>
+      }
+      <app-conversation-messages
+        [conversationId]="'channel-' + channel().id"
+        [messageGroups]="messagesGroupedByDate()"
+        (avatarClicked)="channelConversationUI.openProfileView($event)"
+        (senderClicked)="channelConversationUI.openProfileView($event)"
+        (mentionClicked)="channelConversationUI.openProfileView($event)"
+        (channelMentionClicked)="channelViewService.openChannelView($event)"
+        (reactionAdded)="addReaction($event.messageId, $event.emoji)"
+        (threadClicked)="onThreadClick($event)"
+        (messageEdited)="onMessageEdited($event)"
+        (messageDeleted)="onMessageDeleted($event)"
       />
     </div>
 
-    <div class="channel-conversation__header-actions">
-      <app-members-miniatures
-        [members]="members()"
-        [totalCount]="totalMemberCount()"
-        (memberClicked)="channelConversationUI.openMembersMenu()"
-      />
-      @if (isCurrentUserChannelOwner() || isCurrentUserAdmin()) {
-      <app-add-member-button (addMemberClicked)="channelConversationUI.openAddMembers()" />
-      }
-
-      <!-- Members Options Menu -->
-      <app-members-options-menu
-        [isOpen]="channelConversationUI.getMembersMenuState()()"
-        [members]="members()"
-        [showAddMember]="isCurrentUserChannelOwner() || isCurrentUserAdmin()"
-        (closeClicked)="channelConversationUI.closeMembersMenu()"
-        (addMemberClicked)="channelConversationUI.openAddMembers()"
-        (memberSelected)="channelConversationUI.openProfileView($event)"
-      />
-
-      <!-- Profile View -->
-      @if (selectedMember()) {
-      <app-profile-view
-        [user]="selectedMember()!"
-        [isVisible]="channelConversationUI.getProfileViewState()()"
-        [isOwnProfile]="isOwnProfile()"
-        [isChannelOwner]="isCurrentUserChannelOwner()"
-        [isCurrentUserAdmin]="isCurrentUserAdmin()"
-        [isSelectedUserOwner]="isSelectedUserChannelOwner()"
-        (closeClicked)="channelConversationUI.closeProfileView()"
-        (editClicked)="channelConversationUI.openEditProfile()"
-        (messageClicked)="onProfileMessage()"
-        (removeMemberClicked)="onRemoveMember()"
-      />
-      }
-
-      <!-- Edit Profile -->
-      @if (editProfileUser()) {
-      <app-profile-edit
-        [user]="editProfileUser()!"
-        [isVisible]="channelConversationUI.getEditProfileState()()"
-        (closeClicked)="channelConversationUI.closeEditProfile()"
-        (saveClicked)="onEditProfileSave($event)"
-      />
-      }
-
-      <!-- Add Members -->
-      <app-add-members
-        [isVisible]="channelConversationUI.getAddMembersState()()"
-        [channelName]="channel().name"
-        [users]="availableUsers()"
-        (closeClicked)="channelConversationUI.closeAddMembers()"
-        (membersAdded)="onMembersAdded($event)"
+    <!-- Footer with Message Box -->
+    <div class="channel-conversation__footer">
+      <app-message-box
+        [users]="memberListItems()"
+        [channels]="channelListItems()"
+        [messages]="searchableMessages()"
+        (messageSent)="sendMessage($event)"
+        (messageSelected)="messageScrollService.scrollToMessage($event)"
       />
     </div>
-  </div>
-
-  <!-- Messages Area -->
-  <div class="channel-conversation__messages">
-    @if (hasMoreMessages()) {
-    <button
-      class="channel-conversation__load-more"
-      (click)="loadOlderMessages()"
-      [disabled]="loadingOlderMessages()"
-    >
-      {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
-    </button>
-    }
-    <app-conversation-messages
-      [conversationId]="'channel-' + channel().id"
-      [messageGroups]="messagesGroupedByDate()"
-      (messageClicked)="onThreadClick($event)"
-      (avatarClicked)="channelConversationUI.openProfileView($event)"
-      (senderClicked)="channelConversationUI.openProfileView($event)"
-      (reactionAdded)="onReactionAdded($event)"
-      (threadClicked)="onThreadClick($event)"
-      (messageEdited)="onMessageEdited($event)"
-      (messageDeleted)="onMessageDeleted($event)"
-    />
-  </div>
-
-  <!-- Footer with Message Box -->
-  <div class="channel-conversation__footer">
-    <app-message-box (messageSent)="sendMessage($event)" />
-  </div>
   }
   <!-- End of normal channel view -->
 </div>

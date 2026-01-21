@@ -17,6 +17,7 @@ import {
   where,
   onSnapshot,
   getDocs,
+  limit,
 } from '@angular/fire/firestore';
 
 /**
@@ -130,7 +131,7 @@ export const UserPresenceStore = signalStore(
        * @returns {Function} Unsubscribe function
        */
       startPresenceListener() {
-        const q = query(usersCollection, where('isOnline', '==', true));
+        const q = query(usersCollection, where('isOnline', '==', true), limit(100));
         return onSnapshot(q, (snapshot) => {
           const onlineUserIds = snapshot.docs.map((doc) => doc.id);
           patchState(store, { onlineUsers: onlineUserIds });

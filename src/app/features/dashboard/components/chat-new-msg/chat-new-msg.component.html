@@ -5,26 +5,43 @@
 
   <div class="chat-new-msg__search">
     <div class="chat-new-msg__search-wrapper">
-      <!-- <img src="/img/icon/search-default.svg" alt="Search" class="chat-new-msg__search-icon" /> -->
       <input
         type="text"
         class="chat-new-msg__search-input"
-        placeholder="An: #channel, oder @someone or E-Mail adress"
-        [(ngModel)]="searchQuery"
-        (input)="onSearch()"
+        placeholder="#channel, @user"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event); onSearch()"
       />
+
+      <!-- User Selection Popup (@ prefix) -->
+      @if (showUserSelection()) {
+        <app-user-selection
+          [users]="userResults()"
+          [searchValue]="searchQuery().substring(1)"
+          (userSelected)="onUserSelected($event)"
+          (closed)="onDropdownClose()"
+        />
+      }
+
+      <!-- Channel Selection Popup (# prefix) -->
+      @if (showChannelSelection()) {
+        <app-channel-selection
+          [channels]="channelResults()"
+          [searchValue]="searchQuery().substring(1)"
+          (channelSelected)="onChannelSelected($event)"
+          (closed)="onDropdownClose()"
+        />
+      }
     </div>
   </div>
 
   <div class="chat-new-msg__content">
-    <!-- Empty state or recipient list will go here -->
-    <!-- Hier wird eine leere Status- oder Empfängerliste eingefügt. -->
     <div class="chat-new-msg__empty">
       <p>Search for users or channels to start a conversation</p>
     </div>
   </div>
 
   <div class="chat-new-msg__footer">
-    <app-message-box (messageSent)="onMessageSent($event)" />
+    <app-message-box [users]="allUsers()" [channels]="channelListItems()" />
   </div>
 </div>

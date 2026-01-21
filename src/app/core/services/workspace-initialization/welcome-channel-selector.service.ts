@@ -19,6 +19,7 @@ export class WelcomeChannelSelectorService {
   private navigationService = inject(NavigationService);
 
   private hasAutoSelected = false;
+  private suppressAutoSelect = false; // Flag to prevent auto-select when user returns to sidebar
 
   /**
    * Setup auto-selection effect for DABubble-welcome channel
@@ -30,10 +31,31 @@ export class WelcomeChannelSelectorService {
       const currentSelected = this.navigationService.getSelectedChannelId()();
       const currentDM = this.navigationService.getSelectedDirectMessageId()();
 
-      if (!this.hasAutoSelected && !currentSelected && !currentDM && channels.length > 0) {
+      if (!this.hasAutoSelected && !this.suppressAutoSelect && !currentSelected && !currentDM && channels.length > 0) {
         this.performAutoSelection(channels, onChannelSelected);
       }
     });
+  }
+
+  /**
+   * Suppress auto-selection (used when user manually returns to sidebar)
+   */
+  suppressAutoSelection(): void {
+    this.suppressAutoSelect = true;
+  }
+
+  /**
+   * Check if auto-select is currently suppressed
+   */
+  isAutoSelectSuppressed(): boolean {
+    return this.suppressAutoSelect;
+  }
+
+  /**
+   * Reset suppression (allow auto-select again on next page load)
+   */
+  resetSuppression(): void {
+    this.suppressAutoSelect = false;
   }
 
   /**
@@ -45,7 +67,7 @@ export class WelcomeChannelSelectorService {
   ): void {
     const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
     if (welcomeChannel) {
-      this.navigationService.selectChannelById(welcomeChannel.id);
+      this.navigationService.selectChannel(welcomeChannel.id); // Use selectChannel to update URL
       this.hasAutoSelected = true; // Prevent future auto-selections
 
       // Call optional callback for parent component
@@ -65,7 +87,7 @@ export class WelcomeChannelSelectorService {
     const channels = this.channelStore.channels();
     const welcomeChannel = channels.find((ch) => ch.name === 'DABubble-welcome');
     if (welcomeChannel) {
-      this.navigationService.selectChannelById(welcomeChannel.id);
+      this.navigationService.selectChannel(welcomeChannel.id); // Use selectChannel to update URL
     }
   }
 

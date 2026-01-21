@@ -1,9 +1,22 @@
 <div class="message-box">
+  <!-- Mention Chips -->
+  @if (mentionChips().length > 0) {
+    <div class="message-box__chips">
+      @for (chip of mentionChips(); track chip.id) {
+        <app-mention-chip
+          [data]="chip"
+          (removed)="onChipRemoved(chip)"
+        />
+      }
+    </div>
+  }
+
   <div class="message-box__input-wrapper">
     <textarea
       class="message-box__input"
-      [(ngModel)]="message"
-      placeholder="Type a message..."
+      [ngModel]="message()"
+      (ngModelChange)="updateMessage($event); onMessageInput()"
+      placeholder="Type a message... (#channel, @user, $search)"
       rows="1"
       (keydown.enter)="$event.preventDefault(); sendMessage()"
     ></textarea>
@@ -11,37 +24,81 @@
 
   <div class="message-box__actions">
     <div class="message-box__actions-left">
-      <button
-        class="message-box__action-btn"
-        [class.message-box__action-btn--active]="isEmojiPickerOpen()"
-        (click)="openEmojiPicker()"
-        [attr.aria-label]="'Add emoji'"
-      >
-        <img
-          src="/img/icon/chat/add-reaction-default.svg"
-          alt=""
-          class="message-box__action-icon"
-        />
-      </button>
+      <div class="message-box__emoji-wrapper">
+        <button
+          class="message-box__action-btn"
+          [class.message-box__action-btn--active]="isEmojiPickerOpen()"
+          (click)="openEmojiPicker()"
+          [attr.aria-label]="'Add emoji'"
+        >
+          <img
+            src="/img/icon/chat/add-reaction-default.svg"
+            alt=""
+            class="message-box__action-icon"
+          />
+        </button>
 
-      <button
-        class="message-box__action-btn"
-        [class.message-box__action-btn--active]="isMentionPickerOpen()"
-        (click)="openMentionPicker()"
-        [attr.aria-label]="'Mention user'"
-      >
-        <img
-          src="/img/icon/chat/alternate-email-default.svg"
-          alt=""
-          class="message-box__action-icon"
-        />
-      </button>
+        @if (isEmojiPickerOpen()) {
+          <app-reaction-bar
+            [messageType]="'other'"
+            [hideComment]="true"
+            (reactionClicked)="onEmojiReaction($event)"
+          />
+        }
+      </div>
+
+      <div class="message-box__mention-wrapper">
+        <button
+          class="message-box__action-btn"
+          [class.message-box__action-btn--active]="isUserSelectionOpen()"
+          (click)="openMentionPicker()"
+          [attr.aria-label]="'Mention user'"
+        >
+          <img
+            src="/img/icon/chat/alternate-email-default.svg"
+            alt=""
+            class="message-box__action-icon"
+          />
+        </button>
+
+        @if (isUserSelectionOpen()) {
+          <app-user-selection
+            [users]="availableUsers()"
+            [searchValue]="searchTerm()"
+            (userSelected)="onUserSelected($event)"
+            (closed)="onUserSelectionClosed()"
+          />
+        }
+      </div>
+
+      <!-- Channel Selection Popup (# prefix) -->
+      @if (showChannelSelection()) {
+        <div class="message-box__channel-search-wrapper">
+          <app-channel-selection
+            [channels]="filteredChannels()"
+            [searchValue]="searchTerm()"
+            (channelSelected)="onChannelSelected($event)"
+            (closed)="onChannelSelectionClosed()"
+          />
+        </div>
+      }
+
+      <!-- Message Search Popup ($ prefix) -->
+      @if (showMessageSearch()) {
+        <div class="message-box__message-search-wrapper">
+          <app-message-selection
+            [messages]="filteredMessages()"
+            (messageSelected)="onMessageResultSelected($event)"
+            (closed)="onMessageSearchClosed()"
+          />
+        </div>
+      }
     </div>
 
     <button
       class="message-box__send-btn"
       (click)="sendMessage()"
-      [disabled]="!message.trim()"
+      [disabled]="!message().trim()"
       [attr.aria-label]="'Send message'"
     >
       <img src="/img/icon/chat/send-default.svg" alt="" class="message-box__send-icon" />

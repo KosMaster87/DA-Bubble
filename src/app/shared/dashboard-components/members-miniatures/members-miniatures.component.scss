@@ -1,4 +1,12 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
+
+:host(.members-miniatures--mobile-visible) {
+  .members-miniatures {
+    @media screen and (max-width: 767px) {
+      display: flex;
+    }
+  }
+}
 
 .members-miniatures {
   @include mix.flex(row, flex-start, center);
@@ -10,9 +18,10 @@
   border-radius: 2rem;
   transition: background-color 0.2s;
 
-  // Hide on mobile
   @media screen and (max-width: 767px) {
     display: none;
+    gap: var(--space-1);
+    padding: 0;
   }
 
   &:hover,
@@ -24,6 +33,10 @@
     display: flex;
     position: relative;
     height: 40px;
+
+    @media screen and (max-width: 767px) {
+      height: 28px;
+    }
   }
 
   &__avatar {
@@ -35,8 +48,18 @@
     position: relative;
     pointer-events: none;
 
+    @media screen and (max-width: 767px) {
+      width: 28px;
+      height: 28px;
+      border-width: 1.5px;
+    }
+
     &:not(:first-child) {
       margin-left: -12px;
+
+      @media screen and (max-width: 767px) {
+        margin-left: -8px;
+      }
     }
   }
 
@@ -46,5 +69,10 @@
     color: var(--text-primary, #000);
     min-width: 20px;
     text-align: left;
+
+    @media screen and (max-width: 767px) {
+      font-size: 0.75rem;
+      min-width: 16px;
+    }
   }
 }

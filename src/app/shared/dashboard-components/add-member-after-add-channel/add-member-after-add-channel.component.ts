@@ -47,12 +47,27 @@ export class AddMemberAfterAddChannelComponent {
   selectedUsers = signal<UserListItem[]>([]);
   isUserSelectionOpen = signal<boolean>(false);
 
+  // Touch drag state
+  protected isDragging = signal(false);
+  protected dragStartY = 0;
+  protected currentTranslateY = signal(0);
+  protected isClosing = signal(false);
+  protected isManuallyExpanded = signal(false);
+  protected dragHeightPercentage = signal<number | null>(null);
+
+  /**
+   * Check if any dropdown is open or manually expanded (for mobile expansion)
+   */
+  isExpanded = computed<boolean>(() => {
+    return this.isChannelSelectionOpen() || this.isUserSelectionOpen() || this.isManuallyExpanded();
+  });
+
   /**
    * Available channels that are NOT yet selected and NOT system channels
    */
   availableChannels = computed<ChannelListItem[]>(() => {
     const selectedIds = this.selectedChannels().map((c) => c.id);
-    const systemChannels = ['Mailbox', 'DABubble-welcome'];
+    const systemChannels = ['Mailbox', 'DABubble welcome', "Let's Bubble"];
     return this.channels().filter(
       (channel) => !selectedIds.includes(channel.id) && !systemChannels.includes(channel.name)
     );
@@ -82,6 +97,7 @@ export class AddMemberAfterAddChannelComponent {
   openChannelSelection(): void {
     if (this.selectedOption() === 'all') {
       this.isChannelSelectionOpen.set(true);
+      this.isManuallyExpanded.set(true);
     }
   }
 
@@ -91,6 +107,7 @@ export class AddMemberAfterAddChannelComponent {
   openUserSelection(): void {
     if (this.selectedOption() === 'specific') {
       this.isUserSelectionOpen.set(true);
+      this.isManuallyExpanded.set(true);
     }
   }
 
@@ -113,14 +130,88 @@ export class AddMemberAfterAddChannelComponent {
    * Handle overlay click
    */
   onOverlayClick(): void {
-    this.closed.emit();
+    this.triggerClose();
   }
 
   /**
    * Handle close button click
    */
   onClose(): void {
-    this.closed.emit();
+    this.triggerClose();
+  }
+
+  /**
+   * Trigger closing animation
+   */
+  triggerClose(): void {
+    this.isClosing.set(true);
+    setTimeout(() => {
+      this.closed.emit();
+    }, 300);
+  }
+
+  /**
+   * Handle touch start for drag gesture
+   */
+  onTouchStart(event: TouchEvent): void {
+    this.dragStartY = event.touches[0].clientY;
+    this.isDragging.set(true);
+  }
+
+  /**
+   * Handle touch move for drag gesture
+   */
+  onTouchMove(event: TouchEvent): void {
+    if (!this.isDragging()) return;
+
+    const currentY = event.touches[0].clientY;
+    const deltaY = currentY - this.dragStartY;
+
+    // Dead zone to prevent jittering when dragging near starting position
+    if (Math.abs(deltaY) < 5) {
+      return;
+    }
+
+    // Dragging down - for closing (move element down)
+    if (deltaY > 0) {
+      this.currentTranslateY.set(deltaY);
+      this.dragHeightPercentage.set(null);
+    }
+    // Dragging up - for expanding height (keep position, grow height)
+    else {
+      this.currentTranslateY.set(0);
+      // Start at 90vh, increase to 100vh based on drag distance
+      // Every 100px of upward drag increases height by 10vh
+      const additionalHeight = Math.abs(deltaY) / 100 * 10;
+      const newHeight = Math.min(90 + additionalHeight, 100);
+      this.dragHeightPercentage.set(newHeight);
+    }
+  }
+
+  /**
+   * Handle touch end for drag gesture
+   */
+  onTouchEnd(): void {
+    if (!this.isDragging()) return;
+
+    this.isDragging.set(false);
+    const deltaY = this.currentTranslateY();
+
+    // If dragged down more than 100px, close the modal
+    if (deltaY > 100) {
+      this.triggerClose();
+    }
+    // If dragged up more than 50px, expand to full height
+    else if (deltaY < -50) {
+      this.isManuallyExpanded.set(true);
+      this.currentTranslateY.set(0);
+      this.dragHeightPercentage.set(null);
+    }
+    // Otherwise snap back to original position
+    else {
+      this.currentTranslateY.set(0);
+      this.dragHeightPercentage.set(null);
+    }
   }
 
   /**

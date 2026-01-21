@@ -21,29 +21,34 @@ export class UserSelectionComponent {
 
   /**
    * Filtered users based on search
+   * Filters user list by name matching search value
+   * @returns {UserListItem[]} Filtered array of users
    */
-  filteredUsers = computed(() => {
+  protected filteredUsers = computed(() => {
     const search = this.searchValue().toLowerCase();
-    if (!search) {
-      return this.users();
-    }
+    if (!search) return this.users();
     return this.users().filter((user) => user.name.toLowerCase().includes(search));
   });
 
   /**
    * Handle user selection
+   * Finds user by ID and emits selection event
+   * @param {string} userId - ID of selected user
+   * @returns {void}
    */
-  onUserClick(userId: string): void {
+  protected onUserClick = (userId: string): void => {
     const user = this.users().find((u) => u.id === userId);
     if (user) {
       this.userSelected.emit(user);
     }
-  }
+  };
 
   /**
    * Handle overlay click
+   * Closes the selection popup
+   * @returns {void}
    */
-  onOverlayClick(): void {
+  protected onOverlayClick = (): void => {
     this.closed.emit();
-  }
+  };
 }

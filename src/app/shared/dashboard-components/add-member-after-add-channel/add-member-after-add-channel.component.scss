@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .add-member-after-channel {
   position: fixed;
@@ -6,8 +6,21 @@
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: var(--z-modal);
   @include mix.flex(row, center, center);
+
+  @media (max-width: 767px) {
+    align-items: flex-end;
+  }
+
+  &--closing {
+    @media (max-width: 767px) {
+      .add-member-after-channel__overlay {
+        animation: fadeOut 0.3s ease-out;
+      }
+    }
+  }
 
   &__overlay {
     position: absolute;
@@ -17,6 +30,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     cursor: pointer;
+    animation: fadeIn 0.3s ease-out;
   }
 
   &__content {
@@ -26,6 +40,38 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-out;
     z-index: 1;
+
+    @media (max-width: 767px) {
+      width: 100%;
+      border-radius: 1.5rem 1.5rem 0 0;
+      animation: slideUp 0.3s ease-out;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease-out, max-height 0.3s ease-out;
+    }
+
+    &--expanded {
+      @media (max-width: 767px) {
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+      }
+    }
+
+    &--dragging {
+      @media (max-width: 767px) {
+        transition: none;
+        max-height: var(--drag-height, 100vh);
+      }
+    }
+
+    &--closing {
+      @media (max-width: 767px) {
+        transition: transform 0.3s ease-out;
+        transform: translateY(100%);
+      }
+    }
   }
 
   @keyframes fadeIn {
@@ -39,9 +85,58 @@
     }
   }
 
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  &__handle-wrapper {
+    display: none;
+
+    @media (max-width: 767px) {
+      @include mix.flex(row, center, center);
+      padding: var(--space-3) 0;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y;
+    }
+  }
+
+  &__handle {
+    @media (max-width: 767px) {
+      width: 4rem;
+      height: 0.5rem;
+      background-color: var(--border-color, #e0e0e0);
+      border-radius: 0.25rem;
+    }
+  }
+
   &__header {
     @include mix.flex(row, space-between, center);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-2) var(--space-3);
+    }
   }
 
   &__title {
@@ -82,6 +177,22 @@
     @include mix.flex(column, flex-start, stretch);
     gap: var(--space-4);
     padding: 0 var(--space-6) var(--space-6);
+
+    @media (max-width: 767px) {
+      padding: 0 var(--space-4) var(--space-4);
+      gap: var(--space-3);
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+
+      .add-member-after-channel__content--expanded & {
+        overflow-y: visible;
+      }
+    }
+
+    @media (max-width: 480px) {
+      padding: 0 var(--space-3) var(--space-3);
+    }
   }
 
   &__radio-row {
@@ -176,6 +287,11 @@
     margin-left: calc(24px + var(--space-3));
     position: relative;
     width: 80%;
+
+    @media (max-width: 767px) {
+      margin-left: 0;
+      width: 100%;
+    }
   }
 
   &__selected-channels-container {
@@ -193,6 +309,8 @@
 
   &__channel-chip-wrapper {
     @include mix.flex(row, flex-start, flex-start);
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__channel-chip {
@@ -202,12 +320,19 @@
     background-color: #eceefe;
     border-radius: 1.5rem;
     border: 1px solid #535af1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__channel-chip-name {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
 
   &__channel-chip-remove {
@@ -252,6 +377,8 @@
 
   &__user-chip-wrapper {
     @include mix.flex(row, flex-start, flex-start);
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__user-chip {
@@ -261,6 +388,8 @@
     background-color: #eceefe;
     border-radius: 1.5rem;
     border: 1px solid #535af1;
+    min-width: 0;
+    max-width: 100%;
   }
 
   &__user-chip-avatar {
@@ -275,6 +404,11 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
   }
 
   &__user-chip-remove {
@@ -308,5 +442,19 @@
     @include mix.flex(row, flex-end, center);
     gap: var(--space-4);
     padding: var(--space-6);
+    flex-shrink: 0;
+
+    @media (max-width: 767px) {
+      padding: var(--space-4);
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-3);
+      gap: var(--space-2);
+    }
+  }
+
+  ::ng-deep .user-selection__content {
+    border-radius: 1.5rem;
   }
 }

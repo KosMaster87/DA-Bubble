@@ -1,0 +1,17 @@
+<button
+  class="message-search-item"
+  [class.message-search-item--active]="isActive()"
+  (click)="onClick()"
+  type="button"
+>
+  <div class="message-search-item__icon">
+    <img
+      [src]="item().type === 'channel' ? '/img/icon/channel-bar/tag-default.svg' : '/img/icon/channel-bar/account_circle.svg'"
+      alt="icon"
+    />
+  </div>
+  <div class="message-search-item__content">
+    <div class="message-search-item__name">{{ item().displayName }}</div>
+    <div class="message-search-item__description">{{ item().description }}</div>
+  </div>
+</button>

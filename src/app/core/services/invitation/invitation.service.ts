@@ -24,7 +24,6 @@ import {
 } from '@angular/fire/firestore';
 import {
   Invitation,
-  InvitationType,
   InvitationStatus,
   CreateInvitationRequest,
   InvitationResponse,
@@ -39,8 +38,11 @@ export class InvitationService {
 
   /**
    * Convert Firestore document to Invitation
+   * @private
+   * @param {QueryDocumentSnapshot<DocumentData>} doc - Firestore document
+   * @returns {Invitation} Converted invitation object
    */
-  private convertToInvitation(doc: QueryDocumentSnapshot<DocumentData>): Invitation {
+  private convertToInvitation = (doc: QueryDocumentSnapshot<DocumentData>): Invitation => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -56,162 +58,149 @@ export class InvitationService {
       expiresAt: data['expiresAt']?.toDate(),
       respondedAt: data['respondedAt']?.toDate(),
     };
-  }
+  };
 
   /**
-   * Create a new invitation
+   * Build invitation data object
+   * @private
+   * @param {CreateInvitationRequest} request - Request data
+   * @returns {any} Invitation data for Firestore
    */
-  async createInvitation(request: CreateInvitationRequest): Promise<string> {
+  private buildInvitationData = (request: CreateInvitationRequest): any => {
+    const now = Timestamp.now();
+    const expiresAt = this.calculateExpirationDate(request.expiresInDays || 7);
+    const data: any = {
+      type: request.type,
+      senderId: request.senderId,
+      recipientId: request.recipientId,
+      status: 'pending' as InvitationStatus,
+      createdAt: now,
+      updatedAt: now,
+      expiresAt: Timestamp.fromDate(expiresAt),
+    };
+    return this.addOptionalFields(data, request);
+  };
+
+  /**
+   * Calculate expiration date
+   * @private
+   * @param {number} expiresInDays - Days until expiration
+   * @returns {Date} Expiration date
+   */
+  private calculateExpirationDate = (expiresInDays: number): Date => {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+    return expiresAt;
+  };
+
+  /**
+   * Add optional fields to invitation data
+   * @private
+   * @param {any} data - Base invitation data
+   * @param {CreateInvitationRequest} request - Request with optional fields
+   * @returns {any} Data with optional fields added
+   */
+  private addOptionalFields = (data: any, request: CreateInvitationRequest): any => {
+    if (request.channelId) data.channelId = request.channelId;
+    if (request.channelName) data.channelName = request.channelName;
+    if (request.message) data.message = request.message;
+    return data;
+  };
+
+  /**
+   * Create new invitation
+   * @param {CreateInvitationRequest} request - Invitation request data
+   * @returns {Promise<string>} Created invitation ID
+   */
+  createInvitation = async (request: CreateInvitationRequest): Promise<string> => {
     try {
-      const now = Timestamp.now();
-      const expiresInDays = request.expiresInDays || 7;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
-
-      // Build invitation data - only include fields that have values
-      const invitationData: {
-        type: InvitationType;
-        senderId: string;
-        recipientId: string;
-        status: InvitationStatus;
-        createdAt: Timestamp;
-        updatedAt: Timestamp;
-        expiresAt: Timestamp;
-        channelId?: string;
-        channelName?: string;
-        message?: string;
-      } = {
-        type: request.type,
-        senderId: request.senderId,
-        recipientId: request.recipientId,
-        status: 'pending' as InvitationStatus,
-        createdAt: now,
-        updatedAt: now,
-        expiresAt: Timestamp.fromDate(expiresAt),
-      };
-
-      // Only add optional fields if they have actual values (not null/undefined)
-      if (request.channelId) {
-        invitationData.channelId = request.channelId;
-      }
-      if (request.channelName) {
-        invitationData.channelName = request.channelName;
-      }
-      if (request.message) {
-        invitationData.message = request.message;
-      }
-
+      const invitationData = this.buildInvitationData(request);
       const docRef = await addDoc(collection(this.firestore, this.COLLECTION_NAME), invitationData);
-
-      console.log('✉️ Invitation created:', {
-        invitationId: docRef.id,
-        type: request.type,
-        recipientId: request.recipientId,
-      });
-
       return docRef.id;
     } catch (error) {
-      console.error('❌ Error creating invitation:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Accept an invitation
+   * Accept invitation
+   * @param {string} invitationId - Invitation ID
+   * @returns {Promise<InvitationResponse>} Response with timestamp
    */
-  async acceptInvitation(invitationId: string): Promise<InvitationResponse> {
+  acceptInvitation = async (invitationId: string): Promise<InvitationResponse> => {
     try {
       const invitationRef = doc(this.firestore, this.COLLECTION_NAME, invitationId);
       const respondedAt = Timestamp.now();
-
       await updateDoc(invitationRef, {
         status: 'accepted' as InvitationStatus,
         respondedAt,
         updatedAt: respondedAt,
       });
-
-      console.log('✅ Invitation accepted:', invitationId);
-
-      return {
-        invitationId,
-        action: 'accepted',
-        respondedAt: respondedAt.toDate(),
-      };
+      return { invitationId, action: 'accepted', respondedAt: respondedAt.toDate() };
     } catch (error) {
-      console.error('❌ Error accepting invitation:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Decline an invitation
+   * Decline invitation
+   * @param {string} invitationId - Invitation ID
+   * @returns {Promise<InvitationResponse>} Response with timestamp
    */
-  async declineInvitation(invitationId: string): Promise<InvitationResponse> {
+  declineInvitation = async (invitationId: string): Promise<InvitationResponse> => {
     try {
       const invitationRef = doc(this.firestore, this.COLLECTION_NAME, invitationId);
       const respondedAt = Timestamp.now();
-
       await updateDoc(invitationRef, {
         status: 'declined' as InvitationStatus,
         respondedAt,
         updatedAt: respondedAt,
       });
-
-      console.log('❌ Invitation declined:', invitationId);
-
-      return {
-        invitationId,
-        action: 'declined',
-        respondedAt: respondedAt.toDate(),
-      };
+      return { invitationId, action: 'declined', respondedAt: respondedAt.toDate() };
     } catch (error) {
-      console.error('❌ Error declining invitation:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Delete an invitation
+   * Delete invitation
+   * @param {string} invitationId - Invitation ID
+   * @returns {Promise<void>}
    */
-  async deleteInvitation(invitationId: string): Promise<void> {
+  deleteInvitation = async (invitationId: string): Promise<void> => {
     try {
       const invitationRef = doc(this.firestore, this.COLLECTION_NAME, invitationId);
       await deleteDoc(invitationRef);
-
-      console.log('🗑️ Invitation deleted:', invitationId);
     } catch (error) {
-      console.error('❌ Error deleting invitation:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Get invitations for a specific user (as recipient)
+   * Get invitations for user as recipient
+   * @param {string} userId - User ID
+   * @returns {Promise<Invitation[]>} User invitations
    */
-  async getInvitationsForUser(userId: string): Promise<Invitation[]> {
+  getInvitationsForUser = async (userId: string): Promise<Invitation[]> => {
     try {
       const q = query(
         collection(this.firestore, this.COLLECTION_NAME),
         where('recipientId', '==', userId),
         orderBy('createdAt', 'desc')
       );
-
       const snapshot = await getDocs(q);
-      const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
-
-      console.log('📬 Loaded invitations for user:', userId, invitations.length);
-
-      return invitations;
+      return snapshot.docs.map((doc) => this.convertToInvitation(doc));
     } catch (error) {
-      console.error('❌ Error loading invitations:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Get pending invitations for a user
+   * Get pending invitations for user
+   * @param {string} userId - User ID
+   * @returns {Promise<Invitation[]>} Pending invitations
    */
-  async getPendingInvitations(userId: string): Promise<Invitation[]> {
+  getPendingInvitations = async (userId: string): Promise<Invitation[]> => {
     try {
       const q = query(
         collection(this.firestore, this.COLLECTION_NAME),
@@ -219,109 +208,82 @@ export class InvitationService {
         where('status', '==', 'pending'),
         orderBy('createdAt', 'desc')
       );
-
       const snapshot = await getDocs(q);
-      const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
-
-      console.log('📬 Loaded pending invitations:', userId, invitations.length);
-
-      return invitations;
+      return snapshot.docs.map((doc) => this.convertToInvitation(doc));
     } catch (error) {
-      console.error('❌ Error loading pending invitations:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Subscribe to invitations for a user (real-time updates)
+   * Handle subscription error
+   * @private
+   * @param {any} error - Error object
+   * @param {string} type - Subscription type
    */
-  subscribeToInvitations(
+  private handleSubscriptionError = (error: any, type: string): void => {
+    if (error.code === 'permission-denied' || error.message?.includes('permissions')) return;
+    if (error.code === 'failed-precondition' && error.message?.includes('index')) {
+      console.error('Firebase index required - click link in error above to create it');
+    }
+  };
+
+  /**
+   * Subscribe to invitations for user
+   * @param {string} userId - User ID
+   * @param {Function} callback - Callback with invitations
+   * @returns {Function} Unsubscribe function
+   */
+  subscribeToInvitations = (
     userId: string,
     callback: (invitations: Invitation[]) => void
-  ): () => void {
+  ): (() => void) => {
     const q = query(
       collection(this.firestore, this.COLLECTION_NAME),
       where('recipientId', '==', userId),
       orderBy('createdAt', 'desc')
     );
-
-    const unsubscribe = onSnapshot(
+    return onSnapshot(
       q,
       (snapshot) => {
         const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
         callback(invitations);
-        console.log('📬 Invitations updated:', userId, invitations.length);
       },
-      (error: any) => {
-        // Auto-cleanup on permission error (user logged out)
-        if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-          console.log('🔓 Permission error detected - stopping invitations subscription');
-          return;
-        }
-
-        console.error('❌ Error in invitations subscription:', error);
-
-        // Special handling for missing index error
-        if (error.code === 'failed-precondition' && error.message?.includes('index')) {
-          console.error('');
-          console.error('═══════════════════════════════════════════════════════════');
-          console.error('❌ FIREBASE INDEX ERFORDERLICH');
-          console.error('═══════════════════════════════════════════════════════════');
-          console.error('');
-          console.error('📋 Bitte KLICKE auf den Link im Fehler oben, um den Index');
-          console.error('   automatisch zu erstellen (nur 1 Klick erforderlich).');
-          console.error('');
-          console.error('🎯 Dies ist ein einmaliger Setup-Schritt.');
-          console.error('   Nach der Erstellung funktionieren Invitations automatisch.');
-          console.error('');
-          console.error('⏱️  Index-Erstellung dauert ca. 1-2 Minuten.');
-          console.error('');
-          console.error('═══════════════════════════════════════════════════════════');
-        }
-      }
+      (error: any) => this.handleSubscriptionError(error, 'invitations')
     );
-
-    return unsubscribe;
-  }
+  };
 
   /**
-   * Subscribe to pending invitations only (real-time)
+   * Subscribe to pending invitations only
+   * @param {string} userId - User ID
+   * @param {Function} callback - Callback with pending invitations
+   * @returns {Function} Unsubscribe function
    */
-  subscribeToPendingInvitations(
+  subscribeToPendingInvitations = (
     userId: string,
     callback: (invitations: Invitation[]) => void
-  ): () => void {
+  ): (() => void) => {
     const q = query(
       collection(this.firestore, this.COLLECTION_NAME),
       where('recipientId', '==', userId),
       where('status', '==', 'pending'),
       orderBy('createdAt', 'desc')
     );
-
-    const unsubscribe = onSnapshot(
+    return onSnapshot(
       q,
       (snapshot) => {
         const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
         callback(invitations);
       },
-      (error: any) => {
-        // Auto-cleanup on permission error (user logged out)
-        if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
-          console.log('🔓 Permission error detected - stopping pending invitations subscription');
-          return;
-        }
-
-        console.error('❌ Error in pending invitations subscription:', error);
-      }
+      (error: any) => this.handleSubscriptionError(error, 'pending invitations')
     );
-
-    return unsubscribe;
-  }
+  };
 
   /**
-   * Mark expired invitations as expired (cleanup utility)
+   * Mark expired invitations as expired
+   * @returns {Promise<number>} Number of expired invitations
    */
-  async expireOldInvitations(): Promise<number> {
+  expireOldInvitations = async (): Promise<number> => {
     try {
       const now = Timestamp.now();
       const q = query(
@@ -329,32 +291,25 @@ export class InvitationService {
         where('status', '==', 'pending'),
         where('expiresAt', '<=', now)
       );
-
       const snapshot = await getDocs(q);
       const batch = writeBatch(this.firestore);
-
       snapshot.docs.forEach((document) => {
-        batch.update(document.ref, {
-          status: 'expired' as InvitationStatus,
-          updatedAt: now,
-        });
+        batch.update(document.ref, { status: 'expired' as InvitationStatus, updatedAt: now });
       });
-
       await batch.commit();
-
-      console.log('⏰ Expired old invitations:', snapshot.size);
-
       return snapshot.size;
     } catch (error) {
-      console.error('❌ Error expiring invitations:', error);
       throw error;
     }
-  }
+  };
 
   /**
-   * Check if user has pending invitation for a specific channel
+   * Check if user has pending channel invitation
+   * @param {string} userId - User ID
+   * @param {string} channelId - Channel ID
+   * @returns {Promise<boolean>} True if pending invitation exists
    */
-  async hasPendingChannelInvitation(userId: string, channelId: string): Promise<boolean> {
+  hasPendingChannelInvitation = async (userId: string, channelId: string): Promise<boolean> => {
     try {
       const q = query(
         collection(this.firestore, this.COLLECTION_NAME),
@@ -362,12 +317,10 @@ export class InvitationService {
         where('channelId', '==', channelId),
         where('status', '==', 'pending')
       );
-
       const snapshot = await getDocs(q);
       return !snapshot.empty;
     } catch (error) {
-      console.error('❌ Error checking pending invitation:', error);
       return false;
     }
-  }
+  };
 }

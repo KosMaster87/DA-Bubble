@@ -1,0 +1,75 @@
+@use 'mixins' as mix;
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+
+  @media (max-width: 767px) {
+    z-index: 9999;
+  }
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background-color: transparent;
+    cursor: default;
+    z-index: -1;
+  }
+
+  &__content {
+    position: relative;
+    background-color: var(--container-bg, #fff);
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    cursor: default;
+
+    @media (max-width: 767px) {
+      max-height: 60vh;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    @include mix.custom-scrollbar(6px, transparent, var(--border-color));
+  }
+
+  &__section {
+    @include mix.flex(column, flex-start, stretch);
+    gap: var(--space-1);
+  }
+
+  &__section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    padding: 0 var(--space-3);
+    margin-bottom: var(--space-1);
+  }
+
+  &__empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--text-secondary, #999);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+}

@@ -1,0 +1,68 @@
+@if (isVisible() && channel()) {
+<div class="channel-view">
+  <div class="channel-view__overlay" (click)="onClose()"></div>
+  <div class="channel-view__content">
+    <!-- Header -->
+    <div class="channel-view__header">
+      <h2 class="channel-view__title">Channel</h2>
+      <button
+        class="channel-view__close-btn"
+        (click)="onClose()"
+        aria-label="Close channel view"
+      >
+        <img src="/img/icon/window/close-default.svg" alt="" class="channel-view__close-icon" />
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="channel-view__body">
+      <!-- Channel Icon -->
+      <div class="channel-view__icon-wrapper">
+        <span class="channel-view__hash">#</span>
+      </div>
+
+      <!-- Channel Name -->
+      <div class="channel-view__row">
+        <span class="channel-view__name">{{ channel()!.name }}</span>
+      </div>
+
+      <!-- Description -->
+      @if (channel()!.description) {
+      <div class="channel-view__row channel-view__row--info">
+        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="channel-view__icon" />
+        <span class="channel-view__text">{{ channel()!.description }}</span>
+      </div>
+      }
+
+      <!-- Member Count -->
+      <div class="channel-view__row channel-view__row--info">
+        <img src="/img/icon/channel-bar/account-circle-default.svg" alt="" class="channel-view__icon" />
+        <span class="channel-view__text">{{ memberCount() }} {{ memberCount() === 1 ? 'Mitglied' : 'Mitglieder' }}</span>
+      </div>
+
+      <!-- Privacy Status -->
+      <div class="channel-view__row channel-view__row--info">
+        <img
+          [src]="channel()!.isPrivate ? '/img/icon/channel-bar/lock.svg' : '/img/icon/channel-bar/workspaces-default.svg'"
+          alt=""
+          class="channel-view__icon"
+        />
+        <span class="channel-view__text">{{ channel()!.isPrivate ? 'Privater Channel' : 'Öffentlicher Channel' }}</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="channel-view__actions">
+        @if (isMember()) {
+          <button class="channel-view__btn channel-view__btn--primary" (click)="onNavigate()">
+            Zum Channel
+          </button>
+        } @else {
+          <button class="channel-view__btn channel-view__btn--primary" (click)="onJoin()">
+            Channel beitreten
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}

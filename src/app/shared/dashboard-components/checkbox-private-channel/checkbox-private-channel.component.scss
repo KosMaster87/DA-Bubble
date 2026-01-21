@@ -2,7 +2,7 @@
  * Checkbox Private Channel Component Styles
  */
 
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .checkbox-private-channel {
   @include mix.flex-center;

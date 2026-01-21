@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .channel-info {
   position: absolute;
@@ -9,12 +9,25 @@
   display: flex;
   margin-top: var(--space-2);
 
+  @media (max-width: 767px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin-top: 0;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 9999;
+  }
+
   &__overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.5);
   }
 
@@ -29,6 +42,21 @@
     overflow-y: auto;
     z-index: 1;
 
+    @media (max-width: 767px) {
+      border-radius: 0;
+      max-height: 100%;
+      height: 100%;
+      padding: var(--space-3);
+      margin-top: 0;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-2);
+    }
+
     @include mix.tablet {
       padding: var(--space-5);
     }
@@ -41,24 +69,46 @@
   &__header {
     @include mix.flex(row, space-between, center);
     margin-bottom: var(--space-4);
+
+    @media (max-width: 480px) {
+      margin-bottom: var(--space-3);
+    }
   }
 
   &__title-group {
-    @include mix.flex(row, flex-start, center);
+    @include mix.flex(row, flex-start, flex-start);
     gap: var(--space-2);
+
+    @media (max-width: 480px) {
+      gap: var(--space-1);
+    }
   }
 
   &__title-icon {
     width: 16px;
     height: 16px;
+    margin-top: 0.3rem;
     filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
       brightness(98%) contrast(92%);
+
+    @media (max-width: 480px) {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   &__title {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
+
+    @media (max-width: 767px) {
+      font-size: 1.25rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.125rem;
+    }
   }
 
   &__close-btn {
@@ -92,6 +142,18 @@
     @include mix.flex(column, flex-start, stretch);
     gap: var(--space-8);
     padding: var(--space-2);
+
+    @media (max-width: 767px) {
+      gap: var(--space-6);
+      padding: var(--space-1);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 480px) {
+      gap: var(--space-4);
+      padding: 0;
+    }
   }
 
   // Section (replaces card)
@@ -104,6 +166,10 @@
     margin-bottom: var(--space-3);
     position: relative;
     z-index: 1;
+
+    @media (max-width: 480px) {
+      margin-bottom: var(--space-2);
+    }
   }
 
   &__label {
@@ -112,8 +178,16 @@
     color: var(--text-primary, #000);
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
+    @media (max-width: 480px) {
+      font-size: 0.9375rem;
+    }
+
     .channel-info__section--editing & {
       transform: translate(-12px, -20px);
+
+      @media (max-width: 767px) {
+        transform: translate(0, 0);
+      }
     }
   }
 
@@ -122,6 +196,10 @@
 
     .channel-info__section--editing & {
       transform: translate(12px, -20px);
+
+      @media (max-width: 767px) {
+        transform: translate(0, 0);
+      }
     }
   }
 
@@ -135,6 +213,10 @@
     cursor: pointer;
     padding: 0;
     transition: color 0.2s;
+
+    @media (max-width: 480px) {
+      font-size: 0.9375rem;
+    }
 
     &:hover {
       color: #444df2;
@@ -151,6 +233,15 @@
     transition: border-color 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
       border-radius 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
+    @media (max-width: 767px) {
+      padding: var(--space-3);
+      border-radius: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      padding: var(--space-2);
+    }
+
     @include mix.tablet {
       padding: var(--space-6);
     }
@@ -163,7 +254,8 @@
 
   // Channel Display (View Mode)
   &__channel-display {
-    @include mix.flex(row, flex-start, center);
+    @include mix.flex(row, flex-start, flex-start);
+    margin-top: 0.2rem;
     gap: var(--space-2);
     opacity: 1;
     transition: opacity 0.3s ease;
@@ -178,48 +270,73 @@
   &__hash-icon {
     width: 14px;
     height: 14px;
+    margin-top: 0.3rem;
   }
 
   &__channel-name {
     font-size: 1.1rem;
     color: var(--text-primary, #000);
+
+    @media (max-width: 480px) {
+      font-size: 1rem;
+    }
   }
 
   // Input (Edit Mode)
   &__input-wrapper {
     position: relative;
-    @include mix.flex(row, flex-start, center);
+    @include mix.flex(row, flex-start, flex-start);
+    gap: var(--space-2);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 1.5rem;
+    padding: var(--space-2) var(--space-3);
+
+    @media (max-width: 480px) {
+      gap: var(--space-1);
+      padding: var(--space-2) var(--space-2);
+    }
 
     .channel-info__section--editing & {
       opacity: 1;
       pointer-events: all;
     }
+
+    &:focus-within {
+      border-color: var(--primary-color, #444df2);
+      box-shadow: 0 0 0 3px rgba(68, 77, 242, 0.1);
+    }
   }
 
   &__input-icon {
-    position: absolute;
-    left: var(--space-4);
     width: 14px;
     height: 14px;
-    pointer-events: none;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+
+    @media (max-width: 480px) {
+      width: 12px;
+      height: 12px;
+      margin-top: 0.21rem;
+    }
   }
 
   &__input {
-    width: 100%;
-    padding: var(--space-2) var(--space-2) var(--space-2)
-      calc(var(--space-2) + 20px + var(--space-2));
-    border: 1px solid var(--border-color, #e0e0e0);
-    border-radius: 1.5rem;
+    flex: 1;
+    min-width: 0;
+    border: none;
     font-size: 1rem;
     outline: none;
-    transition: all 0.2s;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.4;
+    background: transparent;
+    padding: 0;
 
-    &:focus {
-      border-color: var(--primary-color, #444df2);
-      box-shadow: 0 0 0 3px rgba(68, 77, 242, 0.1);
+    @media (max-width: 480px) {
+      font-size: 0.9375rem;
     }
 
     &::placeholder {
@@ -234,6 +351,10 @@
     margin: 0;
     opacity: 1;
     transition: opacity 0.3s ease;
+
+    @media (max-width: 480px) {
+      font-size: 0.875rem;
+    }
 
     .channel-info__section--editing & {
       opacity: 0;
@@ -256,6 +377,11 @@
     pointer-events: none;
     transition: all 0.3s ease;
 
+    @media (max-width: 480px) {
+      font-size: 0.875rem;
+      padding: var(--space-3);
+    }
+
     .channel-info__section--editing & {
       opacity: 1;
       pointer-events: all;
@@ -275,12 +401,25 @@
     height: 1px;
     background-color: var(--border-color, #e0e0e0);
     margin: var(--space-8);
+
+    @media (max-width: 767px) {
+      margin: var(--space-6);
+    }
+
+    @media (max-width: 480px) {
+      margin: var(--space-4);
+    }
   }
 
   &__roles-wrapper {
     @include mix.flex(column, flex-start, flex-start);
     gap: var(--space-4);
     margin-bottom: var(--space-4);
+
+    @media (max-width: 480px) {
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
   }
 
   &__meta {
@@ -292,6 +431,10 @@
     font-weight: 600;
     font-size: 0.9rem;
     color: var(--text-primary, #000);
+
+    @media (max-width: 480px) {
+      font-size: 0.8125rem;
+    }
   }
 
   &__admins-list {
@@ -308,6 +451,10 @@
     padding: 0;
     text-align: left;
 
+    @media (max-width: 480px) {
+      font-size: 1rem;
+    }
+
     &:hover {
       text-decoration: underline;
     }
@@ -316,5 +463,36 @@
   &__footer {
     @include mix.flex(row, flex-end, center);
     margin-top: var(--space-3);
+
+    @media (max-width: 480px) {
+      margin-top: var(--space-2);
+    }
+  }
+
+  &__members-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-height: 400px;
+    overflow-y: auto;
+    @include mix.custom-scrollbar(4px, transparent, var(--border-color));
+
+    @media (max-width: 767px) {
+      max-height: 300px;
+    }
+
+    @media (max-width: 480px) {
+      max-height: 250px;
+      gap: var(--space-0-5);
+    }
+  }
+
+  // Hide members section on desktop
+  &__section--members {
+    display: none;
+
+    @media (max-width: 767px) {
+      display: block;
+    }
   }
 }

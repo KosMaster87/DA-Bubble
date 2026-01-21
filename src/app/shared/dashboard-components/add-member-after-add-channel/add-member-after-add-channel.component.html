@@ -1,9 +1,27 @@
-<div class="add-member-after-channel">
+<div class="add-member-after-channel" [class.add-member-after-channel--closing]="isClosing()">
   <!-- Overlay -->
   <div class="add-member-after-channel__overlay" (click)="onOverlayClick()"></div>
 
   <!-- Content -->
-  <div class="add-member-after-channel__content">
+  <div
+    class="add-member-after-channel__content"
+    [class.add-member-after-channel__content--dragging]="isDragging()"
+    [class.add-member-after-channel__content--closing]="isClosing()"
+    [class.add-member-after-channel__content--expanded]="isExpanded()"
+    [style.transform]="'translateY(' + currentTranslateY() + 'px)'"
+    [style.--drag-height]="dragHeightPercentage() ? dragHeightPercentage() + 'vh' : null"
+  >
+    <!-- Drag Handle (Mobile) -->
+    <div
+      class="add-member-after-channel__handle-wrapper"
+      (click)="triggerClose()"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+      (touchend)="onTouchEnd()"
+    >
+      <div class="add-member-after-channel__handle"></div>
+    </div>
+
     <!-- Header -->
     <div class="add-member-after-channel__header">
       <h2 class="add-member-after-channel__title">Add member</h2>

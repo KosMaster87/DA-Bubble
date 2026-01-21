@@ -30,9 +30,9 @@ export class ChannelMessageListenerService {
 
   /**
    * Setup real-time listener for channel messages
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback with messages and snapshot
-   * @param onError - Error callback
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback with messages and snapshot
+   * @param {Function} onError - Error callback
    */
   setupListener = (
     channelId: string,
@@ -45,7 +45,8 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear debounce timer for channel
-   * @param channelId - Channel ID
+   * @private
+   * @param {string} channelId - Channel ID
    */
   private clearDebounceTimer = (channelId: string): void => {
     const existingTimer = this.debounceTimers.get(channelId);
@@ -54,9 +55,10 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule listener setup after debounce
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
-   * @param onError - Error callback
+   * @private
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
+   * @param {Function} onError - Error callback
    */
   private scheduleListenerSetup = (
     channelId: string,
@@ -71,9 +73,10 @@ export class ChannelMessageListenerService {
 
   /**
    * Initialize listener for channel
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
-   * @param onError - Error callback
+   * @private
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
+   * @param {Function} onError - Error callback
    */
   private initializeListener = (
     channelId: string,
@@ -89,7 +92,8 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear existing listener for channel
-   * @param channelId - Channel ID
+   * @private
+   * @param {string} channelId - Channel ID
    */
   private clearExistingListener = (channelId: string): void => {
     const existingListener = this.messageListeners.get(channelId);
@@ -101,10 +105,11 @@ export class ChannelMessageListenerService {
 
   /**
    * Create Firestore snapshot listener
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
-   * @param onError - Error callback
-   * @returns Unsubscribe function
+   * @private
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
+   * @param {Function} onError - Error callback
+   * @returns {Unsubscribe} Unsubscribe function
    */
   private createListener = (
     channelId: string,
@@ -117,8 +122,9 @@ export class ChannelMessageListenerService {
 
   /**
    * Build Firestore query for messages
-   * @param channelId - Channel ID
-   * @returns Firestore query
+   * @private
+   * @param {string} channelId - Channel ID
+   * @returns {any} Firestore query
    */
   private buildMessagesQuery = (channelId: string): any => {
     const messagesRef = this.operations.getMessagesCollectionRef(channelId);
@@ -127,11 +133,12 @@ export class ChannelMessageListenerService {
 
   /**
    * Attach snapshot listener to query
-   * @param q - Firestore query
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
-   * @param onError - Error callback
-   * @returns Unsubscribe function
+   * @private
+   * @param {any} q - Firestore query
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
+   * @param {Function} onError - Error callback
+   * @returns {Unsubscribe} Unsubscribe function
    */
   private attachSnapshotListener = (
     q: any,
@@ -148,9 +155,10 @@ export class ChannelMessageListenerService {
 
   /**
    * Handle successful snapshot
-   * @param snapshot - Firestore snapshot
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
+   * @private
+   * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
    */
   private handleSnapshotSuccess = (
     snapshot: QuerySnapshot<DocumentData>,
@@ -163,9 +171,10 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule snapshot processing after debounce
-   * @param snapshot - Firestore snapshot
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
+   * @private
+   * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
    */
   private scheduleSnapshotProcessing = (
     snapshot: QuerySnapshot<DocumentData>,
@@ -180,9 +189,10 @@ export class ChannelMessageListenerService {
 
   /**
    * Process snapshot and trigger callback
-   * @param snapshot - Firestore snapshot
-   * @param channelId - Channel ID
-   * @param onSuccess - Success callback
+   * @private
+   * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
+   * @param {string} channelId - Channel ID
+   * @param {Function} onSuccess - Success callback
    */
   private processSnapshot = (
     snapshot: QuerySnapshot<DocumentData>,
@@ -197,8 +207,9 @@ export class ChannelMessageListenerService {
 
   /**
    * Map Firestore snapshot to messages array
-   * @param snapshot - Firestore query snapshot
-   * @returns Array of messages
+   * @private
+   * @param {any} snapshot - Firestore query snapshot
+   * @returns {Message[]} Array of messages
    */
   private mapSnapshot = (snapshot: any): Message[] => {
     return snapshot.docs.map((doc: any) => {
@@ -287,21 +298,19 @@ export class ChannelMessageListenerService {
 
   /**
    * Log retry attempt
-   * @param channelId - Channel ID
-   * @param retryCount - Current retry count
+   * @private
+   * @param {string} channelId - Channel ID
+   * @param {number} retryCount - Current retry count
    */
   private logRetryAttempt = (channelId: string, retryCount: number): void => {
-    console.warn(
-      `⚠️ Firestore state error for channel ${channelId} (${retryCount + 1}/${this.MAX_RETRIES}) - retrying...`
-    );
   };
 
   /**
    * Log max retries reached
-   * @param channelId - Channel ID
+   * @private
+   * @param {string} channelId - Channel ID
    */
   private logMaxRetriesReached = (channelId: string): void => {
-    console.warn(`⚠️ Max retries reached for channel ${channelId}, ignoring error`);
     this.retryCounters.delete(channelId);
   };
 
@@ -348,11 +357,6 @@ export class ChannelMessageListenerService {
       return;
     }
     this.pendingRetries.add(channelId);
-    // Retry disabled - uncomment if needed
-    // setTimeout(() => {
-    //   this.pendingRetries.delete(channelId);
-    //   this.setupListener(channelId, onSuccess, onError);
-    // }, 3000);
   };
 
   /**

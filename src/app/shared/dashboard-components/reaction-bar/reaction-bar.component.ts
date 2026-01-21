@@ -28,6 +28,7 @@ export class ReactionBarComponent {
 
   messageType = input<'own' | 'other'>('other');
   isInThread = input<boolean>(false);
+  hideComment = input<boolean>(false);
   reactionClicked = output<ReactionType>();
   editMessageClicked = output<void>();
   deleteMessageClicked = output<void>();

@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .add-member-btn {
   @include mix.flex(row, center, center);
