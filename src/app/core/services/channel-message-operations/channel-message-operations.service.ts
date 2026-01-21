@@ -24,12 +24,14 @@ import {
   QueryDocumentSnapshot,
 } from '@angular/fire/firestore';
 import { Message, MessageType } from '@core/models/message.model';
+import { MentionParserService } from '../mention-parser/mention-parser.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChannelMessageOperationsService {
   private firestore = inject(Firestore);
+  private mentionParser = inject(MentionParserService);
 
   /**
    * Get messages collection reference for channel
@@ -85,6 +87,7 @@ export class ChannelMessageOperationsService {
    * @param authorId - Author user ID
    */
   async sendMessage(channelId: string, content: string, authorId: string): Promise<void> {
+    const mentionedUserIds = this.mentionParser.extractMentionedUserIds(content);
     const messagesRef = this.getMessagesCollectionRef(channelId);
     await addDoc(messagesRef, {
       content,
@@ -93,6 +96,7 @@ export class ChannelMessageOperationsService {
       type: MessageType.TEXT,
       attachments: [],
       reactions: [],
+      mentionedUserIds,
       threadCount: 0,
       isEdited: false,
       createdAt: serverTimestamp(),

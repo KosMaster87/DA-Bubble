@@ -16,9 +16,6 @@ import type { Message as PopupMessage } from '@core/models/message.model';
 import type { ThreadMessage } from '@stores/thread.store';
 import type { DirectMessage } from '@core/models/direct-message.model';
 
-/**
- * User list item for popups and selection components
- */
 export interface UserListItem {
   id: string;
   name: string;
@@ -35,11 +32,11 @@ export class UserTransformationService {
   private directMessageStore = inject(DirectMessageStore);
 
   /**
-   * Transform user to ProfileUser
-   * @param userId - User ID
-   * @returns ProfileUser or null
+   * Transform user to ProfileUser format
+   * @param {string | null} userId - User ID to transform
+   * @returns {ProfileUser | null} Transformed profile user or null if user not found
    */
-  toProfileUser(userId: string | null): ProfileUser | null {
+  toProfileUser = (userId: string | null): ProfileUser | null => {
     if (!userId) return null;
 
     const user = this.userStore.getUserById()(userId);
@@ -53,14 +50,14 @@ export class UserTransformationService {
       status: user.isOnline ? 'online' : 'offline',
       isAdmin: false,
     };
-  }
+  };
 
   /**
-   * Transform user to EditProfileUser
-   * @param userId - User ID
-   * @returns EditProfileUser or null
+   * Transform user to EditProfileUser format
+   * @param {string | null} userId - User ID to transform
+   * @returns {EditProfileUser | null} Transformed edit profile user or null if user not found
    */
-  toEditProfileUser(userId: string | null): EditProfileUser | null {
+  toEditProfileUser = (userId: string | null): EditProfileUser | null => {
     if (!userId) return null;
 
     const user = this.userStore.getUserById()(userId);
@@ -73,15 +70,14 @@ export class UserTransformationService {
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
       isAdmin: false,
     };
-  }
+  };
 
   /**
    * Transform PopupMessage to ViewMessage format
-   * Enriches message with user data and ownership info
-   * @param message - PopupMessage from store/model
-   * @returns ViewMessage for conversation components
+   * @param {PopupMessage} message - PopupMessage from store or model
+   * @returns {ViewMessage} ViewMessage for conversation components
    */
-  popupMessageToViewMessage(message: PopupMessage): ViewMessage {
+  popupMessageToViewMessage = (message: PopupMessage): ViewMessage => {
     const user = this.userStore.users().find((u) => u.uid === message.authorId);
     const currentUserId = this.authStore.user()?.uid;
 
@@ -99,15 +95,14 @@ export class UserTransformationService {
       isEdited: message.isEdited,
       editedAt: message.editedAt,
     };
-  }
+  };
 
   /**
    * Transform ThreadMessages to ViewMessages
-   * Enriches thread messages with user data and ownership info
-   * @param threadMessages - Array of ThreadMessage from ThreadStore
-   * @returns Array of ViewMessage for conversation components
+   * @param {ThreadMessage[]} threadMessages - Array of ThreadMessage from ThreadStore
+   * @returns {ViewMessage[]} Array of ViewMessage for conversation components
    */
-  threadMessagesToViewMessages(threadMessages: ThreadMessage[]): ViewMessage[] {
+  threadMessagesToViewMessages = (threadMessages: ThreadMessage[]): ViewMessage[] => {
     const currentUserId = this.authStore.user()?.uid || '';
 
     return threadMessages.map((thread) => {
@@ -123,90 +118,105 @@ export class UserTransformationService {
         reactions: thread.reactions || [],
       };
     });
-  }
+  };
 
   /**
    * Transform DirectMessages to ViewMessages
-   * Enriches direct messages with user data and ownership info
-   * @param messages - Array of DirectMessage from DirectMessageStore
-   * @returns Array of ViewMessage for conversation components
+   * @param {DirectMessage[]} messages - Array of DirectMessage from DirectMessageStore
+   * @returns {ViewMessage[]} Array of ViewMessage for conversation components
    */
-  directMessagesToViewMessages(messages: DirectMessage[]): ViewMessage[] {
+  directMessagesToViewMessages = (messages: DirectMessage[]): ViewMessage[] => {
     const currentUserId = this.authStore.user()?.uid || '';
 
-    return messages.map((msg) => {
-      const user = this.userStore.getUserById()(msg.authorId);
-      return {
-        id: msg.id,
-        senderId: msg.authorId,
-        senderName: user?.displayName || 'Unknown User',
-        senderAvatar: user?.photoURL || '/img/profile/profile-0.svg',
-        content: msg.content,
-        timestamp: msg.createdAt,
-        isOwnMessage: msg.authorId === currentUserId,
-        threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
-        reactions: msg.reactions || [],
-        lastThreadTimestamp:
-          msg.lastThreadTimestamp instanceof Date
-            ? msg.lastThreadTimestamp
-            : msg.lastThreadTimestamp
-            ? new Date(msg.lastThreadTimestamp)
-            : undefined,
-        isEdited: msg.isEdited,
-        editedAt:
-          msg.editedAt instanceof Date
-            ? msg.editedAt
-            : msg.editedAt
-            ? new Date(msg.editedAt)
-            : undefined,
-      };
-    });
-  }
+    return messages.map((msg) => this.transformDirectMessage(msg, currentUserId));
+  };
+
+  /**
+   * Transform a single DirectMessage to ViewMessage
+   * @private
+   * @param {DirectMessage} msg - DirectMessage to transform
+   * @param {string} currentUserId - Current user ID for ownership check
+   * @returns {ViewMessage} Transformed ViewMessage
+   */
+  private transformDirectMessage = (msg: DirectMessage, currentUserId: string): ViewMessage => {
+    const user = this.userStore.getUserById()(msg.authorId);
+    return {
+      id: msg.id,
+      senderId: msg.authorId,
+      senderName: user?.displayName || 'Unknown User',
+      senderAvatar: user?.photoURL || '/img/profile/profile-0.svg',
+      content: msg.content,
+      timestamp: msg.createdAt,
+      isOwnMessage: msg.authorId === currentUserId,
+      threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
+      reactions: msg.reactions || [],
+      lastThreadTimestamp:
+        msg.lastThreadTimestamp instanceof Date
+          ? msg.lastThreadTimestamp
+          : msg.lastThreadTimestamp
+          ? new Date(msg.lastThreadTimestamp)
+          : undefined,
+      isEdited: msg.isEdited,
+      editedAt:
+        msg.editedAt instanceof Date
+          ? msg.editedAt
+          : msg.editedAt
+          ? new Date(msg.editedAt)
+          : undefined,
+    };
+  };
 
   /**
    * Transform channel messages to view messages
-   * Enriches messages with user data and ownership info
-   * @param messages - Array of PopupMessage from ChannelMessageStore
-   * @returns Array of ViewMessage for conversation components
+   * @param {PopupMessage[]} messages - Array of PopupMessage from ChannelMessageStore
+   * @returns {ViewMessage[]} Array of ViewMessage for conversation components
    */
-  channelMessagesToViewMessages(messages: PopupMessage[]): ViewMessage[] {
+  channelMessagesToViewMessages = (messages: PopupMessage[]): ViewMessage[] => {
     const currentUserId = this.authStore.user()?.uid || '';
 
-    return messages.map((msg) => {
-      const author = this.userStore.getUserById()(msg.authorId);
-      return {
-        id: msg.id,
-        senderId: msg.authorId,
-        senderName: author?.displayName || 'Unknown User',
-        senderAvatar: author?.photoURL || '/img/profile/profile-0.svg',
-        content: msg.content,
-        timestamp: msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt),
-        isOwnMessage: msg.authorId === currentUserId,
-        reactions: msg.reactions || [],
-        threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
-        lastThreadTimestamp:
-          msg.lastThreadTimestamp instanceof Date
-            ? msg.lastThreadTimestamp
-            : msg.lastThreadTimestamp
-            ? new Date(msg.lastThreadTimestamp)
-            : undefined,
-        isEdited: msg.isEdited,
-        editedAt:
-          msg.editedAt instanceof Date
-            ? msg.editedAt
-            : msg.editedAt
-            ? new Date(msg.editedAt)
-            : undefined,
-      };
-    });
-  }
+    return messages.map((msg) => this.transformChannelMessage(msg, currentUserId));
+  };
+
+  /**
+   * Transform a single channel message to ViewMessage
+   * @private
+   * @param {PopupMessage} msg - Channel message to transform
+   * @param {string} currentUserId - Current user ID for ownership check
+   * @returns {ViewMessage} Transformed ViewMessage
+   */
+  private transformChannelMessage = (msg: PopupMessage, currentUserId: string): ViewMessage => {
+    const author = this.userStore.getUserById()(msg.authorId);
+    return {
+      id: msg.id,
+      senderId: msg.authorId,
+      senderName: author?.displayName || 'Unknown User',
+      senderAvatar: author?.photoURL || '/img/profile/profile-0.svg',
+      content: msg.content,
+      timestamp: msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt),
+      isOwnMessage: msg.authorId === currentUserId,
+      reactions: msg.reactions || [],
+      threadCount: msg.threadCount && msg.threadCount > 0 ? msg.threadCount : undefined,
+      lastThreadTimestamp:
+        msg.lastThreadTimestamp instanceof Date
+          ? msg.lastThreadTimestamp
+          : msg.lastThreadTimestamp
+          ? new Date(msg.lastThreadTimestamp)
+          : undefined,
+      isEdited: msg.isEdited,
+      editedAt:
+        msg.editedAt instanceof Date
+          ? msg.editedAt
+          : msg.editedAt
+          ? new Date(msg.editedAt)
+          : undefined,
+    };
+  };
 
   /**
    * Get all users as UserListItem for popups and selection components
-   * Maps users from UserStore to simple { id, name, avatar } format
-   * @returns Signal<UserListItem[]>
+   * @returns {Signal<UserListItem[]>} Signal containing array of user list items
    */
-  getUserList(): Signal<UserListItem[]> {
+  getUserList = (): Signal<UserListItem[]> => {
     return computed(() =>
       this.userStore.users().map((user) => ({
         id: user.uid,
@@ -214,13 +224,13 @@ export class UserTransformationService {
         avatar: user.photoURL || '/img/profile/profile-0.svg',
       }))
     );
-  }
+  };
 
   /**
    * Get user display name by ID
-   * @param userId User ID to lookup
-   * @param fallback Fallback name if user not found
-   * @returns User display name or fallback
+   * @param {string} userId - User ID to lookup
+   * @param {string} [fallback='Unknown User'] - Fallback name if user not found
+   * @returns {string} User display name or fallback
    */
   getUserDisplayName = (userId: string, fallback = 'Unknown User'): string => {
     const user = this.userStore.getUserById()(userId);
@@ -229,9 +239,9 @@ export class UserTransformationService {
 
   /**
    * Get user avatar URL by ID
-   * @param userId User ID to lookup
-   * @param fallback Fallback avatar URL if user not found
-   * @returns User avatar URL or fallback
+   * @param {string} userId - User ID to lookup
+   * @param {string} [fallback='/img/profile/profile-0.svg'] - Fallback avatar URL if user not found
+   * @returns {string} User avatar URL or fallback
    */
   getUserAvatar = (userId: string, fallback = '/img/profile/profile-0.svg'): string => {
     const user = this.userStore.getUserById()(userId);
@@ -240,8 +250,8 @@ export class UserTransformationService {
 
   /**
    * Map member IDs to user list items
-   * @param memberIds Array of user IDs
-   * @returns Array of UserListItem
+   * @param {string[]} memberIds - Array of user IDs
+   * @returns {UserListItem[]} Array of UserListItem
    */
   mapMembersToListItems = (memberIds: string[]): UserListItem[] => {
     return memberIds
@@ -251,8 +261,9 @@ export class UserTransformationService {
 
   /**
    * Map single user ID to list item
-   * @param userId User ID
-   * @returns UserListItem or null if user not found
+   * @private
+   * @param {string} userId - User ID
+   * @returns {UserListItem | null} UserListItem or null if user not found
    */
   private mapUserToListItem = (userId: string): UserListItem | null => {
     const user = this.userStore.getUserById()(userId);
@@ -266,10 +277,10 @@ export class UserTransformationService {
 
   /**
    * Map admin UIDs to admin data objects
-   * @param adminUids Array of admin user IDs
-   * @returns Array of admin data
+   * @param {string[]} adminUids - Array of admin user IDs
+   * @returns {Array<{uid: string, name: string}>} Array of admin data objects
    */
-  mapChannelAdmins = (adminUids: string[]) => {
+  mapChannelAdmins = (adminUids: string[]): Array<{uid: string, name: string}> => {
     return adminUids.map((adminUid) => ({
       uid: adminUid,
       name: this.getUserDisplayName(adminUid),
@@ -278,8 +289,8 @@ export class UserTransformationService {
 
   /**
    * Convert channel message to thread message format
-   * @param channelMessage Channel message to convert
-   * @returns ViewMessage for thread component
+   * @param {any} channelMessage - Channel message to convert
+   * @returns {ViewMessage} ViewMessage for thread component
    */
   channelMessageToThreadMessage = (channelMessage: any): ViewMessage => {
     return {
@@ -296,15 +307,14 @@ export class UserTransformationService {
 
   /**
    * Load DM parent message for thread
-   * @param conversationId DM conversation ID
-   * @param threadId Thread message ID
-   * @returns ViewMessage or null
+   * @param {string} conversationId - DM conversation ID
+   * @param {string} threadId - Thread message ID
+   * @returns {ViewMessage | null} ViewMessage or null if not found
    */
   loadDMParentMessage = (conversationId: string, threadId: string): ViewMessage | null => {
     const messages = this.directMessageStore.messages()[conversationId] || [];
     const dmMessage = messages.find((msg) => msg.id === threadId);
     if (!dmMessage) {
-      console.warn('[loadDMParentMessage] DM parent message not found:', threadId);
       return null;
     }
     return this.directMessagesToViewMessages([dmMessage])[0];
@@ -312,15 +322,14 @@ export class UserTransformationService {
 
   /**
    * Load channel parent message for thread
-   * @param conversationId Channel ID
-   * @param threadId Thread message ID
-   * @returns ViewMessage or null
+   * @param {string} conversationId - Channel ID
+   * @param {string} threadId - Thread message ID
+   * @returns {ViewMessage | null} ViewMessage or null if not found
    */
   loadChannelParentMessage = (conversationId: string, threadId: string): ViewMessage | null => {
     const messages = this.channelMessageStore.getMessagesByChannel()(conversationId);
     const channelMessage = messages.find((msg) => msg.id === threadId);
     if (!channelMessage) {
-      console.warn('[loadChannelParentMessage] Channel parent message not found:', threadId);
       return null;
     }
     return this.channelMessageToThreadMessage(channelMessage);

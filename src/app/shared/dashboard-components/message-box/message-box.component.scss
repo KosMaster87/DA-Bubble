@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .message-box {
   @include mix.flex(column, flex-start, stretch);
@@ -13,6 +13,15 @@
     padding: var(--space-2) var(--space-2);
     gap: var(--space-0);
     border-radius: 1rem;
+  }
+
+  &__chips {
+    @include mix.flex(row, flex-start, center);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--space-1);
   }
 
   &__input-wrapper {
@@ -33,7 +42,7 @@
     transition: border-color 0.2s;
 
     @media screen and (max-width: 767px) {
-      min-height: 36px;
+      min-height: 60px;
       padding: var(--space-2);
       font-size: 0.875rem;
       border-radius: 1rem;

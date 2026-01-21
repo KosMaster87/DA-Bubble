@@ -92,84 +92,27 @@ export const ChannelMessageStore = signalStore(
     const listener = inject(ChannelMessageListenerService);
 
     return {
-      // === ENTRY POINT METHODS ===
-
       /**
-       * Entry point: Load messages for channel
-       * @param channelId - Channel ID
+       * Load messages for channel with real-time listener
+       * @param {string} channelId - Channel ID
+       * @returns {void}
        */
       loadChannelMessages(channelId: string): void {
-        this.performLoadChannelMessages(channelId);
+        patchState(store, { isLoading: true, error: null });
+        listener.setupListener(channelId,
+          (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot),
+          (error) => this.handleError(error, 'Failed to load channel messages'));
       },
 
       /**
-       * Entry point: Send message to channel
-       * @param channelId - Channel ID
-       * @param content - Message content
-       * @param authorId - Author user ID
+       * Send message to channel
+       * @async
+       * @param {string} channelId - Channel ID
+       * @param {string} content - Message content
+       * @param {string} authorId - Author user ID
+       * @returns {Promise<void>}
        */
       async sendMessage(channelId: string, content: string, authorId: string): Promise<void> {
-        await this.performSendMessage(channelId, content, authorId);
-      },
-
-      /**
-       * Entry point: Update message content
-       * @param channelId - Channel ID
-       * @param messageId - Message ID
-       * @param content - New content
-       */
-      async updateMessage(channelId: string, messageId: string, content: string): Promise<void> {
-        await this.performUpdateMessage(channelId, messageId, content);
-      },
-
-      /**
-       * Entry point: Delete message
-       * @param channelId - Channel ID
-       * @param messageId - Message ID
-       */
-      async deleteMessage(channelId: string, messageId: string): Promise<void> {
-        await this.performDeleteMessage(channelId, messageId);
-      },
-
-      /**
-       * Entry point: Set active channel
-       * @param channelId - Channel ID or null
-       */
-      setActiveChannel(channelId: string | null): void {
-        patchState(store, { activeChannelId: channelId });
-      },
-
-      /**
-       * Entry point: Add message to channel
-       * @param channelId - Channel ID
-       * @param message - Message to add
-       */
-      addMessageToChannel(channelId: string, message: Message): void {
-        this.performAddMessageToChannel(channelId, message);
-      },
-
-      // === IMPLEMENTATION METHODS ===
-
-      /**
-       * Implementation: Load channel messages
-       * @param channelId - Channel ID
-       */
-      performLoadChannelMessages(channelId: string): void {
-        patchState(store, { isLoading: true, error: null });
-        listener.setupListener(
-          channelId,
-          (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot),
-          (error) => this.handleError(error, 'Failed to load channel messages')
-        );
-      },
-
-      /**
-       * Implementation: Send message
-       * @param channelId - Channel ID
-       * @param content - Message content
-       * @param authorId - Author ID
-       */
-      async performSendMessage(channelId: string, content: string, authorId: string): Promise<void> {
         try {
           await operations.sendMessage(channelId, content, authorId);
         } catch (error) {
@@ -179,12 +122,14 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
-       * Implementation: Update message
-       * @param channelId - Channel ID
-       * @param messageId - Message ID
-       * @param content - New content
+       * Update message content
+       * @async
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID
+       * @param {string} content - New content
+       * @returns {Promise<void>}
        */
-      async performUpdateMessage(channelId: string, messageId: string, content: string): Promise<void> {
+      async updateMessage(channelId: string, messageId: string, content: string): Promise<void> {
         try {
           await operations.updateMessage(channelId, messageId, content);
         } catch (error) {
@@ -194,11 +139,13 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
-       * Implementation: Delete message
-       * @param channelId - Channel ID
-       * @param messageId - Message ID
+       * Delete message from channel
+       * @async
+       * @param {string} channelId - Channel ID
+       * @param {string} messageId - Message ID
+       * @returns {Promise<void>}
        */
-      async performDeleteMessage(channelId: string, messageId: string): Promise<void> {
+      async deleteMessage(channelId: string, messageId: string): Promise<void> {
         try {
           await operations.deleteMessage(channelId, messageId);
         } catch (error) {
@@ -207,17 +154,17 @@ export const ChannelMessageStore = signalStore(
         }
       },
 
+      /** Set active channel @param {string | null} channelId @returns {void} */
+      setActiveChannel: (channelId: string | null) => patchState(store, { activeChannelId: channelId }),
+
       /**
-       * Implementation: Add message to channel
-       * @param channelId - Channel ID
-       * @param message - Message to add
+       * Add message to channel state
+       * @param {string} channelId - Channel ID
+       * @param {Message} message - Message to add
+       * @returns {void}
        */
-      performAddMessageToChannel(channelId: string, message: Message): void {
-        const updated = ChannelMessageStateHelper.addMessageToChannel(
-          store.channelMessages(),
-          channelId,
-          message
-        );
+      addMessageToChannel(channelId: string, message: Message): void {
+        const updated = ChannelMessageStateHelper.addMessageToChannel(store.channelMessages(), channelId, message);
         patchState(store, { channelMessages: updated, isLoading: false });
       },
 
@@ -246,55 +193,33 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Load older messages for pagination
-       * @param channelId - Channel ID
+       * @async
+       * @param {string} channelId - Channel ID
+       * @returns {Promise<void>}
        */
       async loadOlderMessages(channelId: string): Promise<void> {
         const snapshot = channelSnapshots.get(channelId);
-        if (!snapshot || store.loadingOlderMessages()[channelId]) {
-          return;
-        }
-
+        if (!snapshot || store.loadingOlderMessages()[channelId]) return;
         const firstDoc = snapshot.docs[0];
         if (!firstDoc) {
-          patchState(store, {
-            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
-          });
+          patchState(store, { hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false } });
           return;
         }
-
-        patchState(store, {
-          loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: true },
-        });
-
+        patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: true } });
         try {
           const olderMessages = await operations.loadOlderMessages(channelId, firstDoc);
-
           if (olderMessages.length === 0) {
-            patchState(store, {
-              hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
-              loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
-            });
+            patchState(store, { hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
+              loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false } });
             return;
           }
-
           const currentMessages = store.channelMessages()[channelId] || [];
-          const allMessages = [...olderMessages, ...currentMessages];
-          const updated = ChannelMessageStateHelper.updateChannelMessages(
-            store.channelMessages(),
-            channelId,
-            allMessages
-          );
-
-          patchState(store, {
-            channelMessages: updated,
-            loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
-            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: olderMessages.length >= 100 },
-          });
+          const updated = ChannelMessageStateHelper.updateChannelMessages(store.channelMessages(), channelId, [...olderMessages, ...currentMessages]);
+          patchState(store, { channelMessages: updated, loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
+            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: olderMessages.length >= 100 } });
         } catch (error) {
           this.handleError(error, 'Failed to load older messages');
-          patchState(store, {
-            loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
-          });
+          patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false } });
         }
       },
 

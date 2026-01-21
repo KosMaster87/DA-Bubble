@@ -42,18 +42,21 @@ export class ChannelSelectionComponent {
 
   /**
    * Handle channel selection
+   * @param {string} channelId - Channel ID to select
+   * @returns {void}
    */
-  onChannelClick(channelId: string): void {
+  onChannelClick = (channelId: string): void => {
     const channel = this.channels().find((c) => c.id === channelId);
     if (channel) {
       this.channelSelected.emit(channel);
     }
-  }
+  };
 
   /**
    * Handle overlay click
+   * @returns {void}
    */
-  onOverlayClick(): void {
+  onOverlayClick = (): void => {
     this.closed.emit();
-  }
+  };
 }

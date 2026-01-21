@@ -26,6 +26,17 @@
       (saveClicked)="onEditProfileSave($event)"
     />
     }
+
+    <!-- Channel View -->
+    @if (selectedChannelId()) {
+      <app-channel-view
+        [channelId]="selectedChannelId()!"
+        [isVisible]="isChannelViewOpen()"
+        (closeClicked)="onChannelViewClose()"
+        (joinClicked)="onChannelViewJoin($event)"
+        (navigateClicked)="onChannelViewNavigate($event)"
+      />
+    }
   </div>
 
   <!-- Messages Area -->
@@ -42,13 +53,14 @@
     <app-conversation-messages
       [conversationId]="'dm-' + dmInfo().conversationId"
       [messageGroups]="messagesGroupedByDate()"
-      (messageClicked)="onMessageClick($event)"
       (avatarClicked)="onAvatarClick($event)"
       (senderClicked)="onSenderClick($event)"
       (reactionAdded)="onReactionAdded($event)"
       (threadClicked)="onThreadClick($event)"
       (messageEdited)="onMessageEdited($event)"
       (messageDeleted)="onMessageDeleted($event)"
+      (mentionClicked)="openProfileView($event)"
+      (channelMentionClicked)="onChannelMentionClick($event)"
     />
   </div>
 

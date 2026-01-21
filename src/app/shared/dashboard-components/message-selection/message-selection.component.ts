@@ -23,18 +23,23 @@ export class MessageSelectionComponent {
 
   /**
    * Handle message selection
+   * Finds message by ID and emits selection event
+   * @param {string} messageId - ID of the selected message
+   * @returns {void}
    */
-  onMessageClick(messageId: string): void {
+  protected onMessageClick = (messageId: string): void => {
     const message = this.messages().find((m) => m.id === messageId);
     if (message) {
       this.messageSelected.emit(message);
     }
-  }
+  };
 
   /**
    * Handle overlay click
+   * Closes the selection popup
+   * @returns {void}
    */
-  onOverlayClick(): void {
+  protected onOverlayClick = (): void => {
     this.closed.emit();
-  }
+  };
 }

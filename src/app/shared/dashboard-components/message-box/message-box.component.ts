@@ -4,7 +4,7 @@
  * @module shared/dashboard-components/message-box
  */
 
-import { Component, output, signal, input, computed } from '@angular/core';
+import { Component, output, input, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserSelectionComponent } from '../user-selection/user-selection.component';
 import { UserListItem } from '../user-list-item/user-list-item.component';
@@ -13,6 +13,12 @@ import { ChannelListItem } from '../channel-list-item/channel-list-item.componen
 import { ReactionBarComponent, ReactionType } from '../reaction-bar/reaction-bar.component';
 import { MessageSelectionComponent } from '../message-selection/message-selection.component';
 import { MessageSearchItem } from '../message-search-item/message-search-item.component';
+import { MentionChipComponent, MentionChipData } from '../mention-chip/mention-chip.component';
+import {
+  MessageBoxStateService,
+  MessageComposerService,
+  MessageSearchService,
+} from '../../services';
 
 @Component({
   selector: 'app-message-box',
@@ -22,7 +28,9 @@ import { MessageSearchItem } from '../message-search-item/message-search-item.co
     ChannelSelectionComponent,
     ReactionBarComponent,
     MessageSelectionComponent,
+    MentionChipComponent,
   ],
+  providers: [MessageBoxStateService, MessageComposerService, MessageSearchService],
   templateUrl: './message-box.component.html',
   styleUrl: './message-box.component.scss',
 })
@@ -31,41 +39,64 @@ export class MessageBoxComponent {
   channels = input<ChannelListItem[]>([]);
   messages = input<MessageSearchItem[]>([]);
   messageSent = output<string>();
-  messageSelected = output<string>(); // Emits message ID to scroll to
-  protected message = signal('');
-  protected isEmojiPickerOpen = signal<boolean>(false);
-  protected isUserSelectionOpen = signal<boolean>(false);
-  protected isChannelSelectionOpen = signal<boolean>(false);
-  protected isMessageSearchOpen = signal<boolean>(false);
-  protected selectedUsers = signal<UserListItem[]>([]);
-  protected userSearchValue = signal<string>('');
+  messageSelected = output<string>();
+
+  private stateService = inject(MessageBoxStateService);
+  private composerService = inject(MessageComposerService);
+  private searchService = inject(MessageSearchService);
+
+  protected message = this.composerService.getMessage();
+  protected isEmojiPickerOpen = this.stateService.getEmojiPickerOpen();
+  protected isUserSelectionOpen = this.stateService.getUserSelectionOpen();
+  protected isChannelSelectionOpen = this.stateService.getChannelSelectionOpen();
+  protected isMessageSearchOpen = this.stateService.getMessageSearchOpen();
+  protected selectedUsers = this.composerService.getSelectedUsers();
+  protected selectedChannels = this.composerService.getSelectedChannels();
+
+  /**
+   * Mention chips computed from service
+   */
+  protected mentionChips = computed(() => {
+    return this.composerService.getMentionChips();
+  });
+
+  /**
+   * Update message text
+   * @param {string} text - New message text
+   * @returns {void}
+   */
+  protected updateMessage = (text: string): void => {
+    this.composerService.setMessage(text);
+  };
 
   /**
    * Available users that are NOT yet selected
    */
-  availableUsers = computed<UserListItem[]>(() => {
+  protected availableUsers = computed<UserListItem[]>(() => {
     const selectedIds = this.selectedUsers().map((u) => u.id);
-    return this.users().filter((user) => !selectedIds.includes(user.id));
+    return this.searchService.excludeSelected(this.users(), selectedIds);
+  });
+
+  /**
+   * Available channels that are NOT yet selected
+   */
+  protected availableChannels = computed<ChannelListItem[]>(() => {
+    const selectedIds = this.selectedChannels().map((c) => c.id);
+    return this.searchService.excludeSelected(this.channels(), selectedIds);
   });
 
   /**
    * Get search prefix from message input
    */
   protected searchPrefix = computed(() => {
-    const msg = this.message().trim();
-    if (msg.startsWith('$')) return '$';
-    if (msg.startsWith('@')) return '@';
-    if (msg.startsWith('#')) return '#';
-    return '';
+    return this.searchService.getSearchPrefix(this.message());
   });
 
   /**
    * Get search term without prefix
    */
   protected searchTerm = computed(() => {
-    const prefix = this.searchPrefix();
-    if (!prefix) return '';
-    return this.message().substring(1).toLowerCase().trim();
+    return this.searchService.getSearchTerm(this.message());
   });
 
   /**
@@ -73,12 +104,7 @@ export class MessageBoxComponent {
    */
   protected filteredMessages = computed<MessageSearchItem[]>(() => {
     if (this.searchPrefix() !== '$') return [];
-    const term = this.searchTerm();
-    if (term.length < 3) return [];
-
-    return this.messages()
-      .filter((msg) => msg.description.toLowerCase().includes(term))
-      .slice(0, 5); // Top 5 results
+    return this.searchService.filterMessages(this.messages(), this.searchTerm());
   });
 
   /**
@@ -86,11 +112,7 @@ export class MessageBoxComponent {
    */
   protected filteredChannels = computed<ChannelListItem[]>(() => {
     if (this.searchPrefix() !== '#') return [];
-    const term = this.searchTerm();
-
-    if (!term) return this.channels();
-
-    return this.channels().filter((channel) => channel.name.toLowerCase().includes(term));
+    return this.searchService.filterChannels(this.availableChannels(), this.searchTerm());
   });
 
   /**
@@ -108,180 +130,151 @@ export class MessageBoxComponent {
    * Show channel selection popup when # prefix is used
    */
   protected showChannelSelection = computed(() => {
-    return (
-      this.isChannelSelectionOpen() &&
-      this.searchPrefix() === '#'
-    );
+    return this.isChannelSelectionOpen() && this.searchPrefix() === '#';
   });
 
   /**
    * Send message
+   * Builds and emits message if not empty, then resets state
+   * @returns {void}
    */
-  sendMessage(): void {
-    if (this.message().trim()) {
-      this.messageSent.emit(this.message());
-      this.message.set('');
-      this.isMessageSearchOpen.set(false);
-      this.isUserSelectionOpen.set(false);
+  protected sendMessage = (): void => {
+    const fullMessage = this.composerService.buildFullMessage();
+
+    if (fullMessage.trim()) {
+      this.messageSent.emit(fullMessage);
+      this.composerService.reset();
+      this.stateService.closeAll();
     }
-  }
+  };
 
   /**
    * Handle message input change to detect search prefix
+   * Detects @, #, or $ prefixes and opens appropriate selection popup
+   * @returns {void}
    */
-  onMessageInput(): void {
+  protected onMessageInput = (): void => {
     const prefix = this.searchPrefix();
     const term = this.searchTerm();
-    const msg = this.message().trim();
 
-    // Close all if message is empty
-    if (!msg) {
-      this.isUserSelectionOpen.set(false);
-      this.isChannelSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
+    if (!this.message().trim()) {
+      this.stateService.closeAll();
       return;
     }
 
-    // Handle $ prefix for message search
-    if (prefix === '$') {
-      if (term.length >= 3) {
-        this.isMessageSearchOpen.set(true);
-        this.isUserSelectionOpen.set(false);
-        this.isChannelSelectionOpen.set(false);
-        this.isEmojiPickerOpen.set(false);
-      } else {
-        this.isMessageSearchOpen.set(false);
-      }
+    if (prefix === '$' && term.length >= 3) {
+      this.stateService.openMessageSearch();
+    } else if (prefix === '$') {
+      this.stateService.closeMessageSearch();
+    } else if (prefix === '@') {
+      this.stateService.openUserSelection();
+    } else if (prefix === '#') {
+      this.stateService.openChannelSelection();
+    } else {
+      this.stateService.closeAll();
     }
-    // Handle @ prefix for user mentions
-    else if (prefix === '@') {
-      this.isUserSelectionOpen.set(true);
-      this.isChannelSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
-      this.isEmojiPickerOpen.set(false);
-      this.userSearchValue.set(term);
-    }
-    // Handle # prefix for channel mentions
-    else if (prefix === '#') {
-      this.isChannelSelectionOpen.set(true);
-      this.isUserSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
-      this.isEmojiPickerOpen.set(false);
-    }
-    // No prefix - close all search popups
-    else {
-      this.isUserSelectionOpen.set(false);
-      this.isChannelSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
-    }
-  }
+  };
 
   /**
-   * Handle emoji picker (placeholder)
+   * Toggle emoji picker
+   * Opens emoji picker and closes other popups
+   * @returns {void}
    */
-  openEmojiPicker(): void {
-    this.isEmojiPickerOpen.update((v) => !v);
-    if (this.isEmojiPickerOpen()) {
-      this.isUserSelectionOpen.set(false);
-      this.isChannelSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
-    }
-  }
+  protected openEmojiPicker = (): void => {
+    this.stateService.toggleEmojiPicker();
+  };
 
   /**
    * Handle emoji reaction selection
+   * Inserts emoji at cursor position and closes picker
+   * @param {ReactionType} reaction - Reaction type to insert
+   * @returns {void}
    */
-  onEmojiReaction(reaction: ReactionType): void {
-    // Insert emoji at cursor position or append to message
-    const emojiMap: Record<string, string> = {
-      'thumbs-up': '👍',
-      checked: '✅',
-      rocket: '🚀',
-      'nerd-face': '🤓',
-    };
-    const emoji = emojiMap[reaction] || reaction;
-    this.message.set(this.message() + emoji);
-    this.isEmojiPickerOpen.set(false);
-  }
+  protected onEmojiReaction = (reaction: ReactionType): void => {
+    this.composerService.addEmoji(reaction);
+    this.stateService.closeAll();
+  };
 
   /**
-   * Handle mention picker
+   * Toggle user mention picker
+   * Opens user selection popup and closes other popups
+   * @returns {void}
    */
-  openMentionPicker(): void {
-    this.isUserSelectionOpen.update((v) => !v);
-    if (this.isUserSelectionOpen()) {
-      this.isEmojiPickerOpen.set(false);
-      this.isChannelSelectionOpen.set(false);
-      this.isMessageSearchOpen.set(false);
-    }
-  }
+  protected openMentionPicker = (): void => {
+    this.stateService.toggleUserSelection();
+  };
 
   /**
-   * Handle user selection
+   * Handle user selection from mention picker
+   * Adds user as chip and clears search input
+   * @param {UserListItem} user - Selected user to mention
+   * @returns {void}
    */
-  onUserSelected(user: UserListItem): void {
-    this.selectedUsers.update((users) => [...users, user]);
-    // Replace the @ prefix and search term with the mention
-    const currentMessage = this.message();
-    const prefix = this.searchPrefix();
+  protected onUserSelected = (user: UserListItem): void => {
+    this.composerService.addUser(user);
+    this.composerService.setMessage('');
+    this.stateService.closeUserSelection();
+  };
 
-    if (prefix === '@') {
-      // Remove the @ and search term, then add the full mention
-      this.message.set(`@${user.name} `);
+  /**
+   * Handle channel selection from mention picker
+   * Adds channel as chip and clears search input
+   * @param {ChannelListItem} channel - Selected channel to mention
+   * @returns {void}
+   */
+  protected onChannelSelected = (channel: ChannelListItem): void => {
+    this.composerService.addChannel(channel);
+    this.composerService.setMessage('');
+    this.stateService.closeChannelSelection();
+  };
+
+  /**
+   * Remove a mention chip
+   * Removes user or channel from selected mentions
+   * @param {MentionChipData} chip - Mention chip to remove
+   * @returns {void}
+   */
+  protected onChipRemoved = (chip: MentionChipData): void => {
+    if (chip.type === 'user') {
+      this.composerService.removeUser(chip.id);
     } else {
-      // Fallback: just append if no prefix (shouldn't happen)
-      this.message.set(currentMessage + `@${user.name} `);
+      this.composerService.removeChannel(chip.id);
     }
-
-    this.isUserSelectionOpen.set(false);
-  }
+  };
 
   /**
-   * Handle channel selection
+   * Close user selection popup
+   * @returns {void}
    */
-  onChannelSelected(channel: ChannelListItem): void {
-    // Replace the # prefix and search term with the channel mention
-    const prefix = this.searchPrefix();
-
-    if (prefix === '#') {
-      // Remove the # and search term, then add the full channel mention
-      this.message.set(`#${channel.name} `);
-    } else {
-      // Fallback: just append if no prefix (shouldn't happen)
-      this.message.set(this.message() + `#${channel.name} `);
-    }
-
-    this.isChannelSelectionOpen.set(false);
-  }
+  protected onUserSelectionClosed = (): void => {
+    this.stateService.closeUserSelection();
+  };
 
   /**
-   * Close user selection
+   * Close channel selection popup
+   * @returns {void}
    */
-  onUserSelectionClosed(): void {
-    this.isUserSelectionOpen.set(false);
-  }
-
-  /**
-   * Close channel selection
-   */
-  onChannelSelectionClosed(): void {
-    this.isChannelSelectionOpen.set(false);
-  }
+  protected onChannelSelectionClosed = (): void => {
+    this.stateService.closeChannelSelection();
+  };
 
   /**
    * Handle message search result selection
+   * Emits message ID to scroll to that message
+   * @param {MessageSearchItem} message - Selected message from search
+   * @returns {void}
    */
-  onMessageResultSelected(message: MessageSearchItem): void {
-    this.isMessageSearchOpen.set(false);
-    this.message.set('');
-    // Emit message ID to parent component to scroll to that message
+  protected onMessageResultSelected = (message: MessageSearchItem): void => {
+    this.composerService.setMessage('');
+    this.stateService.closeAll();
     this.messageSelected.emit(message.id);
-  }
+  };
 
   /**
-   * Close message search
+   * Close message search popup
+   * @returns {void}
    */
-  onMessageSearchClosed(): void {
-    this.isMessageSearchOpen.set(false);
-  }
+  protected onMessageSearchClosed = (): void => {
+    this.stateService.closeMessageSearch();
+  };
 }

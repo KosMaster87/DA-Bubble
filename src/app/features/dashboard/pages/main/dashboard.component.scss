@@ -1,4 +1,4 @@
-@use '../../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .dashboard {
   position: relative;
@@ -14,7 +14,6 @@
   gap: var(--space-2);
   overflow: hidden;
 
-  // Mobile: No padding and gap
   @media screen and (max-width: 767px) {
     padding: 0;
     gap: 0;

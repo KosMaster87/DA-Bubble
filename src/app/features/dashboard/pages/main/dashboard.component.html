@@ -70,6 +70,7 @@
       (channelLeft)="onChannelLeft()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
       (backRequested)="backToSidebar()"
+      (channelMentionRequested)="navigateToChannel($event)"
     />
     } @else if (currentView() === 'direct-message' && selectedDM()) {
     <app-chat-private
@@ -78,6 +79,7 @@
       [dmInfo]="selectedDM()!"
       (threadRequested)="openThread($event)"
       (backRequested)="backToSidebar()"
+      (channelMentionRequested)="navigateToChannel($event)"
     />
     } @if (isThreadOpen() && threadInfo()) {
     <app-thread
@@ -87,6 +89,7 @@
       (closeRequested)="closeThread()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
       (backRequested)="backToContent()"
+      (channelMentionRequested)="navigateToChannel($event)"
     />
     }
   </div>

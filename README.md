@@ -267,7 +267,6 @@ dabubble/
 ├── package.json                                           # Dependencies & scripts
 ├── tsconfig.json                                          # TypeScript config
 ├── tsconfig.app.json                                      # App-specific TS config
-├── THREAD-SYSTEM.md                                       # Thread architecture documentation
 ├── angular.json                                           # Angular workspace config
 ├── package.json                                           # Dependencies & scripts
 ├── tsconfig.json                                          # TypeScript config
@@ -379,8 +378,6 @@ Thread panel slides in from right
 - **ConversationMessagesComponent** – Reusable message list
 - **Dashboard** – Orchestrates thread opening/closing
 
-**See:** [THREAD-SYSTEM.md](./THREAD-SYSTEM.md) for complete architecture documentation
-
 ---
 
 ### Module READMEs
@@ -392,7 +389,6 @@ Each major module has detailed documentation:
 - **[LAYOUT-README.md](./src/app/layout/LAYOUT-README.md)** - Layouts, Sidebar, Header
 - **[SHARED-README.md](./src/app/shared/SHARED-README.md)** - Shared UI Components
 - **[STORES-README.md](./src/app/stores/STORES-README.md)** - NgRx SignalStore Architecture
-- **[THREAD-SYSTEM.md](./THREAD-SYSTEM.md)** - Complete Thread System Documentation
 
 ---
 
@@ -625,13 +621,11 @@ This project is licensed under the MIT License.
 - ✅ **Google OAuth** - Popup strategy (production-ready)
 - ✅ **IONOS Apache Hosting** - .htaccess SPA routing
 - ✅ **Type Safety** - No `any` types, explicit TypeScript throughout
-- ✅ **Documentation** - THREAD-SYSTEM.md, STORES-README.md
 
 **Production Ready:** Full Firebase backend with security rules ✅
 
 - ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
 - ✅ **Google OAuth** - Popup strategy (production-ready)
 - ✅ **IONOS Apache Hosting** - .htaccess SPA routing
-- ✅ **Documentation** - THREAD-SYSTEM.md + updated copilot prompts
 
 **Next Milestone:** Firebase Migration (Q1 2025)

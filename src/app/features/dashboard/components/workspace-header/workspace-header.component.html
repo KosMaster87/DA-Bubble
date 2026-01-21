@@ -91,9 +91,9 @@
       />
       }
 
-      @if (profileUser) {
+      @if (profileUser()) {
       <app-profile-view
-        [user]="profileUser"
+        [user]="profileUser()!"
         [isVisible]="isProfileViewOpen()"
         [isOwnProfile]="true"
         [isChannelOwner]="false"
@@ -103,9 +103,9 @@
         (editClicked)="onProfileEdit()"
         (messageClicked)="onProfileMessage()"
       />
-      } @if (editProfileUser) {
+      } @if (editProfileUser()) {
       <app-profile-edit
-        [user]="editProfileUser"
+        [user]="editProfileUser()!"
         [isVisible]="isEditProfileOpen()"
         (closeClicked)="onEditProfileClose()"
         (saveClicked)="onProfileSave($event)"

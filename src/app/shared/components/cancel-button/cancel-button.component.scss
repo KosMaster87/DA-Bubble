@@ -4,8 +4,8 @@
  * BEM Methodology
  */
 
-@use '../../../../styles/variables' as vars;
-@use '../../../../styles/mixins' as mix;
+@use 'variables' as vars;
+@use 'mixins' as mix;
 
 .cancel-button {
   @include mix.flex-center;

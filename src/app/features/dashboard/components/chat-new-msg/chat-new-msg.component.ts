@@ -5,7 +5,6 @@
  */
 
 import { Component, output, inject, computed, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
@@ -15,6 +14,7 @@ import { ChannelSelectionComponent } from '@shared/dashboard-components/channel-
 import { UserStore } from '@stores/user.store';
 import { ChannelStore } from '@stores/channel.store';
 import { SearchAutocompleteService } from '@shared/services/search-autocomplete.service';
+import { NavigationService } from '@core/services/navigation/navigation.service';
 
 @Component({
   selector: 'app-chat-new-msg',
@@ -31,14 +31,15 @@ export class ChatNewMsgComponent {
   private userStore = inject(UserStore);
   private channelStore = inject(ChannelStore);
   private searchService = inject(SearchAutocompleteService);
-  private router = inject(Router);
+  private navigationService = inject(NavigationService);
   backRequested = output<void>();
 
   protected searchQuery = signal('');
   protected isDropdownOpen = signal(false);
 
   /**
-   * Get search prefix
+   * Get search prefix from query
+   * @returns {Signal<string>} Search prefix (# or @ or empty)
    */
   protected searchPrefix = computed(() => {
     const query = this.searchQuery();
@@ -48,13 +49,20 @@ export class ChatNewMsgComponent {
   });
 
   /**
-   * Check which popup to show
+   * Check if user selection popup should show
+   * @returns {Signal<boolean>} True if user dropdown visible
    */
   protected showUserSelection = computed(() => this.isDropdownOpen() && this.searchPrefix() === '@' && this.userResults().length > 0);
+
+  /**
+   * Check if channel selection popup should show
+   * @returns {Signal<boolean>} True if channel dropdown visible
+   */
   protected showChannelSelection = computed(() => this.isDropdownOpen() && this.searchPrefix() === '#' && this.channelResults().length > 0);
 
   /**
    * All workspace users for message-box mentions
+   * @returns {Signal<UserListItem[]>} User list items
    */
   protected allUsers = computed<UserListItem[]>(() => {
     return this.userStore.users().map(user => ({
@@ -65,7 +73,8 @@ export class ChatNewMsgComponent {
   });
 
   /**
-   * All public channels for message-box channel mentions
+   * All public channels for message-box mentions
+   * @returns {Signal<ChannelListItem[]>} Channel list items
    */
   protected channelListItems = computed<ChannelListItem[]>(() => {
     return this.channelStore.getPublicChannels().map((ch) => ({
@@ -76,11 +85,13 @@ export class ChatNewMsgComponent {
 
   /**
    * Search results from autocomplete service
+   * @returns {Signal} Autocomplete search results
    */
   protected searchResults = this.searchService.searchResults;
 
   /**
-   * Filtered user results
+   * Filtered user results from search
+   * @returns {Signal<UserListItem[]>} User search results
    */
   protected userResults = computed<UserListItem[]>(() => {
     return this.searchResults()
@@ -93,7 +104,8 @@ export class ChatNewMsgComponent {
   });
 
   /**
-   * Filtered channel results
+   * Filtered channel results from search
+   * @returns {Signal<ChannelListItem[]>} Channel search results
    */
   protected channelResults = computed<ChannelListItem[]>(() => {
     return this.searchResults()
@@ -105,51 +117,48 @@ export class ChatNewMsgComponent {
   });
 
   /**
-   * Check if there are any results
+   * Check if search has any results
+   * @returns {Signal<boolean>} True if results exist
    */
   protected hasResults = computed(() => this.searchResults().length > 0);
 
   /**
-   * Handle message send
+   * Handle search input
+   * @returns {void}
    */
-  onMessageSent(message: string): void {
-    console.log('Message sent:', message);
-    // TODO: Implement message sending logic
-  }
-
-  /**
-   * Handle search
-   */
-  onSearch(): void {
+  onSearch = (): void => {
     const query = this.searchQuery();
     this.searchService.setSearchQuery(query);
     this.isDropdownOpen.set(query.length > 0);
-  }
+  };
 
   /**
-   * Close dropdown
+   * Close dropdown popup
+   * @returns {void}
    */
-  onDropdownClose(): void {
+  onDropdownClose = (): void => {
     this.isDropdownOpen.set(false);
-  }
+  };
 
   /**
-   * Handle user selection
+   * Handle user selection from dropdown
+   * @param {UserListItem} user - Selected user
+   * @returns {void}
    */
-  onUserSelected(user: UserListItem): void {
+  onUserSelected = (user: UserListItem): void => {
     this.isDropdownOpen.set(false);
-    this.searchQuery.set(`@${user.name} `);
     this.searchService.clearSearch();
-    // TODO: Navigate to DM with user or set as recipient
-  }
+    this.navigationService.navigateToDirectMessage(user.id);
+  };
 
   /**
-   * Handle channel selection
+   * Handle channel selection from dropdown
+   * @param {ChannelListItem} channel - Selected channel
+   * @returns {void}
    */
-  onChannelSelected(channel: ChannelListItem): void {
+  onChannelSelected = (channel: ChannelListItem): void => {
     this.isDropdownOpen.set(false);
-    this.searchQuery.set(`#${channel.name} `);
     this.searchService.clearSearch();
-    // TODO: Navigate to channel
-  }
+    this.navigationService.navigateToChannel(channel.id);
+  };
 }

@@ -1,11 +1,11 @@
-@use '../../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .workspace-header {
   &__content {
     @include mix.flex(row, space-between, center);
     gap: 1rem;
     max-width: 100%;
-    padding: 0.2rem 0.2rem; // TEST
+    padding: 0.2rem 0.2rem;
 
     @include mix.tablet-landscape {
       gap: 1.5rem;
@@ -29,7 +29,6 @@
     flex: 1;
     max-width: 400px;
 
-    // Hide on mobile
     @media screen and (max-width: 767px) {
       display: none;
     }
@@ -101,7 +100,6 @@
       color: var(--text-primary, #000);
       transition: color 0.2s;
 
-      // Hide on mobile
       @media screen and (max-width: 767px) {
         display: none;
       }
@@ -121,7 +119,6 @@
       position: relative;
       flex-shrink: 0;
 
-      // Desktop size
       @media screen and (min-width: 768px) {
         width: 42px;
         height: 42px;

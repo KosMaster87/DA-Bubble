@@ -1,4 +1,4 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .message-search-item {
   @include mix.flex(row, flex-start, center);

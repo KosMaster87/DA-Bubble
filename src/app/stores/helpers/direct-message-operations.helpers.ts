@@ -102,12 +102,14 @@ export const sendMessageToFirestore = async (
   firestore: Firestore,
   conversationId: string,
   authorId: string,
-  content: string
+  content: string,
+  mentionedUserIds: string[] = []
 ) => {
   const messagesRef = collection(firestore, 'direct-messages', conversationId, 'messages');
   await addDoc(messagesRef, {
     authorId,
     content,
+    mentionedUserIds,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     isEdited: false,

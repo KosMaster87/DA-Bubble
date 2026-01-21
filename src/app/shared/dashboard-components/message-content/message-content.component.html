@@ -1,0 +1,28 @@
+<span class="message-content">
+  @for (segment of segments(); track $index) {
+    @if (segment.type === 'mention') {
+      <span class="message-content__chip-wrapper" (click)="onMentionClick(segment.id!)">
+        <app-mention-chip
+          [data]="{
+            id: segment.id!,
+            type: 'user',
+            name: segment.content.substring(1).trim(),
+            avatar: segment.avatar,
+          }"
+        />
+      </span>
+    } @else if (segment.type === 'channel') {
+      <span class="message-content__chip-wrapper" (click)="onChannelClick(segment.id!)">
+        <app-mention-chip
+          [data]="{
+            id: segment.id!,
+            type: 'channel',
+            name: segment.content.substring(1).trim(),
+          }"
+        />
+      </span>
+    } @else {
+      <span>{{ segment.content }}</span>
+    }
+  }
+</span>

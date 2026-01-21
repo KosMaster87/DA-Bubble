@@ -13,10 +13,7 @@ import { ThreadUnreadPopupComponent } from '@shared/dashboard-components/thread-
 import { AuthStore } from '@stores/auth';
 import { UserPresenceStore } from '@stores/index';
 import { ChannelListService } from '@core/services/channel-list/channel-list.service';
-import {
-  DirectMessageListService,
-  type DirectMessageListItem,
-} from '@core/services/direct-message-list/direct-message-list.service';
+import { DirectMessageListService } from '@core/services/direct-message-list/direct-message-list.service';
 import { ChannelManagementService } from '@core/services/channel-management/channel-management.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
@@ -105,108 +102,52 @@ export class WorkspaceSidebarComponent {
    */
   protected selectedDirectMessageId = this.navigationService.getSelectedDirectMessageId();
 
-  /**
-   * Open new message view
-   */
-  openNewMessage(): void {
-    this.newMessageRequested.emit();
-  }
-
-  /**
-   * Open mailbox view
-   */
-  openMailbox(): void {
-    this.mailboxRequested.emit();
-  }
-
-  /**
-   * Toggle channels dropdown
-   */
-  toggleChannels(): void {
-    this.workspaceSidebarService.toggleChannels();
-  }
-
-  /**
-   * Toggle direct messages dropdown
-   */
-  toggleDirectMessages(): void {
-    this.workspaceSidebarService.toggleDirectMessages();
-  }
-
-  /**
-   * Toggle system control dropdown
-   */
-  toggleSystemControl(): void {
-    this.workspaceSidebarService.toggleSystemControl();
-  }
-
-  /**
-   * Open legal page
-   */
-  openLegal(): void {
-    this.navigationService.navigateToLegal();
-  }
-
-  /**
-   * Open settings
-   */
-  openSettings(): void {
-    // TODO: Open settings dialog/page
-    console.log('Opening settings...');
-  }
+  openNewMessage = (): void => this.newMessageRequested.emit();
+  openMailbox = (): void => this.mailboxRequested.emit();
+  toggleChannels = (): void => this.workspaceSidebarService.toggleChannels();
+  toggleDirectMessages = (): void => this.workspaceSidebarService.toggleDirectMessages();
+  toggleSystemControl = (): void => this.workspaceSidebarService.toggleSystemControl();
+  openLegal = (): void => this.navigationService.navigateToLegal();
+  openSettings = (): void => { /* TODO: Open settings dialog/page */ };
 
   /**
    * Select a channel or special view (mailbox, etc.)
    * Delegates to NavigationService for routing and state management
+   * @param {string} channelId - Channel ID to select
+   * @returns {void}
    */
-  selectChannel(channelId: string): void {
-    // Reset auto-select suppression on manual channel selection
+  selectChannel = (channelId: string): void => {
     this.workspaceInitializationService.resetAutoSelectSuppression();
-
     this.navigationService.selectChannel(channelId);
     this.channelSelected.emit(channelId);
-  }
+  };
 
-  /**
-   * Public method to select a channel by ID (for parent components)
-   * Note: Does not emit event to avoid circular navigation loops
-   */
-  selectChannelById(channelId: string): void {
-    this.navigationService.selectChannelById(channelId);
-  }
+  selectChannelById = (channelId: string): void => this.navigationService.selectChannelById(channelId);
+  selectDirectMessageById = (messageId: string): void => this.navigationService.selectDirectMessageById(messageId);
+  deselectDirectMessage = (): void => this.navigationService.deselectDirectMessage();
 
-  /**
-   * Add new channel
-   */
-  addChannel(): void {
-    this.workspaceSidebarService.startAddChannel();
-  }
-
-  /**
-   * Handle create channel close
-   */
-  onCreateChannelClose(): void {
-    this.workspaceSidebarService.closeCreateChannel();
-  }
+  addChannel = (): void => this.workspaceSidebarService.startAddChannel();
+  onCreateChannelClose = (): void => this.workspaceSidebarService.closeCreateChannel();
+  onClose = (): void => this.workspaceSidebarService.closeAddMemberAfterChannel();
 
   /**
    * Handle create channel submit
+   * @param {Object} data - Channel data
+   * @param {string} data.name - Channel name
+   * @param {string} data.description - Channel description
+   * @param {boolean} data.isPrivate - Whether channel is private
+   * @returns {void}
    */
-  onCreateChannel(data: { name: string; description: string; isPrivate: boolean }): void {
+  onCreateChannel = (data: { name: string; description: string; isPrivate: boolean }): void => {
     this.workspaceSidebarService.setPendingChannelData(data.name, data.description, data.isPrivate);
     this.workspaceSidebarService.closeCreateChannel();
     this.workspaceSidebarService.openAddMemberAfterChannel();
-  }
-
-  /**
-   * Handle add member after channel close
-   */
-  onClose(): void {
-    this.workspaceSidebarService.closeAddMemberAfterChannel();
-  }
+  };
 
   /**
    * Handle add member after channel create - create channel and send invitations
+   * @param {Object} data - Channel creation data
+   * @returns {Promise<void>}
    */
   async onCreate(data: {
     type: 'all' | 'specific';
@@ -221,7 +162,7 @@ export class WorkspaceSidebarComponent {
     // (includes lock, cleanup, and auto-selection)
     const newChannelId = await this.channelManagementService.createChannelFromPending(
       data,
-      currentUserId
+      currentUserId,
     );
 
     if (!newChannelId) return; // Locked or failed
@@ -232,126 +173,89 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Select a direct message (handles self-DM automatically)
+   * @param {string} messageId - Direct message ID to select
+   * @returns {Promise<void>}
    */
-  async selectDirectMessage(messageId: string): Promise<void> {
+  selectDirectMessage = async (messageId: string): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return;
 
-    // Reset auto-select suppression on manual DM selection
     this.workspaceInitializationService.resetAutoSelectSuppression();
 
-    // Handle self-DM and get actual conversation ID via DirectMessageListService
     const actualConversationId = await this.directMessageListService.selectConversation(
       messageId,
-      currentUserId
+      currentUserId,
     );
 
     if (!actualConversationId) return;
-
     this.navigationService.selectDirectMessage(actualConversationId);
     this.directMessageSelected.emit(actualConversationId);
-  }
-
-  /**
-   * Public method to select a direct message by ID (for parent components)
-   * Note: Does not emit event to avoid circular navigation loops
-   */
-  selectDirectMessageById(messageId: string): void {
-    this.navigationService.selectDirectMessageById(messageId);
-  }
-
-  /**
-   * Deselect the current direct message
-   */
-  deselectDirectMessage(): void {
-    this.navigationService.deselectDirectMessage();
-  }
+  };
 
   /**
    * Start or open a direct message conversation with a user
-   * @param userId The other user's ID
-   * @returns Conversation data { id, participants }
+   * @param {string} userId - The other user's ID
+   * @returns {Promise<{id: string, participants: string[]} | null>} Conversation data or null
    */
-  async startDirectMessage(userId: string): Promise<{
-    id: string;
-    participants: string[];
-  } | null> {
+  startDirectMessage = async (userId: string): Promise<{ id: string; participants: string[] } | null> => {
     const currentUserId = this.authStore.user()?.uid;
-    if (!currentUserId) {
-      console.error('❌ Cannot start DM: No current user');
-      return null;
-    }
+    if (!currentUserId) return null;
 
-    // Start conversation and auto-select via DirectMessageListService
-    // (includes navigation state update)
     const conversation = await this.directMessageListService.startAndSelectConversation(
       currentUserId,
-      userId
+      userId,
     );
 
     return conversation;
-  }
+  };
 
   /**
    * Handle thread click from popup
+   * @param {Object} event - Thread event data
+   * @param {string} event.messageId - Message ID
+   * @param {PopupMessage} event.parentMessage - Parent message
+   * @param {string} event.conversationId - Conversation ID
+   * @param {boolean} event.isDirectMessage - Is direct message flag
+   * @param {boolean} isDirectMessage - Direct message flag
+   * @returns {Promise<void>}
    */
-  async onThreadClick(
+  onThreadClick = async (
     event: {
       messageId: string;
       parentMessage: PopupMessage;
       conversationId: string;
       isDirectMessage: boolean;
     },
-    isDirectMessage: boolean
-  ): Promise<void> {
-    // Don't emit conversation selection - thread opening will handle navigation
-    // Emitting selection here causes thread to be closed by showChannel/showDirectMessage
-
-    // Handle thread navigation and message transformation via NavigationService
+    isDirectMessage: boolean,
+  ): Promise<void> => {
     const { viewMessage } = this.navigationService.handleThreadClick(
       {
         conversationId: event.conversationId,
         messageId: event.messageId,
         message: event.parentMessage,
       },
-      event.isDirectMessage
+      event.isDirectMessage,
     );
 
-    // Emit thread opened event for parent component
     this.threadOpened.emit({
       messageId: event.messageId,
       parentMessage: viewMessage,
       conversationId: event.conversationId,
       isDirectMessage: event.isDirectMessage,
     });
-  }
+  };
 
-  /**
-   * Handle mouse enter on thread unread item
-   */
-  onThreadUnreadMouseEnter(id: string): void {
-    this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
-  }
-
-  /**
-   * Handle mouse leave on thread unread item
-   */
-  onThreadUnreadMouseLeave(): void {
-    this.workspaceSidebarService.onThreadUnreadMouseLeave();
-  }
-
-  /**
-   * Cancel hover timeout (when entering popup)
-   */
-  onPopupMouseEnter(): void {
-    this.workspaceSidebarService.onPopupMouseEnter();
-  }
+  onThreadUnreadMouseEnter = (id: string): void => this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
+  onThreadUnreadMouseLeave = (): void => this.workspaceSidebarService.onThreadUnreadMouseLeave();
+  onPopupMouseEnter = (): void => this.workspaceSidebarService.onPopupMouseEnter();
 
   /**
    * Handle image load error - use fallback avatar
+   * @param {Event} event - Error event
+   * @returns {void}
    */
-  onImageError(event: Event): void {
+  onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;
     img.src = '/img/profile/profile-0.svg';
-  }
+  };
 }

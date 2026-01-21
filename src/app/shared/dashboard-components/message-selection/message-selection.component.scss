@@ -1,9 +1,10 @@
-@use '../../../../styles/mixins' as mix;
+@use 'mixins' as mix;
 
 .message-selection {
   position: absolute;
   top: calc(100% + var(--space-1));
   left: 0;
+  right: 0;
   z-index: var(--z-dropdown);
 
   @media (max-width: 767px) {
@@ -36,6 +37,11 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     cursor: default;
+
+    @media (max-width: 767px) {
+      width: 70%;
+      min-width: unset;
+    }
   }
 
   &__body {

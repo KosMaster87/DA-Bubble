@@ -1,9 +1,21 @@
 <div class="message-box">
+  <!-- Mention Chips -->
+  @if (mentionChips().length > 0) {
+    <div class="message-box__chips">
+      @for (chip of mentionChips(); track chip.id) {
+        <app-mention-chip
+          [data]="chip"
+          (removed)="onChipRemoved(chip)"
+        />
+      }
+    </div>
+  }
+
   <div class="message-box__input-wrapper">
     <textarea
       class="message-box__input"
       [ngModel]="message()"
-      (ngModelChange)="message.set($event); onMessageInput()"
+      (ngModelChange)="updateMessage($event); onMessageInput()"
       placeholder="Type a message... (#channel, @user, $search)"
       rows="1"
       (keydown.enter)="$event.preventDefault(); sendMessage()"
@@ -52,7 +64,7 @@
         @if (isUserSelectionOpen()) {
           <app-user-selection
             [users]="availableUsers()"
-            [searchValue]="userSearchValue()"
+            [searchValue]="searchTerm()"
             (userSelected)="onUserSelected($event)"
             (closed)="onUserSelectionClosed()"
           />

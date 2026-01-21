@@ -1,0 +1,35 @@
+@use 'mixins' as mix;
+
+.message-content {
+  display: inline;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+
+  &__chip-wrapper {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0 0.25rem;
+    vertical-align: middle;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    // Remove the remove button from chips in messages (read-only)
+    ::ng-deep .mention-chip__remove {
+      display: none;
+    }
+
+    // Ensure chip is clickable
+    ::ng-deep .mention-chip {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+  }
+}

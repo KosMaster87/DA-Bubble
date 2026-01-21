@@ -27,29 +27,40 @@ export class SearchResultsDropdownComponent {
 
   /**
    * Handle overlay click to close dropdown
+   * Emits closed event when overlay is clicked
+   * @returns {void}
    */
-  onOverlayClick(): void {
+  protected onOverlayClick = (): void => {
     this.closed.emit();
-  }
+  };
 
   /**
    * Handle user selection
+   * Emits user ID when user is clicked
+   * @param {string} userId - ID of selected user
+   * @returns {void}
    */
-  onUserClick(userId: string): void {
+  protected onUserClick = (userId: string): void => {
     this.userSelected.emit(userId);
-  }
+  };
 
   /**
    * Handle channel selection
+   * Emits channel ID when channel is clicked
+   * @param {string} channelId - ID of selected channel
+   * @returns {void}
    */
-  onChannelClick(channelId: string): void {
+  protected onChannelClick = (channelId: string): void => {
     this.channelSelected.emit(channelId);
-  }
+  };
 
   /**
    * Handle message result selection
+   * Emits message ID when message is clicked
+   * @param {string} id - ID of selected message
+   * @returns {void}
    */
-  onMessageClick(id: string): void {
+  protected onMessageClick = (id: string): void => {
     this.messageSelected.emit(id);
-  }
+  };
 }

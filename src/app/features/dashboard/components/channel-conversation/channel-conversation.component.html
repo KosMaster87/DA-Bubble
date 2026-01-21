@@ -75,7 +75,7 @@
         <app-members-options-menu
           [isOpen]="channelConversationUI.getMembersMenuState()()"
           [members]="members()"
-          [showAddMember]="isCurrentUserChannelOwner() || isCurrentUserAdmin()"
+          [showAddMember]="isCurrentUserChannelOwner()"
           (closeClicked)="channelConversationUI.closeMembersMenu()"
           (addMemberClicked)="channelConversationUI.openAddMembers()"
           (memberSelected)="channelConversationUI.openProfileView($event)"
@@ -88,7 +88,7 @@
             [isVisible]="channelConversationUI.getProfileViewState()()"
             [isOwnProfile]="isOwnProfile()"
             [isChannelOwner]="isCurrentUserChannelOwner()"
-            [isCurrentUserAdmin]="isCurrentUserAdmin()"
+            [isCurrentUserAdmin]="false"
             [isSelectedUserOwner]="isSelectedUserChannelOwner()"
             (closeClicked)="channelConversationUI.closeProfileView()"
             (editClicked)="channelConversationUI.openEditProfile()"
@@ -115,6 +115,17 @@
           (closeClicked)="channelConversationUI.closeAddMembers()"
           (membersAdded)="onMembersAdded($event)"
         />
+
+        <!-- Channel View -->
+        @if (selectedChannelId()) {
+          <app-channel-view
+            [channelId]="selectedChannelId()!"
+            [isVisible]="isChannelViewOpen()"
+            (closeClicked)="channelViewService.closeChannelView()"
+            (joinClicked)="onChannelViewJoin($event)"
+            (navigateClicked)="onChannelViewJoin($event)"
+          />
+        }
       </div>
     </div>
 
@@ -134,7 +145,9 @@
         [messageGroups]="messagesGroupedByDate()"
         (avatarClicked)="channelConversationUI.openProfileView($event)"
         (senderClicked)="channelConversationUI.openProfileView($event)"
-        (reactionAdded)="onReactionAdded($event)"
+        (mentionClicked)="channelConversationUI.openProfileView($event)"
+        (channelMentionClicked)="channelViewService.openChannelView($event)"
+        (reactionAdded)="addReaction($event.messageId, $event.emoji)"
         (threadClicked)="onThreadClick($event)"
         (messageEdited)="onMessageEdited($event)"
         (messageDeleted)="onMessageDeleted($event)"
@@ -148,7 +161,7 @@
         [channels]="channelListItems()"
         [messages]="searchableMessages()"
         (messageSent)="sendMessage($event)"
-        (messageSelected)="scrollToMessage($event)"
+        (messageSelected)="messageScrollService.scrollToMessage($event)"
       />
     </div>
   }
