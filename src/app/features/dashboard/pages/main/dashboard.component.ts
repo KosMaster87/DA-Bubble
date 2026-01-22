@@ -4,13 +4,14 @@
  * @module features/dashboard/pages/main/dashboard
  */
 
-import { Component, inject, ViewChild, effect, untracked, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, ViewChild, effect, untracked, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
+import { ResponsiveViewService } from '@shared/services/responsive-view.service';
 import { DashboardStateService } from '@shared/services/dashboard-state.service';
 import { DashboardInitializationService } from '@shared/services/dashboard-initialization.service';
 import { ThreadManagementService } from '@shared/services/thread-management.service';
@@ -49,6 +50,7 @@ export class DashboardComponent {
   @ViewChild('sidebar') sidebar!: WorkspaceSidebarComponent;
 
   protected sidebarService = inject(WorkspaceSidebarService);
+  protected responsiveView = inject(ResponsiveViewService);
   protected dashboardState = inject(DashboardStateService);
   protected dashboardInit = inject(DashboardInitializationService);
   protected threadManagement = inject(ThreadManagementService);
@@ -66,32 +68,79 @@ export class DashboardComponent {
   protected threadInfo = this.threadManagement.threadInfo;
 
   // Mobile view state management
-  protected isMobileView = signal<boolean>(false);
+  protected isMobileView = this.responsiveView.isMobile;
   protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
 
   // Computed: Should show each section on mobile
-  protected showSidebarMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'sidebar'
+  protected showSidebarMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'sidebar',
   );
-  protected showContentMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'content'
+  protected showContentMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'content',
   );
-  protected showThreadMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'thread'
+  protected showThreadMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'thread',
   );
 
+
+  constructor() {
+    this.dashboardInit.initializeEffects();
+    this.setupRouteListener();
+    this.setupResponsiveSidebar();
+    this.setupMobileViewEffects();
+  }
+
   /**
-   * Check if current viewport is mobile
-   * Updates isMobileView signal based on window width
+   * Handle mobile sidebar visibility
+   * Shows sidebar on mobile to let CSS control visibility
+   * @private
    * @returns {void}
    */
-  private checkMobileView = (): void => {
-    this.isMobileView.set(window.innerWidth < 768);
+  private handleMobileSidebarVisibility = (): void => {
+    if (this.sidebarService.isHidden()) {
+      this.sidebarService.show();
+    }
+  };
+
+  /**
+   * Handle desktop sidebar collapse
+   * Auto-collapses sidebar at 1440px breakpoint
+   * @private
+   * @param {boolean} shouldCollapse - Whether sidebar should collapse
+   * @returns {void}
+   */
+  private handleDesktopSidebarCollapse = (shouldCollapse: boolean): void => {
+    if (shouldCollapse && !this.sidebarService.isHidden()) {
+      this.sidebarService.hide();
+    } else if (!shouldCollapse && this.sidebarService.isHidden()) {
+      this.sidebarService.show();
+    }
+  };
+
+  /**
+   * Setup responsive sidebar auto-collapse effect
+   * Automatically collapses/expands sidebar based on viewport width
+   * Only applies on non-mobile viewports (>= 768px)
+   * @private
+   * @returns {void}
+   */
+  private setupResponsiveSidebar = (): void => {
+    effect(() => {
+      const shouldCollapse = this.responsiveView.shouldCollapseSidebar();
+      const isMobile = this.isMobileView();
+
+      untracked(() => {
+        isMobile
+          ? this.handleMobileSidebarVisibility()
+          : this.handleDesktopSidebarCollapse(shouldCollapse);
+      });
+    });
   };
 
   /**
    * Setup mobile view effects
    * Watches for view changes and updates mobile active view
+   * @private
    * @returns {void}
    */
   private setupMobileViewEffects = (): void => {
@@ -103,10 +152,16 @@ export class DashboardComponent {
 
     effect(() => {
       const view = this.currentView();
-      if (this.isMobileView() && !this.isThreadOpen() &&
-          (view === 'channel' || view === 'direct-message' ||
-           view === 'chat-new-msg' || view === 'mailbox' ||
-           view === 'legal' || view === 'welcome')) {
+      if (
+        this.isMobileView() &&
+        !this.isThreadOpen() &&
+        (view === 'channel' ||
+          view === 'direct-message' ||
+          view === 'chat-new-msg' ||
+          view === 'mailbox' ||
+          view === 'legal' ||
+          view === 'welcome')
+      ) {
         untracked(() => this.mobileActiveView.set('content'));
       }
     });
@@ -115,6 +170,7 @@ export class DashboardComponent {
   /**
    * Setup route parameter listener
    * Creates an effect that watches route parameter changes and handles routing
+   * @private
    * @returns {void}
    */
   private setupRouteListener = (): void => {
@@ -127,6 +183,7 @@ export class DashboardComponent {
   /**
    * Handle route parameter changes
    * Delegates route handling to route handler service
+   * @private
    * @param {any} params - Route parameters from navigation service
    * @returns {void}
    */
@@ -138,26 +195,6 @@ export class DashboardComponent {
       showChannel: this.showChannel,
       showDirectMessage: this.showDirectMessage,
     });
-  };
-
-  /**
-   * Initialize dashboard effects
-   */
-  private initEffects = (() => {
-    this.dashboardInit.initializeEffects();
-    this.setupRouteListener();
-    this.checkMobileView();
-    this.setupMobileViewEffects();
-  })();
-
-  /**
-   * Listen to window resize events
-   * Updates mobile view state on window resize
-   * @returns {void}
-   */
-  @HostListener('window:resize')
-  onResize = (): void => {
-    this.checkMobileView();
   };
 
   /**
@@ -221,7 +258,12 @@ export class DashboardComponent {
    * @param {Object} event - Thread request event with messageId, parentMessage, conversationId, isDirectMessage
    * @returns {void}
    */
-  openThread = (event: { messageId: string; parentMessage: Message; conversationId?: string; isDirectMessage?: boolean; }): void => {
+  openThread = (event: {
+    messageId: string;
+    parentMessage: Message;
+    conversationId?: string;
+    isDirectMessage?: boolean;
+  }): void => {
     this.threadCoordinator.openThread(event);
   };
 
@@ -260,5 +302,6 @@ export class DashboardComponent {
   };
 
   /** Navigate to channel by ID (e.g., #channel mention) @param {string} channelId @returns {void} */
-  navigateToChannel = (channelId: string): void => this.navigationService.navigateToChannel(channelId);
+  navigateToChannel = (channelId: string): void =>
+    this.navigationService.navigateToChannel(channelId);
 }

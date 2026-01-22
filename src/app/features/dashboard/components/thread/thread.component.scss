@@ -13,17 +13,30 @@
     box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-2) var(--space-3);
     }
 
-    @include mix.tablet-landscape {
-      padding: var(--space-5) var(--space-6);
-    }
+    // // Reduce padding when sidebar is collapsed (768px - 1440px)
+    // @media screen and (min-width: 769px) and (max-width: 1440px) {
+    //   padding: var(--space-3) var(--space-4);
+    // }
 
-    @include mix.laptop {
-      padding: var(--space-6) var(--space-8);
-    }
+    // @include mix.tablet-landscape {
+    //   padding: var(--space-5) var(--space-6);
+
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-4) var(--space-5);
+    //   }
+    // }
+
+    // @include mix.laptop {
+    //   padding: var(--space-6) var(--space-8);
+
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-6);
+    //   }
+    // }
 
     &-info {
       flex: 1;
@@ -33,7 +46,7 @@
   &__title-wrapper {
     margin-bottom: var(--space-1);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       margin-bottom: var(--space-0);
     }
   }
@@ -44,16 +57,29 @@
     color: var(--text-primary);
     margin: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 1.125rem;
+    }
+
+    // Reduce font size when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
+      font-size: 1.25rem;
     }
 
     @include mix.tablet-landscape {
       font-size: 1.35rem;
+
+      @media screen and (max-width: 1440px) {
+        font-size: 1.25rem;
+      }
     }
 
     @include mix.laptop {
       font-size: 1.5rem;
+
+      @media screen and (max-width: 1440px) {
+        font-size: 1.35rem;
+      }
     }
   }
 
@@ -63,7 +89,7 @@
     color: #535af1;
     margin: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
     }
   }
@@ -73,7 +99,7 @@
     color: var(--text-secondary);
     margin: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
     }
   }
@@ -119,12 +145,30 @@
   }
 
   &__parent {
-    padding: var(--space-6) var(--space-10);
+    // padding: var(--space-6) var(--space-10);
+    padding: var(--space-3) var(--space-4);
     background-color: #f8f9fa;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-3) var(--space-2);
     }
+
+    // // Reduce padding when sidebar is collapsed (768px - 1440px)
+    // @media screen and (min-width: 769px) and (max-width: 1440px) {
+    //   padding: var(--space-3) var(--space-4);
+    // }
+
+    // @include mix.tablet-landscape {
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-6);
+    //   }
+    // }
+
+    // @include mix.laptop {
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-8);
+    //   }
+    // }
   }
 
   &__parent-label {
@@ -135,7 +179,7 @@
     letter-spacing: 0.5px;
     margin-bottom: var(--space-3);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.6875rem;
       letter-spacing: 0.3px;
       margin-bottom: var(--space-2);
@@ -146,7 +190,11 @@
     display: flex;
     gap: var(--space-3);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
+      gap: var(--space-2);
+    }
+
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
       gap: var(--space-2);
     }
   }
@@ -158,9 +206,14 @@
     object-fit: cover;
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 32px;
       height: 32px;
+    }
+
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
+      width: 36px;
+      height: 36px;
     }
   }
 
@@ -174,7 +227,7 @@
     gap: var(--space-2);
     margin-bottom: var(--space-1);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
       margin-bottom: var(--space-0);
     }
@@ -190,7 +243,7 @@
     cursor: pointer;
     transition: color 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
     }
 
@@ -203,7 +256,7 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.6875rem;
     }
   }
@@ -217,7 +270,12 @@
     margin: 0;
     word-wrap: break-word;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
+      font-size: 0.875rem;
+      padding: var(--space-2);
+    }
+
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
       font-size: 0.875rem;
       padding: var(--space-2);
     }
@@ -228,7 +286,7 @@
     background-color: var(--border-color);
     margin-top: var(--space-4);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       margin-top: var(--space-2);
     }
   }
@@ -236,8 +294,25 @@
   &__footer {
     padding: var(--space-4) var(--space-6);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-1) var(--space-1);
+    }
+
+    // Reduce padding when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    @include mix.tablet-landscape {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-3) var(--space-5);
+      }
+    }
+
+    @include mix.laptop {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-4) var(--space-6);
+      }
     }
   }
 

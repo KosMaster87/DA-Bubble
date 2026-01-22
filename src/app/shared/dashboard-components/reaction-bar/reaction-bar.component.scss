@@ -10,7 +10,7 @@
   border-radius: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
     border-radius: 1rem;
@@ -36,7 +36,7 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 26px;
       height: 26px;
     }
@@ -55,7 +55,7 @@
     height: 20px;
     object-fit: contain;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 16px;
       height: 16px;
     }

@@ -7,7 +7,7 @@
   border-radius: 1.9rem;
   overflow: hidden;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     border-radius: 0;
   }
 
@@ -16,7 +16,7 @@
     padding: var(--space-5) var(--space-6);
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-2) var(--space-3) var(--space-1) var(--space-3);
     }
 
@@ -31,7 +31,7 @@
     color: var(--text-primary);
     margin: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 1.25rem;
     }
 
@@ -45,7 +45,7 @@
     box-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-2) var(--space-2);
     }
 
@@ -68,7 +68,7 @@
     color: var(--text-primary);
     transition: all 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       border: 1px solid var(--border-color);
     }
 
@@ -81,7 +81,7 @@
     &::placeholder {
       color: var(--text-secondary);
 
-      @media screen and (max-width: 767px) {
+      @media screen and (max-width: 768px) {
         font-size: 0.8125rem;
       }
     }
@@ -97,7 +97,7 @@
     padding: var(--space-6);
     @include mix.custom-scrollbar(6px, transparent, var(--border-color));
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-4);
     }
 
@@ -113,7 +113,7 @@
     color: var(--text-secondary);
     font-size: 1rem;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.875rem;
     }
 
@@ -126,7 +126,7 @@
     padding: var(--space-4) var(--space-6);
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-1) var(--space-1);
     }
 

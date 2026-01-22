@@ -9,28 +9,26 @@
   height: 100vh;
   height: 100dvh;
   margin: 0 auto;
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-0);
   background-color: var(--background-color);
   gap: var(--space-2);
   overflow: hidden;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     padding: 0;
     gap: 0;
   }
 
-  @include mix.tablet-landscape {
-    padding: var(--space-4);
-    gap: var(--space-3);
-  }
+  // @include mix.tablet-landscape {
+  //   padding: var(--space-2) var(--space-4) var(--space-2) var(--space-1);
+  // }
 
   @include mix.laptop {
-    padding: var(--space-6);
-    gap: var(--space-4);
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-0);
   }
 
   @include mix.desktop {
-    padding: var(--space-6);
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-0);
   }
 
   &__header {
@@ -41,55 +39,106 @@
     @include mix.flex(row, flex-start, stretch);
     flex: 1;
     overflow: hidden;
-    gap: var(--space-2);
+    gap: var(--space-3);
     transition: gap 0.3s ease;
     position: relative;
 
     // Mobile: Stack views absolutely, show one at a time
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: 0;
     }
 
-    @include mix.tablet-landscape {
-      gap: var(--space-3);
-    }
+    // @include mix.tablet-landscape {
+    //   gap: var(--space-3);
+    // }
 
-    @include mix.laptop {
-      gap: var(--space-4);
-    }
+    // @include mix.laptop {
+    //   gap: var(--space-3);
+    // }
 
-    &--no-sidebar {
-      gap: 0;
-    }
+    // &--no-sidebar {
+    //   gap: 0;
+    //   transition: gap 0s 0.9s;
+    // }
 
     &--thread-open {
       display: grid;
       grid-template-columns: auto 1fr 400px;
-      gap: var(--space-2);
+      grid-template-rows: minmax(0, 1fr);
+      gap: var(--space-3);
+      padding: var(--space-0) var(--space-1) var(--space-0) var(--space-1);
+      min-height: 0;
+      max-height: 100%;
 
       // Mobile: Still stack absolutely
-      @media screen and (max-width: 767px) {
+      @media screen and (max-width: 768px) {
         display: flex;
         gap: 0;
       }
 
+      // Remove gap when sidebar is collapsed (< 1440px)
+      @media screen and (min-width: 769px) and (max-width: 1440px) {
+        gap: 0;
+        column-gap: var(--space-2);
+        grid-template-columns: auto 1fr 350px;
+      }
+
+      // Content hidden under 1024px: Thread takes all available space
+      @media screen and (min-width: 769px) and (max-width: 1024px) {
+        grid-template-columns: auto 0 1fr;
+        column-gap: 0;
+        padding: var(--space-0) var(--space-1) var(--space-0) var(--space-4);
+
+        // Gap nur wenn Sidebar sichtbar ist
+        &:not(.dashboard__main--no-sidebar) {
+          column-gap: var(--space-2);
+        }
+      }
+
       @include mix.tablet-landscape {
         grid-template-columns: auto 1fr 450px;
-        gap: var(--space-3);
+
+        @media screen and (max-width: 1440px) {
+          gap: 0;
+          column-gap: var(--space-3);
+          grid-template-columns: auto 1fr 380px;
+        }
+
+        @media screen and (max-width: 1024px) {
+          grid-template-columns: auto 0 1fr;
+          column-gap: 0;
+        }
       }
 
       @include mix.laptop {
         grid-template-columns: auto 1fr 500px;
-        gap: var(--space-4);
+        padding: var(--space-0) var(--space-0) var(--space-0) var(--space-0);
+
+        @media screen and (max-width: 1440px) {
+          gap: 0;
+          column-gap: var(--space-4);
+          grid-template-columns: auto 1fr 420px;
+        }
       }
     }
   }
 
   &__sidebar {
     flex-shrink: 0;
+    height: 100%;
+    min-height: 0;
+
+    // Remove padding when thread is open and viewport < 1024px
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      .dashboard__main--thread-open & {
+        app-workspace-sidebar {
+          padding: 0;
+        }
+      }
+    }
 
     // Mobile: Full screen, absolutely positioned
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;
@@ -111,9 +160,15 @@
     flex: 1;
     overflow: hidden;
     border-radius: 1.9rem;
+    height: 100%;
+    min-height: 0;
+    transition:
+      width 0.3s ease,
+      min-width 0.3s ease;
+    min-width: 0;
 
     // Mobile: Full screen, absolutely positioned
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;
@@ -124,6 +179,7 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
       border-radius: 0;
+      margin-left: 0;
 
       &--mobile-visible {
         opacity: 1;
@@ -134,11 +190,13 @@
 
   &__thread {
     width: 100%;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     border-radius: 1.9rem;
 
     // Mobile: Full screen, absolutely positioned with highest z-index
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;

@@ -7,7 +7,7 @@
   right: 0;
   z-index: var(--z-dropdown);
 
-  @media (max-width: 767px) {
+  @media (max-width: 768px) {
     z-index: 9999;
   }
 
@@ -38,7 +38,7 @@
     overflow: hidden;
     cursor: default;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       width: 70%;
       min-width: unset;
     }

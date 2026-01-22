@@ -6,7 +6,7 @@
   right: 0;
   z-index: var(--z-popup-stacked);
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     position: fixed;
     top: 0;
     left: 0;
@@ -31,7 +31,7 @@
     cursor: pointer;
     z-index: -1;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
     }
   }
@@ -44,7 +44,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     animation: slideDown 0.2s ease-out;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       min-width: 320px;
       max-width: 90vw;
       border-radius: 1.25rem;

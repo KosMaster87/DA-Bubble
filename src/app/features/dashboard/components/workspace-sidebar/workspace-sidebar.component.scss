@@ -1,41 +1,70 @@
 @use 'mixins' as mix;
 
+:host {
+  padding: var(--space-0) var(--space-0) var(--space-0) var(--space-4);
+
+  &:has(.workspace-sidebar--hidden) {
+    padding: 0;
+  }
+}
+
+// Remove padding when thread is open and viewport < 1024px
+:host-context(.dashboard__main--thread-open) {
+  @media screen and (min-width: 769px) and (max-width: 1024px) {
+    padding: 0 !important;
+  }
+}
+
 .workspace-sidebar {
   height: 100%;
   background-color: var(--container-bg);
   border-right: 1px solid var(--border-color);
-  transition: transform 0.3s ease, margin 0.3s ease, width 0.3s ease;
-  width: 200px;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 320px;
   display: flex;
   flex-direction: column;
   border-radius: 1.9rem;
   overflow: hidden;
+  opacity: 1;
 
   // Mobile: Full width, no border radius
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     width: 100%;
     border-radius: 0;
     border-right: none;
   }
 
-  @include mix.tablet-landscape {
-    width: 240px;
-  }
+  // @include mix.tablet-landscape {
+  //   // width: 240px;
+  //   width: 320px;
+  // }
 
-  @include mix.laptop {
-    width: 280px;
-  }
+  // @include mix.laptop {
+  //   // width: 280px;
+  //   width: 320px;
+  // }
 
-  @include mix.desktop {
-    width: 320px;
-  }
+  // @include mix.desktop {
+  //   width: 320px;
+  // }
 
   &--hidden {
     width: 0;
     min-width: 0;
     margin-right: 0;
     transform: translateX(-100%);
+    opacity: 0;
     border-right: none;
+    pointer-events: none;
+    transition:
+      transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s,
+      opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s,
+      margin 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s,
+      width 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
   }
 
   &__header {
@@ -44,17 +73,13 @@
     flex-shrink: 0;
 
     // Hide on mobile
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       display: none;
     }
 
-    @include mix.tablet-landscape {
-      padding: var(--space-5) var(--space-4);
-    }
-
-    @include mix.laptop {
-      padding: var(--space-6) var(--space-4);
-    }
+    // @include mix.tablet-landscape {
+    //   padding: var(--space-5) var(--space-4);
+    // }
   }
 
   &__branding {
@@ -67,21 +92,12 @@
     width: 32px;
     height: 32px;
     object-fit: contain;
-
-    @include mix.laptop {
-      width: 40px;
-      height: 40px;
-    }
   }
 
   &__workspace-name {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary, #000);
-
-    @include mix.laptop {
-      font-size: 1.5rem;
-    }
   }
 
   &__multi-edit-btn {
@@ -105,18 +121,15 @@
         background-color: #eceefe;
       }
     }
-
-    @include mix.laptop {
-      width: 40px;
-      height: 40px;
-    }
   }
 
   &__multi-edit-icon {
     width: 20px;
     height: 20px;
     opacity: 0.6;
-    transition: opacity 0.2s, filter 0.2s;
+    transition:
+      opacity 0.2s,
+      filter 0.2s;
 
     // Hover state (including when active)
     .workspace-sidebar__multi-edit-btn:hover & {
@@ -129,11 +142,6 @@
     .workspace-sidebar__multi-edit-btn--active:not(:hover) & {
       opacity: 1;
       filter: none;
-    }
-
-    @include mix.laptop {
-      width: 20px;
-      height: 20px;
     }
   }
 
@@ -149,7 +157,7 @@
   &__floating-btn {
     display: none;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -164,7 +172,10 @@
       box-shadow: 0 4px 12px rgba(68, 77, 242, 0.3);
       cursor: pointer;
       z-index: 1000;
-      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      transition:
+        background-color 0.2s,
+        transform 0.2s,
+        box-shadow 0.2s;
 
       &:hover {
         background-color: #535af1;
@@ -183,7 +194,7 @@
 
     // Hide when sidebar is hidden on mobile
     .workspace-sidebar--hidden & {
-      @media screen and (max-width: 767px) {
+      @media screen and (max-width: 768px) {
         display: none;
       }
     }
@@ -227,7 +238,7 @@
     flex-shrink: 0;
     position: relative;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -240,7 +251,7 @@
     object-fit: contain;
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -259,7 +270,7 @@
     position: relative;
     margin-right: var(--space-2);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 10px;
       height: 10px;
       margin-right: var(--space-1);
@@ -272,7 +283,7 @@
     transform: rotate(-90deg);
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 10px;
       height: 10px;
     }
@@ -293,7 +304,7 @@
     color: var(--text-primary, #000);
     transition: color 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.875rem;
     }
 
@@ -313,7 +324,7 @@
     transition: background-color 0.2s;
     position: relative;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 28px;
       height: 28px;
     }
@@ -332,7 +343,7 @@
     height: 12px;
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 10px;
       height: 10px;
     }
@@ -425,7 +436,7 @@
     width: 100%;
     min-width: 0; // Important for text-overflow to work
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: 0.5rem;
       padding: 0.375rem 1rem 0.375rem calc(0.5rem - 3px);
     }
@@ -484,7 +495,7 @@
     align-items: center;
     justify-content: center;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -496,7 +507,7 @@
     flex-shrink: 0;
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -517,12 +528,17 @@
     white-space: nowrap;
     flex: 1;
     min-width: 0; // Important for flex items with text-overflow
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
+    display: block; // Changed from flex to block for direct text content
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.875rem;
+    }
+
+    // When it contains child elements (text + suffix), use flex
+    &:has(.workspace-sidebar__item-name-text) {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
     }
   }
 
@@ -551,7 +567,7 @@
     flex-shrink: 0;
     object-fit: cover;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 32px;
       height: 32px;
     }
@@ -566,7 +582,7 @@
     border-radius: 50%;
     border: 2px solid var(--container-bg, #fff);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 10px;
       height: 10px;
       border-width: 1.5px;
@@ -598,7 +614,7 @@
     border-radius: 2rem;
     transition: background-color 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: 0.5rem;
       padding: 0.375rem 0.5rem;
     }
@@ -617,7 +633,7 @@
     align-items: center;
     justify-content: center;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -629,7 +645,7 @@
     flex-shrink: 0;
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 14px;
       height: 14px;
     }
@@ -645,7 +661,7 @@
     font-weight: 400;
     color: var(--text-primary, #000);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.875rem;
     }
   }

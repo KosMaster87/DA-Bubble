@@ -4,6 +4,7 @@
  */
 
 export { WorkspaceSidebarService } from './workspace-sidebar.service';
+export { ResponsiveViewService } from './responsive-view.service';
 export { ChatScrollService } from './chat-scroll.service';
 export { MessageScrollCoordinatorService } from './message-scroll-coordinator.service';
 export { MessageInteractionService } from './message-interaction.service';
