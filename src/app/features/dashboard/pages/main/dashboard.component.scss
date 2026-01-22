@@ -64,8 +64,11 @@
     &--thread-open {
       display: grid;
       grid-template-columns: auto 1fr 400px;
+      grid-template-rows: minmax(0, 1fr);
       gap: var(--space-3);
       padding: var(--space-0) var(--space-1) var(--space-0) var(--space-1);
+      min-height: 0;
+      max-height: 100%;
 
       // Mobile: Still stack absolutely
       @media screen and (max-width: 768px) {
@@ -122,6 +125,8 @@
 
   &__sidebar {
     flex-shrink: 0;
+    height: 100%;
+    min-height: 0;
 
     // Remove padding when thread is open and viewport < 1024px
     @media screen and (min-width: 769px) and (max-width: 1024px) {
@@ -155,6 +160,8 @@
     flex: 1;
     overflow: hidden;
     border-radius: 1.9rem;
+    height: 100%;
+    min-height: 0;
     transition:
       width 0.3s ease,
       min-width 0.3s ease;
@@ -183,6 +190,8 @@
 
   &__thread {
     width: 100%;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     border-radius: 1.9rem;
 
