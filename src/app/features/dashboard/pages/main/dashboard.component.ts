@@ -82,12 +82,6 @@ export class DashboardComponent {
     () => !this.isMobileView() || this.mobileActiveView() === 'thread',
   );
 
-  // Computed: Should hide content when thread is open and viewport is small
-  // Only apply on non-mobile viewports (>= 768px)
-  protected shouldHideContentForThread = computed(
-    () =>
-      this.isThreadOpen() && this.responsiveView.shouldCollapseContent() && !this.isMobileView(),
-  );
 
   constructor() {
     this.dashboardInit.initializeEffects();

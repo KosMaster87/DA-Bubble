@@ -17,26 +17,26 @@
       padding: var(--space-2) var(--space-3);
     }
 
-    // Reduce padding when sidebar is collapsed (768px - 1440px)
-    @media screen and (min-width: 769px) and (max-width: 1440px) {
-      padding: var(--space-3) var(--space-4);
-    }
+    // // Reduce padding when sidebar is collapsed (768px - 1440px)
+    // @media screen and (min-width: 769px) and (max-width: 1440px) {
+    //   padding: var(--space-3) var(--space-4);
+    // }
 
-    @include mix.tablet-landscape {
-      padding: var(--space-5) var(--space-6);
+    // @include mix.tablet-landscape {
+    //   padding: var(--space-5) var(--space-6);
 
-      @media screen and (max-width: 1440px) {
-        padding: var(--space-4) var(--space-5);
-      }
-    }
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-4) var(--space-5);
+    //   }
+    // }
 
-    @include mix.laptop {
-      padding: var(--space-6) var(--space-8);
+    // @include mix.laptop {
+    //   padding: var(--space-6) var(--space-8);
 
-      @media screen and (max-width: 1440px) {
-        padding: var(--space-5) var(--space-6);
-      }
-    }
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-6);
+    //   }
+    // }
 
     &-info {
       flex: 1;
@@ -145,29 +145,30 @@
   }
 
   &__parent {
-    padding: var(--space-6) var(--space-10);
+    // padding: var(--space-6) var(--space-10);
+    padding: var(--space-3) var(--space-4);
     background-color: #f8f9fa;
 
     @media screen and (max-width: 768px) {
       padding: var(--space-3) var(--space-2);
     }
 
-    // Reduce padding when sidebar is collapsed (768px - 1440px)
-    @media screen and (min-width: 769px) and (max-width: 1440px) {
-      padding: var(--space-3) var(--space-4);
-    }
+    // // Reduce padding when sidebar is collapsed (768px - 1440px)
+    // @media screen and (min-width: 769px) and (max-width: 1440px) {
+    //   padding: var(--space-3) var(--space-4);
+    // }
 
-    @include mix.tablet-landscape {
-      @media screen and (max-width: 1440px) {
-        padding: var(--space-5) var(--space-6);
-      }
-    }
+    // @include mix.tablet-landscape {
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-6);
+    //   }
+    // }
 
-    @include mix.laptop {
-      @media screen and (max-width: 1440px) {
-        padding: var(--space-5) var(--space-8);
-      }
-    }
+    // @include mix.laptop {
+    //   @media screen and (max-width: 1440px) {
+    //     padding: var(--space-5) var(--space-8);
+    //   }
+    // }
   }
 
   &__parent-label {
