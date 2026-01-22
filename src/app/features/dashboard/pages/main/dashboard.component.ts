@@ -4,13 +4,14 @@
  * @module features/dashboard/pages/main/dashboard
  */
 
-import { Component, inject, ViewChild, effect, untracked, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, ViewChild, effect, untracked, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
+import { ResponsiveViewService } from '@shared/services/responsive-view.service';
 import { DashboardStateService } from '@shared/services/dashboard-state.service';
 import { DashboardInitializationService } from '@shared/services/dashboard-initialization.service';
 import { ThreadManagementService } from '@shared/services/thread-management.service';
@@ -49,6 +50,7 @@ export class DashboardComponent {
   @ViewChild('sidebar') sidebar!: WorkspaceSidebarComponent;
 
   protected sidebarService = inject(WorkspaceSidebarService);
+  protected responsiveView = inject(ResponsiveViewService);
   protected dashboardState = inject(DashboardStateService);
   protected dashboardInit = inject(DashboardInitializationService);
   protected threadManagement = inject(ThreadManagementService);
@@ -66,7 +68,7 @@ export class DashboardComponent {
   protected threadInfo = this.threadManagement.threadInfo;
 
   // Mobile view state management
-  protected isMobileView = signal<boolean>(false);
+  protected isMobileView = this.responsiveView.isMobile;
   protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
 
   // Computed: Should show each section on mobile
@@ -80,13 +82,41 @@ export class DashboardComponent {
     !this.isMobileView() || this.mobileActiveView() === 'thread'
   );
 
+  // Computed: Should hide content when thread is open and viewport is small
+  // Only apply on non-mobile viewports (>= 768px)
+  protected shouldHideContentForThread = computed(() =>
+    this.isThreadOpen() && this.responsiveView.shouldCollapseContent() && !this.isMobileView()
+  );
+
   /**
-   * Check if current viewport is mobile
-   * Updates isMobileView signal based on window width
+   * Setup responsive sidebar auto-collapse effect
+   * Automatically collapses/expands sidebar based on viewport width
+   * Only applies on non-mobile viewports (>= 768px)
    * @returns {void}
    */
-  private checkMobileView = (): void => {
-    this.isMobileView.set(window.innerWidth < 768);
+  private setupResponsiveSidebar = (): void => {
+    effect(() => {
+      const shouldCollapse = this.responsiveView.shouldCollapseSidebar();
+      const isMobile = this.isMobileView();
+
+      untracked(() => {
+        // Don't apply auto-collapse on mobile - mobile uses different layout system
+        if (isMobile) {
+          // On mobile, always show sidebar (visibility controlled by CSS and showSidebarMobile)
+          if (this.sidebarService.isHidden()) {
+            this.sidebarService.show();
+          }
+          return;
+        }
+
+        // On tablet/desktop, apply auto-collapse at 1440px breakpoint
+        if (shouldCollapse && !this.sidebarService.isHidden()) {
+          this.sidebarService.hide();
+        } else if (!shouldCollapse && this.sidebarService.isHidden()) {
+          this.sidebarService.show();
+        }
+      });
+    });
   };
 
   /**
@@ -146,19 +176,11 @@ export class DashboardComponent {
   private initEffects = (() => {
     this.dashboardInit.initializeEffects();
     this.setupRouteListener();
-    this.checkMobileView();
+    this.setupResponsiveSidebar();
     this.setupMobileViewEffects();
   })();
 
-  /**
-   * Listen to window resize events
-   * Updates mobile view state on window resize
-   * @returns {void}
-   */
-  @HostListener('window:resize')
-  onResize = (): void => {
-    this.checkMobileView();
-  };
+
 
   /**
    * Show new message view - Closes thread and displays new message composition

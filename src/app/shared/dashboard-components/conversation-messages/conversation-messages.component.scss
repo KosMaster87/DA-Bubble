@@ -19,6 +19,11 @@
     gap: var(--space-2);
   }
 
+  // Reduce gap for smaller threads (768px-1440px)
+  @media screen and (min-width: 768px) and (max-width: 1440px) {
+    gap: var(--space-4);
+  }
+
   // CRITICAL: Must use flex to fill parent container, not height: 100%
   // Parent is a flex container, so flex: 1 takes the defined space
   flex: 1;
@@ -58,6 +63,11 @@
       padding: var(--space-2) var(--space-2);
     }
 
+    // Reduce padding for smaller threads (768px-1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
     &:hover {
       background-color: #eceefe;
 
@@ -80,6 +90,10 @@
         @media screen and (max-width: 767px) {
           left: var(--space-2);
         }
+
+        @media screen and (min-width: 768px) and (max-width: 1440px) {
+          left: var(--space-4);
+        }
       }
     }
 
@@ -90,6 +104,10 @@
 
         @media screen and (max-width: 767px) {
           right: var(--space-2);
+        }
+
+        @media screen and (min-width: 768px) and (max-width: 1440px) {
+          right: var(--space-4);
         }
       }
     }

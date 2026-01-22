@@ -15,6 +15,12 @@
     border-radius: 1rem;
   }
 
+  // Reduce padding for smaller threads (768px-1440px)
+  @media screen and (min-width: 768px) and (max-width: 1440px) {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1);
+  }
+
   &__chips {
     @include mix.flex(row, flex-start, center);
     flex-wrap: wrap;
@@ -46,6 +52,12 @@
       padding: var(--space-2);
       font-size: 0.875rem;
       border-radius: 1rem;
+    }
+
+    // Reduce padding for smaller threads (768px-1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      padding: var(--space-2);
+      font-size: 0.9375rem;
     }
 
     &:focus {

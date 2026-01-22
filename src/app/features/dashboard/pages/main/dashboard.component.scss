@@ -20,17 +20,17 @@
   }
 
   @include mix.tablet-landscape {
-    padding: var(--space-4);
-    gap: var(--space-3);
+    padding: var(--space-2);
+    // gap: var(--space-3);
   }
 
   @include mix.laptop {
-    padding: var(--space-6);
-    gap: var(--space-4);
+    padding: var(--space-2);
+    // gap: var(--space-3);
   }
 
   @include mix.desktop {
-    padding: var(--space-6);
+    padding: var(--space-2);
   }
 
   &__header {
@@ -73,14 +73,54 @@
         gap: 0;
       }
 
+      // Remove gap when sidebar is collapsed (< 1440px) - gap only between content and thread via thread margin-left
+      @media screen and (min-width: 768px) and (max-width: 1440px) {
+        gap: 0;
+        column-gap: var(--space-2);
+        // Reduce thread width when sidebar is collapsed
+        grid-template-columns: auto 1fr 350px;
+      }
+
+      // Content collapse breakpoint: Reduce content to sidebar width (200px)
+      // Thread takes remaining space but with max width
+      @media screen and (min-width: 768px) and (max-width: 1280px) {
+        grid-template-columns: auto 200px minmax(300px, 1fr);
+      }
+
       @include mix.tablet-landscape {
         grid-template-columns: auto 1fr 450px;
         gap: var(--space-3);
+
+        // Remove gap when sidebar is collapsed
+        @media screen and (max-width: 1440px) {
+          gap: 0;
+          column-gap: var(--space-3);
+          // Reduce thread width when sidebar is collapsed
+          grid-template-columns: auto 1fr 380px;
+        }
+
+        // Content collapse at tablet landscape with thread open (240px like sidebar)
+        @media screen and (max-width: 1280px) {
+          grid-template-columns: auto 240px minmax(320px, 1fr);
+        }
       }
 
       @include mix.laptop {
         grid-template-columns: auto 1fr 500px;
         gap: var(--space-4);
+
+        // Remove gap when sidebar is collapsed
+        @media screen and (max-width: 1440px) {
+          gap: 0;
+          column-gap: var(--space-4);
+          // Reduce thread width when sidebar is collapsed
+          grid-template-columns: auto 1fr 420px;
+        }
+
+        // Content collapse at laptop with thread open (280px like sidebar)
+        @media screen and (max-width: 1280px) {
+          grid-template-columns: auto 280px minmax(350px, 1fr);
+        }
       }
     }
   }
@@ -111,6 +151,31 @@
     flex: 1;
     overflow: hidden;
     border-radius: 1.9rem;
+    transition: width 0.3s ease, min-width 0.3s ease;
+    min-width: 0;
+
+    // Reduce to sidebar width when thread needs more space on smaller screens
+    &--hidden-for-thread {
+      flex: 0 0 200px;
+      width: 200px;
+      min-width: 200px;
+      max-width: 200px;
+
+      // Match sidebar widths at different breakpoints
+      @include mix.tablet-landscape {
+        flex: 0 0 240px;
+        width: 240px;
+        min-width: 240px;
+        max-width: 240px;
+      }
+
+      @include mix.laptop {
+        flex: 0 0 280px;
+        width: 280px;
+        min-width: 280px;
+        max-width: 280px;
+      }
+    }
 
     // Mobile: Full screen, absolutely positioned
     @media screen and (max-width: 767px) {

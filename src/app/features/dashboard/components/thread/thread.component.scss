@@ -17,12 +17,25 @@
       padding: var(--space-2) var(--space-3);
     }
 
+    // Reduce padding when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
     @include mix.tablet-landscape {
       padding: var(--space-5) var(--space-6);
+
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-4) var(--space-5);
+      }
     }
 
     @include mix.laptop {
       padding: var(--space-6) var(--space-8);
+
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-5) var(--space-6);
+      }
     }
 
     &-info {
@@ -48,12 +61,25 @@
       font-size: 1.125rem;
     }
 
+    // Reduce font size when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      font-size: 1.25rem;
+    }
+
     @include mix.tablet-landscape {
       font-size: 1.35rem;
+
+      @media screen and (max-width: 1440px) {
+        font-size: 1.25rem;
+      }
     }
 
     @include mix.laptop {
       font-size: 1.5rem;
+
+      @media screen and (max-width: 1440px) {
+        font-size: 1.35rem;
+      }
     }
   }
 
@@ -125,6 +151,23 @@
     @media screen and (max-width: 767px) {
       padding: var(--space-3) var(--space-2);
     }
+
+    // Reduce padding when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    @include mix.tablet-landscape {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-5) var(--space-6);
+      }
+    }
+
+    @include mix.laptop {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-5) var(--space-8);
+      }
+    }
   }
 
   &__parent-label {
@@ -149,6 +192,10 @@
     @media screen and (max-width: 767px) {
       gap: var(--space-2);
     }
+
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      gap: var(--space-2);
+    }
   }
 
   &__parent-avatar {
@@ -161,6 +208,11 @@
     @media screen and (max-width: 767px) {
       width: 32px;
       height: 32px;
+    }
+
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      width: 36px;
+      height: 36px;
     }
   }
 
@@ -221,6 +273,11 @@
       font-size: 0.875rem;
       padding: var(--space-2);
     }
+
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      font-size: 0.875rem;
+      padding: var(--space-2);
+    }
   }
 
   &__divider {
@@ -238,6 +295,23 @@
 
     @media screen and (max-width: 767px) {
       padding: var(--space-1) var(--space-1);
+    }
+
+    // Reduce padding when sidebar is collapsed (768px - 1440px)
+    @media screen and (min-width: 768px) and (max-width: 1440px) {
+      padding: var(--space-3) var(--space-4);
+    }
+
+    @include mix.tablet-landscape {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-3) var(--space-5);
+      }
+    }
+
+    @include mix.laptop {
+      @media screen and (max-width: 1440px) {
+        padding: var(--space-4) var(--space-6);
+      }
     }
   }
 

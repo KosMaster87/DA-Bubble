@@ -38,6 +38,7 @@
     <app-channal-welcome
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       (directMessageRequested)="startDirectMessageWithUser($event)"
       (backRequested)="backToSidebar()"
     />
@@ -45,12 +46,14 @@
     <app-chat-new-msg
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       (backRequested)="backToSidebar()"
     />
     } @else if (currentView() === 'mailbox') {
     <app-channel-mailbox
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       (channelSelected)="openChannelById($event)"
       (backRequested)="backToSidebar()"
     />
@@ -58,6 +61,7 @@
     <app-legal-overview
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       [isMobileView]="isMobileView()"
       (backRequested)="backToSidebar()"
     />
@@ -65,6 +69,7 @@
     <app-channel-conversation
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       [channel]="selectedChannel()!"
       (threadRequested)="openThread($event)"
       (channelLeft)="onChannelLeft()"
@@ -76,6 +81,7 @@
     <app-chat-private
       class="dashboard__content"
       [class.dashboard__content--mobile-visible]="showContentMobile()"
+      [class.dashboard__content--hidden-for-thread]="shouldHideContentForThread()"
       [dmInfo]="selectedDM()!"
       (threadRequested)="openThread($event)"
       (backRequested)="backToSidebar()"

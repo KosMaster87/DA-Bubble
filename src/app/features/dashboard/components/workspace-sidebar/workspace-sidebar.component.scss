@@ -4,8 +4,11 @@
   height: 100%;
   background-color: var(--container-bg);
   border-right: 1px solid var(--border-color);
-  transition: transform 0.3s ease, margin 0.3s ease, width 0.3s ease;
-  width: 200px;
+  transition:
+    transform 0.3s ease,
+    margin 0.3s ease,
+    width 0.3s ease;
+  width: 320px;
   display: flex;
   flex-direction: column;
   border-radius: 1.9rem;
@@ -19,11 +22,13 @@
   }
 
   @include mix.tablet-landscape {
-    width: 240px;
+    // width: 240px;
+    width: 320px;
   }
 
   @include mix.laptop {
-    width: 280px;
+    // width: 280px;
+    width: 320px;
   }
 
   @include mix.desktop {
@@ -48,13 +53,9 @@
       display: none;
     }
 
-    @include mix.tablet-landscape {
-      padding: var(--space-5) var(--space-4);
-    }
-
-    @include mix.laptop {
-      padding: var(--space-6) var(--space-4);
-    }
+    // @include mix.tablet-landscape {
+    //   padding: var(--space-5) var(--space-4);
+    // }
   }
 
   &__branding {
@@ -67,21 +68,12 @@
     width: 32px;
     height: 32px;
     object-fit: contain;
-
-    @include mix.laptop {
-      width: 40px;
-      height: 40px;
-    }
   }
 
   &__workspace-name {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary, #000);
-
-    @include mix.laptop {
-      font-size: 1.5rem;
-    }
   }
 
   &__multi-edit-btn {
@@ -105,18 +97,15 @@
         background-color: #eceefe;
       }
     }
-
-    @include mix.laptop {
-      width: 40px;
-      height: 40px;
-    }
   }
 
   &__multi-edit-icon {
     width: 20px;
     height: 20px;
     opacity: 0.6;
-    transition: opacity 0.2s, filter 0.2s;
+    transition:
+      opacity 0.2s,
+      filter 0.2s;
 
     // Hover state (including when active)
     .workspace-sidebar__multi-edit-btn:hover & {
@@ -129,11 +118,6 @@
     .workspace-sidebar__multi-edit-btn--active:not(:hover) & {
       opacity: 1;
       filter: none;
-    }
-
-    @include mix.laptop {
-      width: 20px;
-      height: 20px;
     }
   }
 
@@ -164,7 +148,10 @@
       box-shadow: 0 4px 12px rgba(68, 77, 242, 0.3);
       cursor: pointer;
       z-index: 1000;
-      transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      transition:
+        background-color 0.2s,
+        transform 0.2s,
+        box-shadow 0.2s;
 
       &:hover {
         background-color: #535af1;
@@ -517,12 +504,17 @@
     white-space: nowrap;
     flex: 1;
     min-width: 0; // Important for flex items with text-overflow
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
+    display: block; // Changed from flex to block for direct text content
 
     @media screen and (max-width: 767px) {
       font-size: 0.875rem;
+    }
+
+    // When it contains child elements (text + suffix), use flex
+    &:has(.workspace-sidebar__item-name-text) {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
     }
   }
 
