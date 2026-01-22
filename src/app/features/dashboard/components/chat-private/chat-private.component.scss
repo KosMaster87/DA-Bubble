@@ -23,13 +23,13 @@
       padding: var(--space-0) var(--space-1);
     }
 
-    @include mix.tablet-landscape {
-      padding: var(--space-5) var(--space-6);
-    }
+    // @include mix.tablet-landscape {
+    //   padding: var(--space-5) var(--space-6);
+    // }
 
-    @include mix.laptop {
-      padding: var(--space-6) var(--space-8);
-    }
+    // @include mix.laptop {
+    //   padding: var(--space-6) var(--space-8);
+    // }
   }
 
   &__messages {

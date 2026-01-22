@@ -9,7 +9,7 @@
   height: 100vh;
   height: 100dvh;
   margin: 0 auto;
-  padding: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-0);
   background-color: var(--background-color);
   gap: var(--space-2);
   overflow: hidden;
@@ -20,12 +20,12 @@
   }
 
   @include mix.tablet-landscape {
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-0);
     // gap: var(--space-3);
   }
 
   @include mix.laptop {
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-0);
     // gap: var(--space-3);
   }
 
@@ -42,7 +42,7 @@
     flex: 1;
     overflow: hidden;
     gap: var(--space-2);
-    transition: gap 0.9s ease;
+    transition: gap 0.3s ease;
     position: relative;
 
     // Mobile: Stack views absolutely, show one at a time
@@ -58,10 +58,10 @@
     //   gap: var(--space-3);
     // }
 
-    &--no-sidebar {
-      gap: 0;
-      transition: gap 0s 0.9s;
-    }
+    // &--no-sidebar {
+    //   gap: 0;
+    //   transition: gap 0s 0.9s;
+    // }
 
     &--thread-open {
       display: grid;
@@ -151,6 +151,7 @@
   &__content {
     flex: 1;
     overflow: hidden;
+    border-radius: 1.9rem;
     border-radius: 1.9rem;
     transition:
       width 0.3s ease,

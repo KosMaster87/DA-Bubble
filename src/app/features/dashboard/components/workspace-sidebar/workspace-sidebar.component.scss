@@ -1,5 +1,13 @@
 @use 'mixins' as mix;
 
+:host {
+  padding: var(--space-0) var(--space-0) var(--space-0) var(--space-2);
+
+  &:has(.workspace-sidebar--hidden) {
+    padding: 0;
+  }
+}
+
 .workspace-sidebar {
   height: 100%;
   background-color: var(--container-bg);
@@ -23,19 +31,19 @@
     border-right: none;
   }
 
-  @include mix.tablet-landscape {
-    // width: 240px;
-    width: 320px;
-  }
+  // @include mix.tablet-landscape {
+  //   // width: 240px;
+  //   width: 320px;
+  // }
 
-  @include mix.laptop {
-    // width: 280px;
-    width: 320px;
-  }
+  // @include mix.laptop {
+  //   // width: 280px;
+  //   width: 320px;
+  // }
 
-  @include mix.desktop {
-    width: 320px;
-  }
+  // @include mix.desktop {
+  //   width: 320px;
+  // }
 
   &--hidden {
     width: 0;
