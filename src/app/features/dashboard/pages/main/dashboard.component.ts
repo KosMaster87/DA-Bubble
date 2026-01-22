@@ -72,26 +72,62 @@ export class DashboardComponent {
   protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
 
   // Computed: Should show each section on mobile
-  protected showSidebarMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'sidebar'
+  protected showSidebarMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'sidebar',
   );
-  protected showContentMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'content'
+  protected showContentMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'content',
   );
-  protected showThreadMobile = computed(() =>
-    !this.isMobileView() || this.mobileActiveView() === 'thread'
+  protected showThreadMobile = computed(
+    () => !this.isMobileView() || this.mobileActiveView() === 'thread',
   );
 
   // Computed: Should hide content when thread is open and viewport is small
   // Only apply on non-mobile viewports (>= 768px)
-  protected shouldHideContentForThread = computed(() =>
-    this.isThreadOpen() && this.responsiveView.shouldCollapseContent() && !this.isMobileView()
+  protected shouldHideContentForThread = computed(
+    () =>
+      this.isThreadOpen() && this.responsiveView.shouldCollapseContent() && !this.isMobileView(),
   );
+
+  constructor() {
+    this.dashboardInit.initializeEffects();
+    this.setupRouteListener();
+    this.setupResponsiveSidebar();
+    this.setupMobileViewEffects();
+  }
+
+  /**
+   * Handle mobile sidebar visibility
+   * Shows sidebar on mobile to let CSS control visibility
+   * @private
+   * @returns {void}
+   */
+  private handleMobileSidebarVisibility = (): void => {
+    if (this.sidebarService.isHidden()) {
+      this.sidebarService.show();
+    }
+  };
+
+  /**
+   * Handle desktop sidebar collapse
+   * Auto-collapses sidebar at 1440px breakpoint
+   * @private
+   * @param {boolean} shouldCollapse - Whether sidebar should collapse
+   * @returns {void}
+   */
+  private handleDesktopSidebarCollapse = (shouldCollapse: boolean): void => {
+    if (shouldCollapse && !this.sidebarService.isHidden()) {
+      this.sidebarService.hide();
+    } else if (!shouldCollapse && this.sidebarService.isHidden()) {
+      this.sidebarService.show();
+    }
+  };
 
   /**
    * Setup responsive sidebar auto-collapse effect
    * Automatically collapses/expands sidebar based on viewport width
    * Only applies on non-mobile viewports (>= 768px)
+   * @private
    * @returns {void}
    */
   private setupResponsiveSidebar = (): void => {
@@ -100,21 +136,9 @@ export class DashboardComponent {
       const isMobile = this.isMobileView();
 
       untracked(() => {
-        // Don't apply auto-collapse on mobile - mobile uses different layout system
-        if (isMobile) {
-          // On mobile, always show sidebar (visibility controlled by CSS and showSidebarMobile)
-          if (this.sidebarService.isHidden()) {
-            this.sidebarService.show();
-          }
-          return;
-        }
-
-        // On tablet/desktop, apply auto-collapse at 1440px breakpoint
-        if (shouldCollapse && !this.sidebarService.isHidden()) {
-          this.sidebarService.hide();
-        } else if (!shouldCollapse && this.sidebarService.isHidden()) {
-          this.sidebarService.show();
-        }
+        isMobile
+          ? this.handleMobileSidebarVisibility()
+          : this.handleDesktopSidebarCollapse(shouldCollapse);
       });
     });
   };
@@ -122,6 +146,7 @@ export class DashboardComponent {
   /**
    * Setup mobile view effects
    * Watches for view changes and updates mobile active view
+   * @private
    * @returns {void}
    */
   private setupMobileViewEffects = (): void => {
@@ -133,10 +158,16 @@ export class DashboardComponent {
 
     effect(() => {
       const view = this.currentView();
-      if (this.isMobileView() && !this.isThreadOpen() &&
-          (view === 'channel' || view === 'direct-message' ||
-           view === 'chat-new-msg' || view === 'mailbox' ||
-           view === 'legal' || view === 'welcome')) {
+      if (
+        this.isMobileView() &&
+        !this.isThreadOpen() &&
+        (view === 'channel' ||
+          view === 'direct-message' ||
+          view === 'chat-new-msg' ||
+          view === 'mailbox' ||
+          view === 'legal' ||
+          view === 'welcome')
+      ) {
         untracked(() => this.mobileActiveView.set('content'));
       }
     });
@@ -145,6 +176,7 @@ export class DashboardComponent {
   /**
    * Setup route parameter listener
    * Creates an effect that watches route parameter changes and handles routing
+   * @private
    * @returns {void}
    */
   private setupRouteListener = (): void => {
@@ -157,6 +189,7 @@ export class DashboardComponent {
   /**
    * Handle route parameter changes
    * Delegates route handling to route handler service
+   * @private
    * @param {any} params - Route parameters from navigation service
    * @returns {void}
    */
@@ -169,18 +202,6 @@ export class DashboardComponent {
       showDirectMessage: this.showDirectMessage,
     });
   };
-
-  /**
-   * Initialize dashboard effects
-   */
-  private initEffects = (() => {
-    this.dashboardInit.initializeEffects();
-    this.setupRouteListener();
-    this.setupResponsiveSidebar();
-    this.setupMobileViewEffects();
-  })();
-
-
 
   /**
    * Show new message view - Closes thread and displays new message composition
@@ -243,7 +264,12 @@ export class DashboardComponent {
    * @param {Object} event - Thread request event with messageId, parentMessage, conversationId, isDirectMessage
    * @returns {void}
    */
-  openThread = (event: { messageId: string; parentMessage: Message; conversationId?: string; isDirectMessage?: boolean; }): void => {
+  openThread = (event: {
+    messageId: string;
+    parentMessage: Message;
+    conversationId?: string;
+    isDirectMessage?: boolean;
+  }): void => {
     this.threadCoordinator.openThread(event);
   };
 
@@ -282,5 +308,6 @@ export class DashboardComponent {
   };
 
   /** Navigate to channel by ID (e.g., #channel mention) @param {string} channelId @returns {void} */
-  navigateToChannel = (channelId: string): void => this.navigationService.navigateToChannel(channelId);
+  navigateToChannel = (channelId: string): void =>
+    this.navigationService.navigateToChannel(channelId);
 }

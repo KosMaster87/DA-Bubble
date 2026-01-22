@@ -2,7 +2,7 @@
 
 :host(.members-miniatures--mobile-visible) {
   .members-miniatures {
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       display: flex;
     }
   }
@@ -18,7 +18,7 @@
   border-radius: 2rem;
   transition: background-color 0.2s;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     display: none;
     gap: var(--space-1);
     padding: 0;
@@ -34,7 +34,7 @@
     position: relative;
     height: 40px;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       height: 28px;
     }
   }
@@ -48,7 +48,7 @@
     position: relative;
     pointer-events: none;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 28px;
       height: 28px;
       border-width: 1.5px;
@@ -57,7 +57,7 @@
     &:not(:first-child) {
       margin-left: -12px;
 
-      @media screen and (max-width: 767px) {
+      @media screen and (max-width: 768px) {
         margin-left: -8px;
       }
     }
@@ -70,7 +70,7 @@
     min-width: 20px;
     text-align: left;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
       min-width: 16px;
     }

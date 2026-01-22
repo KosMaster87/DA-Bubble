@@ -8,7 +8,7 @@
   overflow: hidden;
 
   // Mobile: No border radius for full screen
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     border-radius: 0;
   }
 
@@ -19,7 +19,7 @@
     flex-shrink: 0;
     position: relative;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-0) var(--space-1);
     }
 
@@ -68,7 +68,7 @@
     padding: var(--space-4) var(--space-6);
     flex-shrink: 0;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-1) var(--space-1);
     }
   }

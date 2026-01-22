@@ -14,7 +14,7 @@
   gap: var(--space-2);
   overflow: hidden;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     padding: 0;
     gap: 0;
   }
@@ -42,24 +42,25 @@
     flex: 1;
     overflow: hidden;
     gap: var(--space-2);
-    transition: gap 0.3s ease;
+    transition: gap 0.9s ease;
     position: relative;
 
     // Mobile: Stack views absolutely, show one at a time
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: 0;
     }
 
-    @include mix.tablet-landscape {
-      gap: var(--space-3);
-    }
+    // @include mix.tablet-landscape {
+    //   gap: var(--space-3);
+    // }
 
-    @include mix.laptop {
-      gap: var(--space-4);
-    }
+    // @include mix.laptop {
+    //   gap: var(--space-3);
+    // }
 
     &--no-sidebar {
       gap: 0;
+      transition: gap 0s 0.9s;
     }
 
     &--thread-open {
@@ -68,13 +69,13 @@
       gap: var(--space-2);
 
       // Mobile: Still stack absolutely
-      @media screen and (max-width: 767px) {
+      @media screen and (max-width: 768px) {
         display: flex;
         gap: 0;
       }
 
       // Remove gap when sidebar is collapsed (< 1440px) - gap only between content and thread via thread margin-left
-      @media screen and (min-width: 768px) and (max-width: 1440px) {
+      @media screen and (min-width: 769px) and (max-width: 1440px) {
         gap: 0;
         column-gap: var(--space-2);
         // Reduce thread width when sidebar is collapsed
@@ -83,7 +84,7 @@
 
       // Content collapse breakpoint: Reduce content to sidebar width (200px)
       // Thread takes remaining space but with max width
-      @media screen and (min-width: 768px) and (max-width: 1280px) {
+      @media screen and (min-width: 769px) and (max-width: 1280px) {
         grid-template-columns: auto 200px minmax(300px, 1fr);
       }
 
@@ -129,7 +130,7 @@
     flex-shrink: 0;
 
     // Mobile: Full screen, absolutely positioned
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;
@@ -151,7 +152,9 @@
     flex: 1;
     overflow: hidden;
     border-radius: 1.9rem;
-    transition: width 0.3s ease, min-width 0.3s ease;
+    transition:
+      width 0.3s ease,
+      min-width 0.3s ease;
     min-width: 0;
 
     // Reduce to sidebar width when thread needs more space on smaller screens
@@ -178,7 +181,7 @@
     }
 
     // Mobile: Full screen, absolutely positioned
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;
@@ -189,6 +192,7 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
       border-radius: 0;
+      margin-left: 0;
 
       &--mobile-visible {
         opacity: 1;
@@ -203,7 +207,7 @@
     border-radius: 1.9rem;
 
     // Mobile: Full screen, absolutely positioned with highest z-index
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       position: absolute;
       top: 0;
       left: 0;

@@ -25,12 +25,12 @@ export interface Breakpoints {
  * Default breakpoint values matching SCSS mixins
  */
 const DEFAULT_BREAKPOINTS: Breakpoints = {
-  mobile: 767,           // max-width for mobile (< 768px)
-  tablet: 768,           // min-width for tablet
+  mobile: 768, // max-width for mobile (<= 768px)
+  tablet: 769, // min-width for tablet
   tabletLandscape: 1024, // min-width for tablet landscape
-  laptop: 1440,          // min-width for laptop
-  desktop: 1920,         // min-width for desktop
-  largeDesktop: 2560,    // min-width for large desktop
+  laptop: 1440, // min-width for laptop
+  desktop: 1920, // min-width for desktop
+  largeDesktop: 2560, // min-width for large desktop
   sidebarCollapse: 1440, // max-width where sidebar should auto-collapse
   contentCollapse: 1280, // max-width where content should collapse when thread is open
 };
@@ -46,26 +46,35 @@ export class ResponsiveViewService {
   private _viewportWidth = signal<number>(this.isBrowser ? window.innerWidth : 1920);
   readonly viewportWidth = this._viewportWidth.asReadonly();
 
+  // Track previous mobile state for transition detection
+  private _wasMobile = signal<boolean>(
+    this.isBrowser ? window.innerWidth <= DEFAULT_BREAKPOINTS.mobile : false,
+  );
+
   // Breakpoint signals - computed from viewport width
-  readonly isMobile = computed(() => this._viewportWidth() < DEFAULT_BREAKPOINTS.tablet);
-  readonly isTablet = computed(() =>
-    this._viewportWidth() >= DEFAULT_BREAKPOINTS.tablet &&
-    this._viewportWidth() < DEFAULT_BREAKPOINTS.tabletLandscape
+  readonly isMobile = computed(() => this._viewportWidth() <= DEFAULT_BREAKPOINTS.mobile);
+  readonly isTablet = computed(
+    () =>
+      this._viewportWidth() >= DEFAULT_BREAKPOINTS.tablet &&
+      this._viewportWidth() < DEFAULT_BREAKPOINTS.tabletLandscape,
   );
-  readonly isTabletLandscape = computed(() =>
-    this._viewportWidth() >= DEFAULT_BREAKPOINTS.tabletLandscape &&
-    this._viewportWidth() < DEFAULT_BREAKPOINTS.laptop
+  readonly isTabletLandscape = computed(
+    () =>
+      this._viewportWidth() >= DEFAULT_BREAKPOINTS.tabletLandscape &&
+      this._viewportWidth() < DEFAULT_BREAKPOINTS.laptop,
   );
-  readonly isLaptop = computed(() =>
-    this._viewportWidth() >= DEFAULT_BREAKPOINTS.laptop &&
-    this._viewportWidth() < DEFAULT_BREAKPOINTS.desktop
+  readonly isLaptop = computed(
+    () =>
+      this._viewportWidth() >= DEFAULT_BREAKPOINTS.laptop &&
+      this._viewportWidth() < DEFAULT_BREAKPOINTS.desktop,
   );
-  readonly isDesktop = computed(() =>
-    this._viewportWidth() >= DEFAULT_BREAKPOINTS.desktop &&
-    this._viewportWidth() < DEFAULT_BREAKPOINTS.largeDesktop
+  readonly isDesktop = computed(
+    () =>
+      this._viewportWidth() >= DEFAULT_BREAKPOINTS.desktop &&
+      this._viewportWidth() < DEFAULT_BREAKPOINTS.largeDesktop,
   );
-  readonly isLargeDesktop = computed(() =>
-    this._viewportWidth() >= DEFAULT_BREAKPOINTS.largeDesktop
+  readonly isLargeDesktop = computed(
+    () => this._viewportWidth() >= DEFAULT_BREAKPOINTS.largeDesktop,
   );
 
   // Convenience computed signals
@@ -75,13 +84,13 @@ export class ResponsiveViewService {
   readonly isDesktopOrLarger = computed(() => this._viewportWidth() >= DEFAULT_BREAKPOINTS.desktop);
 
   // Sidebar collapse breakpoint
-  readonly shouldCollapseSidebar = computed(() =>
-    this._viewportWidth() <= DEFAULT_BREAKPOINTS.sidebarCollapse
+  readonly shouldCollapseSidebar = computed(
+    () => this._viewportWidth() <= DEFAULT_BREAKPOINTS.sidebarCollapse,
   );
 
   // Content collapse breakpoint (when thread is open)
-  readonly shouldCollapseContent = computed(() =>
-    this._viewportWidth() <= DEFAULT_BREAKPOINTS.contentCollapse
+  readonly shouldCollapseContent = computed(
+    () => this._viewportWidth() <= DEFAULT_BREAKPOINTS.contentCollapse,
   );
 
   constructor() {
@@ -99,6 +108,36 @@ export class ResponsiveViewService {
   private initializeResizeListener(): void {
     window.addEventListener('resize', () => {
       this._viewportWidth.set(window.innerWidth);
+      this.updateMobileState();
+    });
+  }
+
+  /**
+   * Update mobile state tracking
+   * Tracks mobile state changes for transition detection
+   * @private
+   * @returns {void}
+   */
+  private updateMobileState(): void {
+    this._wasMobile.set(this.isMobile());
+  }
+
+  /**
+   * Register callback for mobile-to-desktop transition
+   * Executes callback when viewport changes from mobile to desktop
+   * @param {() => void} callback - Function to execute on transition
+   * @returns {void}
+   */
+  onMobileToDesktopTransition(callback: () => void): void {
+    effect(() => {
+      const isMobile = this.isMobile();
+      const wasMobile = this._wasMobile();
+
+      if (wasMobile && !isMobile) {
+        callback();
+      }
+
+      this._wasMobile.set(isMobile);
     });
   }
 

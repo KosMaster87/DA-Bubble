@@ -9,14 +9,14 @@
   gap: var(--space-2);
   position: relative;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     padding: var(--space-2) var(--space-2);
     gap: var(--space-0);
     border-radius: 1rem;
   }
 
   // Reduce padding for smaller threads (768px-1440px)
-  @media screen and (min-width: 768px) and (max-width: 1440px) {
+  @media screen and (min-width: 769px) and (max-width: 1440px) {
     padding: var(--space-2) var(--space-3);
     gap: var(--space-1);
   }
@@ -47,7 +47,7 @@
     resize: vertical;
     transition: border-color 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       min-height: 60px;
       padding: var(--space-2);
       font-size: 0.875rem;
@@ -55,7 +55,7 @@
     }
 
     // Reduce padding for smaller threads (768px-1440px)
-    @media screen and (min-width: 768px) and (max-width: 1440px) {
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
       padding: var(--space-2);
       font-size: 0.9375rem;
     }
@@ -74,7 +74,7 @@
     @include mix.flex(row, space-between, center);
     gap: var(--space-2);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
     }
   }
@@ -83,7 +83,7 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
     }
   }
@@ -172,7 +172,7 @@
     transition: background-color 0.2s;
     position: relative;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 30px;
       height: 30px;
     }
@@ -191,7 +191,7 @@
     height: 20px;
     transition: filter 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 16px;
       height: 16px;
     }
@@ -225,7 +225,7 @@
     transition: all 0.2s;
     position: relative;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 34px;
       height: 34px;
     }
@@ -252,7 +252,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 16px;
       height: 16px;
     }

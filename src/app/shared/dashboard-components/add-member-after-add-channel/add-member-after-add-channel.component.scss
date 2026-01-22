@@ -10,12 +10,12 @@
   z-index: var(--z-modal);
   @include mix.flex(row, center, center);
 
-  @media (max-width: 767px) {
+  @media (max-width: 768px) {
     align-items: flex-end;
   }
 
   &--closing {
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       .add-member-after-channel__overlay {
         animation: fadeOut 0.3s ease-out;
       }
@@ -41,7 +41,7 @@
     animation: fadeIn 0.2s ease-out;
     z-index: 1;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       width: 100%;
       border-radius: 1.5rem 1.5rem 0 0;
       animation: slideUp 0.3s ease-out;
@@ -52,7 +52,7 @@
     }
 
     &--expanded {
-      @media (max-width: 767px) {
+      @media (max-width: 768px) {
         height: 100vh;
         height: 100dvh;
         max-height: none;
@@ -60,14 +60,14 @@
     }
 
     &--dragging {
-      @media (max-width: 767px) {
+      @media (max-width: 768px) {
         transition: none;
         max-height: var(--drag-height, 100vh);
       }
     }
 
     &--closing {
-      @media (max-width: 767px) {
+      @media (max-width: 768px) {
         transition: transform 0.3s ease-out;
         transform: translateY(100%);
       }
@@ -106,7 +106,7 @@
   &__handle-wrapper {
     display: none;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       @include mix.flex(row, center, center);
       padding: var(--space-3) 0;
       cursor: pointer;
@@ -117,7 +117,7 @@
   }
 
   &__handle {
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       width: 4rem;
       height: 0.5rem;
       background-color: var(--border-color, #e0e0e0);
@@ -130,7 +130,7 @@
     padding: var(--space-6);
     flex-shrink: 0;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       padding: var(--space-3) var(--space-4);
     }
 
@@ -178,7 +178,7 @@
     gap: var(--space-4);
     padding: 0 var(--space-6) var(--space-6);
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       padding: 0 var(--space-4) var(--space-4);
       gap: var(--space-3);
       flex: 1;
@@ -288,7 +288,7 @@
     position: relative;
     width: 80%;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       margin-left: 0;
       width: 100%;
     }
@@ -444,7 +444,7 @@
     padding: var(--space-6);
     flex-shrink: 0;
 
-    @media (max-width: 767px) {
+    @media (max-width: 768px) {
       padding: var(--space-4);
     }
 

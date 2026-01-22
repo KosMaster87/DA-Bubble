@@ -15,12 +15,12 @@
   gap: var(--space-8);
   position: relative;
 
-  @media screen and (max-width: 767px) {
+  @media screen and (max-width: 768px) {
     gap: var(--space-2);
   }
 
   // Reduce gap for smaller threads (768px-1440px)
-  @media screen and (min-width: 768px) and (max-width: 1440px) {
+  @media screen and (min-width: 769px) and (max-width: 1440px) {
     gap: var(--space-4);
   }
 
@@ -59,12 +59,12 @@
     padding: var(--space-5) var(--space-10);
     transition: background-color 0.2s ease;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       padding: var(--space-2) var(--space-2);
     }
 
     // Reduce padding for smaller threads (768px-1440px)
-    @media screen and (min-width: 768px) and (max-width: 1440px) {
+    @media screen and (min-width: 769px) and (max-width: 1440px) {
       padding: var(--space-3) var(--space-4);
     }
 
@@ -87,11 +87,11 @@
         left: var(--space-10);
         right: auto;
 
-        @media screen and (max-width: 767px) {
+        @media screen and (max-width: 768px) {
           left: var(--space-2);
         }
 
-        @media screen and (min-width: 768px) and (max-width: 1440px) {
+        @media screen and (min-width: 769px) and (max-width: 1440px) {
           left: var(--space-4);
         }
       }
@@ -102,11 +102,11 @@
         right: var(--space-10);
         left: auto;
 
-        @media screen and (max-width: 767px) {
+        @media screen and (max-width: 768px) {
           right: var(--space-2);
         }
 
-        @media screen and (min-width: 768px) and (max-width: 1440px) {
+        @media screen and (min-width: 769px) and (max-width: 1440px) {
           right: var(--space-4);
         }
       }
@@ -122,7 +122,7 @@
     padding: 1.5rem;
     border-radius: 1.5rem;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-2);
       padding: var(--space-3);
       border-radius: 1rem;
@@ -170,7 +170,7 @@
     flex-shrink: 0;
     cursor: pointer;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       width: 32px;
       height: 32px;
     }
@@ -188,7 +188,7 @@
     gap: var(--space-2);
     width: 100%;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
     }
   }
@@ -197,7 +197,7 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
     }
   }
@@ -212,7 +212,7 @@
     cursor: pointer;
     transition: color 0.2s;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
     }
 
@@ -225,7 +225,7 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.6875rem;
       padding-top: 0.1rem;
     }
@@ -241,7 +241,7 @@
     word-wrap: break-word;
     max-width: fit-content;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.875rem;
       padding: var(--space-2);
     }
@@ -254,7 +254,7 @@
     gap: var(--space-2);
     margin-top: var(--space-1);
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       gap: var(--space-1);
     }
   }
@@ -272,7 +272,7 @@
     transition: color 0.2s;
     width: fit-content;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.75rem;
       gap: var(--space-1);
     }
@@ -292,7 +292,7 @@
     font-weight: 400;
     font-size: 0.75rem;
 
-    @media screen and (max-width: 767px) {
+    @media screen and (max-width: 768px) {
       font-size: 0.6875rem;
       padding-top: 0.1rem;
     }
