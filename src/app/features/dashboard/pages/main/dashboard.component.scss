@@ -28,7 +28,7 @@
   }
 
   @include mix.desktop {
-     padding: var(--space-2) var(--space-4) var(--space-2) var(--space-0);
+    padding: var(--space-2) var(--space-4) var(--space-2) var(--space-0);
   }
 
   &__header {
@@ -85,6 +85,11 @@
         grid-template-columns: auto 0 1fr;
         column-gap: 0;
         padding: var(--space-0) var(--space-1) var(--space-0) var(--space-4);
+
+        // Gap nur wenn Sidebar sichtbar ist
+        &:not(.dashboard__main--no-sidebar) {
+          column-gap: var(--space-2);
+        }
       }
 
       @include mix.tablet-landscape {
@@ -117,6 +122,15 @@
 
   &__sidebar {
     flex-shrink: 0;
+
+    // Remove padding when thread is open and viewport < 1024px
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      .dashboard__main--thread-open & {
+        app-workspace-sidebar {
+          padding: 0;
+        }
+      }
+    }
 
     // Mobile: Full screen, absolutely positioned
     @media screen and (max-width: 768px) {

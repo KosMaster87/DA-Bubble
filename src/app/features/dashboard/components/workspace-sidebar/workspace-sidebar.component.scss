@@ -8,6 +8,13 @@
   }
 }
 
+// Remove padding when thread is open and viewport < 1024px
+:host-context(.dashboard__main--thread-open) {
+  @media screen and (min-width: 769px) and (max-width: 1024px) {
+    padding: 0 !important;
+  }
+}
+
 .workspace-sidebar {
   height: 100%;
   background-color: var(--container-bg);
