@@ -48,6 +48,12 @@ RewriteRule . /index.html [L]
 
     # HSTS - Force HTTPS for 1 year
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+    # Cross-Origin Policies for Firebase Auth
+    # IMPORTANT: unsafe-none is required for Firebase signInWithPopup() to work
+    # See COOP-SECURITY.md for details
+    Header always set Cross-Origin-Opener-Policy "unsafe-none"
+    Header always set Cross-Origin-Resource-Policy "cross-origin"
 </IfModule>
 
 # ------------------------------------------------------

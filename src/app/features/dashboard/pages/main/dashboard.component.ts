@@ -71,6 +71,11 @@ export class DashboardComponent {
   protected isMobileView = this.responsiveView.isMobile;
   protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
 
+  // Track sidebar and content state for panel management
+  private previousSidebarOpen = signal<boolean>(!this.sidebarService.isHidden());
+  private previousHasContent = signal<boolean>(false);
+  private closedContentByRule = signal<{ type: 'channel' | 'dm'; id: string } | null>(null);
+
   // Computed: Should show each section on mobile
   protected showSidebarMobile = computed(
     () => !this.isMobileView() || this.mobileActiveView() === 'sidebar',
@@ -82,12 +87,27 @@ export class DashboardComponent {
     () => !this.isMobileView() || this.mobileActiveView() === 'thread',
   );
 
+  // Computed: Sidebar priority mode (1024-1280px with sidebar open and thread open)
+  protected isSidebarPriorityMode = computed(() => {
+    const viewportWidth = this.responsiveView.viewportWidth();
+    const isThreadOpen = this.isThreadOpen();
+    const isSidebarOpen = !this.sidebarService.isHidden();
+
+    return (
+      viewportWidth >= 1024 &&
+      viewportWidth < 1280 &&
+      isThreadOpen &&
+      isSidebarOpen &&
+      !this.isMobileView()
+    );
+  });
 
   constructor() {
     this.dashboardInit.initializeEffects();
     this.setupRouteListener();
     this.setupResponsiveSidebar();
     this.setupMobileViewEffects();
+    this.setupPanelManagement();
   }
 
   /**
@@ -164,6 +184,123 @@ export class DashboardComponent {
       ) {
         untracked(() => this.mobileActiveView.set('content'));
       }
+    });
+  };
+
+  /**
+   * Setup panel management for responsive layout
+   * Manages automatic closing of panels at specific breakpoints
+   *
+   * Rules:
+   * 1. Under 1024px with thread open: Save content info, track as closed
+   * 2. Between 1024-1280px with thread open: Sidebar and content are mutually exclusive
+   *    - When sidebar opens → save content info, track as closed
+   *    - When content opens → close sidebar
+   *    - Thread always stays open
+   * 3. Above 1280px or thread closes: Navigate back to saved content
+   *
+   * @private
+   * @returns {void}
+   */
+  private setupPanelManagement = (): void => {
+    // Rule 1: Under 1024px with thread - save and track content as closed
+    effect(() => {
+      const viewportWidth = this.responsiveView.viewportWidth();
+      const isThreadOpen = this.isThreadOpen();
+      const currentView = this.currentView();
+      const hasContent = currentView === 'channel' || currentView === 'direct-message';
+      const alreadyClosed = this.closedContentByRule();
+
+      untracked(() => {
+        if (
+          viewportWidth < 1024 &&
+          hasContent &&
+          isThreadOpen &&
+          !this.isMobileView() &&
+          !alreadyClosed
+        ) {
+          // Save content info and mark as closed
+          if (currentView === 'channel' && this.selectedChannel()) {
+            this.closedContentByRule.set({ type: 'channel', id: this.selectedChannel()!.id });
+          } else if (currentView === 'direct-message' && this.selectedDM()) {
+            this.closedContentByRule.set({ type: 'dm', id: this.selectedDM()!.conversationId });
+          }
+        }
+      });
+    });
+
+    // Rule 2: Between 1024-1280px with thread - sidebar and content are mutually exclusive
+    effect(() => {
+      const viewportWidth = this.responsiveView.viewportWidth();
+      const isThreadOpen = this.isThreadOpen();
+      const isSidebarOpen = !this.sidebarService.isHidden();
+      const currentView = this.currentView();
+      const hasContent = currentView === 'channel' || currentView === 'direct-message';
+      const wasSidebarOpen = this.previousSidebarOpen();
+      const hadContent = this.previousHasContent();
+      const alreadyClosed = this.closedContentByRule();
+
+      untracked(() => {
+        // Only apply in the 1024-1280px range when thread is open
+        if (viewportWidth >= 1024 && viewportWidth < 1280 && isThreadOpen && !this.isMobileView()) {
+          // Detect sidebar opening (was closed, now open)
+          const sidebarJustOpened = !wasSidebarOpen && isSidebarOpen;
+          // Detect content opening (was closed, now open)
+          const contentJustOpened = !hadContent && hasContent;
+
+          // When sidebar opens, save content state
+          if (sidebarJustOpened && hasContent && !alreadyClosed) {
+            if (currentView === 'channel' && this.selectedChannel()) {
+              this.closedContentByRule.set({ type: 'channel', id: this.selectedChannel()!.id });
+            } else if (currentView === 'direct-message' && this.selectedDM()) {
+              this.closedContentByRule.set({ type: 'dm', id: this.selectedDM()!.conversationId });
+            }
+          }
+          // When content opens, close sidebar
+          else if (contentJustOpened && isSidebarOpen) {
+            this.sidebarService.hide();
+            this.previousSidebarOpen.set(false);
+          }
+
+          // Update previous states
+          this.previousSidebarOpen.set(isSidebarOpen);
+          this.previousHasContent.set(hasContent);
+        }
+      });
+    });
+
+    // Rule 3: Restore content when conditions are met
+    effect(() => {
+      const viewportWidth = this.responsiveView.viewportWidth();
+      const isThreadOpen = this.isThreadOpen();
+      const closedContent = this.closedContentByRule();
+      const currentView = this.currentView();
+
+      untracked(() => {
+        if (closedContent) {
+          // Check if we should restore content
+          const shouldRestore = viewportWidth >= 1280 || !isThreadOpen;
+
+          // Also check that we're not already showing this content
+          const isShowingSameContent =
+            (closedContent.type === 'channel' &&
+              currentView === 'channel' &&
+              this.selectedChannel()?.id === closedContent.id) ||
+            (closedContent.type === 'dm' &&
+              currentView === 'direct-message' &&
+              this.selectedDM()?.conversationId === closedContent.id);
+
+          if (shouldRestore && !isShowingSameContent) {
+            // Navigate to restore the content
+            if (closedContent.type === 'channel') {
+              this.router.navigate(['/dashboard', 'channel', closedContent.id]);
+            } else if (closedContent.type === 'dm') {
+              this.router.navigate(['/dashboard', 'dm', closedContent.id]);
+            }
+            this.closedContentByRule.set(null);
+          }
+        }
+      });
     });
   };
 

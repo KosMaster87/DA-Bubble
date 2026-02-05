@@ -132,7 +132,9 @@ export const detectOfflineUsers = onSchedule(
       }
 
       const batch = db.batch();
-      const offlineCount = processOnlineUsers(usersSnapshot, batch, cutoffTime, now);
+      const offlineCount = processOnlineUsers(
+        usersSnapshot, batch, cutoffTime, now
+      );
 
       await commitBatchUpdates(batch, offlineCount);
     } catch (error) {

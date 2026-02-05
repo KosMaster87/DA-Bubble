@@ -181,10 +181,11 @@ export const updateDMOnNewMessage = onDocumentCreated(
  * Triggers when a new thread reply is created in a DM conversation.
  * Updates the parent conversation's lastMessageAt.
  */
-export const updateDirectMessageOnThreadMessage = onDocumentCreated(
+export const updateDMOnThreadMessage = onDocumentCreated(
   {
     document:
-      "direct-messages/{conversationId}/messages/{messageId}/threads/{threadId}",
+      "direct-messages/{conversationId}/messages/" +
+      "{messageId}/threads/{threadId}",
     region: "us-central1",
   },
   async (event) => {
