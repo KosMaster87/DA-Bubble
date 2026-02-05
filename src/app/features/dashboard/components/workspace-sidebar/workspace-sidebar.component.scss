@@ -3,6 +3,10 @@
 :host {
   padding: var(--space-0) var(--space-0) var(--space-0) var(--space-4);
 
+  @media screen and (max-width: 768px) {
+    padding: 0;
+  }
+
   &:has(.workspace-sidebar--hidden) {
     padding: 0;
   }
