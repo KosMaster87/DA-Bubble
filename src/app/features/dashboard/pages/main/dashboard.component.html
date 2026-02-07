@@ -27,6 +27,7 @@
       [isNewMessageActive]="currentView() === 'chat-new-msg'"
       [isMailboxActive]="currentView() === 'mailbox'"
       [isLegalActive]="currentView() === 'legal'"
+      [isSettingsActive]="currentView() === 'settings'"
       [isMobileView]="isMobileView()"
       (newMessageRequested)="showNewMessage()"
       (mailboxRequested)="showMailbox()"
@@ -60,6 +61,14 @@
       />
     } @else if (currentView() === 'legal') {
       <app-legal-overview
+        class="dashboard__content"
+        [class.dashboard__content--mobile-visible]="showContentMobile()"
+
+        [isMobileView]="isMobileView()"
+        (backRequested)="backToSidebar()"
+      />
+    } @else if (currentView() === 'settings') {
+      <app-settings
         class="dashboard__content"
         [class.dashboard__content--mobile-visible]="showContentMobile()"
 

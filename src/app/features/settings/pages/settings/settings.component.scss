@@ -1,11 +1,11 @@
 @use 'mixins' as mix;
 
-.legal-overview {
+.settings {
   width: 100%;
   height: 100%;
   padding: var(--space-6);
   overflow-y: auto;
-  background: var(--legal-overview-bg);
+  background: var(--settings-bg);
 
   @include mix.tablet {
     padding: var(--space-8);
@@ -96,37 +96,26 @@
   }
 }
 
-.legal-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
+.settings-card {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--legal-card-bg);
-  border: 2px solid var(--legal-card-border);
-  box-shadow: var(--legal-card-shadow-hover);
+  padding: var(--space-6);
+  background: var(--settings-card-bg);
+  border: 2px solid var(--settings-card-border);
   border-radius: var(--radius-lg);
-  cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
-  width: 100%;
 
   &:hover {
-    background: var(--legal-card-bg-hover);
-    border-color: var(--legal-card-border-hover);
-    box-shadow: var(--legal-card-shadow-hover);
+    border-color: var(--settings-card-border-hover);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-2px);
-
-    .legal-card__arrow {
-      color: var(--legal-card-border-hover);
-      transform: translateX(4px);
-    }
   }
 
   &__icon-wrapper {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, var(--color-primary) 0%, #7c7ff2 100%);
+    background: linear-gradient(135deg, var(--color-primary, #444df2) 0%, #7c7ff2 100%);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -137,18 +126,20 @@
   &__icon {
     width: 32px;
     height: 32px;
-    filter: brightness(0) invert(1); // Make icon white
+    stroke: white;
   }
 
   &__content {
-    min-width: 0; // Allow text truncation
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
   &__title {
     font-size: var(--font-size-lg);
     font-weight: 700;
     color: var(--text-primary, #000);
-    margin: 0 0 var(--space-1);
+    margin: 0;
     font-family: var(--font-family-primary);
   }
 
@@ -159,9 +150,9 @@
     line-height: 1.4;
   }
 
-  &__arrow {
-    color: var(--text-tertiary, #999);
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+  &__control {
+    margin-top: var(--space-2);
+    display: flex;
+    align-items: center;
   }
 }

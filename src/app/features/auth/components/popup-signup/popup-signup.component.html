@@ -1,4 +1,9 @@
 <div class="popup-signup">
-  <span class="popup-signup__text">Don't have an account?</span>
-  <app-link-button label="Create account" [routerLink]="'/signup'" />
+  <div class="popup-signup__theme">
+    <app-theme-toggle />
+  </div>
+  <div class="popup-signup__signup">
+    <span class="popup-signup__text">Don't have an account?</span>
+    <app-link-button label="Create account" [routerLink]="'/signup'" />
+  </div>
 </div>

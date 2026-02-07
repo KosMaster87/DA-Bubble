@@ -32,6 +32,22 @@
     <link rel="icon" type="image/png" sizes="96x96" href="theme-light/icon-96.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="theme-light/icon-192.png" />
 
+    <!-- Initial Theme Script (prevents FOUC - Flash of Unstyled Content) -->
+    <script>
+      // Execute immediately before Angular loads
+      (function () {
+        try {
+          const stored = localStorage.getItem('dabubbleTheme') || 'device';
+          const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = stored === 'device' ? (systemIsDark ? 'dark' : 'light') : stored;
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          // Fallback to light theme
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+
     <!-- Open Graph Meta -->
     <meta property="og:title" content="DABubble - Modern Messaging" />
     <meta

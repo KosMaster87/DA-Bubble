@@ -19,6 +19,7 @@ import { ChannelConversationComponent } from '../../components/channel-conversat
 import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
 import { ThreadComponent } from '../../components/thread/thread.component';
 import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
+import { SettingsComponent } from '../../../settings/pages/settings/settings.component';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import {
   WorkspaceSidebarService,
@@ -44,6 +45,7 @@ import {
     ChatPrivateComponent,
     ThreadComponent,
     LegalOverviewComponent,
+    SettingsComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -262,6 +264,7 @@ export class DashboardComponent {
       showWelcome: this.showWelcome,
       showMailbox: this.showMailbox,
       showLegal: this.showLegal,
+      showSettings: this.showSettings,
       showChannel: this.showChannel,
       showDirectMessage: this.showDirectMessage,
     });
@@ -284,6 +287,9 @@ export class DashboardComponent {
 
   /** Show legal view @returns {void} */
   showLegal = (): void => this.dashboardState.showLegal();
+
+  /** Show settings view @returns {void} */
+  showSettings = (): void => this.dashboardState.showSettings();
 
   /** Open channel by ID - Delegates to showChannel @param {string} channelId @returns {void} */
   openChannelById = (channelId: string): void => this.showChannel(channelId);

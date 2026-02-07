@@ -304,7 +304,11 @@
         </button>
 
         <!-- Einstellungen -->
-        <button class="workspace-sidebar__item" (click)="openSettings()">
+        <button
+          class="workspace-sidebar__item"
+          [class.workspace-sidebar__item--active]="isSettingsActive()"
+          (click)="openSettings()"
+        >
           <span class="workspace-sidebar__item-content">
             <span class="workspace-sidebar__item-icon-wrapper">
               <img

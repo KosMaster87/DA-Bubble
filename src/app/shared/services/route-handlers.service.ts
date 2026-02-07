@@ -56,6 +56,16 @@ export class RouteHandlersService {
   };
 
   /**
+   * Handle settings route
+   * @param showSettings - Callback to show settings view
+   */
+  handleSettingsRoute = (showSettings: () => void): void => {
+    this.threadCoordinator.closeThreadIfOpen();
+    this.navigationService.selectChannelById('settings');
+    showSettings();
+  };
+
+  /**
    * Handle channel route
    * @param channelId - Unique identifier of the channel
    * @param threadId - Optional thread ID to open

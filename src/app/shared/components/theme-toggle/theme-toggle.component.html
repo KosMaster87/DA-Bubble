@@ -1,0 +1,14 @@
+<button
+  type="button"
+  class="theme-toggle"
+  (click)="toggleTheme()"
+  [attr.aria-label]="'Theme wechseln zu ' + getNextThemeLabel()"
+  title="Theme wechseln"
+>
+  <img
+    [src]="getCurrentThemeIcon()"
+    [alt]="getCurrentThemeLabel()"
+    class="theme-toggle__icon"
+  />
+  <span class="theme-toggle__label">{{ getCurrentThemeLabel() }}</span>
+</button>

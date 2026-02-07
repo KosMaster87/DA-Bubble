@@ -4,7 +4,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--container-bg);
+  background-color: var(--channel-mailbox-bg);
   overflow: hidden;
 
   &__header {
@@ -166,7 +166,7 @@
     @include mix.flex(row, flex-start, flex-start);
     gap: var(--space-3);
     padding: var(--space-4);
-    background-color: var(--container-bg);
+    background-color: var(--channel-mailbox-message-bg);
     border: 1px solid var(--border-color);
     border-radius: 1rem;
     cursor: pointer;
@@ -183,21 +183,20 @@
     }
 
     &:hover {
-      background-color: #f8f8f8;
-      border-color: #535af1;
+      background-color: var(--channel-mailbox-message-bg-hover);
+      // border-color: #535af1;
     }
 
     &--unread {
-      background-color: #f0f0ff;
-      border-color: #535af1;
+      background-color: var(--channel-mailbox-message-bg--unread);
 
       &:hover {
-        background-color: #e8e8ff;
+        background-color: var(--channel-mailbox-message-bg--unread-hover);
       }
     }
 
     &--admin {
-      border-left: 4px solid #535af1;
+      border-left: 4px solid var(--primary-color);
     }
 
     &--system {
@@ -250,7 +249,11 @@
   &__message-from {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--channel-mailbox-message-from-color);
+
+    .channel-mailbox__message:hover & {
+      color: var(--channel-mailbox-message-from-color-hover);
+    }
   }
 
   &__message-time {
@@ -262,8 +265,12 @@
   &__message-subject {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--channel-mailbox-message-subject-color);
     margin: 0;
+
+    .channel-mailbox__message:hover & {
+      color: var(--channel-mailbox-message-subject-color-hover);
+    }
 
     @media (max-width: 768px) {
       font-size: 0.9375rem;
@@ -276,7 +283,7 @@
 
   &__message-preview {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: var(--channel-mailbox-message-preview-color);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -284,6 +291,10 @@
     // -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     white-space: normal;
+
+    .channel-mailbox__message:hover & {
+      color: var(--channel-mailbox-message-preview-color-hover);
+    }
 
     @media (max-width: 768px) {
       font-size: 0.8125rem;
@@ -328,13 +339,14 @@
     }
 
     &--decline {
-      color: var(--text-primary);
+      color: var(--channel-mailbox-decline-text-color);
       background-color: transparent;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--channel-mailbox-message-decline-border);
 
       &:hover {
         background-color: #f8f8f8;
-        border-color: #535af1;
+        border-color: var(--channel-mailbox-message-decline-border-hover);
+        color: var(--channel-mailbox-decline-text-color-hover);
       }
     }
   }

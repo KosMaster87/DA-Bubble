@@ -1,0 +1,18 @@
+<div class="language-switcher">
+  <button
+    class="language-switcher__button"
+    [class.language-switcher__button--active]="i18n.currentLang() === 'de'"
+    (click)="i18n.setLanguage('de')"
+    type="button"
+  >
+    🇩🇪 Deutsch
+  </button>
+  <button
+    class="language-switcher__button"
+    [class.language-switcher__button--active]="i18n.currentLang() === 'en'"
+    (click)="i18n.setLanguage('en')"
+    type="button"
+  >
+    🇬🇧 English
+  </button>
+</div>

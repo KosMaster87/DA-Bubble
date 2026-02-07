@@ -31,7 +31,7 @@ export const routes: Routes = [
         path: 'forgot-password',
         loadComponent: () =>
           import('./features/auth/pages/password-forgot/password-forgot.component').then(
-            (m) => m.PasswordForgotComponent
+            (m) => m.PasswordForgotComponent,
           ),
         canActivate: [noAuthGuard],
       },
@@ -39,7 +39,7 @@ export const routes: Routes = [
         path: 'reset-password',
         loadComponent: () =>
           import('./features/auth/pages/password-restore/password-restore.component').then(
-            (m) => m.PasswordRestoreComponent
+            (m) => m.PasswordRestoreComponent,
           ),
         // No guard - needs oobCode from email link
       },
@@ -47,7 +47,7 @@ export const routes: Routes = [
         path: 'verify-email',
         loadComponent: () =>
           import('./features/auth/pages/verify-email/verify-email.component').then(
-            (m) => m.VerifyEmailComponent
+            (m) => m.VerifyEmailComponent,
           ),
         // No guard - needed after signup
       },
@@ -55,7 +55,7 @@ export const routes: Routes = [
         path: 'avatar-selection',
         loadComponent: () =>
           import('./features/auth/pages/avatar-selection/avatar-selection.component').then(
-            (m) => m.AvatarSelectionComponent
+            (m) => m.AvatarSelectionComponent,
           ),
         canActivate: [avatarSelectionGuard],
       },
@@ -64,14 +64,14 @@ export const routes: Routes = [
         path: 'imprint',
         loadComponent: () =>
           import('./features/legal/pages/imprint/imprint.component').then(
-            (m) => m.ImprintComponent
+            (m) => m.ImprintComponent,
           ),
       },
       {
         path: 'privacy-policy',
         loadComponent: () =>
           import('./features/legal/pages/privacy-policy/privacy-policy.component').then(
-            (m) => m.PrivacyPolicyComponent
+            (m) => m.PrivacyPolicyComponent,
           ),
       },
       // 404 Page (accessible for everyone)
@@ -79,7 +79,7 @@ export const routes: Routes = [
         path: 'not-found',
         loadComponent: () =>
           import('./features/auth/pages/not-found/not-found.component').then(
-            (m) => m.NotFoundComponent
+            (m) => m.NotFoundComponent,
           ),
       },
     ],
@@ -91,7 +91,7 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -99,7 +99,7 @@ export const routes: Routes = [
     path: 'dashboard/channel/:id',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -107,7 +107,7 @@ export const routes: Routes = [
     path: 'dashboard/channel/:id/thread/:threadId',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -115,7 +115,7 @@ export const routes: Routes = [
     path: 'dashboard/dm/:id',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -123,7 +123,7 @@ export const routes: Routes = [
     path: 'dashboard/dm/:id/thread/:threadId',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -131,7 +131,15 @@ export const routes: Routes = [
     path: 'dashboard/mailbox',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'dashboard/new-message',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },
@@ -139,7 +147,15 @@ export const routes: Routes = [
     path: 'dashboard/legal',
     loadComponent: () =>
       import('./features/dashboard/pages/main/dashboard.component').then(
-        (m) => m.DashboardComponent
+        (m) => m.DashboardComponent,
+      ),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'dashboard/settings',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
   },

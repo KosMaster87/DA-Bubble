@@ -31,7 +31,8 @@ export class DashboardReuseStrategy extends BaseRouteReuseStrategy {
       path === 'dashboard/channel/:id' ||
       path === 'dashboard/dm/:id' ||
       path === 'dashboard/mailbox' ||
-      path === 'dashboard/legal';
+      path === 'dashboard/legal' ||
+      path === 'dashboard/settings';
 
     if (isDashboardRoute(futurePath) && isDashboardRoute(currPath)) {
       return true;

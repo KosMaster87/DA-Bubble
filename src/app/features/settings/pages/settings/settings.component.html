@@ -1,0 +1,67 @@
+<div class="settings">
+  <div class="settings__header">
+    <h1 class="settings__title">Settings</h1>
+    <p class="settings__subtitle">Customize your preferences and application settings</p>
+  </div>
+
+  <div class="settings__grid">
+    <!-- Theme Settings Card -->
+    <div class="settings-card">
+      <div class="settings-card__icon-wrapper">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="settings-card__icon">
+          <path
+            d="M12 3V4M12 20V21M4 12H3M6.31412 6.31412L5.5 5.5M17.6859 6.31412L18.5 5.5M6.31412 17.69L5.5 18.5M17.6859 17.69L18.5 18.5M21 12H20M16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+      <div class="settings-card__content">
+        <h2 class="settings-card__title">Theme</h2>
+        <p class="settings-card__description">Choose between light, dark or system theme</p>
+        <div class="settings-card__control">
+          <app-theme-toggle />
+        </div>
+      </div>
+    </div>
+
+    <!-- Language Settings Card -->
+    <div class="settings-card">
+      <div class="settings-card__icon-wrapper">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="settings-card__icon">
+          <path
+            d="M3 5H15M9 3V5M10.048 14.5C8.79697 12.9157 7.8464 11.1061 7.244 9.167M5.268 9.167H14.232M12.776 9.167C12.3786 10.7006 11.7669 12.1706 10.964 13.534M10.964 13.534C11.5051 14.3157 12.1214 15.0528 12.807 15.738C13.5784 16.5094 14.4406 17.1774 15.377 17.727M10.964 13.534C10.1766 12.5133 9.51436 11.407 8.988 10.238M21 21L17.4 17.4M17 10C17 11.1819 16.5308 12.3522 15.682 13.682C14.8331 15.0119 13.631 16.4637 12.18 18C10.729 16.4637 9.52688 15.0119 8.67804 13.682C7.82919 12.3522 7.36 11.1819 7.36 10C7.36 8.4087 7.99214 6.88258 9.11736 5.75736C10.2426 4.63214 11.7687 4 13.36 4C14.9513 4 16.4774 4.63214 17.6026 5.75736C18.7279 6.88258 19.36 8.4087 19.36 10H17Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </div>
+      <div class="settings-card__content">
+        <h2 class="settings-card__title">Language</h2>
+        <p class="settings-card__description">Select your preferred language</p>
+        <div class="settings-card__control">
+          <app-language-switcher />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings__footer">
+    <button class="settings__back-btn" (click)="goBack()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M15 18L9 12L15 6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
