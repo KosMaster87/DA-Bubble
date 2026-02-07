@@ -5,7 +5,7 @@
   height: 100%;
   padding: var(--space-6);
   overflow-y: auto;
-  background: var(--background-primary, #fff);
+  background: var(--legal-overview-bg);
 
   @include mix.tablet {
     padding: var(--space-8);
@@ -102,8 +102,9 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-5);
-  background: var(--card-bg, #fff);
-  border: 2px solid var(--color-border, #eee);
+  background: var(--legal-card-bg);
+  border: 2px solid var(--legal-card-border);
+  box-shadow: var(--legal-card-shadow-hover);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -111,12 +112,13 @@
   width: 100%;
 
   &:hover {
-    border-color: var(--color-primary, #444df2);
-    box-shadow: var(--shadow-lg);
+    background: var(--legal-card-bg-hover);
+    border-color: var(--legal-card-border-hover);
+    box-shadow: var(--legal-card-shadow-hover);
     transform: translateY(-2px);
 
     .legal-card__arrow {
-      color: var(--color-primary, #444df2);
+      color: var(--legal-card-border-hover);
       transform: translateX(4px);
     }
   }
@@ -124,7 +126,7 @@
   &__icon-wrapper {
     width: 56px;
     height: 56px;
-    background: linear-gradient(135deg, var(--color-primary, #444df2) 0%, #7c7ff2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, #7c7ff2 100%);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;

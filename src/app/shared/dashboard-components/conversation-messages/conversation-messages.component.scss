@@ -69,7 +69,7 @@
     }
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--conversation-message-wrapper-hover-bg);
 
       .conversation-messages__reaction-bar {
         opacity: 1;
@@ -118,7 +118,7 @@
     gap: var(--space-3);
     cursor: pointer;
     transition: border-color 0.2s ease;
-    border: 1px solid #adb0d9;
+    border: 1px solid var(--conversation-message-border);
     padding: 1.5rem;
     border-radius: 1.5rem;
 
@@ -129,7 +129,7 @@
     }
 
     &:hover {
-      border-color: #535bf131;
+      border-color: var(--conversation-message-border-hover);
     }
 
     &--own {

@@ -73,6 +73,10 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.js",
+            "host": "0.0.0.0"
+          },
           "configurations": {
             "production": {
               "buildTarget": "dabubble:build:production"

@@ -10,13 +10,6 @@ import { WorkspaceHeaderComponent } from '../../components/workspace-header/work
 import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
-import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
-import { ResponsiveViewService } from '@shared/services/responsive-view.service';
-import { DashboardStateService } from '@shared/services/dashboard-state.service';
-import { DashboardInitializationService } from '@shared/services/dashboard-initialization.service';
-import { ThreadManagementService } from '@shared/services/thread-management.service';
-import { DashboardRouteHandlerService } from '@shared/services/dashboard-route-handler.service';
-import { DashboardThreadCoordinatorService } from '@shared/services/dashboard-thread-coordinator.service';
 import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
@@ -26,7 +19,18 @@ import { ChannelConversationComponent } from '../../components/channel-conversat
 import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
 import { ThreadComponent } from '../../components/thread/thread.component';
 import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
+import { SettingsComponent } from '../../../settings/pages/settings/settings.component';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import {
+  WorkspaceSidebarService,
+  ResponsiveViewService,
+  DashboardStateService,
+  DashboardInitializationService,
+  ThreadManagementService,
+  DashboardRouteHandlerService,
+  DashboardThreadCoordinatorService,
+  ResponsivePanelManagementService,
+} from '@shared/services';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,6 +45,7 @@ import { type Message } from '@shared/dashboard-components/conversation-messages
     ChatPrivateComponent,
     ThreadComponent,
     LegalOverviewComponent,
+    SettingsComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -58,6 +63,7 @@ export class DashboardComponent {
   protected router = inject(Router);
   private routeHandler = inject(DashboardRouteHandlerService);
   private threadCoordinator = inject(DashboardThreadCoordinatorService);
+  private panelManager = inject(ResponsivePanelManagementService);
   private welcomeSelector = inject(WelcomeChannelSelectorService);
 
   // Expose state from services for template
@@ -70,6 +76,7 @@ export class DashboardComponent {
   // Mobile view state management
   protected isMobileView = this.responsiveView.isMobile;
   protected mobileActiveView = signal<'sidebar' | 'content' | 'thread'>('sidebar');
+  private wasMobileView = signal<boolean>(this.responsiveView.isMobile());
 
   // Computed: Should show each section on mobile
   protected showSidebarMobile = computed(
@@ -82,12 +89,29 @@ export class DashboardComponent {
     () => !this.isMobileView() || this.mobileActiveView() === 'thread',
   );
 
+  // Computed: Sidebar priority mode (1024-1280px with sidebar open and thread open)
+  protected isSidebarPriorityMode = computed(() => {
+    const viewportWidth = this.responsiveView.viewportWidth();
+    const isThreadOpen = this.isThreadOpen();
+    const isSidebarOpen = !this.sidebarService.isHidden();
+
+    return (
+      viewportWidth >= 1024 &&
+      viewportWidth < 1280 &&
+      isThreadOpen &&
+      isSidebarOpen &&
+      !this.isMobileView()
+    );
+  });
 
   constructor() {
     this.dashboardInit.initializeEffects();
     this.setupRouteListener();
     this.setupResponsiveSidebar();
-    this.setupMobileViewEffects();
+    this.setupThreadMobileEffect();
+    this.setupContentMobileEffect();
+    this.setupMobileToDesktopTransition();
+    this.panelManager.setupEffects();
   }
 
   /**
@@ -138,32 +162,80 @@ export class DashboardComponent {
   };
 
   /**
-   * Setup mobile view effects
-   * Watches for view changes and updates mobile active view
+   * Setup thread mobile effect
+   * Switches to thread view when thread opens on mobile
    * @private
    * @returns {void}
    */
-  private setupMobileViewEffects = (): void => {
+  private setupThreadMobileEffect = (): void => {
     effect(() => {
       if (this.isMobileView() && this.isThreadOpen()) {
         untracked(() => this.mobileActiveView.set('thread'));
       }
     });
+  };
 
+  /**
+   * Setup content mobile effect
+   * Switches to content view for various content types on mobile
+   * @private
+   * @returns {void}
+   */
+  private setupContentMobileEffect = (): void => {
     effect(() => {
       const view = this.currentView();
-      if (
-        this.isMobileView() &&
-        !this.isThreadOpen() &&
-        (view === 'channel' ||
-          view === 'direct-message' ||
-          view === 'chat-new-msg' ||
-          view === 'mailbox' ||
-          view === 'legal' ||
-          view === 'welcome')
-      ) {
+      const isContentView = this.isContentView(view);
+
+      if (this.isMobileView() && !this.isThreadOpen() && isContentView) {
         untracked(() => this.mobileActiveView.set('content'));
       }
+    });
+  };
+
+  /**
+   * Check if view is a content view type
+   * @private
+   * @param {string} view - Current view name
+   * @returns {boolean} True if view is content type
+   */
+  private isContentView = (view: string): boolean => {
+    const contentViews = [
+      'channel',
+      'direct-message',
+      'chat-new-msg',
+      'mailbox',
+      'legal',
+      'welcome',
+    ];
+    return contentViews.includes(view);
+  };
+
+  /**
+   * Setup mobile to desktop transition effect
+   * Opens welcome channel when transitioning from mobile without content
+   * @private
+   * @returns {void}
+   */
+  private setupMobileToDesktopTransition = (): void => {
+    effect(() => {
+      const isMobile = this.isMobileView();
+      const wasMobile = this.wasMobileView();
+      const currentView = this.currentView();
+      const hasThread = this.isThreadOpen();
+
+      untracked(() => {
+        const transitionedToDesktop = wasMobile && !isMobile;
+        const hasNoContent = currentView === 'none' || currentView === 'welcome';
+
+        if (transitionedToDesktop && hasNoContent && !hasThread) {
+          const welcomeId = this.dashboardState.navigateToWelcome();
+          if (welcomeId && this.sidebar) {
+            this.sidebar.selectChannelById(welcomeId);
+          }
+        }
+
+        this.wasMobileView.set(isMobile);
+      });
     });
   };
 
@@ -192,6 +264,7 @@ export class DashboardComponent {
       showWelcome: this.showWelcome,
       showMailbox: this.showMailbox,
       showLegal: this.showLegal,
+      showSettings: this.showSettings,
       showChannel: this.showChannel,
       showDirectMessage: this.showDirectMessage,
     });
@@ -214,6 +287,9 @@ export class DashboardComponent {
 
   /** Show legal view @returns {void} */
   showLegal = (): void => this.dashboardState.showLegal();
+
+  /** Show settings view @returns {void} */
+  showSettings = (): void => this.dashboardState.showSettings();
 
   /** Open channel by ID - Delegates to showChannel @param {string} channelId @returns {void} */
   openChannelById = (channelId: string): void => this.showChannel(channelId);

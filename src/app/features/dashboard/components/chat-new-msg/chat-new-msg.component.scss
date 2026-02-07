@@ -3,7 +3,7 @@
 .chat-new-msg {
   @include mix.flex(column, flex-start, stretch);
   height: 100%;
-  background: var(--container-bg);
+  background: var(--new-message-bg);
   border-radius: 1.9rem;
   overflow: hidden;
 

@@ -110,6 +110,7 @@ export class WorkspaceSidebarService {
    */
   closeCreateChannel(): void {
     this._isCreateChannelOpen.set(false);
+    this._isAddChannelActive.set(false);
   }
 
   /**
@@ -124,6 +125,7 @@ export class WorkspaceSidebarService {
    */
   closeAddMemberAfterChannel(): void {
     this._isAddMemberAfterChannelOpen.set(false);
+    this._isAddChannelActive.set(false);
     this.clearPendingChannelData();
   }
 

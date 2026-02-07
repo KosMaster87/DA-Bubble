@@ -4,7 +4,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--container-bg);
+  background-color: var(--thread-bg);
   overflow: hidden;
 
   &__header {
@@ -147,7 +147,8 @@
   &__parent {
     // padding: var(--space-6) var(--space-10);
     padding: var(--space-3) var(--space-4);
-    background-color: #f8f9fa;
+    background-color: var(--thread-parent-bg);
+    box-shadow: var(--shadow-sm);
 
     @media screen and (max-width: 768px) {
       padding: var(--space-3) var(--space-2);

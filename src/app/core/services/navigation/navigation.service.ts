@@ -165,7 +165,21 @@ export class NavigationService {
    */
   navigateToLegal(): void {
     this.stateService.setSelectedChannelId('legal');
+    this.stateService.setSelectedDirectMessageId(null);
+    this.stateService.setNewMessageActive(false);
+    this.stateService.setMailboxActive(false);
     this.router.navigate(['/dashboard/legal']);
+  }
+
+  /**
+   * Navigate to settings page
+   */
+  navigateToSettings(): void {
+    this.stateService.setSelectedChannelId('settings');
+    this.stateService.setSelectedDirectMessageId(null);
+    this.stateService.setNewMessageActive(false);
+    this.stateService.setMailboxActive(false);
+    this.router.navigate(['/dashboard/settings']);
   }
 
   /**
@@ -176,6 +190,7 @@ export class NavigationService {
     this.stateService.setSelectedChannelId(null);
     this.stateService.setSelectedDirectMessageId(null);
     this.stateService.setMailboxActive(false);
+    this.router.navigate(['/dashboard/new-message']);
   }
 
   /**

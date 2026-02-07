@@ -10,7 +10,7 @@
   height: 100dvh;
   margin: 0 auto;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-0);
-  background-color: var(--background-color);
+  // background-color: var(--background-color);
   gap: var(--space-2);
   overflow: hidden;
 
@@ -76,40 +76,41 @@
         gap: 0;
       }
 
-      // Remove gap when sidebar is collapsed (< 1440px)
-      @media screen and (min-width: 769px) and (max-width: 1440px) {
+      // 1280px - 1920px: All 3 panels can be open
+      // Grid stays: sidebar(auto) | content(1fr) | thread(400px)
+
+      // 1024px - 1280px: Content + Thread visible, Sidebar collapses to 0
+      @media screen and (min-width: 1024px) and (max-width: 1279px) {
+        grid-template-columns: 0 1fr 380px;
         gap: 0;
-        column-gap: var(--space-2);
-        grid-template-columns: auto 1fr 350px;
+        column-gap: var(--space-3);
+        padding: var(--space-0) var(--space-1) var(--space-0) var(--space-1);
+
+        // When sidebar is manually opened: keep 3-column grid but hide content
+        &.dashboard__main--sidebar-priority {
+          grid-template-columns: auto 0 1fr;
+          padding: var(--space-0) var(--space-1) var(--space-0) var(--space-4);
+
+          &:not(.dashboard__main--no-sidebar) {
+            column-gap: var(--space-2);
+          }
+        }
       }
 
-      // Content hidden under 1024px: Thread takes all available space
-      @media screen and (min-width: 769px) and (max-width: 1024px) {
+      // Under 1024px: Only thread visible (content column = 0)
+      @media screen and (min-width: 769px) and (max-width: 1023px) {
         grid-template-columns: auto 0 1fr;
+        gap: 0;
         column-gap: 0;
         padding: var(--space-0) var(--space-1) var(--space-0) var(--space-4);
 
-        // Gap nur wenn Sidebar sichtbar ist
+        // When sidebar is visible: add gap
         &:not(.dashboard__main--no-sidebar) {
           column-gap: var(--space-2);
         }
       }
 
-      @include mix.tablet-landscape {
-        grid-template-columns: auto 1fr 450px;
-
-        @media screen and (max-width: 1440px) {
-          gap: 0;
-          column-gap: var(--space-3);
-          grid-template-columns: auto 1fr 380px;
-        }
-
-        @media screen and (max-width: 1024px) {
-          grid-template-columns: auto 0 1fr;
-          column-gap: 0;
-        }
-      }
-
+      // Desktop refinements
       @include mix.laptop {
         grid-template-columns: auto 1fr 500px;
         padding: var(--space-0) var(--space-0) var(--space-0) var(--space-0);
@@ -118,6 +119,21 @@
           gap: 0;
           column-gap: var(--space-4);
           grid-template-columns: auto 1fr 420px;
+        }
+
+        @media screen and (max-width: 1279px) {
+          grid-template-columns: 0 1fr 420px;
+          column-gap: var(--space-3);
+
+          &.dashboard__main--sidebar-priority {
+            grid-template-columns: auto 0 1fr;
+            padding: var(--space-0) var(--space-1) var(--space-0) var(--space-4);
+          }
+        }
+
+        @media screen and (max-width: 1023px) {
+          grid-template-columns: auto 0 1fr;
+          column-gap: 0;
         }
       }
     }

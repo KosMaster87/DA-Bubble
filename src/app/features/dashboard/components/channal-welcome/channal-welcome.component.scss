@@ -4,7 +4,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: var(--container-bg);
+  background-color: var(--channel-welcome-bg);
   overflow: hidden;
   gap: var(--space-2);
 
@@ -117,7 +117,7 @@
   }
 
   &__welcome-card {
-    background: linear-gradient(135deg, rgba(68, 77, 242, 0.05) 0%, rgba(121, 126, 243, 0.05) 100%);
+    background: var(--channel-welcome-bg-card-greeting);
     border: 1px solid rgba(68, 77, 242, 0.2);
     border-radius: 12px;
     padding: 2rem;
@@ -190,7 +190,7 @@
   }
 
   &__info-card {
-    background-color: #fff;
+    background-color: var(--channel-welcome-bg-card-info);
     border: 1px solid var(--border-color, #e0e0e0);
     border-radius: 12px;
     padding: 1.5rem;
@@ -265,11 +265,10 @@
   }
 
   &__announcement {
-    background-color: #f8f9ff;
+    background-color: var(--channel-welcome-bg-card-announcement);
     border-left: 4px solid #535af1;
     border-radius: 8px;
     padding: 1.25rem;
-    margin-bottom: 1.5rem;
 
     @media screen and (max-width: 768px) {
       padding: var(--space-3);
@@ -371,11 +370,11 @@
   &__announcement-text {
     margin: 0;
     line-height: 1.6;
-    color: var(--text-primary);
+    color: var(--text-secondary);
   }
 
   &__stats-card {
-    background-color: #fff;
+    background-color: var(--channel-welcome-bg-card-stats);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
@@ -416,7 +415,7 @@
   &__stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #535af1;
+    color: var(--primary-color);
     margin-bottom: 0.25rem;
 
     @media screen and (max-width: 768px) {
@@ -434,7 +433,7 @@
   }
 
   &__tips-card {
-    background-color: #fffbf0;
+    background-color: var(--channel-welcome-bg-card-tips);
     border: 1px solid #ffd93d;
     border-radius: 12px;
     padding: 1.5rem;
@@ -478,18 +477,18 @@
     }
 
     kbd {
-      background-color: #fff;
-      border: 1px solid #ddd;
+      background-color: var(--channel-welcome-kbd-bg);
+      color: var(--channel-welcome-kbd-text);
+      border: 1px solid var(--channel-welcome-kbd-border);
+      padding: 2px 6px;
       border-radius: 4px;
-      padding: 0.125rem 0.375rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.875rem;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      font-family: monospace;
+      box-shadow: 0 2px 0 var(--channel-welcome-kbd-border);
     }
   }
 
   &__cta-card {
-    background: linear-gradient(135deg, #535af1 0%, #797ef3 100%);
+    background: var(--channel-welcome-bg-card-cta);
     border-radius: 12px;
     padding: 2rem;
     text-align: center;

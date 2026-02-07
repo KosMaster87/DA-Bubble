@@ -19,6 +19,7 @@ export type DashboardView =
   | 'chat-new-msg'
   | 'mailbox'
   | 'legal'
+  | 'settings'
   | 'channel'
   | 'direct-message';
 
@@ -100,6 +101,13 @@ export class DashboardStateService {
   }
 
   /**
+   * Show settings view
+   */
+  showSettings(): void {
+    this._currentView.set('settings');
+  }
+
+  /**
    * Show channel by ID
    * @param channelId Channel ID to display
    * @param deselectDM Callback to deselect DM in sidebar
@@ -128,6 +136,10 @@ export class DashboardStateService {
     }
     if (channelId === 'legal') {
       this.showLegal();
+      return true;
+    }
+    if (channelId === 'settings') {
+      this.showSettings();
       return true;
     }
     return false;
@@ -200,7 +212,7 @@ export class DashboardStateService {
   private determineOtherUser = (
     conversationId: string,
     participants: [string, string] | undefined,
-    currentUserId: string
+    currentUserId: string,
   ): string | null => {
     const conversation = this.getConversation(conversationId);
 
@@ -219,18 +231,13 @@ export class DashboardStateService {
    * Get conversation from store
    */
   private getConversation = (conversationId: string): any | undefined => {
-    return this.directMessageStore
-      .sortedConversations()
-      .find((c) => c.id === conversationId);
+    return this.directMessageStore.sortedConversations().find((c) => c.id === conversationId);
   };
 
   /**
    * Get other user from conversation participants
    */
-  private getOtherUserFromConversation = (
-    conversation: any,
-    currentUserId: string
-  ): string => {
+  private getOtherUserFromConversation = (conversation: any, currentUserId: string): string => {
     const otherUserId = conversation.participants.find((id: string) => id !== currentUserId);
     return otherUserId || currentUserId; // Self-DM if no other user
   };
@@ -240,7 +247,7 @@ export class DashboardStateService {
    */
   private getOtherUserFromParticipants = (
     participants: [string, string] | undefined,
-    currentUserId: string
+    currentUserId: string,
   ): string | null => {
     if (!participants) return null;
 
@@ -266,7 +273,7 @@ export class DashboardStateService {
     conversationId: string,
     otherUserId: string,
     currentUserId: string,
-    otherUser: any
+    otherUser: any,
   ): void => {
     const dmInfo = this.createDMInfo(conversationId, otherUserId, currentUserId, otherUser);
     this._selectedDM.set(dmInfo);
@@ -280,7 +287,7 @@ export class DashboardStateService {
     conversationId: string,
     otherUserId: string,
     currentUserId: string,
-    otherUser: any
+    otherUser: any,
   ): DMInfo => {
     const isSelfDM = otherUserId === currentUserId;
     const displayName = isSelfDM ? `${otherUser.displayName} (Notes)` : otherUser.displayName;

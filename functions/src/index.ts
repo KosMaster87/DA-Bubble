@@ -38,5 +38,5 @@ export {
 // ============================================
 export {
   updateDMOnNewMessage,
-  updateDirectMessageOnThreadMessage,
+  updateDMOnThreadMessage,
 } from "./firestore/directMessages";

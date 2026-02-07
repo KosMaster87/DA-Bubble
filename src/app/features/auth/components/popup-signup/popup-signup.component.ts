@@ -6,10 +6,11 @@
 
 import { Component } from '@angular/core';
 import { LinkButtonComponent } from '@shared/components';
+import { ThemeToggleComponent } from '@shared/components/theme-toggle';
 
 @Component({
   selector: 'app-popup-signup',
-  imports: [LinkButtonComponent],
+  imports: [LinkButtonComponent, ThemeToggleComponent],
   templateUrl: './popup-signup.component.html',
   styleUrl: './popup-signup.component.scss',
 })

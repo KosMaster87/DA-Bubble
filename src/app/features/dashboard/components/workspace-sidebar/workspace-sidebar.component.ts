@@ -6,6 +6,7 @@
 
 import { Component, inject, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { CreateChannelComponent } from '@shared/dashboard-components/create-channel/create-channel.component';
 import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-components/add-member-after-add-channel/add-member-after-add-channel.component';
@@ -34,6 +35,7 @@ import { type Message as ViewMessage } from '@shared/dashboard-components/conver
   styleUrl: './workspace-sidebar.component.scss',
 })
 export class WorkspaceSidebarComponent {
+  private router = inject(Router);
   protected authStore = inject(AuthStore);
   protected userPresenceStore = inject(UserPresenceStore);
   protected channelListService = inject(ChannelListService);
@@ -49,6 +51,7 @@ export class WorkspaceSidebarComponent {
   isNewMessageActive = input<boolean>(false);
   isMailboxActive = input<boolean>(false);
   isLegalActive = input<boolean>(false);
+  isSettingsActive = input<boolean>(false);
   isMobileView = input<boolean>(false);
 
   // Outputs
@@ -102,13 +105,18 @@ export class WorkspaceSidebarComponent {
    */
   protected selectedDirectMessageId = this.navigationService.getSelectedDirectMessageId();
 
-  openNewMessage = (): void => this.newMessageRequested.emit();
+  openNewMessage = (): void => {
+    this.navigationService.selectNewMessage();
+    this.newMessageRequested.emit();
+  };
   openMailbox = (): void => this.mailboxRequested.emit();
   toggleChannels = (): void => this.workspaceSidebarService.toggleChannels();
   toggleDirectMessages = (): void => this.workspaceSidebarService.toggleDirectMessages();
   toggleSystemControl = (): void => this.workspaceSidebarService.toggleSystemControl();
   openLegal = (): void => this.navigationService.navigateToLegal();
-  openSettings = (): void => { /* TODO: Open settings dialog/page */ };
+  openSettings = (): void => {
+    this.navigationService.navigateToSettings();
+  };
 
   /**
    * Select a channel or special view (mailbox, etc.)
@@ -122,8 +130,10 @@ export class WorkspaceSidebarComponent {
     this.channelSelected.emit(channelId);
   };
 
-  selectChannelById = (channelId: string): void => this.navigationService.selectChannelById(channelId);
-  selectDirectMessageById = (messageId: string): void => this.navigationService.selectDirectMessageById(messageId);
+  selectChannelById = (channelId: string): void =>
+    this.navigationService.selectChannelById(channelId);
+  selectDirectMessageById = (messageId: string): void =>
+    this.navigationService.selectDirectMessageById(messageId);
   deselectDirectMessage = (): void => this.navigationService.deselectDirectMessage();
 
   addChannel = (): void => this.workspaceSidebarService.startAddChannel();
@@ -197,7 +207,9 @@ export class WorkspaceSidebarComponent {
    * @param {string} userId - The other user's ID
    * @returns {Promise<{id: string, participants: string[]} | null>} Conversation data or null
    */
-  startDirectMessage = async (userId: string): Promise<{ id: string; participants: string[] } | null> => {
+  startDirectMessage = async (
+    userId: string,
+  ): Promise<{ id: string; participants: string[] } | null> => {
     const currentUserId = this.authStore.user()?.uid;
     if (!currentUserId) return null;
 
@@ -245,7 +257,8 @@ export class WorkspaceSidebarComponent {
     });
   };
 
-  onThreadUnreadMouseEnter = (id: string): void => this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
+  onThreadUnreadMouseEnter = (id: string): void =>
+    this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
   onThreadUnreadMouseLeave = (): void => this.workspaceSidebarService.onThreadUnreadMouseLeave();
   onPopupMouseEnter = (): void => this.workspaceSidebarService.onPopupMouseEnter();
 
