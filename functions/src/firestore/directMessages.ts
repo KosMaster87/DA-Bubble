@@ -19,7 +19,7 @@ const getConversationRef = (
  * @return {Promise<admin.firestore.DocumentSnapshot>} Document snapshot
  */
 const fetchConversation = async (
-  conversationRef: admin.firestore.DocumentReference
+  conversationRef: admin.firestore.DocumentReference,
 ): Promise<admin.firestore.DocumentSnapshot> => {
   return await conversationRef.get();
 };
@@ -47,7 +47,7 @@ const findRecipientId = (
 const updateConversationOnMessage = async (
   conversationRef: admin.firestore.DocumentReference,
   messageData: admin.firestore.DocumentData,
-  recipientId: string
+  recipientId: string,
 ): Promise<void> => {
   await conversationRef.update({
     lastMessageAt: messageData.createdAt,
@@ -64,7 +64,7 @@ const updateConversationOnMessage = async (
  */
 const updateConversationOnThread = async (
   conversationRef: admin.firestore.DocumentReference,
-  messageData: admin.firestore.DocumentData
+  messageData: admin.firestore.DocumentData,
 ): Promise<void> => {
   await conversationRef.update({
     lastMessageAt: messageData.createdAt,
@@ -78,7 +78,7 @@ const updateConversationOnThread = async (
  * @return {Promise<admin.firestore.DocumentSnapshot | null>} Document
  */
 const getValidConversation = async (
-  conversationId: string
+  conversationId: string,
 ): Promise<admin.firestore.DocumentSnapshot | null> => {
   const conversationRef = getConversationRef(conversationId);
   const conversationDoc = await fetchConversation(conversationRef);
@@ -101,7 +101,7 @@ const getValidConversation = async (
 const getValidRecipientId = (
   conversationDoc: admin.firestore.DocumentSnapshot,
   authorId: string,
-  conversationId: string
+  conversationId: string,
 ): string | null => {
   const participants = conversationDoc.data()?.participants || [];
   const recipientId = findRecipientId(participants, authorId);
@@ -122,7 +122,7 @@ const getValidRecipientId = (
  */
 const processNewDMMessage = async (
   conversationId: string,
-  messageData: admin.firestore.DocumentData
+  messageData: admin.firestore.DocumentData,
 ): Promise<void> => {
   const conversationDoc = await getValidConversation(conversationId);
   if (!conversationDoc) return;
@@ -135,11 +135,7 @@ const processNewDMMessage = async (
   if (!recipientId) return;
 
   const conversationRef = getConversationRef(conversationId);
-  await updateConversationOnMessage(
-    conversationRef,
-    messageData,
-    recipientId
-  );
+  await updateConversationOnMessage(conversationRef, messageData, recipientId);
 };
 
 /**
@@ -156,7 +152,7 @@ const processNewDMMessage = async (
 export const updateDMOnNewMessage = onDocumentCreated(
   {
     document: "direct-messages/{conversationId}/messages/{messageId}",
-    region: "us-central1",
+    region: "europe-west1",
   },
   async (event) => {
     const conversationId = event.params.conversationId;
@@ -173,7 +169,7 @@ export const updateDMOnNewMessage = onDocumentCreated(
       logger.error(`Error updating conversation ${conversationId}:`, error);
       throw error;
     }
-  }
+  },
 );
 
 /**
@@ -186,7 +182,7 @@ export const updateDMOnThreadMessage = onDocumentCreated(
     document:
       "direct-messages/{conversationId}/messages/" +
       "{messageId}/threads/{threadId}",
-    region: "us-central1",
+    region: "europe-west1",
   },
   async (event) => {
     const conversationId = event.params.conversationId;
@@ -204,5 +200,5 @@ export const updateDMOnThreadMessage = onDocumentCreated(
       logger.error(`Error updating conversation ${conversationId}:`, error);
       throw error;
     }
-  }
+  },
 );

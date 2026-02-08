@@ -17,7 +17,11 @@ admin.initializeApp();
 
 // Global settings for all functions
 // maxInstances: 10 prevents unexpected scaling costs
-setGlobalOptions({maxInstances: 10});
+// region: europe-west1 matches Firestore location eur3
+setGlobalOptions({
+  maxInstances: 10,
+  region: "europe-west1",
+});
 
 // ============================================
 // SCHEDULED FUNCTIONS
