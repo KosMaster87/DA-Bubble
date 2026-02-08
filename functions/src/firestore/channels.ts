@@ -21,7 +21,7 @@ const getChannelRef = (
  */
 const updateChannelOnMessage = async (
   channelRef: admin.firestore.DocumentReference,
-  messageData: admin.firestore.DocumentData
+  messageData: admin.firestore.DocumentData,
 ): Promise<void> => {
   await channelRef.update({
     lastMessageAt: messageData.createdAt,
@@ -38,7 +38,7 @@ const updateChannelOnMessage = async (
  */
 const updateChannelOnThread = async (
   channelRef: admin.firestore.DocumentReference,
-  messageData: admin.firestore.DocumentData
+  messageData: admin.firestore.DocumentData,
 ): Promise<void> => {
   await channelRef.update({
     lastMessageAt: messageData.createdAt,
@@ -60,7 +60,7 @@ const updateChannelOnThread = async (
 export const updateChannelOnNewMessage = onDocumentCreated(
   {
     document: "channels/{channelId}/messages/{messageId}",
-    region: "us-central1",
+    region: "europe-west1",
   },
   async (event) => {
     const channelId = event.params.channelId;
@@ -78,7 +78,7 @@ export const updateChannelOnNewMessage = onDocumentCreated(
       logger.error(`Error updating channel ${channelId}:`, error);
       throw error;
     }
-  }
+  },
 );
 
 /**
@@ -89,7 +89,7 @@ export const updateChannelOnNewMessage = onDocumentCreated(
 export const updateChannelOnThreadMessage = onDocumentCreated(
   {
     document: "channels/{channelId}/messages/{messageId}/threads/{threadId}",
-    region: "us-central1",
+    region: "europe-west1",
   },
   async (event) => {
     const channelId = event.params.channelId;
@@ -107,5 +107,5 @@ export const updateChannelOnThreadMessage = onDocumentCreated(
       logger.error(`Error updating channel ${channelId}:`, error);
       throw error;
     }
-  }
+  },
 );
