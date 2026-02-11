@@ -7,6 +7,8 @@
 
     <!-- Viewport & PWA Meta -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="screen-orientation" content="portrait" />
+    <meta name="x5-orientation" content="portrait" />
     <meta
       name="description"
       content="DABubble - Moderne Messaging-Plattform für Teams. Schnell, sicher und intuitiv."
@@ -20,11 +22,11 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest-light.webmanifest" id="manifest-link" />
 
-    <!-- Theme Colors -->
-    <meta name="theme-color" content="#444df2" />
+    <!-- Theme Colors (dynamically updated by script below) -->
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
     <meta name="msapplication-TileColor" content="#444df2" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="DABubble" />
 
     <!-- Favicon & Icons -->
@@ -40,7 +42,19 @@
           const stored = localStorage.getItem('dabubbleTheme') || 'device';
           const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
           const theme = stored === 'device' ? (systemIsDark ? 'dark' : 'light') : stored;
+
+          // Set theme attribute
           document.documentElement.setAttribute('data-theme', theme);
+
+          // Update theme-color meta tag based on theme
+          const themeColors = {
+            light: '#ffffff',  // --workspace-bg in light theme
+            dark: '#404040'    // --workspace-bg in dark theme
+          };
+          const metaThemeColor = document.getElementById('theme-color-meta');
+          if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', themeColors[theme]);
+          }
         } catch (e) {
           // Fallback to light theme
           document.documentElement.setAttribute('data-theme', 'light');

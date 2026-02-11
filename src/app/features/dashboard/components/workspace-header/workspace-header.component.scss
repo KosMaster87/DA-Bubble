@@ -6,13 +6,21 @@
     gap: 1rem;
     max-width: 100%;
     padding: 0.2rem 0.2rem;
+    background-color: var(--workspace-bg);
+
+    @include mix.tablet {
+      gap: 1.5rem;
+      background-color: unset;
+    }
 
     @include mix.tablet-landscape {
       gap: 1.5rem;
+      background-color: unset;
     }
 
     @include mix.laptop {
       gap: 2rem;
+      background-color: unset;
     }
   }
 
@@ -158,7 +166,9 @@
   &__options-icon {
     width: 14.4px;
     height: 14.4px;
-    transition: transform 0.2s, filter 0.2s;
+    transition:
+      transform 0.2s,
+      filter 0.2s;
 
     // Hover state
     .workspace-header__profile:hover & {
