@@ -19,3 +19,26 @@ body {
   color: var(--text-color);
   transition: background-color var(--transition-base), color var(--transition-base);
 }
+
+/* ============================================================
+   PWA Safe Area Support (iOS Notch, Android Status Bar)
+   ============================================================ */
+@supports (padding: max(0px)) {
+  body {
+    /* Safe area insets for devices with notches/curved screens */
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* PWA Standalone Mode Specific Styles */
+@media (display-mode: standalone) {
+  body {
+    /* Ensure app fills entire viewport in PWA mode */
+    min-height: 100vh;
+    /* Use dvh for dynamic viewport height (mobile browsers with/without address bar) */
+    min-height: 100dvh;
+  }
+}

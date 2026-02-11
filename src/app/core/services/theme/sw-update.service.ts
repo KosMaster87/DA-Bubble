@@ -93,7 +93,7 @@ export class SwUpdateService {
    */
   private promptUserToUpdate(): void {
     const shouldUpdate = confirm(
-      'Eine neue Version von DABubble ist verfügbar. Jetzt aktualisieren?'
+      'A new version of DABubble is available. Update now?'
     );
 
     if (shouldUpdate) {

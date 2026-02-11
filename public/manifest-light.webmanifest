@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#444df2",
+  "theme_color": "#ffffff",
   "categories": ["productivity", "communication", "messaging"],
   "lang": "en",
   "dir": "ltr",

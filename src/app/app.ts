@@ -13,10 +13,11 @@ import { NavigationService } from '@core/services/navigation/navigation.service'
 import { UserPresenceStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
 import { environment } from '../config/environments/env.dev';
+import { LandscapeWarningComponent } from '@shared/components/landscape-warning/landscape-warning.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, LandscapeWarningComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

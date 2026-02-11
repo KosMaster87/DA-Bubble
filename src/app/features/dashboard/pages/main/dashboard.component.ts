@@ -276,20 +276,33 @@ export class DashboardComponent {
    */
   showNewMessage = (): void => {
     if (this.threadManagement.isThreadOpen()) this.threadManagement.closeThread();
+    if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showNewMessage();
   };
 
   /** Show welcome view @returns {void} */
-  showWelcome = (): void => this.dashboardState.showWelcome();
+  showWelcome = (): void => {
+    if (this.isMobileView()) this.mobileActiveView.set('content');
+    this.dashboardState.showWelcome();
+  };
 
   /** Show mailbox view @returns {void} */
-  showMailbox = (): void => this.dashboardState.showMailbox();
+  showMailbox = (): void => {
+    if (this.isMobileView()) this.mobileActiveView.set('content');
+    this.dashboardState.showMailbox();
+  };
 
   /** Show legal view @returns {void} */
-  showLegal = (): void => this.dashboardState.showLegal();
+  showLegal = (): void => {
+    if (this.isMobileView()) this.mobileActiveView.set('content');
+    this.dashboardState.showLegal();
+  };
 
   /** Show settings view @returns {void} */
-  showSettings = (): void => this.dashboardState.showSettings();
+  showSettings = (): void => {
+    if (this.isMobileView()) this.mobileActiveView.set('content');
+    this.dashboardState.showSettings();
+  };
 
   /** Open channel by ID - Delegates to showChannel @param {string} channelId @returns {void} */
   openChannelById = (channelId: string): void => this.showChannel(channelId);
