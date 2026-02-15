@@ -1,4 +1,4 @@
-# 💬 DABubble – Discord Clone Chat App
+# DABubble – Discord Clone Chat App
 
 [![Angular](https://img.shields.io/badge/Angular-21.0-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -10,13 +10,13 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 
 ---
 
-## 🚀 Live Demo
+## Live Demo
 
-🔗 **[dabubble.dev2k.org](https://dabubble.dev2k.org)**
+**[dabubble.dev2k.org](https://dabubble.dev2k.org)**
 
 ---
 
-## 📸 Preview
+## Preview
 
 ### Desktop View
 
@@ -28,11 +28,9 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 
 ---
 
-## ✨ Features
+## Features
 
-### 👤 User Account & Administration
-
-### 👤 User Account & Administration
+### User Account & Administration
 
 - ✅ **User Registration** – Email/password with avatar selection
 - ✅ **User Login** – Secure authentication with Firebase
@@ -42,7 +40,7 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 - ✅ **Auth Guards** – Route protection (auth, no-auth, avatar-selection)
 - 🔜 **Online Status** – Real-time user presence (planned)
 
-### 💬 Channels & Direct Messages
+### Channels & Direct Messages
 
 - ✅ **Channels** – Group discussions with multiple members
 - ✅ **Channel Management** – Create, edit, manage channels
@@ -54,24 +52,24 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
   - Last reply timestamp
   - Parent message shown in thread
   - Reactive loading with signals
-- 🔜 **Mention Users** – Tag members with `@username` (planned)
-- 🔜 **Mention Channels** – Reference channels with `#channel` (planned)
-- 🔜 **Search Messages** – Find messages across channels and DMs (planned)
-- 🔜 **Emoticons in Messages** – Emoji picker integration (planned)
+- ✅ **Mention Users** – Tag members with `@username` (planned)
+- ✅ **Mention Channels** – Reference channels with `#channel` (planned)
+- ✅ **Search Messages** – Find messages across channels and DMs (planned)
+- ✅ **Emoticons in Messages** – Emoji picker integration (planned)
 
-### 🔧 Channel Management
+### Channel Management
 
 - ✅ **Create Channels** – Set name, description
 - ✅ **Channel List** – Sidebar navigation with mailbox
 - ✅ **Workspace UI** – Header with search, sidebar with channels/DMs
-- 🔜 **Add Members** – Invite users to existing channels (planned)
-- 🔜 **Leave Channels** – Exit channels you don't need (planned)
-- 🔜 **Edit Channels** – Modify name and description (planned)
+- ✅ **Add Members** – Invite users to existing channels (planned)
+- ✅ **Leave Channels** – Exit channels you don't need (planned)
+- ✅ **Edit Channels** – Modify name and description (planned)
 - 🔜 **Duplicate Prevention** – No duplicate channel names (planned)
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Frontend**
 
@@ -94,7 +92,6 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 - ESLint & Prettier
 - JSDoc Documentation
 - Max 14 lines per function
-- Max 100 LOC per modular file (stores)
 - Max 400 LOC per file (general)
 
 **DevOps & Hosting**
@@ -106,14 +103,23 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 dabubble/
 ├── .github/
 │   ├── prompts/
-│   │   ├── copilot-angular.prompt.md                      # Angular dev standards
-│   │   └── copilot-project.prompt.md                      # Project requirements
+│   │   ├── angular/                                       # Angular dev guides (modular)
+│   │   │   ├── 01-coding-standards.md                     # Function rules, naming, Git
+│   │   │   ├── 02-component-structure.md                  # Component patterns, signals
+│   │   │   ├── 03-state-management.md                     # NgRx SignalStore
+│   │   │   ├── 04-styling-bem.md                          # BEM methodology, SCSS
+│   │   │   ├── 05-firebase-integration.md                 # Firebase patterns
+│   │   │   ├── 06-architecture.md                         # Thread system, auth flow
+│   │   │   ├── 07-quality-checklist.md                    # Code quality checklist
+│   │   │   └── README.md                                  # Guide navigation
+│   │   ├── copilot-project.prompt.md                      # Project requirements
+│   │   └── README.md                                      # Prompts overview
 │   └── workflows/
 │       └── deploy.yml                                     # CI/CD Pipeline (future)
 ├── public/
@@ -174,10 +180,8 @@ dabubble/
 │   │   │   │   │   ├── thread/                            # Thread conversation view
 │   │   │   │   │   ├── workspace-header/                  # Dashboard header with search
 │   │   │   │   │   └── workspace-sidebar/                 # Channel/DM sidebar navigation
-│   │   │   │   ├── pages/                                 # Dashboard pages
-│   │   │   │   │   └── dashboard.component.ts             # Main dashboard orchestrator
-│   │   │   │   └── services/                              # Dashboard services
-│   │   │   │       └── (deprecated - migrated to stores)  # Old localStorage services
+│   │   │   │   └── pages/                                 # Dashboard pages
+│   │   │   │       └── dashboard.component.ts             # Main dashboard orchestrator
 │   │   │   │
 │   │   │   └── legal/                                     # Legal Pages
 │   │   │       └── pages/                                 # Legal page components
@@ -233,8 +237,7 @@ dabubble/
 │   │   │   ├── message.store.ts                           # Message CRUD store
 │   │   │   ├── user.store.ts                              # User management store (auto-cleanup)
 │   │   │   ├── user-presence.store.ts                     # User online/offline status
-│   │   │   ├── store.utils.ts                             # Store utility functions
-│   │   │   ├── STORES-README.md                           # Store architecture documentation
+│   │   │   └── store.utils.ts                             # Store utility functions
 │   ├── config/
 │   │   └── environments/                                  # Environment configs
 │   │       ├── env.dev.ts                                 # Dev config (not in Git)
@@ -276,7 +279,7 @@ dabubble/
 
 ---
 
-## �️ Architecture
+## Architecture
 
 ### Modular NgRx SignalStore Pattern
 
@@ -284,24 +287,21 @@ DABubble uses a **modular store structure** for complex features like authentica
 
 ```
 stores/auth/
-├── auth.store.ts              # Main store orchestrator (72 LOC)
-├── auth.types.ts              # State interface & initial state (27 LOC)
-├── auth.helpers.ts            # Mappers & state handlers (74 LOC)
-├── auth.login.methods.ts      # Login methods (93 LOC)
-├── auth.signup.methods.ts     # Signup methods (58 LOC)
-├── auth.password.methods.ts   # Password methods (32 LOC)
+├── auth.store.ts              # Main store orchestrator
+├── auth.types.ts              # State interface & initial state
+├── auth.helpers.ts            # Mappers & state handlers
+├── auth.login.methods.ts      # Login methods
+├── auth.signup.methods.ts     # Signup methods
+├── auth.password.methods.ts   # Password methods
 └── index.ts                   # Barrel export
 ```
 
 **Benefits:**
 
 - ✅ Single Responsibility: Each file has one clear purpose
-- ✅ Testability: Methods can be tested in isolation
+- 🔜 Testability: Methods can be tested in isolation (planned)
 - ✅ Maintainability: Changes affect only relevant files
 - ✅ Scalability: Easy to add new features
-- ✅ File Size: All files ≤ 100 LOC (meets project standards)
-
-**See:** [STORES-README.md](./src/app/stores/STORES-README.md) for detailed documentation
 
 ---
 
@@ -328,15 +328,7 @@ async loginWithGoogle(): Promise<void> {
 
 **Production Hosting: IONOS Apache**
 
-Production deployment at [dabubble.dev2k.org](https://dabubble.dev2k.org) uses IONOS Apache hosting with `.htaccess` configuration for SPA routing:
-
-```apache
-# .htaccess (dist/dabubble/browser/)
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^.*$ index.html [L]
-```
+Production deployment at [dabubble.dev2k.org](https://dabubble.dev2k.org) uses IONOS Apache hosting with `.htaccess` configuration for SPA routing
 
 ---
 
@@ -368,97 +360,45 @@ Thread panel slides in from right
 - ✅ Parent message included in thread view
 - ✅ Reactive loading with `effect()` watching signals
 - ✅ Structured event communication pattern
-- ✅ localStorage persistence via DummyThreadService
 - ✅ Ready for Firebase migration
 
 **Components:**
 
-- **DummyThreadService** – Thread data management (localStorage)
 - **ThreadComponent** – Thread display with parent + replies
 - **ConversationMessagesComponent** – Reusable message list
 - **Dashboard** – Orchestrates thread opening/closing
 
 ---
 
-### Module READMEs
+## User Stories (Implementation Status)
 
-Each major module has detailed documentation:
-
-- **[CORE-README.md](./src/app/core/CORE-README.md)** - Guards, Models, Core Services
-- **[FEATURES-README.md](./src/app/features/FEATURES-README.md)** - Auth, Dashboard Features
-- **[LAYOUT-README.md](./src/app/layout/LAYOUT-README.md)** - Layouts, Sidebar, Header
-- **[SHARED-README.md](./src/app/shared/SHARED-README.md)** - Shared UI Components
-- **[STORES-README.md](./src/app/stores/STORES-README.md)** - NgRx SignalStore Architecture
-
----
-
-## �🎨 Design System
-
-### Color Palette
-
-```scss
---primary-color: #444df2        // Primary brand color
---secondary-color: #535af1      // Secondary actions
---link-color: #797ef3           // Links and highlights
---text-color: #000000           // Main text
---background-color: #eceefe     // App background
---container-bg: #ffffff         // Card/container backgrounds
-```
-
-### Typography
-
-- **Primary Font:** Nunito (sans-serif)
-- **Secondary Font:** Figtree (sans-serif)
-- **Base Size:** 16px (1rem)
-- **Responsive scaling** with clamp()
-
-### BEM Naming
-
-All SCSS follows BEM methodology:
-
-```scss
-.message-card {
-} // Block
-.message-card__header {
-} // Element
-.message-card--highlighted {
-} // Modifier
-```
-
----
-
-## 📋 User Stories (Implementation Checklist)
-
-### ✅ User Account & Administration
-
-- [ ] User registration with email/password
-- [ ] User login with authentication
+- [x] User registration with email/password/google
+- [x] User login with authentication
 - [ ] Password recovery via email
-- [ ] Profile editing (name, avatar)
-- [ ] Minimizable sidebar menu
-- [ ] Online status (optional)
+- [ ] Profile editing
+- [x] Online status
 
 ### ✅ Channels & Direct Messages
 
-- [ ] Direct messaging between users
-- [ ] React to messages with emoticons
-- [ ] Send messages with emoticons
-- [ ] Mention users with `@`
-- [ ] Mention channels with `#`
-- [ ] Create threads on messages
-- [ ] Search messages globally
+- [x] Direct messaging between users
+- [x] React to messages with emoticons
+- [x] Send messages with emoticons
+- [x] Create threads on messages
+- [x] Mention users with `@`
+- [x] Mention channels with `#`
+- [x] Search messages in the chats
 
 ### ✅ Channel Management
 
-- [ ] Create new channels
-- [ ] Add members to channels
-- [ ] Leave channels
-- [ ] Edit channel details
+- [x] Create new channels
+- [x] Add members to channels
+- [x] Leave channels
+- [x] Edit channel details
 - [ ] Prevent duplicate channel names
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -517,7 +457,7 @@ Navigate to `http://localhost:4200/`
 
 ---
 
-## 🧪 Development
+## Development
 
 ### Available Scripts
 
@@ -542,7 +482,7 @@ ng generate        # Generate components/services/etc.
 
 ---
 
-## 🔒 Security
+## Security
 
 - Firebase Authentication for user management
 - Firestore Security Rules for data protection
@@ -553,79 +493,31 @@ ng generate        # Generate components/services/etc.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a student project. Contributions are not currently accepted, but feel free to fork and customize!
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-## 👤 Author
+## Author
 
 **Konstantin Aksenov**
 
-- 🌐 Portfolio: [portfolio.dev2k.org](https://portfolio.dev2k.org)
-- 💼 LinkedIn: [LinkedIn](https://www.linkedin.com/in/konstantin-aksenov-802b88190/)
-- 🐙 GitHub: [@KosMaster87](https://github.com/KosMaster87)
-- 📧 Email: konstantin.aksenov@dev2k.org
+- Portfolio: [portfolio.dev2k.org](https://portfolio.dev2k.org)
+- LinkedIn: [LinkedIn](https://www.linkedin.com/in/konstantin-aksenov-802b88190/)
+- GitHub: [@KosMaster87](https://github.com/KosMaster87)
+- Email: konstantin.aksenov@dev2k.org
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
+- Developer Akademie for the project foundation
 - Angular Team for the amazing framework
-- Firebase for bacJanuary 2026
-  **Version:** 1.0.0 (Production - Full Firebase Integration)
-
-**Recent Updates:**
-
-- ✅ **Firebase Migration Complete** - Full Firestore integration
-  - Real-time listeners with auto-cleanup on logout
-  - Permission error handling (no console errors on logout)
-  - Channel, DM, Thread, User stores with Firestore
-  - Invitation system with channel/DM invitations
-- ✅ **Invitation System** - Channel & DM invitation workflow
-  - Send invitations instead of direct member addition
-  - Mailbox component for invitation management
-  - Accept/decline invitation flow
-  - Auto-navigation after acceptance
-  - Firebase Rules validation
-- ✅ **Store Auto-Cleanup** - Clean logout without errors
-  - All stores detect permission errors
-  - Automatic unsubscribe on logout
-  - State reset to initial values
-  - No "Missing or insufficient permissions" errors
-- ✅ **Security Enhancement** - Channel creation security fix
-  - Only creator added as member immediately
-  - Other users receive invitations
-  - Must accept before joining channel
-- ✅ **Thread System** - Full Firestore implementation
-  - Thread replies with parent message display
-  - Reactive loading with effect()
-  - Real-time updates via onSnapshot
-  - Thread count and last reply timestamp
-- ✅ **Reaction System** - Message reactions with emojis
-  - ReactionService for toggle logic
-  - Firestore reactions array management
-  - Visual reaction bar on messages
-- ✅ **Unread Tracking** - UnreadService for message tracking
-  - lastRead timestamps per user/channel
-  - Visual unread indicators
-  - Mark as read functionality
-- ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
-- ✅ **Google OAuth** - Popup strategy (production-ready)
-- ✅ **IONOS Apache Hosting** - .htaccess SPA routing
-- ✅ **Type Safety** - No `any` types, explicit TypeScript throughout
-
-**Production Ready:** Full Firebase backend with security rules ✅
-
-- ✅ **Modular NgRx SignalStore** - Auth store with modular pattern
-- ✅ **Google OAuth** - Popup strategy (production-ready)
-- ✅ **IONOS Apache Hosting** - .htaccess SPA routing
-
-**Next Milestone:** Firebase Migration (Q1 2025)
+- Firebase for backend services
