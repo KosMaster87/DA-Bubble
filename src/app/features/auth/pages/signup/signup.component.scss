@@ -87,7 +87,7 @@
     @include mix.subtitle;
     grid-column: 1 / -1;
     text-align: center;
-    color: #000000;
+    color: var(--text-color);
     margin: 0;
 
     // Begrenze font-size damit Text im Container bleibt

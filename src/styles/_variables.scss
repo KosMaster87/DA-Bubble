@@ -38,8 +38,9 @@
   --input-icon-color-hover: #000000;
   --input-icon-opacity: 0.6;
   --input-icon-size: clamp(1.4rem, 1vw + 0.2rem, 1.6rem);
+  --input-icon-filter: brightness(0) saturate(100%);
   --input-text-color: #000000;
-  --input-placeholder-color: #686868;
+  --input-placeholder-color: var(--text-color);
   --input-caret-color: #000000;
   --input-gap: clamp(0.5rem, 2vw, 1rem);
 
@@ -67,6 +68,12 @@
   --cancel-button-text-hover: #c0392b;
   --cancel-button-border: 2px solid #e74c3c;
   --cancel-button-border-hover: 2px solid #c0392b;
+
+  /* Checkbox */
+  --checkbox-border: rgba(70, 70, 220, 0.6);
+  --checkbox-border-hover: #535af1;
+  --checkbox-wrapper-hover-bg: rgba(70, 70, 220, 0.2);
+  --checkbox-check-color: rgb(30, 30, 255);
 
   // Header specific
   --dabubble-logo-text-color: var(--primary-color);
@@ -296,7 +303,7 @@
   --text-primary: #e4e4e7;
   --text-secondary: var(--text-color-light);
   --background-color: #71717a;
-    // --background-color: var(--workspace-bg);
+  // --background-color: var(--workspace-bg);
   --container-bg: #3f3f4675;
   --container-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   --border-color: #3f3f46;
@@ -310,8 +317,10 @@
   --input-border-focus: #6b73ff;
   --input-icon-color: #a1a1aa;
   --input-icon-color-hover: #e4e4e7;
+  --input-icon-filter: brightness(0) invert(1);
   --input-text-color: #e4e4e7;
-  --input-placeholder-color: #71717a;
+  --input-placeholder-color: var(--text-color);
+  // --input-placeholder-color: #686868;
   --input-caret-color: #e4e4e7;
 
   /* Button - Dark Mode */
@@ -323,7 +332,7 @@
 
   /* Back Button - Dark Mode */
   --back-button-bg: transparent;
-  --back-button-bg-hover: #2a2d3a;
+  --back-button-bg-hover: #a1a1aa;
   --back-button-bg-disabled: #3f3f46;
   --back-button-icon-color: #e4e4e7;
   --back-button-icon-color-hover: #6b73ff;
@@ -335,6 +344,12 @@
   --cancel-button-text-hover: #fca5a5;
   --cancel-button-border: 2px solid #f87171;
   --cancel-button-border-hover: 2px solid #fca5a5;
+
+  /* Checkbox - Dark Mode */
+  --checkbox-border: #a1a1aa;
+  --checkbox-border-hover: #8f95ff;
+  --checkbox-wrapper-hover-bg: rgba(161, 161, 170, 0.2);
+  --checkbox-check-color: #8f95ff;
 
   // Header specific
   --dabubble-logo-text-color: #fff;
@@ -397,7 +412,6 @@
   --channel-mailbox-decline-text-color-hover: var(--black);
   --channel-mailbox-message-decline-border: rgba(231, 76, 60);
   --channel-mailbox-message-decline-border-hover: rgba(231, 76, 60, 0.1);
-
 
   // Legal-overview specific
   --legal-overview-bg: var(--workspace-bg);
