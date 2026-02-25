@@ -4,16 +4,15 @@
  * @module features/dashboard/components/channel-mailbox
  */
 
-import { Component, signal, computed, inject, effect, output } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Router } from '@angular/router';
-import { ChannelStore, MailboxStore, UserStore } from '@stores/index';
-import { AuthStore } from '@stores/auth';
-import { InvitationService } from '@core/services/invitation/invitation.service';
+import { Component, computed, effect, inject, output, signal } from '@angular/core';
+import { Invitation } from '@core/models/invitation.model';
 import { InvitationManagementService } from '@core/services/invitation-management/invitation-management.service';
+import { InvitationService } from '@core/services/invitation/invitation.service';
 import { MailboxInteractionService } from '@core/services/mailbox-interaction/mailbox-interaction.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
-import { Invitation } from '@core/models/invitation.model';
+import { AuthStore } from '@stores/auth';
+import { ChannelStore, MailboxStore } from '@stores/index';
 
 @Component({
   selector: 'app-channel-mailbox',
@@ -38,7 +37,7 @@ export class ChannelMailboxComponent {
   protected invitations = signal<Invitation[]>([]);
   protected invitationsError = signal<string | null>(null);
   protected pendingInvitations = computed(() =>
-    this.invitations().filter((inv) => inv.status === 'pending')
+    this.invitations().filter((inv) => inv.status === 'pending'),
   );
   protected pendingCount = computed(() => this.pendingInvitations().length);
 
@@ -127,7 +126,7 @@ export class ChannelMailboxComponent {
         this.invitations.set(invitations);
         this.invitationsError.set(null);
         console.log('📬 Invitations loaded:', invitations.length);
-      }
+      },
     );
   };
 

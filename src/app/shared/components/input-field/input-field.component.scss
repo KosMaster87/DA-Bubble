@@ -27,7 +27,7 @@
       border-color: var(--input-border-hover);
 
       .input-field__icon {
-        filter: brightness(0) saturate(100%);
+        filter: var(--input-icon-filter);
       }
     }
 
@@ -36,14 +36,14 @@
       border-color: var(--input-border-focus);
 
       .input-field__icon {
-        filter: brightness(0) saturate(100%);
+        filter: var(--input-icon-filter);
       }
     }
 
-    // Keep icon black when input has value
+    // Keep icon colored when input has value
     &:has(.input-field__input:not(:placeholder-shown)) {
       .input-field__icon {
-        filter: brightness(0) saturate(100%);
+        filter: var(--input-icon-filter);
       }
     }
 

@@ -14,7 +14,7 @@
     @include mix.transition(background, 0.3s);
 
     &:hover {
-      background: rgba(70, 70, 220, 0.2);
+      background: var(--checkbox-wrapper-hover-bg);
     }
   }
 
@@ -22,7 +22,7 @@
     appearance: none;
     width: clamp(18px, 3vw, 18px);
     height: clamp(18px, 3vw, 18px);
-    border: clamp(2px, 0.4vw, 2px) solid rgba(70, 70, 220, 0.6);
+    border: clamp(2px, 0.4vw, 2px) solid var(--checkbox-border);
     border-radius: 4px;
     background: transparent;
     cursor: pointer;
@@ -31,17 +31,17 @@
     flex-shrink: 0;
 
     &:hover {
-      border-color: var(--primary-color);
+      border-color: var(--checkbox-border-hover);
     }
 
     &:checked {
       background: transparent;
-      border-color: var(--primary-color);
+      border-color: var(--checkbox-border-hover);
 
       &::after {
         content: '✔';
         font-size: clamp(12px, 2vw, 12px);
-        color: rgb(30, 30, 255);
+        color: var(--checkbox-check-color);
         position: absolute;
         top: 50%;
         left: 50%;
