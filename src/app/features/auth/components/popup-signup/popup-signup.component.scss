@@ -3,24 +3,14 @@
 .popup-signup {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4);
   width: 100%;
 
-  // Mobile - max 767px
-  @media screen and (max-width: 767px) {
-    flex-direction: column;
-    align-items: flex-end;
-  }
-
   &__theme {
     display: flex;
-    align-items: center;
-
-    @media screen and (max-width: 767px) {
-      align-self: flex-start;
-    }
+    align-items: flex-end;
   }
 
   &__signup {

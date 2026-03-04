@@ -12,7 +12,7 @@
 
   &--active {
     .user-list-item__content {
-      background-color: #eceefe;
+      background-color: var(--user-list-item-bg-hover);
     }
 
     .user-list-item__name {
@@ -35,11 +35,11 @@
     }
 
     .user-list-item:hover & {
-      background-color: #eceefe;
+      background-color: var(--user-list-item-bg-hover);
     }
 
     .user-list-item--active & {
-      background-color: #eceefe;
+      background-color: var(--user-list-item-bg-hover);
     }
   }
 
