@@ -256,10 +256,12 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
-       * Cleanup all listeners
+       * Cleanup all listeners and release pagination snapshots
        */
       destroy(): void {
         listener.clearAllListeners();
+        channelSnapshots.clear();
+        patchState(store, initialState);
       },
     };
   })

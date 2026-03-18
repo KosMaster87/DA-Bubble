@@ -22,7 +22,6 @@ export interface ChannelState {
   channels: Channel[];
   selectedChannel: Channel | null;
   myChannels: Channel[];
-  publicChannels: Channel[];
   isLoading: boolean;
   error: string | null;
 }
@@ -35,7 +34,6 @@ const initialState: ChannelState = {
   channels: [],
   selectedChannel: null,
   myChannels: [],
-  publicChannels: [],
   isLoading: false,
   error: null,
 };
