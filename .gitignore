@@ -61,6 +61,10 @@ Thumbs.db
 src/config/environments/env.dev.ts
 src/config/environments/env.prod.ts
 
+# MCP server build artifacts and dependencies
+mcp/node_modules
+mcp/lib
+
 # Keep example files in git for reference
 # !src/config/environments/env.dev.example.ts
 # !src/config/environments/env.prod.example.ts

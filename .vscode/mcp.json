@@ -8,6 +8,15 @@
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "dabubble": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/mcp/lib/index.js"],
+      "env": {
+        "FIREBASE_PROJECT_ID": "${env:FIREBASE_PROJECT_ID}",
+        "GOOGLE_APPLICATION_CREDENTIALS": "${env:GOOGLE_APPLICATION_CREDENTIALS}"
+      }
     }
   }
 }

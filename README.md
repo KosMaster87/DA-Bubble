@@ -482,6 +482,28 @@ ng generate        # Generate components/services/etc.
 
 ---
 
+## MCP Server (AI Integration)
+
+DABubble ships an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server in the `mcp/` directory. It lets AI assistants like **Claude Desktop**, **Cursor**, or **VS Code Copilot** read and write DABubble data directly.
+
+### Available tools
+
+| Tool | Description |
+|------|-------------|
+| `list_channels` | List all channels |
+| `get_channel_messages` | Read recent messages from a channel |
+| `send_channel_message` | Post a message to a channel |
+| `list_users` | List all users |
+| `get_user` | Get a user's profile by UID |
+| `list_direct_message_conversations` | List DM conversations for a user |
+| `get_direct_messages` | Read recent DM messages |
+| `send_direct_message` | Post a DM message |
+| `search_messages` | Keyword search across all channels |
+
+See **[mcp/README.md](mcp/README.md)** for full setup and configuration instructions.
+
+---
+
 ## Security
 
 - Firebase Authentication for user management
