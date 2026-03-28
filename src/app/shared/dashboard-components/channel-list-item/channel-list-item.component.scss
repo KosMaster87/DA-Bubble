@@ -12,7 +12,7 @@
 
   &--active {
     .channel-list-item__content {
-      background-color: #eceefe;
+      background-color: var(--channel-list-item-hover-bg);
     }
 
     .channel-list-item__name {
@@ -30,11 +30,11 @@
     width: 100%;
 
     .channel-list-item:hover & {
-      background-color: #eceefe;
+      background-color: var(--channel-list-item-hover-bg);
     }
 
     .channel-list-item--active & {
-      background-color: #eceefe;
+      background-color: var(--channel-list-item-hover-bg);
     }
   }
 

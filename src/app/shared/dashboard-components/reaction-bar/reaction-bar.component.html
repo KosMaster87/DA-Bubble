@@ -4,23 +4,23 @@
   [class.reaction-bar--other]="messageType() === 'other'"
 >
   @if (!isInThread()) {
-  <button
-    class="reaction-bar__button"
-    type="button"
-    (click)="onReactionClick('checked')"
-    aria-label="Check reaction"
-  >
-    <img src="/img/icon/emojis/emoji-checked.svg" alt="Check" class="reaction-bar__icon" />
-  </button>
+    <button
+      class="reaction-bar__button"
+      type="button"
+      (click)="onReactionClick('checked')"
+      aria-label="Check reaction"
+    >
+      <img src="/img/icon/emojis/emoji-checked.svg" alt="Check" class="reaction-bar__icon" />
+    </button>
 
-  <button
-    class="reaction-bar__button"
-    type="button"
-    (click)="onReactionClick('thumbs-up')"
-    aria-label="Thumbs up reaction"
-  >
-    <img src="/img/icon/emojis/emoji-thumbs-up.svg" alt="Thumbs up" class="reaction-bar__icon" />
-  </button>
+    <button
+      class="reaction-bar__button"
+      type="button"
+      (click)="onReactionClick('thumbs-up')"
+      aria-label="Thumbs up reaction"
+    >
+      <img src="/img/icon/emojis/emoji-thumbs-up.svg" alt="Thumbs up" class="reaction-bar__icon" />
+    </button>
   }
 
   <div class="reaction-bar__emoji-wrapper">
@@ -33,65 +33,66 @@
       <img
         src="/img/icon/emojis/emoji-add-reaction-default.svg"
         alt="Add reaction"
-        class="reaction-bar__icon"
+        class="reaction-bar__icon reaction-bar__icon--action"
       />
     </button>
 
     <!-- Emoji Picker Popup -->
     @if (isEmojiPickerOpen()) {
-    <div class="reaction-bar__emoji-picker">
-      @for (emoji of availableEmojis; track emoji.id) {
-      <button
-        class="reaction-bar__emoji-button"
-        type="button"
-        (click)="onEmojiSelect(emoji)"
-        [attr.aria-label]="emoji.label"
-      >
-        <img [src]="emoji.icon" [alt]="emoji.label" class="reaction-bar__emoji-icon" />
-      </button>
-      }
-    </div>
+      <div class="reaction-bar__emoji-picker">
+        @for (emoji of availableEmojis; track emoji.id) {
+          <button
+            class="reaction-bar__emoji-button"
+            type="button"
+            (click)="onEmojiSelect(emoji)"
+            [attr.aria-label]="emoji.label"
+          >
+            <img [src]="emoji.icon" [alt]="emoji.label" class="reaction-bar__emoji-icon" />
+          </button>
+        }
+      </div>
     }
   </div>
 
   @if (!isInThread() && !hideComment()) {
-  <button
-    class="reaction-bar__button"
-    type="button"
-    (click)="onReactionClick('comment')"
-    aria-label="Comment"
-  >
-    <img
-      src="/img/icon/emojis/emoji-comment-default.svg"
-      alt="Comment"
-      class="reaction-bar__icon"
-    />
-  </button>
-  } @if (messageType() === 'own') {
-  <div class="reaction-bar__more-wrapper">
     <button
       class="reaction-bar__button"
       type="button"
-      (click)="toggleEditMenu()"
-      aria-label="More options"
+      (click)="onReactionClick('comment')"
+      aria-label="Comment"
     >
       <img
-        src="/img/icon/emojis/emoji-more-vert-default.svg"
-        alt="More options"
-        class="reaction-bar__icon"
+        src="/img/icon/emojis/emoji-comment-default.svg"
+        alt="Comment"
+        class="reaction-bar__icon reaction-bar__icon--action"
       />
     </button>
+  }
+  @if (messageType() === 'own') {
+    <div class="reaction-bar__more-wrapper">
+      <button
+        class="reaction-bar__button"
+        type="button"
+        (click)="toggleEditMenu()"
+        aria-label="More options"
+      >
+        <img
+          src="/img/icon/emojis/emoji-more-vert-default.svg"
+          alt="More options"
+          class="reaction-bar__icon reaction-bar__icon--action"
+        />
+      </button>
 
-    @if (isEditMenuOpen()) {
-    <div class="reaction-bar__edit-menu">
-      <button class="reaction-bar__edit-button" type="button" (click)="onEditMessage()">
-        Edit message
-      </button>
-      <button class="reaction-bar__edit-button" type="button" (click)="onDeleteMessage()">
-        Delete message
-      </button>
+      @if (isEditMenuOpen()) {
+        <div class="reaction-bar__edit-menu">
+          <button class="reaction-bar__edit-button" type="button" (click)="onEditMessage()">
+            Edit message
+          </button>
+          <button class="reaction-bar__edit-button" type="button" (click)="onDeleteMessage()">
+            Delete message
+          </button>
+        </div>
+      }
     </div>
-    }
-  </div>
   }
 </div>

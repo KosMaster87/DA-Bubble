@@ -235,7 +235,7 @@
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--channel-list-item-hover-bg);
     }
   }
 
@@ -246,7 +246,7 @@
     transition: color 0.2s;
 
     .profile-view__edit-btn:hover & {
-      color: #535af1;
+      color: var(--list-item-hover-text-color);
     }
   }
 
@@ -256,9 +256,12 @@
     flex-shrink: 0;
     transition: filter 0.2s;
 
+    :host-context([data-theme='dark']) & {
+      filter: brightness(0) invert(1) brightness(0.9);
+    }
+
     .profile-view__edit-btn:hover & {
-      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
-        brightness(98%) contrast(92%);
+      filter: var(--list-item-hover-icon-filter);
     }
   }
 

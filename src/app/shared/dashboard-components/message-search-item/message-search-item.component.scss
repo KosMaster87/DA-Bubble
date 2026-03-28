@@ -13,28 +13,26 @@
   text-align: left;
 
   &:hover {
-    background-color: #eceefe;
+    background-color: var(--channel-list-item-hover-bg);
 
     .message-search-item__name {
-      color: #535af1;
+      color: var(--list-item-hover-text-color);
     }
 
     .message-search-item__icon img {
-      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
-        brightness(98%) contrast(92%);
+      filter: var(--list-item-hover-icon-filter);
     }
   }
 
   &--active {
-    background-color: #eceefe;
+    background-color: var(--channel-list-item-hover-bg);
 
     .message-search-item__name {
-      color: #535af1;
+      color: var(--list-item-hover-text-color);
     }
 
     .message-search-item__icon img {
-      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
-        brightness(98%) contrast(92%);
+      filter: var(--list-item-hover-icon-filter);
     }
   }
 

@@ -44,19 +44,20 @@
     font-size: 1rem;
     font-family: inherit;
     color: var(--text-primary);
+    background-color: var(--input-bg);
     resize: vertical;
     transition: border-color 0.2s;
 
     @media screen and (max-width: 768px) {
       min-height: 60px;
-      padding: var(--space-2);
+      // padding: var(--space-2);
       font-size: 0.875rem;
       border-radius: 1rem;
     }
 
     // Reduce padding for smaller threads (768px-1440px)
     @media screen and (min-width: 769px) and (max-width: 1440px) {
-      padding: var(--space-2);
+      // padding: var(--space-2);
       font-size: 0.9375rem;
     }
 

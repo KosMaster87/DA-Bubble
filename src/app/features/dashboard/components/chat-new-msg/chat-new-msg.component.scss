@@ -66,6 +66,7 @@
     border-radius: 42px;
     font-size: 1rem;
     color: var(--text-primary);
+    background-color: var(--input-bg);
     transition: all 0.2s;
 
     @media screen and (max-width: 768px) {

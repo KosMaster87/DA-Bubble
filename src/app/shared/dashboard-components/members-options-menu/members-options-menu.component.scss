@@ -118,7 +118,7 @@
     transition: background-color 0.2s;
 
     .members-options-menu__add-wrapper:hover & {
-      background-color: #eceefe;
+      background-color: var(--channel-list-item-hover-bg);
     }
   }
 
@@ -130,8 +130,7 @@
     transition: filter 0.2s;
 
     .members-options-menu__add-wrapper:hover & {
-      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
-        brightness(98%) contrast(92%);
+      filter: var(--list-item-hover-icon-filter);
     }
   }
 
@@ -143,7 +142,7 @@
 
     .members-options-menu__add-wrapper:hover &,
     .members-options-menu__add-wrapper:active & {
-      color: #535af1;
+      color: var(--list-item-hover-text-color);
     }
   }
 }

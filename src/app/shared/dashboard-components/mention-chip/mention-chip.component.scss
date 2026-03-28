@@ -4,16 +4,16 @@
   @include mix.flex(row, flex-start, center);
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
-  background-color: #eceefe;
+  background-color: var(--mention-chip-bg);
   border-radius: 1.25rem;
-  border: 1px solid #d1d5f0;
+  border: 1px solid var(--mention-chip-border);
   max-width: 300px;
   transition: all 0.15s ease-out;
   cursor: pointer;
 
   &:hover {
-    background-color: #dce0f7;
-    border-color: #c4c9e8;
+    background-color: var(--mention-chip-bg-hover);
+    border-color: var(--mention-chip-border-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(68, 77, 242, 0.15);
   }
@@ -24,12 +24,12 @@
   }
 
   &--channel {
-    background-color: #eceefe;
-    border-color: #d1d5f0;
+    background-color: var(--mention-chip-bg);
+    border-color: var(--mention-chip-border);
 
     &:hover {
-      background-color: #dce0f7;
-      border-color: #c4c9e8;
+      background-color: var(--mention-chip-bg-hover);
+      border-color: var(--mention-chip-border-hover);
     }
   }
 
