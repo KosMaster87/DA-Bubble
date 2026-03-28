@@ -16,7 +16,7 @@
     gap: 0.25rem;
     padding: 0.25rem 0.625rem;
     background-color: var(--bg-color);
-    border: 1px solid #adb0d9;
+    border: 1px solid var(--conversation-message-border);
     border-radius: 1.25rem;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -29,7 +29,7 @@
 
     &:hover {
       background-color: var(--bg-color-hover);
-      border-color: var(--purple-1);
+      border-color: var(--conversation-message-border-hover);
       transform: scale(1.05);
     }
 

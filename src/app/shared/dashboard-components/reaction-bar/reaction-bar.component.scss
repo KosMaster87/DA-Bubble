@@ -5,7 +5,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  background-color: #ffffff;
+  background-color: var(--reaction-bar-bg);
   border: 1px solid var(--border-color);
   border-radius: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -42,7 +42,7 @@
     }
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--reaction-bar-bg-hover);
     }
 
     &:active {
@@ -58,6 +58,10 @@
     @media screen and (max-width: 768px) {
       width: 16px;
       height: 16px;
+    }
+
+    &--action {
+      filter: var(--reaction-bar-icon-filter);
     }
   }
 
@@ -77,7 +81,7 @@
     position: absolute;
     bottom: -320%;
     left: 0;
-    background-color: #ffffff;
+    background-color: var(--reaction-bar-bg);
     border: 1px solid var(--border-color);
     border-radius: 0 1.875rem 1.875rem 1.875rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -104,7 +108,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--reaction-bar-bg-hover);
     }
 
     &:active {
@@ -116,7 +120,7 @@
     position: absolute;
     bottom: -185%;
     left: 0;
-    background-color: #ffffff;
+    background-color: var(--reaction-bar-bg);
     border: 1px solid var(--border-color);
     border-radius: 0 1.875rem 1.875rem 1.875rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -146,7 +150,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--reaction-bar-bg-hover);
     }
 
     &:active {

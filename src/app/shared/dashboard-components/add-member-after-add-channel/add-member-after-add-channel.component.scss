@@ -35,7 +35,7 @@
 
   &__content {
     position: relative;
-    background: var(--container-bg);
+    background: var(--background-color);
     border-radius: 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-out;
@@ -48,7 +48,9 @@
       max-height: 90vh;
       display: flex;
       flex-direction: column;
-      transition: transform 0.3s ease-out, max-height 0.3s ease-out;
+      transition:
+        transform 0.3s ease-out,
+        max-height 0.3s ease-out;
     }
 
     &--expanded {
@@ -246,7 +248,9 @@
     padding: var(--space-2) var(--space-4);
     border-radius: 2rem;
     border: 1px solid var(--border-color);
-    transition: background-color 0.2s, border-color 0.2s;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s;
 
     .add-member-after-channel__channel-btn:hover &,
     .add-member-after-channel__channel-btn--open & {
@@ -270,7 +274,9 @@
   &__channel-arrow {
     width: 16px;
     height: 16px;
-    transition: filter 0.2s, transform 0.2s;
+    transition:
+      filter 0.2s,
+      transform 0.2s;
     transform: rotate(90deg);
 
     &--open {
@@ -317,9 +323,9 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
     padding: var(--space-1) var(--space-2);
-    background-color: #eceefe;
+    background-color: var(--mention-chip-bg);
     border-radius: 1.5rem;
-    border: 1px solid #535af1;
+    border: 1px solid var(--primary-color);
     min-width: 0;
     max-width: 100%;
   }
@@ -385,9 +391,9 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
     padding: var(--space-1) var(--space-2);
-    background-color: #eceefe;
+    background-color: var(--mention-chip-bg);
     border-radius: 1.5rem;
-    border: 1px solid #535af1;
+    border: 1px solid var(--primary-color);
     min-width: 0;
     max-width: 100%;
   }

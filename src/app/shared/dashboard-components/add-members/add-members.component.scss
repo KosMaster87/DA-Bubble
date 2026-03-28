@@ -33,7 +33,7 @@
   &__content {
     position: relative;
     min-width: 400px;
-    background: var(--container-bg);
+    background: var(--background-color);
     border-radius: 1.5rem 0 1.5rem 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     animation: slideDown 0.2s ease-out;
@@ -151,8 +151,6 @@
   }
 
   &__channel-row {
-
-
     @include mix.flex(row, flex-start, flex-start);
     gap: var(--space-3);
 
@@ -208,9 +206,9 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
     padding: var(--space-1) var(--space-2);
-    background-color: #eceefe;
+    background-color: var(--mention-chip-bg);
     border-radius: 1.5rem;
-    border: 1px solid #535af1;
+    border: 1px solid var(--primary-color);
   }
 
   &__user-chip-avatar {
