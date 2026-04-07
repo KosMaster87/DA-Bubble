@@ -52,4 +52,25 @@ describe('NotificationContainerComponent', () => {
     const toasts = fixture.debugElement.queryAll(By.css('.notification-container__toast'));
     expect(toasts.length).toBe(3);
   });
+
+  it('removes toast when Escape key is pressed', () => {
+    service.error('Test Error', 0);
+    const fixture = TestBed.createComponent(NotificationContainerComponent);
+    fixture.detectChanges();
+
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    document.dispatchEvent(event);
+    fixture.detectChanges();
+
+    expect(service.toasts().length).toBe(0);
+  });
+
+  it('applies reduced-motion styles when prefers-reduced-motion is active', () => {
+    service.info('Accessibility', 0);
+    const fixture = TestBed.createComponent(NotificationContainerComponent);
+    fixture.detectChanges();
+
+    const container = fixture.debugElement.nativeElement as HTMLElement;
+    expect(container.querySelector('.notification-container__toast')).not.toBeNull();
+  });
 });

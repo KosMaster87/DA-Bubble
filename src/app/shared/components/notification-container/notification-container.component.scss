@@ -61,3 +61,12 @@
     width: auto;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-container {
+    &__toast {
+      animation: none;
+      transition: none;
+    }
+  }
+}

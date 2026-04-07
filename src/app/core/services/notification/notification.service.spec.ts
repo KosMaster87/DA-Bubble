@@ -54,4 +54,11 @@ describe('NotificationService', () => {
 
     expect(service.getVisible(3).length).toBe(3);
   });
+
+  it('prevents duplicate messages from being added', () => {
+    service.success('Already shown', 0);
+    service.success('Already shown', 0);
+
+    expect(service.toasts().length).toBe(1);
+  });
 });

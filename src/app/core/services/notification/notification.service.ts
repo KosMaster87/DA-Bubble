@@ -18,8 +18,17 @@ export class NotificationService {
 
   /**
    * Create and enqueue a new toast notification.
+   * Prevents duplicate messages of the same type from being added.
    */
   show(input: CreateNotificationInput): string {
+    // Check for existing duplicate (same type and message)
+    const existing = this._toasts().find(
+      (t) => t.type === input.type && t.message === input.message,
+    );
+    if (existing) {
+      return existing.id;
+    }
+
     const toast: NotificationToast = {
       id: this.createToastId(),
       type: input.type,
