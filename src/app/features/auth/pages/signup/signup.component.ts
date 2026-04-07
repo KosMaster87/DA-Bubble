@@ -5,16 +5,21 @@
  */
 
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthStore } from '@stores/auth';
+import { Router, RouterLink } from '@angular/router';
+import {
+  getAuthErrorNotificationMessage,
+  notificationCopy,
+} from '@core/services/notification/notification-copy';
+import { NotificationService } from '@core/services/notification/notification.service';
 import { slideDownAnimation } from '@shared/animations';
 import {
-  InputFieldComponent,
-  CheckboxFieldComponent,
-  PrimaryButtonComponent,
   BackButtonComponent,
+  CheckboxFieldComponent,
+  InputFieldComponent,
+  PrimaryButtonComponent,
 } from '@shared/components';
+import { AuthStore } from '@stores/auth';
 
 @Component({
   selector: 'app-signup',
@@ -34,6 +39,7 @@ export class SignupComponent {
   private fb = inject(FormBuilder);
   private authStore = inject(AuthStore);
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
 
   protected signupForm: FormGroup;
   protected isSubmitting = signal(false);
@@ -84,9 +90,13 @@ export class SignupComponent {
     try {
       const { name, email, password } = this.signupForm.value;
       await this.authStore.signup(email, password, name);
+      this.notificationService.success(notificationCopy.signupSuccess);
       await this.router.navigate(['/verify-email']);
     } catch (error) {
       console.error('Registration failed:', error);
+      this.notificationService.error(
+        getAuthErrorNotificationMessage(error, notificationCopy.signupFailed),
+      );
     } finally {
       this.isSubmitting.set(false);
     }

@@ -5,7 +5,7 @@
         <img src="/img/icon/profile/mail-default.svg" alt="" class="channel-mailbox__title-icon" />
         {{ mailboxTitle() }}
         @if (pendingCount() > 0) {
-        <span class="channel-mailbox__badge">{{ pendingCount() }}</span>
+          <span class="channel-mailbox__badge">{{ pendingCount() }}</span>
         }
       </h1>
       <p class="channel-mailbox__description">{{ mailboxDescription() }}</p>
@@ -15,117 +15,123 @@
   <div class="channel-mailbox__content">
     <!-- Loading State -->
     @if (loading()) {
-    <div class="channel-mailbox__loading">
-      <p>Loading messages...</p>
-    </div>
+      <div class="channel-mailbox__loading">
+        <p>Loading messages...</p>
+      </div>
     }
 
     <!-- Messages Section -->
     <div class="channel-mailbox__messages">
       <!-- Invitations Section -->
       @if (pendingInvitations().length > 0) {
-      <div class="channel-mailbox__section">
-        <h2 class="channel-mailbox__section-title">📬 Invitations ({{ pendingCount() }})</h2>
+        <div class="channel-mailbox__section">
+          <h2 class="channel-mailbox__section-title">📬 Invitations ({{ pendingCount() }})</h2>
 
-        <div class="channel-mailbox__invitations">
-          @for (invitation of pendingInvitations(); track invitation.id) {
-          <div
-            class="channel-mailbox__message channel-mailbox__message--invitation channel-mailbox__message--unread"
-          >
-            <div class="channel-mailbox__message-avatar">
-              <img
-                [src]="getSenderAvatar(invitation.senderId)"
-                [alt]="getSenderName(invitation.senderId)"
-              />
-            </div>
-            <div class="channel-mailbox__message-content">
-              <div class="channel-mailbox__message-header">
-                <span class="channel-mailbox__message-from">{{
-                  getSenderName(invitation.senderId)
-                }}</span>
-                <span class="channel-mailbox__message-time">
-                  {{ invitation.createdAt | date : 'short' }}
-                </span>
+          <div class="channel-mailbox__invitations">
+            @for (invitation of pendingInvitations(); track invitation.id) {
+              <div
+                class="channel-mailbox__message channel-mailbox__message--invitation channel-mailbox__message--unread"
+              >
+                <div class="channel-mailbox__message-avatar">
+                  <img
+                    [src]="getSenderAvatar(invitation.senderId)"
+                    [alt]="getSenderName(invitation.senderId)"
+                  />
+                </div>
+                <div class="channel-mailbox__message-content">
+                  <div class="channel-mailbox__message-header">
+                    <span class="channel-mailbox__message-from">{{
+                      getSenderName(invitation.senderId)
+                    }}</span>
+                    <span class="channel-mailbox__message-time">
+                      {{ invitation.createdAt | date: 'short' }}
+                    </span>
+                  </div>
+
+                  @if (invitation.type === 'channel') {
+                    <h3 class="channel-mailbox__message-subject">
+                      📢 Invitation to Channel #{{ invitation.channelName }}
+                    </h3>
+                    <p class="channel-mailbox__message-preview">
+                      {{ getSenderName(invitation.senderId) }} invites you to the channel #{{
+                        invitation.channelName
+                      }}.
+                      @if (invitation.message) {
+                        <br />
+                        <em>"{{ invitation.message }}"</em>
+                      }
+                    </p>
+                  }
+                  @if (invitation.type === 'direct-message') {
+                    <h3 class="channel-mailbox__message-subject">💬 Direct Message Invitation</h3>
+                    <p class="channel-mailbox__message-preview">
+                      {{ getSenderName(invitation.senderId) }} wants to chat with you.
+                      @if (invitation.message) {
+                        <br />
+                        <em>"{{ invitation.message }}"</em>
+                      }
+                    </p>
+                  }
+
+                  <div class="channel-mailbox__message-actions">
+                    <button
+                      class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
+                      (click)="acceptInvitation(invitation)"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
+                      (click)="declineInvitation(invitation.id)"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              @if (invitation.type === 'channel') {
-              <h3 class="channel-mailbox__message-subject">
-                📢 Invitation to Channel #{{ invitation.channelName }}
-              </h3>
-              <p class="channel-mailbox__message-preview">
-                {{ getSenderName(invitation.senderId) }} invites you to the channel #{{
-                  invitation.channelName
-                }}. @if (invitation.message) {
-                <br />
-                <em>"{{ invitation.message }}"</em>
-                }
-              </p>
-              } @if (invitation.type === 'direct-message') {
-              <h3 class="channel-mailbox__message-subject">💬 Direct Message Invitation</h3>
-              <p class="channel-mailbox__message-preview">
-                {{ getSenderName(invitation.senderId) }} wants to chat with you. @if
-                (invitation.message) {
-                <br />
-                <em>"{{ invitation.message }}"</em>
-                }
-              </p>
-              }
-
-              <div class="channel-mailbox__message-actions">
-                <button
-                  class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
-                  (click)="acceptInvitation(invitation)"
-                >
-                  Accept
-                </button>
-                <button
-                  class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
-                  (click)="declineInvitation(invitation.id)"
-                >
-                  Decline
-                </button>
-              </div>
-            </div>
+            }
           </div>
-          }
         </div>
-      </div>
       }
 
       <!-- System Notification -->
-      <div class="channel-mailbox__message channel-mailbox__message--system">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/icon/channel-bar/tag-default.svg" alt="System" />
+      <!-- Error State -->
+      @if (storeError()) {
+        <div class="channel-mailbox__error" role="alert">
+          <p>{{ storeError() }}</p>
         </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">DABubble System</span>
-            <span class="channel-mailbox__message-time">yesterday</span>
-          </div>
-          <h3 class="channel-mailbox__message-subject">🔔 New Feature Available</h3>
-          <p class="channel-mailbox__message-preview">
-            Thread replies are now available! Click on a message to reply in a thread.
-          </p>
-        </div>
-      </div>
+      }
 
-      <!-- Welcome Message -->
-      <div class="channel-mailbox__message channel-mailbox__message--system">
-        <div class="channel-mailbox__message-avatar">
-          <img src="/img/logos/logo.png" alt="DABubble" />
-        </div>
-        <div class="channel-mailbox__message-content">
-          <div class="channel-mailbox__message-header">
-            <span class="channel-mailbox__message-from">DABubble</span>
-            <span class="channel-mailbox__message-time">2 weeks ago</span>
+      <!-- Dynamic Messages from Store -->
+      @for (msg of messages(); track msg.id) {
+        <div
+          class="channel-mailbox__message"
+          [class.channel-mailbox__message--system]="msg.type === 'system'"
+          [class.channel-mailbox__message--admin]="msg.type === 'admin'"
+          [class.channel-mailbox__message--unread]="!msg.isRead"
+          (click)="onMessageClick(msg.id)"
+        >
+          <div class="channel-mailbox__message-content">
+            <div class="channel-mailbox__message-header">
+              <span class="channel-mailbox__message-from">{{ msg.authorId }}</span>
+              <span class="channel-mailbox__message-time">
+                {{ msg.createdAt | date: 'short' }}
+              </span>
+            </div>
+            <h3 class="channel-mailbox__message-subject">{{ msg.subject }}</h3>
+            <p class="channel-mailbox__message-preview">{{ msg.content }}</p>
           </div>
-          <h3 class="channel-mailbox__message-subject">🎉 Welcome to DABubble!</h3>
-          <p class="channel-mailbox__message-preview">
-            Great to have you here! You'll receive important notifications, invitations and updates
-            here.
-          </p>
         </div>
-      </div>
+      }
+
+      <!-- Empty State -->
+      @if (
+        !loading() && !storeError() && messages().length === 0 && pendingInvitations().length === 0
+      ) {
+        <div class="channel-mailbox__empty">
+          <p>Keine Nachrichten vorhanden.</p>
+        </div>
+      }
     </div>
   </div>
 </div>

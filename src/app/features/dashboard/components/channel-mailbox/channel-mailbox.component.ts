@@ -100,6 +100,11 @@ export class ChannelMailboxComponent {
   protected loading = computed(() => this.mailboxStore.loading());
 
   /**
+   * Error state from mailbox store
+   */
+  protected storeError = computed(() => this.mailboxStore.error());
+
+  /**
    * Load invitations for current user
    */
   private loadInvitations = (userId: string): void => {

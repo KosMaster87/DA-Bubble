@@ -1,0 +1,19 @@
+<div class="notification-container" aria-live="polite" aria-atomic="false">
+  @for (toast of visibleToasts(); track toast.id) {
+    <div
+      class="notification-container__toast"
+      [class]="'notification-container__toast notification-container__toast--' + toast.type"
+      role="status"
+    >
+      <p class="notification-container__message">{{ toast.message }}</p>
+      <button
+        type="button"
+        class="notification-container__close"
+        (click)="dismiss(toast.id)"
+        aria-label="Dismiss notification"
+      >
+        x
+      </button>
+    </div>
+  }
+</div>

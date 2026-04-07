@@ -4,13 +4,18 @@
  * @module features/auth/pages/verify-email
  */
 
-import { Component, inject, signal, effect } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, effect, inject, signal } from '@angular/core';
 import { Auth, sendEmailVerification } from '@angular/fire/auth';
+import { Router } from '@angular/router';
 import {
+  getAuthErrorNotificationMessage,
+  notificationCopy,
+} from '@core/services/notification/notification-copy';
+import { NotificationService } from '@core/services/notification/notification.service';
+import {
+  GuestButtonComponent,
   PrimaryButtonComponent,
   SecondaryButtonComponent,
-  GuestButtonComponent,
 } from '@shared/components';
 
 @Component({
@@ -22,6 +27,7 @@ import {
 export class VerifyEmailComponent {
   private router = inject(Router);
   private auth = inject(Auth);
+  private notificationService = inject(NotificationService);
 
   protected userEmail = signal<string>('');
   protected isChecking = signal(false);
@@ -52,10 +58,13 @@ export class VerifyEmailComponent {
       if (isVerified) {
         await this.router.navigate(['/avatar-selection']);
       } else {
-        alert('Please verify your email first by clicking the link in your inbox.');
+        this.notificationService.info(notificationCopy.verifyEmailPending);
       }
     } catch (error) {
       console.error('Error checking verification:', error);
+      this.notificationService.error(
+        getAuthErrorNotificationMessage(error, notificationCopy.verifyEmailCheckFailed),
+      );
     } finally {
       this.isChecking.set(false);
     }
@@ -72,10 +81,14 @@ export class VerifyEmailComponent {
       if (this.auth.currentUser) {
         await sendEmailVerification(this.auth.currentUser);
         this.emailSent.set(true);
+        this.notificationService.success(notificationCopy.verifyEmailResent);
         setTimeout(() => this.emailSent.set(false), 3000);
       }
     } catch (error) {
       console.error('Error sending verification email:', error);
+      this.notificationService.error(
+        getAuthErrorNotificationMessage(error, notificationCopy.verifyEmailResendFailed),
+      );
     }
   }
 
