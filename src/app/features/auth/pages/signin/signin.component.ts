@@ -5,15 +5,20 @@
  */
 
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthStore } from '@stores/auth';
+import { Router } from '@angular/router';
+import {
+  getAuthErrorNotificationMessage,
+  notificationCopy,
+} from '@core/services/notification/notification-copy';
+import { NotificationService } from '@core/services/notification/notification.service';
 import { slideDownAnimation } from '@shared/animations';
 import {
+  GuestButtonComponent,
   InputFieldComponent,
   PrimaryButtonComponent,
-  GuestButtonComponent,
 } from '@shared/components';
+import { AuthStore } from '@stores/auth';
 
 @Component({
   selector: 'app-signin',
@@ -26,6 +31,7 @@ export class SigninComponent {
   private fb = inject(FormBuilder);
   private authStore = inject(AuthStore);
   private router = inject(Router);
+  private notificationService = inject(NotificationService);
 
   protected signinForm: FormGroup;
   protected isSubmitting = signal(false);
@@ -129,6 +135,9 @@ export class SigninComponent {
   handleLoginError(error: any): void {
     console.error('Login failed:', error);
     this.signinForm.setErrors({ loginFailed: true });
+    this.notificationService.error(
+      getAuthErrorNotificationMessage(error, notificationCopy.signinFailed),
+    );
   }
 
   /**

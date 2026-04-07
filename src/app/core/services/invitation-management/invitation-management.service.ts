@@ -6,6 +6,8 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Invitation } from '@core/models/invitation.model';
+import { getInvitationAcceptErrorNotificationMessage } from '@core/services/notification/notification-copy';
+import { NotificationService } from '@core/services/notification/notification.service';
 import { InvitationAcceptanceService } from './invitation-acceptance.service';
 import { InvitationNavigationService } from './invitation-navigation.service';
 
@@ -19,6 +21,7 @@ import { InvitationNavigationService } from './invitation-navigation.service';
 export class InvitationManagementService {
   private acceptanceService = inject(InvitationAcceptanceService);
   private navigationService = inject(InvitationNavigationService);
+  private notificationService = inject(NotificationService);
 
   /**
    * Accept invitation and handle channel/DM logic
@@ -31,7 +34,7 @@ export class InvitationManagementService {
       currentUserId,
       this.acceptanceService.handleChannelInvitation,
       this.acceptanceService.handleDirectMessageInvitation,
-      this.handleInvitationError
+      this.handleInvitationError,
     );
   };
 
@@ -62,6 +65,6 @@ export class InvitationManagementService {
       code: error?.code,
       invitationId,
     });
-    alert(`Error accepting invitation: ${error?.message || 'Unknown error'}`);
+    this.notificationService.error(getInvitationAcceptErrorNotificationMessage(error));
   };
 }

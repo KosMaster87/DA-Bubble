@@ -5,8 +5,10 @@
  * @module LandscapeWarningComponent
  */
 
-import { Component, OnInit, OnDestroy, signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Component, inject, OnDestroy, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { notificationCopy } from '@core/services/notification/notification-copy';
+import { NotificationService } from '@core/services/notification/notification.service';
 
 /**
  * Landscape Warning Component
@@ -42,6 +44,7 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class LandscapeWarningComponent implements OnInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
+  private notificationService = inject(NotificationService);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   protected showWarning = signal(false);
@@ -202,7 +205,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
   protected async installPWA(): Promise<void> {
     try {
       if (!this.deferredPrompt) {
-        alert('Installation wurde bereits abgeschlossen oder ist nicht verfügbar.');
+        this.notificationService.info(notificationCopy.pwaInstallUnavailable);
         return;
       }
 
