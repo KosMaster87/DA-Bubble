@@ -5,19 +5,20 @@
  * @module AppComponent
  */
 
-import { Component, signal, inject, OnDestroy, effect } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { Component, effect, inject, OnDestroy, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { FirebaseService } from '@core/services/firebase/firebase.service';
 import { HeartbeatService } from '@core/services/heartbeat/heartbeat.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
-import { UserPresenceStore } from '@stores/index';
-import { AuthStore } from '@stores/auth';
-import { environment } from '../config/environments/env.dev';
 import { LandscapeWarningComponent } from '@shared/components/landscape-warning/landscape-warning.component';
+import { NotificationContainerComponent } from '@shared/components/notification-container/notification-container.component';
+import { AuthStore } from '@stores/auth';
+import { UserPresenceStore } from '@stores/index';
+import { environment } from '../config/environments/env.dev';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LandscapeWarningComponent],
+  imports: [RouterOutlet, LandscapeWarningComponent, NotificationContainerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

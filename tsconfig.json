@@ -6,14 +6,13 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
     "paths": {
-      "@app/*": ["src/app/*"],
-      "@core/*": ["src/app/core/*"],
-      "@features/*": ["src/app/features/*"],
-      "@layout/*": ["src/app/layout/*"],
-      "@shared/*": ["src/app/shared/*"],
-      "@stores/*": ["src/app/stores/*"]
+      "@app/*": ["./src/app/*"],
+      "@core/*": ["./src/app/core/*"],
+      "@features/*": ["./src/app/features/*"],
+      "@layout/*": ["./src/app/layout/*"],
+      "@shared/*": ["./src/app/shared/*"],
+      "@stores/*": ["./src/app/stores/*"]
     },
     "esModuleInterop": true,
     "strict": true,
