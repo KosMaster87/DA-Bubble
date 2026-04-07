@@ -350,4 +350,20 @@
       }
     }
   }
+
+  &__empty {
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9375rem;
+  }
+
+  &__error {
+    margin: var(--space-4) var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0.5rem;
+    background-color: var(--color-error-bg, #fef2f2);
+    color: var(--color-error, #dc2626);
+    font-size: 0.9375rem;
+  }
 }
