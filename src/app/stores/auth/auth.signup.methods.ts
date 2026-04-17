@@ -5,7 +5,7 @@
  */
 
 import { Auth, createUserWithEmailAndPassword, applyActionCode } from '@angular/fire/auth';
-import { Firestore } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
 import {
@@ -81,13 +81,13 @@ export const createSignupMethods = (
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('No user logged in');
 
-      // Update Firebase Auth profile
-      await updateSignupProfile(currentUser, profile.displayName || currentUser.displayName!);
+      // Update Firebase Auth profile if displayName is provided
+      if (profile.displayName) {
+        await updateSignupProfile(currentUser, profile.displayName);
+      }
 
       // Update Firestore user document
       const userDocRef = doc(firestore, 'users', currentUser.uid);
-      const { getDoc, setDoc } = await import('@angular/fire/firestore');
-
       await setDoc(
         userDocRef,
         {
