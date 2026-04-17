@@ -5,28 +5,22 @@
  * @module AuthMethodsHelpers
  */
 
-import {
-  Auth,
-  updateProfile,
-  UserCredential,
-  sendEmailVerification,
-} from '@angular/fire/auth';
+import { Auth, UserCredential, sendEmailVerification, updateProfile } from '@angular/fire/auth';
 import {
   Firestore,
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  writeBatch,
   arrayUnion,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+  writeBatch,
 } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
-import { patchState } from '@ngrx/signals';
 
 // ============================================================================
 // SIGNUP HELPERS
@@ -63,7 +57,7 @@ export async function createSignupFirestoreUser(
 }
 
 /**
- * Update Firebase Auth profile with displayName
+ * Update Firebase Auth profile during signup with displayName
  * @async
  */
 export async function updateSignupProfile(
@@ -72,6 +66,18 @@ export async function updateSignupProfile(
 ): Promise<void> {
   await updateProfile(credential.user, { displayName });
   console.log('✅ User profile updated with displayName:', displayName);
+}
+
+/**
+ * Update Firebase Auth profile for existing user
+ * @async
+ */
+export async function updateExistingUserProfile(
+  firebaseUser: any,
+  profile: { displayName?: string; photoURL?: string },
+): Promise<void> {
+  await updateProfile(firebaseUser, profile);
+  console.log('✅ User profile updated:', profile);
 }
 
 /**
@@ -190,10 +196,7 @@ export async function createLoginFirestoreUser(
  * Create Notes DM (self-conversation) for user
  * @async
  */
-export async function createLoginNotesDM(
-  userId: string,
-  firestore: Firestore,
-): Promise<void> {
+export async function createLoginNotesDM(userId: string, firestore: Firestore): Promise<void> {
   try {
     const notesDmId = `${userId}_${userId}`;
     const notesDmRef = doc(firestore, 'directMessages', notesDmId);

@@ -10,6 +10,7 @@ import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
 import {
   updateSignupProfile,
+  updateExistingUserProfile,
   createSignupFirestoreUser,
   addSignupUserToDefaultChannels,
   sendSignupVerificationEmail,
@@ -82,8 +83,8 @@ export const createSignupMethods = (
       if (!currentUser) throw new Error('No user logged in');
 
       // Update Firebase Auth profile if displayName is provided
-      if (profile.displayName) {
-        await updateSignupProfile(currentUser, profile.displayName);
+      if (profile.displayName || profile.photoURL) {
+        await updateExistingUserProfile(currentUser, profile);
       }
 
       // Update Firestore user document
