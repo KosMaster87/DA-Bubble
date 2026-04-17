@@ -4,19 +4,19 @@
  * @module features/dashboard/components/workspace-header
  */
 
-import { Component, inject, signal, output, computed, input } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthStore } from '@stores/auth';
-import { UserPresenceStore } from '@stores/index';
 import { WorkspaceHeaderStateService } from '@core/services/workspace-header-state/workspace-header-state.service';
-import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
 import { BackToWorkspaceComponent } from '@shared/components/back-to-workspace/back-to-workspace.component';
+import { DABubbleLogoComponent } from '@shared/components/dabubble-logo/dabubble-logo.component';
 import {
   UserOptionsMenuComponent,
   UserOptionsMenuMobileComponent,
 } from '@shared/dashboard-components';
-import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
+import { AuthStore } from '@stores/auth';
+import { UserPresenceStore } from '@stores/index';
 
 @Component({
   selector: 'app-workspace-header',
@@ -135,7 +135,7 @@ export class WorkspaceHeaderComponent {
   logout = async (): Promise<void> => {
     this.isOptionsOpen.set(false);
     await this.authStore.logout();
-    await this.router.navigate(['/']);
+    await this.router.navigate(['/'], { state: { signedOut: true } });
   };
 
   /**

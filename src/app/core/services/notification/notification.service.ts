@@ -8,7 +8,12 @@ import { CreateNotificationInput, NotificationToast } from './notification.types
   providedIn: 'root',
 })
 export class NotificationService {
-  private static readonly DEFAULT_DURATION_MS = 4000;
+  private static readonly DEFAULT_DURATION_BY_TYPE_MS = {
+    success: 2600,
+    info: 3800,
+    warning: 5200,
+    error: 6500,
+  } as const;
 
   private readonly _toasts = signal<NotificationToast[]>([]);
   private readonly timerByToastId = new Map<string, ReturnType<typeof setTimeout>>();
@@ -33,7 +38,7 @@ export class NotificationService {
       id: this.createToastId(),
       type: input.type,
       message: input.message,
-      duration: input.duration ?? NotificationService.DEFAULT_DURATION_MS,
+      duration: input.duration ?? NotificationService.DEFAULT_DURATION_BY_TYPE_MS[input.type],
       createdAt: Date.now(),
     };
 

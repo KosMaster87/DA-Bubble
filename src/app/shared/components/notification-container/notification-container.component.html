@@ -1,4 +1,9 @@
-<div class="notification-container" aria-live="polite" aria-atomic="false">
+<div
+  class="notification-container"
+  [class.notification-container--auth-mobile]="isAuthRoute()"
+  aria-live="polite"
+  aria-atomic="false"
+>
   @for (toast of visibleToasts(); track toast.id) {
     <div
       class="notification-container__toast"

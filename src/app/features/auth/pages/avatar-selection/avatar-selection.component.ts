@@ -6,8 +6,8 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { BackButtonComponent, PrimaryButtonComponent } from '@shared/components';
 import { AuthStore } from '@stores/auth';
-import { PrimaryButtonComponent, BackButtonComponent } from '@shared/components';
 
 @Component({
   selector: 'app-avatar-selection',
@@ -113,6 +113,6 @@ export class AvatarSelectionComponent {
    */
   async goBack(): Promise<void> {
     await this.authStore.logout();
-    await this.router.navigate(['/']);
+    await this.router.navigate(['/'], { state: { signedOut: true } });
   }
 }

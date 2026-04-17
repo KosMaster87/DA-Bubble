@@ -28,6 +28,9 @@ import { AuthStore } from '@stores/auth';
   animations: [slideDownAnimation],
 })
 export class SigninComponent {
+  private static readonly SUCCESS_REDIRECT_DELAY_MS = 220;
+  private static readonly LOGOUT_STATE_KEY = 'signedOut';
+
   private fb = inject(FormBuilder);
   private authStore = inject(AuthStore);
   private router = inject(Router);
@@ -39,6 +42,7 @@ export class SigninComponent {
 
   constructor() {
     this.signinForm = this.createForm();
+    this.showSignedOutToastIfNeeded();
   }
 
   /**
@@ -62,6 +66,7 @@ export class SigninComponent {
   async onSubmit(): Promise<void> {
     if (this.signinForm.invalid) {
       this.signinForm.markAllAsTouched();
+      this.notificationService.warning(notificationCopy.authFormInvalid);
       return;
     }
 
@@ -80,7 +85,7 @@ export class SigninComponent {
     try {
       const { email, password } = this.signinForm.value;
       await this.authStore.loginWithEmail(email, password);
-      await this.navigateToHome();
+      await this.notifySuccessAndNavigate(notificationCopy.signinSuccessEmail);
     } catch (error) {
       this.handleLoginError(error);
     } finally {
@@ -99,7 +104,7 @@ export class SigninComponent {
 
     try {
       await this.authStore.loginWithGoogle();
-      await this.navigateToHome();
+      await this.notifySuccessAndNavigate(notificationCopy.signinSuccessGoogle);
     } catch (error) {
       this.handleLoginError(error);
     } finally {
@@ -118,7 +123,7 @@ export class SigninComponent {
 
     try {
       await this.authStore.loginAnonymously();
-      await this.navigateToHome();
+      await this.notifySuccessAndNavigate(notificationCopy.signinSuccessGuest);
     } catch (error) {
       this.handleLoginError(error);
     } finally {
@@ -138,6 +143,17 @@ export class SigninComponent {
     this.notificationService.error(
       getAuthErrorNotificationMessage(error, notificationCopy.signinFailed),
     );
+  }
+
+  /**
+   * Show a success toast and delay redirect slightly so feedback is visible.
+   */
+  private async notifySuccessAndNavigate(message: string): Promise<void> {
+    this.notificationService.success(message);
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, SigninComponent.SUCCESS_REDIRECT_DELAY_MS);
+    });
+    await this.navigateToHome();
   }
 
   /**
@@ -166,5 +182,35 @@ export class SigninComponent {
    */
   togglePasswordVisibility(): void {
     this.hidePassword.set(!this.hidePassword());
+  }
+
+  /**
+   * Shows a post-logout confirmation message exactly once on the sign-in page.
+   *
+   * Purpose:
+   * - Confirm to the user that logout really happened and the session is closed.
+   * - Provide a polite transition message after leaving the authenticated area.
+   * - Avoid duplicate toasts during refresh/back navigation by clearing the transient state.
+   *
+   * Why this exists:
+   * - Logout intentionally redirects immediately for security and responsiveness.
+   * - The sign-in page is therefore the right place to communicate "signed out" feedback.
+   * - Navigation state is used as a short-lived signal, not as persistent app state.
+   */
+  private showSignedOutToastIfNeeded(): void {
+    const navigation = this.router.currentNavigation();
+    const fromNavigation = navigation?.extras?.state?.[SigninComponent.LOGOUT_STATE_KEY] === true;
+    const fromHistory = history.state?.[SigninComponent.LOGOUT_STATE_KEY] === true;
+
+    if (!fromNavigation && !fromHistory) {
+      return;
+    }
+
+    this.notificationService.info(notificationCopy.signedOutInfo);
+
+    if (fromHistory) {
+      const { [SigninComponent.LOGOUT_STATE_KEY]: _, ...rest } = history.state ?? {};
+      history.replaceState(rest, document.title);
+    }
   }
 }

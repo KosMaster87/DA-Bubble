@@ -100,6 +100,6 @@ export class VerifyEmailComponent {
    */
   async goToSignin(): Promise<void> {
     await this.auth.signOut();
-    await this.router.navigate(['/']);
+    await this.router.navigate(['/'], { state: { signedOut: true } });
   }
 }

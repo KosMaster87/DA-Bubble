@@ -71,6 +71,7 @@ export class SignupComponent {
   async onSubmit(): Promise<void> {
     if (this.signupForm.invalid) {
       this.signupForm.markAllAsTouched();
+      this.notificationService.warning(notificationCopy.authFormInvalid);
       return;
     }
 
