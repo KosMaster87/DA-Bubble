@@ -6,6 +6,14 @@ import {
 } from './notification-copy';
 
 describe('notification-copy', () => {
+  it('exposes auth success and validation copy', () => {
+    expect(notificationCopy.signinSuccessEmail.length).toBeGreaterThan(0);
+    expect(notificationCopy.signinSuccessGoogle.length).toBeGreaterThan(0);
+    expect(notificationCopy.signinSuccessGuest.length).toBeGreaterThan(0);
+    expect(notificationCopy.signedOutInfo.length).toBeGreaterThan(0);
+    expect(notificationCopy.authFormInvalid.length).toBeGreaterThan(0);
+  });
+
   it('maps known auth codes to user-friendly copy', () => {
     const message = getAuthErrorNotificationMessage(
       { code: 'auth/invalid-credential' },

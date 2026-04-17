@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { NotificationService } from '@core/services/notification/notification.service';
+import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { NotificationContainerComponent } from './notification-container.component';
 
@@ -8,8 +10,19 @@ describe('NotificationContainerComponent', () => {
   let service: NotificationService;
 
   beforeEach(async () => {
+    const routerEvents = new Subject();
+
     await TestBed.configureTestingModule({
       imports: [NotificationContainerComponent],
+      providers: [
+        {
+          provide: Router,
+          useValue: {
+            url: '/',
+            events: routerEvents.asObservable(),
+          },
+        },
+      ],
     }).compileComponents();
     service = TestBed.inject(NotificationService);
   });

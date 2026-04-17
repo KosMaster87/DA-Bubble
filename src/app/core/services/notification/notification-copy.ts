@@ -7,6 +7,11 @@ interface CodedError {
 }
 
 export const notificationCopy = {
+  authFormInvalid: 'Please fix the highlighted fields and try again.',
+  signinSuccessEmail: 'Signed in successfully. Welcome back!',
+  signinSuccessGoogle: 'Signed in with Google. Welcome back!',
+  signinSuccessGuest: 'Guest session started. Welcome!',
+  signedOutInfo: 'Thanks for using the app. We look forward to welcoming you back soon.',
   signinFailed: 'Sign-in failed. Please check your credentials and try again.',
   signupFailed: 'Sign-up failed. Please try again in a moment.',
   signupSuccess: 'Account created. Please verify your email to continue.',

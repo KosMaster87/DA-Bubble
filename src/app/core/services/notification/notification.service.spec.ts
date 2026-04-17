@@ -22,8 +22,19 @@ describe('NotificationService', () => {
     service.success('Saved');
 
     expect(service.toasts().length).toBe(1);
-    vi.advanceTimersByTime(4000);
+    vi.advanceTimersByTime(2600);
 
+    expect(service.toasts().length).toBe(0);
+  });
+
+  it('keeps error toast visible longer than success toast by default', () => {
+    service.error('Broken');
+
+    expect(service.toasts().length).toBe(1);
+    vi.advanceTimersByTime(2600);
+    expect(service.toasts().length).toBe(1);
+
+    vi.advanceTimersByTime(3900);
     expect(service.toasts().length).toBe(0);
   });
 

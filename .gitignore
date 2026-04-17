@@ -64,3 +64,6 @@ src/config/environments/env.prod.ts
 # Keep example files in git for reference
 # !src/config/environments/env.dev.example.ts
 # !src/config/environments/env.prod.example.ts
+
+# Test results
+test-results.log

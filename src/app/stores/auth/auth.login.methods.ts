@@ -6,29 +6,29 @@
 
 import {
   Auth,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signInAnonymously,
   GoogleAuthProvider,
   UserCredential,
   deleteUser,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  signInWithPopup,
 } from '@angular/fire/auth';
 import {
   Firestore,
+  arrayUnion,
+  collection,
+  deleteDoc,
   doc,
   getDoc,
-  setDoc,
-  collection,
-  query,
-  where,
   getDocs,
+  query,
+  setDoc,
   updateDoc,
-  arrayUnion,
-  deleteDoc,
+  where,
   writeBatch,
 } from '@angular/fire/firestore';
-import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
+import { patchState } from '@ngrx/signals';
 
 /**
  * Create login methods for auth store
@@ -45,7 +45,7 @@ export const createLoginMethods = (
   firestore: Firestore,
   store: any,
   handleSuccessfulAuth: (user: any) => void,
-  handleAuthError: (error: unknown, message: string) => void
+  handleAuthError: (error: unknown, message: string) => void,
 ) => ({
   /**
    * Login with email and password
@@ -59,7 +59,7 @@ export const createLoginMethods = (
       firestore,
       store,
       handleSuccessfulAuth,
-      handleAuthError
+      handleAuthError,
     );
   },
 
@@ -74,7 +74,7 @@ export const createLoginMethods = (
       firestore,
       store,
       handleSuccessfulAuth,
-      handleAuthError
+      handleAuthError,
     );
   },
 
@@ -88,7 +88,7 @@ export const createLoginMethods = (
       firestore,
       store,
       handleSuccessfulAuth,
-      handleAuthError
+      handleAuthError,
     );
   },
 
@@ -170,7 +170,7 @@ export const createLoginMethods = (
                 lastSeen: new Date(),
                 updatedAt: new Date(),
               },
-              { merge: true }
+              { merge: true },
             );
           } catch (firestoreError) {
             // Log Firestore error but continue with logout
@@ -210,7 +210,7 @@ async function performLogin(
   firestore: Firestore,
   store: any,
   handleSuccessfulAuth: (user: any) => void,
-  handleAuthError: (error: unknown, message: string) => void
+  handleAuthError: (error: unknown, message: string) => void,
 ): Promise<void> {
   patchState(store, { isLoading: true, error: null });
   try {
@@ -280,7 +280,8 @@ async function performLogin(
         },
         {
           name: "Let's Bubble",
-          description: 'Connect with all DABubble users! Share ideas, ask questions, and collaborate.',
+          description:
+            'Connect with all DABubble users! Share ideas, ask questions, and collaborate.',
         },
       ];
 
@@ -288,7 +289,7 @@ async function performLogin(
         try {
           const channelQuery = query(
             collection(firestore, 'channels'),
-            where('name', '==', channelConfig.name)
+            where('name', '==', channelConfig.name),
           );
           const channelSnapshot = await getDocs(channelQuery);
 
@@ -301,7 +302,7 @@ async function performLogin(
               updatedAt: new Date(),
             });
             console.log(
-              `✅ ${isAnonymous ? 'Guest' : 'Google'} user added to ${channelConfig.name} channel`
+              `✅ ${isAnonymous ? 'Guest' : 'Google'} user added to ${channelConfig.name} channel`,
             );
           } else {
             // Channel doesn't exist - create it with this user as creator
@@ -321,7 +322,7 @@ async function performLogin(
             console.log(
               `✅ ${channelConfig.name} channel created with ${
                 isAnonymous ? 'Guest' : 'Google'
-              } user as admin`
+              } user as admin`,
             );
           }
         } catch (channelError) {
@@ -338,12 +339,13 @@ async function performLogin(
           lastSeen: new Date(),
           updatedAt: new Date(),
         },
-        { merge: true }
+        { merge: true },
       );
     }
 
     await handleSuccessfulAuth(firebaseUser);
   } catch (error) {
     handleAuthError(error, 'Login failed');
+    throw error;
   }
 }

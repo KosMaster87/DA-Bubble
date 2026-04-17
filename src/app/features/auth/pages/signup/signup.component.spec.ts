@@ -1,14 +1,34 @@
 import { TestBed } from '@angular/core/testing';
 import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
+import { notificationCopy } from '@core/services/notification/notification-copy';
 import { NotificationService } from '@core/services/notification/notification.service';
 import { AuthStore } from '@stores/auth';
 import { describe, expect, it, vi } from 'vitest';
 import { SignupComponent } from './signup.component';
 
 describe('SignupComponent', () => {
+  it('shows warning toast when signup form is invalid', async () => {
+    const notification = { error: vi.fn(), success: vi.fn(), warning: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        FormBuilder,
+        { provide: AuthStore, useValue: { signup: vi.fn() } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: NotificationService, useValue: notification },
+      ],
+    });
+
+    const component = TestBed.runInInjectionContext(() => new SignupComponent());
+
+    await component.onSubmit();
+
+    expect(notification.warning).toHaveBeenCalledWith(notificationCopy.authFormInvalid);
+  });
+
   it('shows an error toast for registration failures', async () => {
-    const notification = { error: vi.fn(), success: vi.fn() };
+    const notification = { error: vi.fn(), success: vi.fn(), warning: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
