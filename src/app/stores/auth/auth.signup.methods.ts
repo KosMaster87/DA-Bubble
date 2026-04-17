@@ -4,16 +4,16 @@
  * @module AuthSignupMethods
  */
 
-import { Auth, createUserWithEmailAndPassword, applyActionCode } from '@angular/fire/auth';
+import { Auth, applyActionCode, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
-import { patchState } from '@ngrx/signals';
 import { User } from '@core/models/user.model';
+import { patchState } from '@ngrx/signals';
 import {
-  updateSignupProfile,
-  updateExistingUserProfile,
-  createSignupFirestoreUser,
   addSignupUserToDefaultChannels,
+  createSignupFirestoreUser,
   sendSignupVerificationEmail,
+  updateExistingUserProfile,
+  updateSignupProfile,
 } from './auth-methods-helpers';
 
 /**

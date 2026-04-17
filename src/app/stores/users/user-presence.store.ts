@@ -7,18 +7,18 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import {
   Firestore,
   collection,
   doc,
-  updateDoc,
-  query,
-  where,
-  onSnapshot,
   getDocs,
   limit,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
 } from '@angular/fire/firestore';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 
 /**
  * State interface for user presence management
@@ -84,7 +84,7 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID to set online
        * @returns {Promise<void>}
        */
-      async setUserOnline(uid: string) {
+      async setUserOnline(uid: string): Promise<void> {
         await this.performSetUserOnline(uid);
       },
 
@@ -95,7 +95,7 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID to set offline
        * @returns {Promise<void>}
        */
-      async setUserOffline(uid: string) {
+      async setUserOffline(uid: string): Promise<void> {
         await this.performSetUserOffline(uid);
       },
 
@@ -104,7 +104,7 @@ export const UserPresenceStore = signalStore(
        * @function updateMultipleUserPresence
        * @param {string[]} onlineUserIds - Array of online user IDs
        */
-      updateMultipleUserPresence(onlineUserIds: string[]) {
+      updateMultipleUserPresence(onlineUserIds: string[]): void {
         patchState(store, { onlineUsers: onlineUserIds });
       },
 
@@ -118,8 +118,7 @@ export const UserPresenceStore = signalStore(
         try {
           const q = query(usersCollection, where('isOnline', '==', true));
           const snapshot = await getDocs(q);
-          const onlineUserIds = snapshot.docs.map((doc) => doc.id);
-          patchState(store, { onlineUsers: onlineUserIds });
+          this.setOnlineUsersFromSnapshot(snapshot);
         } catch (error) {
           this.handleError(error, 'Failed to load online users');
         }
@@ -130,11 +129,10 @@ export const UserPresenceStore = signalStore(
        * @function startPresenceListener
        * @returns {Function} Unsubscribe function
        */
-      startPresenceListener() {
+      startPresenceListener(): () => void {
         const q = query(usersCollection, where('isOnline', '==', true), limit(100));
         return onSnapshot(q, (snapshot) => {
-          const onlineUserIds = snapshot.docs.map((doc) => doc.id);
-          patchState(store, { onlineUsers: onlineUserIds });
+          this.setOnlineUsersFromSnapshot(snapshot);
         });
       },
 
@@ -147,13 +145,8 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID to set online
        * @returns {Promise<void>}
        */
-      async performSetUserOnline(uid: string) {
-        try {
-          await this.updateUserPresenceInFirestore(uid, true);
-          this.updateUserPresence(uid, true);
-        } catch (error) {
-          this.handleError(error, 'Failed to set user online');
-        }
+      async performSetUserOnline(uid: string): Promise<void> {
+        await this.executePresenceOperation(uid, true, 'Failed to set user online');
       },
 
       /**
@@ -163,13 +156,8 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID to set offline
        * @returns {Promise<void>}
        */
-      async performSetUserOffline(uid: string) {
-        try {
-          await this.updateUserPresenceInFirestore(uid, false);
-          this.updateUserPresence(uid, false);
-        } catch (error) {
-          this.handleError(error, 'Failed to set user offline');
-        }
+      async performSetUserOffline(uid: string): Promise<void> {
+        await this.executePresenceOperation(uid, false, 'Failed to set user offline');
       },
 
       // === HELPER FUNCTIONS ===
@@ -182,7 +170,7 @@ export const UserPresenceStore = signalStore(
        * @param {boolean} isOnline - Online status
        * @returns {Promise<void>}
        */
-      async updateUserPresenceInFirestore(uid: string, isOnline: boolean) {
+      async updateUserPresenceInFirestore(uid: string, isOnline: boolean): Promise<void> {
         const userDoc = doc(usersCollection, uid);
         await updateDoc(userDoc, {
           isOnline,
@@ -196,7 +184,7 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID
        * @param {boolean} isOnline - Online status
        */
-      updateUserPresence(uid: string, isOnline: boolean) {
+      updateUserPresence(uid: string, isOnline: boolean): void {
         const currentOnlineUsers = store.onlineUsers();
         if (isOnline && !currentOnlineUsers.includes(uid)) {
           patchState(store, { onlineUsers: [...currentOnlineUsers, uid] });
@@ -206,12 +194,35 @@ export const UserPresenceStore = signalStore(
       },
 
       /**
+       * Execute shared presence update flow.
+       */
+      async executePresenceOperation(
+        uid: string,
+        isOnline: boolean,
+        defaultMessage: string,
+      ): Promise<void> {
+        try {
+          await this.updateUserPresenceInFirestore(uid, isOnline);
+          this.updateUserPresence(uid, isOnline);
+        } catch (error) {
+          this.handleError(error, defaultMessage);
+        }
+      },
+
+      /**
+       * Set online users from a Firestore snapshot.
+       */
+      setOnlineUsersFromSnapshot(snapshot: { docs: Array<{ id: string }> }): void {
+        patchState(store, { onlineUsers: snapshot.docs.map((doc) => doc.id) });
+      },
+
+      /**
        * Handle errors and update state
        * @function handleError
        * @param {unknown} error - Error object
        * @param {string} defaultMessage - Default error message
        */
-      handleError(error: unknown, defaultMessage: string) {
+      handleError(error: unknown, defaultMessage: string): void {
         const errorMessage = error instanceof Error ? error.message : defaultMessage;
         patchState(store, { error: errorMessage, isLoading: false });
       },
@@ -223,7 +234,7 @@ export const UserPresenceStore = signalStore(
        * @function setLoading
        * @param {boolean} isLoading - Loading state
        */
-      setLoading(isLoading: boolean) {
+      setLoading(isLoading: boolean): void {
         patchState(store, { isLoading });
       },
 
@@ -232,7 +243,7 @@ export const UserPresenceStore = signalStore(
        * @function setError
        * @param {string | null} error - Error message or null to clear
        */
-      setError(error: string | null) {
+      setError(error: string | null): void {
         patchState(store, { error });
       },
 
@@ -240,7 +251,7 @@ export const UserPresenceStore = signalStore(
        * Clear error message
        * @function clearError
        */
-      clearError() {
+      clearError(): void {
         patchState(store, { error: null });
       },
 
@@ -248,9 +259,9 @@ export const UserPresenceStore = signalStore(
        * Clear all online users from state
        * @function clearOnlineUsers
        */
-      clearOnlineUsers() {
+      clearOnlineUsers(): void {
         patchState(store, { onlineUsers: [] });
       },
     };
-  })
+  }),
 );

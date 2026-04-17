@@ -5,9 +5,9 @@
  */
 
 import { Injectable, inject, computed, Signal } from '@angular/core';
-import { ThreadStore } from '@stores/thread.store';
-import { ChannelStore } from '@stores/channel.store';
-import { UserStore } from '@stores/user.store';
+import { ThreadStore } from '@stores/threads/thread.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { UserStore } from '@stores/users/user.store';
 import { AuthStore } from '@stores/auth';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';

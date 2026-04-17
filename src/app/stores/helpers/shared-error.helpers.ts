@@ -4,6 +4,8 @@
  * @module stores/helpers/shared
  */
 
+import { ErrorLike } from '../core/store.types';
+
 /**
  * Extract error message from unknown error type
  */
@@ -16,14 +18,25 @@ export const getErrorMessage = (error: unknown, defaultMessage: string): string 
 /**
  * Check if error is a permission denied error
  */
-export const isPermissionError = (error: any): boolean =>
-  error?.code === 'permission-denied' || error?.message?.includes('permissions');
+export const isPermissionError = (error: unknown): boolean => {
+  const e = error as ErrorLike;
+  return e?.code === 'permission-denied' || e?.message?.includes('permissions') === true;
+};
+
+/**
+ * Check if error is a Firestore missing-index error
+ */
+export const isMissingIndexError = (error: unknown): boolean => {
+  const e = error as ErrorLike;
+  return e?.code === 'failed-precondition' && e?.message?.includes('index') === true;
+};
 
 /**
  * Check if error is a Firestore internal state error
  */
-export const isFirestoreInternalError = (error: any): boolean => {
-  const errorMsg = error?.message || '';
+export const isFirestoreInternalError = (error: unknown): boolean => {
+  const e = error as ErrorLike;
+  const errorMsg = e?.message ?? '';
   return (
     errorMsg.includes('FIRESTORE INTERNAL ASSERTION FAILED') ||
     errorMsg.includes('Unexpected state') ||
@@ -53,7 +66,6 @@ export const logWarning = (context: string, message: string): void => {
 export const createErrorState = (error: unknown, defaultMessage: string) => ({
   error: getErrorMessage(error, defaultMessage),
   isLoading: false,
-  loading: false,
 });
 
 /**
@@ -62,5 +74,4 @@ export const createErrorState = (error: unknown, defaultMessage: string) => ({
 export const createSuccessState = () => ({
   error: null,
   isLoading: false,
-  loading: false,
 });

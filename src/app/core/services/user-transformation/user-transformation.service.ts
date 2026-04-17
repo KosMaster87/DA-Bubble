@@ -7,13 +7,13 @@
 import { Injectable, inject, computed, Signal } from '@angular/core';
 import { UserStore } from '@stores/index';
 import { AuthStore } from '@stores/auth';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
 import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import type { Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import type { Message as PopupMessage } from '@core/models/message.model';
-import type { ThreadMessage } from '@stores/thread.store';
+import type { ThreadMessage } from '@stores/threads/thread.store';
 import type { DirectMessage } from '@core/models/direct-message.model';
 
 export interface UserListItem {

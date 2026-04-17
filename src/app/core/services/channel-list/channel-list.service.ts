@@ -5,9 +5,9 @@
  */
 
 import { computed, inject, Injectable, Signal } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { ThreadStore } from '@stores/thread.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 

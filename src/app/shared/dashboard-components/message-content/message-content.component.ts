@@ -7,8 +7,8 @@
 import { Component, input, output, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MentionChipComponent } from '../mention-chip/mention-chip.component';
-import { UserStore } from '@stores/user.store';
-import { ChannelStore } from '@stores/channel.store';
+import { UserStore } from '@stores/users/user.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { MessageParsingService, MessageSegment } from '../../services/message-parsing.service';
 
 export type { MessageSegment } from '../../services/message-parsing.service';

@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 /**
  * Service for managing channel membership when accepting invitations

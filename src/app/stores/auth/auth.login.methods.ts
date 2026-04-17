@@ -8,7 +8,6 @@ import {
   Auth,
   GoogleAuthProvider,
   UserCredential,
-  deleteUser,
   signInAnonymously,
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -16,13 +15,13 @@ import {
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { patchState } from '@ngrx/signals';
 import {
+  addLoginUserToDefaultChannels,
   createLoginFirestoreUser,
   createLoginNotesDM,
-  addLoginUserToDefaultChannels,
-  updateLoginUserStatus,
-  updateLogoutUserStatus,
   deleteGuestUserAccount,
   isGuestUser,
+  updateLoginUserStatus,
+  updateLogoutUserStatus,
 } from './auth-methods-helpers';
 
 /**

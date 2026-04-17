@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { ThreadManagementService } from '@shared/services/thread-management.service';
 import { NavigationStateService } from './navigation-state.service';

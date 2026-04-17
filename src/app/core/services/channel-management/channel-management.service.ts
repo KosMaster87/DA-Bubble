@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { InvitationService } from '@core/services/invitation/invitation.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';

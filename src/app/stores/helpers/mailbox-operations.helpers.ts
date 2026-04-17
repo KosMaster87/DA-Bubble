@@ -13,7 +13,7 @@ import {
   deleteDoc,
   Timestamp,
 } from '@angular/fire/firestore';
-import { CreateMailboxMessageRequest } from '../mailbox.store';
+import { CreateMailboxMessageRequest } from '../mailbox/mailbox.store';
 
 /**
  * Send a mailbox message to Firestore

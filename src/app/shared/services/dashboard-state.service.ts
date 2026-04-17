@@ -5,9 +5,9 @@
  */
 
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
-import { UserStore } from '@stores/user.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { UserStore } from '@stores/users/user.store';
 import { AuthStore } from '@stores/auth';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ThreadManagementService } from './thread-management.service';

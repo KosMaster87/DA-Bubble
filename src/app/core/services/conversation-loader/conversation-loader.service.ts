@@ -6,9 +6,9 @@
  */
 
 import { inject, Injectable } from '@angular/core';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
-import { ThreadStore } from '@stores/thread.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 import { UnreadService } from '@core/services/unread/unread.service';
 
 /**

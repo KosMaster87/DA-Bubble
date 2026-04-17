@@ -13,8 +13,8 @@ import {
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
-import { ThreadStore } from '@stores/thread.store';
-import { ChannelStore } from '@stores/channel.store';
+import { ThreadStore } from '@stores/threads/thread.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';

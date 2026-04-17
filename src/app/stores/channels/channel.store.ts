@@ -8,11 +8,11 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { Channel, CreateChannelRequest } from '@core/models/channel.model';
-import { ChannelOperationsService } from '@core/services/channel-operations/channel-operations.service';
 import { ChannelListenerService } from '@core/services/channel-listener/channel-listener.service';
-import { ChannelStateHelper } from './helpers/channel-state.helper';
+import { ChannelOperationsService } from '@core/services/channel-operations/channel-operations.service';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { ChannelStateHelper } from '../helpers/channel-state.helper';
 
 /**
  * State interface for channel management
@@ -66,7 +66,7 @@ export const ChannelStore = signalStore(
      * @returns {Signal<Function>} Function that takes id and returns channel or undefined
      */
     getChannelById: computed(
-      () => (id: string) => store.channels().find((channel) => channel.id === id)
+      () => (id: string) => store.channels().find((channel) => channel.id === id),
     ),
 
     /**
@@ -142,7 +142,7 @@ export const ChannelStore = signalStore(
         patchState(store, { isLoading: true });
         listener.setupListener(
           (channels) => this.handleChannelsLoaded(channels, userId),
-          (error) => this.handleError(error, 'Failed to load channels')
+          (error) => this.handleError(error, 'Failed to load channels'),
         );
       },
 
@@ -153,15 +153,11 @@ export const ChannelStore = signalStore(
        * @returns Channel ID
        */
       async performCreate(channelData: CreateChannelRequest, createdBy: string): Promise<string> {
-        patchState(store, { isLoading: true, error: null });
-        try {
-          const channelId = await operations.createChannel(channelData, createdBy);
-          patchState(store, { isLoading: false });
-          return channelId;
-        } catch (error) {
-          this.handleError(error, 'Failed to create channel');
-          throw error;
-        }
+        return await this.executeChannelOperation(
+          () => operations.createChannel(channelData, createdBy),
+          'Failed to create channel',
+          true,
+        );
       },
 
       /**
@@ -170,13 +166,12 @@ export const ChannelStore = signalStore(
        * @param updates - Updates to apply
        */
       async performUpdate(channelId: string, updates: Partial<Channel>): Promise<void> {
-        try {
-          await operations.updateChannel(channelId, updates);
-          this.updateChannelInState(channelId, updates);
-        } catch (error) {
-          this.handleError(error, 'Failed to update channel');
-          throw error;
-        }
+        await this.executeChannelOperation(
+          () => operations.updateChannel(channelId, updates),
+          'Failed to update channel',
+          false,
+          () => this.updateChannelInState(channelId, updates),
+        );
       },
 
       /**
@@ -185,15 +180,14 @@ export const ChannelStore = signalStore(
        * @param userId - User ID
        */
       async performLeaveChannel(channelId: string, userId: string): Promise<void> {
-        patchState(store, { isLoading: true, error: null });
-        try {
-          this.validateLeaveChannel(channelId, userId);
-          await operations.removeUserFromChannel(channelId, userId);
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to leave channel');
-          throw error;
-        }
+        await this.executeChannelOperation(
+          async () => {
+            this.validateLeaveChannel(channelId, userId);
+            return await operations.removeUserFromChannel(channelId, userId);
+          },
+          'Failed to leave channel',
+          true,
+        );
       },
 
       /**
@@ -201,15 +195,14 @@ export const ChannelStore = signalStore(
        * @param channelId - Channel ID
        */
       async performDeleteChannel(channelId: string): Promise<void> {
-        patchState(store, { isLoading: true, error: null });
-        try {
-          this.validateChannelExists(channelId);
-          await operations.deleteChannel(channelId);
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to delete channel');
-          throw error;
-        }
+        await this.executeChannelOperation(
+          async () => {
+            this.validateChannelExists(channelId);
+            return await operations.deleteChannel(channelId);
+          },
+          'Failed to delete channel',
+          true,
+        );
       },
 
       // === HELPER METHODS ===
@@ -234,10 +227,7 @@ export const ChannelStore = signalStore(
        * @param channelId - Channel ID
        */
       validateChannelExists(channelId: string): void {
-        const channel = store.getChannelById()(channelId);
-        if (!channel) {
-          throw new Error('Channel not found');
-        }
+        this.getChannelOrThrow(channelId);
       },
 
       /**
@@ -246,13 +236,19 @@ export const ChannelStore = signalStore(
        * @param userId - User ID
        */
       validateLeaveChannel(channelId: string, userId: string): void {
-        const channel = store.getChannelById()(channelId);
-        if (!channel) {
-          throw new Error('Channel not found');
-        }
+        const channel = this.getChannelOrThrow(channelId);
         if (ChannelStateHelper.isChannelOwner(channel, userId)) {
           throw new Error('Channel owner cannot leave the channel');
         }
+      },
+
+      /**
+       * Get channel by ID or throw a not-found error.
+       */
+      getChannelOrThrow(channelId: string): Channel {
+        const channel = store.getChannelById()(channelId);
+        if (!channel) throw new Error('Channel not found');
+        return channel;
       },
 
       /**
@@ -264,7 +260,7 @@ export const ChannelStore = signalStore(
         const updated = ChannelStateHelper.updateChannelInArray(
           store.channels(),
           channelId,
-          updates
+          updates,
         );
         patchState(store, { channels: updated, error: null });
       },
@@ -277,6 +273,53 @@ export const ChannelStore = signalStore(
       handleError(error: unknown, defaultMessage: string): void {
         const errorMessage = error instanceof Error ? error.message : defaultMessage;
         patchState(store, { error: errorMessage, isLoading: false });
+      },
+
+      /**
+       * Execute channel operation with shared loading and error handling.
+       */
+      async executeChannelOperation<T>(
+        operation: () => Promise<T>,
+        defaultMessage: string,
+        withLoadingState = false,
+        onSuccess?: () => void,
+      ): Promise<T> {
+        if (withLoadingState) {
+          this.startOperationLoading();
+        }
+
+        try {
+          const result = await operation();
+          this.completeChannelOperation(withLoadingState, onSuccess);
+          return result;
+        } catch (error) {
+          this.handleError(error, defaultMessage);
+          throw error;
+        }
+      },
+
+      /**
+       * Apply shared successful channel operation effects.
+       */
+      completeChannelOperation(withLoadingState: boolean, onSuccess?: () => void): void {
+        onSuccess?.();
+        if (withLoadingState) {
+          this.finishOperationLoading();
+        }
+      },
+
+      /**
+       * Mark channel operation loading start.
+       */
+      startOperationLoading(): void {
+        patchState(store, { isLoading: true, error: null });
+      },
+
+      /**
+       * Mark channel operation loading end.
+       */
+      finishOperationLoading(): void {
+        patchState(store, { isLoading: false });
       },
 
       /**
@@ -295,5 +338,5 @@ export const ChannelStore = signalStore(
         patchState(store, initialState);
       },
     };
-  })
+  }),
 );

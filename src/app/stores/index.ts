@@ -9,25 +9,23 @@
 
 // Store exports
 export { AuthStore } from './auth';
-export { UserStore } from './user.store';
-export { UserPresenceStore } from './user-presence.store';
-export { ChannelStore } from './channel.store';
-export { ChannelMemberStore } from './channel-member.store';
-export { MessageStore } from './message.store';
-export { ChannelMessageStore } from './channel-message.store';
-export { DirectMessageStore } from './direct-message.store';
-export { ThreadStore } from './thread.store';
-export { MailboxStore } from './mailbox.store';
+export { ChannelMemberStore, ChannelMessageStore, ChannelStore, MessageStore } from './channels';
+export { DirectMessageStore } from './direct-messages';
+export { MailboxStore } from './mailbox';
+export { ThreadStore } from './threads';
+export { UserPresenceStore, UserStore } from './users';
 
 // Type exports (required by isolatedModules compiler option)
 export type { AuthState } from './auth';
-export type { UserState } from './user.store';
-export type { UserPresenceState } from './user-presence.store';
-export type { ChannelState } from './channel.store';
-export type { ChannelMemberState } from './channel-member.store';
-export type { MessageState, CreateMessageRequest } from './message.store';
-export type { ChannelMessageState } from './channel-message.store';
-export type { DirectMessageState } from './direct-message.store';
+export type {
+  ChannelMemberState,
+  ChannelMessageState,
+  ChannelState,
+  CreateMessageRequest,
+  MessageState,
+} from './channels';
+export type { DirectMessageState } from './direct-messages';
+export type { UserPresenceState, UserState } from './users';
 
 // Utility exports
-export { useStores } from './store.utils';
+export { useStores } from './core';

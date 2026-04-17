@@ -8,13 +8,13 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import { QuerySnapshot, DocumentData } from '@angular/fire/firestore';
+import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
-import { ReactionService } from '@core/services/reaction/reaction.service';
-import { ChannelMessageOperationsService } from '@core/services/channel-message-operations/channel-message-operations.service';
 import { ChannelMessageListenerService } from '@core/services/channel-message-listener/channel-message-listener.service';
-import { ChannelMessageStateHelper } from './helpers/channel-message-state.helper';
+import { ChannelMessageOperationsService } from '@core/services/channel-message-operations/channel-message-operations.service';
+import { ReactionService } from '@core/services/reaction/reaction.service';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { ChannelMessageStateHelper } from '../helpers/channel-message-state.helper';
 
 /**
  * State interface for channel message management
@@ -63,7 +63,7 @@ export const ChannelMessageStore = signalStore(
      * @returns {Signal<Function>} Function that takes channelId and returns messages array
      */
     getMessagesByChannel: computed(
-      () => (channelId: string) => store.channelMessages()[channelId] || []
+      () => (channelId: string) => store.channelMessages()[channelId] || [],
     ),
 
     /**
@@ -82,7 +82,7 @@ export const ChannelMessageStore = signalStore(
     channelMessageCount: computed(() => {
       return Object.values(store.channelMessages()).reduce(
         (total, messages) => total + messages.length,
-        0
+        0,
       );
     }),
   })),
@@ -90,6 +90,64 @@ export const ChannelMessageStore = signalStore(
     const reactionService = inject(ReactionService);
     const operations = inject(ChannelMessageOperationsService);
     const listener = inject(ChannelMessageListenerService);
+
+    const shouldSkipOlderMessagesLoad = (
+      channelId: string,
+      snapshot: QuerySnapshot<DocumentData> | undefined,
+    ): boolean => {
+      return !snapshot || store.loadingOlderMessages()[channelId];
+    };
+
+    const markNoMoreOlderMessages = (channelId: string): void => {
+      patchState(
+        store,
+        ChannelMessageStateHelper.buildNoMoreMessagesState(store.hasMoreMessages(), channelId),
+      );
+    };
+
+    const startOlderMessagesLoading = (channelId: string): void => {
+      patchState(store, {
+        loadingOlderMessages: ChannelMessageStateHelper.updateLoadingOlderMessages(
+          store.loadingOlderMessages(),
+          channelId,
+          true,
+        ),
+      });
+    };
+
+    const finishOlderMessagesLoading = (channelId: string): void => {
+      patchState(store, {
+        loadingOlderMessages: ChannelMessageStateHelper.updateLoadingOlderMessages(
+          store.loadingOlderMessages(),
+          channelId,
+          false,
+        ),
+      });
+    };
+
+    const applyEmptyOlderMessages = (channelId: string): void => {
+      patchState(
+        store,
+        ChannelMessageStateHelper.buildEmptyOlderMessagesState(
+          store.hasMoreMessages(),
+          store.loadingOlderMessages(),
+          channelId,
+        ),
+      );
+    };
+
+    const applyOlderMessagesSuccess = (channelId: string, olderMessages: Message[]): void => {
+      patchState(
+        store,
+        ChannelMessageStateHelper.buildOlderMessagesSuccessState(
+          store.channelMessages(),
+          store.hasMoreMessages(),
+          store.loadingOlderMessages(),
+          channelId,
+          olderMessages,
+        ),
+      );
+    };
 
     return {
       /**
@@ -99,9 +157,11 @@ export const ChannelMessageStore = signalStore(
        */
       loadChannelMessages(channelId: string): void {
         patchState(store, { isLoading: true, error: null });
-        listener.setupListener(channelId,
+        listener.setupListener(
+          channelId,
           (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot),
-          (error) => this.handleError(error, 'Failed to load channel messages'));
+          (error) => this.handleError(error, 'Failed to load channel messages'),
+        );
       },
 
       /**
@@ -113,12 +173,10 @@ export const ChannelMessageStore = signalStore(
        * @returns {Promise<void>}
        */
       async sendMessage(channelId: string, content: string, authorId: string): Promise<void> {
-        try {
-          await operations.sendMessage(channelId, content, authorId);
-        } catch (error) {
-          this.handleError(error, 'Failed to send message');
-          throw error;
-        }
+        await this.executeChannelMessageOperation(
+          () => operations.sendMessage(channelId, content, authorId),
+          'Failed to send message',
+        );
       },
 
       /**
@@ -130,12 +188,10 @@ export const ChannelMessageStore = signalStore(
        * @returns {Promise<void>}
        */
       async updateMessage(channelId: string, messageId: string, content: string): Promise<void> {
-        try {
-          await operations.updateMessage(channelId, messageId, content);
-        } catch (error) {
-          this.handleError(error, 'Failed to update message');
-          throw error;
-        }
+        await this.executeChannelMessageOperation(
+          () => operations.updateMessage(channelId, messageId, content),
+          'Failed to update message',
+        );
       },
 
       /**
@@ -146,16 +202,15 @@ export const ChannelMessageStore = signalStore(
        * @returns {Promise<void>}
        */
       async deleteMessage(channelId: string, messageId: string): Promise<void> {
-        try {
-          await operations.deleteMessage(channelId, messageId);
-        } catch (error) {
-          this.handleError(error, 'Failed to delete message');
-          throw error;
-        }
+        await this.executeChannelMessageOperation(
+          () => operations.deleteMessage(channelId, messageId),
+          'Failed to delete message',
+        );
       },
 
       /** Set active channel @param {string | null} channelId @returns {void} */
-      setActiveChannel: (channelId: string | null) => patchState(store, { activeChannelId: channelId }),
+      setActiveChannel: (channelId: string | null) =>
+        patchState(store, { activeChannelId: channelId }),
 
       /**
        * Add message to channel state
@@ -164,7 +219,11 @@ export const ChannelMessageStore = signalStore(
        * @returns {void}
        */
       addMessageToChannel(channelId: string, message: Message): void {
-        const updated = ChannelMessageStateHelper.addMessageToChannel(store.channelMessages(), channelId, message);
+        const updated = ChannelMessageStateHelper.addMessageToChannel(
+          store.channelMessages(),
+          channelId,
+          message,
+        );
         patchState(store, { channelMessages: updated, isLoading: false });
       },
 
@@ -176,19 +235,22 @@ export const ChannelMessageStore = signalStore(
        * @param messages - Loaded messages
        * @param snapshot - Firestore snapshot for pagination
        */
-      handleMessagesLoaded(channelId: string, messages: Message[], snapshot: QuerySnapshot<DocumentData>): void {
+      handleMessagesLoaded(
+        channelId: string,
+        messages: Message[],
+        snapshot: QuerySnapshot<DocumentData>,
+      ): void {
         channelSnapshots.set(channelId, snapshot);
-        const updated = ChannelMessageStateHelper.updateChannelMessages(
-          store.channelMessages(),
-          channelId,
-          messages
+        patchState(
+          store,
+          ChannelMessageStateHelper.buildMessagesLoadedState(
+            store.channelMessages(),
+            store.hasMoreMessages(),
+            store.updateCounter(),
+            channelId,
+            messages,
+          ),
         );
-        patchState(store, {
-          channelMessages: updated,
-          isLoading: false,
-          updateCounter: store.updateCounter() + 1,
-          hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: messages.length >= 100 },
-        });
       },
 
       /**
@@ -199,27 +261,23 @@ export const ChannelMessageStore = signalStore(
        */
       async loadOlderMessages(channelId: string): Promise<void> {
         const snapshot = channelSnapshots.get(channelId);
-        if (!snapshot || store.loadingOlderMessages()[channelId]) return;
+        if (!snapshot || shouldSkipOlderMessagesLoad(channelId, snapshot)) return;
         const firstDoc = snapshot.docs[0];
         if (!firstDoc) {
-          patchState(store, { hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false } });
+          markNoMoreOlderMessages(channelId);
           return;
         }
-        patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: true } });
+        startOlderMessagesLoading(channelId);
         try {
           const olderMessages = await operations.loadOlderMessages(channelId, firstDoc);
           if (olderMessages.length === 0) {
-            patchState(store, { hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: false },
-              loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false } });
+            applyEmptyOlderMessages(channelId);
             return;
           }
-          const currentMessages = store.channelMessages()[channelId] || [];
-          const updated = ChannelMessageStateHelper.updateChannelMessages(store.channelMessages(), channelId, [...olderMessages, ...currentMessages]);
-          patchState(store, { channelMessages: updated, loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false },
-            hasMoreMessages: { ...store.hasMoreMessages(), [channelId]: olderMessages.length >= 100 } });
+          applyOlderMessagesSuccess(channelId, olderMessages);
         } catch (error) {
           this.handleError(error, 'Failed to load older messages');
-          patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [channelId]: false } });
+          finishOlderMessagesLoading(channelId);
         }
       },
 
@@ -234,6 +292,21 @@ export const ChannelMessageStore = signalStore(
       },
 
       /**
+       * Execute shared channel message operation flow.
+       */
+      async executeChannelMessageOperation(
+        operation: () => Promise<void>,
+        defaultMessage: string,
+      ): Promise<void> {
+        try {
+          await operation();
+        } catch (error) {
+          this.handleError(error, defaultMessage);
+          throw error;
+        }
+      },
+
+      /**
        * Toggle reaction on message
        * @param channelId - Channel ID
        * @param messageId - Message ID
@@ -244,13 +317,13 @@ export const ChannelMessageStore = signalStore(
         channelId: string,
         messageId: string,
         emojiId: string,
-        userId: string
+        userId: string,
       ): Promise<void> {
         const messageRef = reactionService.getMessageRef(
           'channels',
           channelId,
           'messages',
-          messageId
+          messageId,
         );
         await reactionService.toggleReaction(messageRef, emojiId, userId);
       },
@@ -262,5 +335,5 @@ export const ChannelMessageStore = signalStore(
         listener.clearAllListeners();
       },
     };
-  })
+  }),
 );

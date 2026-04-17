@@ -6,7 +6,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { AuthStore } from '@stores/auth';
-import { UserStore } from '@stores/user.store';
+import { UserStore } from '@stores/users/user.store';
 
 /**
  * Service for managing user profile updates

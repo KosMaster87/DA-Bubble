@@ -4,24 +4,32 @@
  * @module stores/thread-listener
  */
 
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
-  Firestore,
   collection,
+  DocumentData,
+  Firestore,
   onSnapshot,
-  query,
   orderBy,
+  query,
+  QuerySnapshot,
   Unsubscribe,
 } from '@angular/fire/firestore';
+import { type ThreadMessage } from './../threads/thread.store';
 import { ThreadOperationsService } from './thread-operations.service';
-import { type ThreadMessage } from './../thread.store';
 
 export interface SnapshotHandler {
-  (snapshot: any, messageId: string): void;
+  (snapshot: QuerySnapshot<DocumentData>, messageId: string): void;
 }
 
 export interface ErrorHandler {
-  (error: any, listenerKey: string, channelId: string, messageId: string, isDirectMessage?: boolean): void;
+  (
+    error: unknown,
+    listenerKey: string,
+    channelId: string,
+    messageId: string,
+    isDirectMessage?: boolean,
+  ): void;
 }
 
 @Injectable({
@@ -41,42 +49,44 @@ export class ThreadListenerService {
     messageId: string,
     isDirectMessage: boolean | undefined,
     onSnapshotCallback: SnapshotHandler,
-    onErrorCallback: ErrorHandler
+    onErrorCallback: ErrorHandler,
   ): boolean => {
     const listenerKey = `${channelId}_${messageId}`;
     if (this.threadListeners.has(listenerKey)) return false;
 
-    try {
-      const threadsPath = this.threadOps.getThreadsPath(channelId, messageId, isDirectMessage);
-      const threadsQuery = query(collection(this.firestore, threadsPath), orderBy('createdAt', 'asc'));
+    const threadsPath = this.threadOps.getThreadsPath(channelId, messageId, isDirectMessage);
+    const threadsQuery = query(
+      collection(this.firestore, threadsPath),
+      orderBy('createdAt', 'asc'),
+    );
 
-      const unsubscribe = onSnapshot(
-        threadsQuery,
-        (snapshot: any) => onSnapshotCallback(snapshot, messageId),
-        (error: any) => onErrorCallback(error, listenerKey, channelId, messageId, isDirectMessage)
-      );
+    const unsubscribe = onSnapshot(
+      threadsQuery,
+      (snapshot: QuerySnapshot<DocumentData>) => onSnapshotCallback(snapshot, messageId),
+      (error: unknown) =>
+        onErrorCallback(error, listenerKey, channelId, messageId, isDirectMessage),
+    );
 
-      this.threadListeners.set(listenerKey, unsubscribe);
-      return true;
-    } catch (error) {
-      throw error;
-    }
+    this.threadListeners.set(listenerKey, unsubscribe);
+    return true;
   };
 
   /**
    * Check if permission error should trigger retry
    */
-  isPermissionError = (error: any): boolean => {
-    return error.code === 'permission-denied' || error.message?.includes('permissions');
+  isPermissionError = (error: unknown): boolean => {
+    if (!(error instanceof Error)) {
+      return false;
+    }
+
+    const firebaseCode = (error as { code?: string }).code;
+    return firebaseCode === 'permission-denied' || error.message.includes('permissions');
   };
 
   /**
    * Schedule retry for thread subscription after permission error
    */
-  scheduleRetry = (
-    listenerKey: string,
-    retryFn: () => void
-  ): void => {
+  scheduleRetry = (listenerKey: string, retryFn: () => void): void => {
     console.log('🔓 Permission error - will retry thread subscription');
 
     // Unsubscribe existing listener FIRST before scheduling retry
@@ -107,7 +117,7 @@ export class ThreadListenerService {
   /**
    * Map snapshot to thread messages
    */
-  mapSnapshot = (snapshot: any, messageId: string): ThreadMessage[] => {
-    return snapshot.docs.map((doc: any) => this.threadOps.mapThreadDocument(doc, messageId));
+  mapSnapshot = (snapshot: QuerySnapshot<DocumentData>, messageId: string): ThreadMessage[] => {
+    return snapshot.docs.map((doc) => this.threadOps.mapThreadDocument(doc, messageId));
   };
 }

@@ -6,7 +6,7 @@
 
 import { Component, input, output, inject, computed } from '@angular/core';
 import { AuthStore } from '@stores/auth';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 interface ChannelAccessInfo {
   channelId: string;

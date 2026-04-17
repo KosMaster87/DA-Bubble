@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { ThreadStore } from '@stores/thread.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 
 /**
  * Service for managing thread message interactions
