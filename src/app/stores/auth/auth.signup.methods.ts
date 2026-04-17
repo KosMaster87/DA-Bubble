@@ -49,7 +49,7 @@ export const createSignupMethods = (
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('✅ Firebase Auth user created:', credential.user.uid);
 
-      await updateSignupProfile(credential.user, displayName);
+      await updateSignupProfile(credential, displayName);
       await createSignupFirestoreUser(credential, displayName, firestore);
       await addSignupUserToDefaultChannels(credential.user.uid, firestore);
       await sendSignupVerificationEmail(credential);
