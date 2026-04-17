@@ -10,14 +10,14 @@
 import { inject } from '@angular/core';
 import {
   AuthStore,
-  UserStore,
-  ChannelStore,
   ChannelMemberStore,
-  MessageStore,
   ChannelMessageStore,
+  ChannelStore,
   DirectMessageStore,
+  MessageStore,
   UserPresenceStore,
-} from './index';
+  UserStore,
+} from '../index';
 
 /**
  * Custom hook to access all stores in one object

@@ -5,46 +5,50 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 
 import {
-  Firestore,
   doc,
+  DocumentData,
+  Firestore,
   getDoc,
-  updateDoc,
+  QuerySnapshot,
   serverTimestamp,
   Unsubscribe,
-  QuerySnapshot,
-  DocumentData,
+  updateDoc,
 } from '@angular/fire/firestore';
-import { ThreadStore } from './thread.store';
 import {
-  DirectMessageConversation,
   DirectMessage,
+  DirectMessageConversation,
   getConversationId,
 } from '@core/models/direct-message.model';
-import { ReactionService } from '@core/services/reaction/reaction.service';
 import { MentionParserService } from '@core/services/mention-parser/mention-parser.service';
-import {
-  sendMessageToFirestore,
-  updateConversationPreview,
-  deleteMessageWithThreads,
-} from './helpers/direct-message-operations.helpers';
-import { loadOlderDMMessages } from './helpers/direct-message-listener.helpers';
-import {
-  filterConversationsById,
-  filterMessagesByConversationId,
-  removeConversationFromUserDoc,
-  cleanupSingleMessageListener,
-  clearDebounceTimers,
-  cleanupAllListeners,
-} from './helpers/direct-message-state.helpers';
-import { logError } from './helpers/shared-error.helpers';
+import { ReactionService } from '@core/services/reaction/reaction.service';
+import { startOrResumeConversation } from '../helpers/direct-message-conversation.helpers';
+import { loadOlderDMMessages } from '../helpers/direct-message-listener.helpers';
 import {
   loadConversations as loadConversationsHelper,
   loadMessages as loadMessagesHelper,
-} from './helpers/direct-message-loader.helpers';
-import { startOrResumeConversation } from './helpers/direct-message-conversation.helpers';
+} from '../helpers/direct-message-loader.helpers';
+import {
+  deleteMessageWithThreads,
+  sendMessageToFirestore,
+  updateConversationPreview,
+} from '../helpers/direct-message-operations.helpers';
+import {
+  buildHasMoreMessagesState,
+  buildLeaveConversationState,
+  buildLoadingOlderMessagesState,
+  buildOlderMessagesSuccessState,
+  cleanupAllListeners,
+  cleanupSingleMessageListener,
+  clearDebounceTimers,
+  removeConversationFromUserDoc,
+} from '../helpers/direct-message-state.helpers';
+import { logError } from '../helpers/shared-error.helpers';
+import { ThreadStore } from '../threads/thread.store';
+
+type TimerHandle = ReturnType<typeof setTimeout>;
 
 export interface DirectMessageState {
   conversations: DirectMessageConversation[];
@@ -74,8 +78,8 @@ export const DirectMessageStore = signalStore(
   withComputed((store) => ({
     sortedConversations: computed(() =>
       [...store.conversations()].sort(
-        (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
-      )
+        (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime(),
+      ),
     ),
     activeMessages: computed(() => {
       const activeId = store.activeConversationId();
@@ -97,29 +101,100 @@ export const DirectMessageStore = signalStore(
     let conversationsUnsubscribe: Unsubscribe | null = null;
     let messagesSnapshots: Map<string, QuerySnapshot<DocumentData>> = new Map();
     let messagesUnsubscribers: Map<string, Unsubscribe> = new Map();
-    let conversationsDebounceTimer: any = null;
+    let conversationsDebounceTimer: TimerHandle | null = null;
     let conversationsRetryCount = 0;
-    let messagesDebounceTimers: Map<string, any> = new Map();
+    let messagesDebounceTimers: Map<string, TimerHandle> = new Map();
     let messagesRetryCounters: Map<string, number> = new Map();
 
     const loadConversations = (userConversationIds: string[]): void => {
-      loadConversationsHelper(
-        firestore, userConversationIds, conversationsDebounceTimer,
-        (timer) => { conversationsDebounceTimer = timer; },
-        (state) => patchState(store, state), () => store.conversations(),
-        conversationsUnsubscribe, (unsub) => { conversationsUnsubscribe = unsub; },
-        conversationsRetryCount, (count) => { conversationsRetryCount = count; },
-        MAX_RETRIES, DEBOUNCE_MS, SNAPSHOT_DEBOUNCE_MS, initialState
-      );
+      loadConversationsHelper({
+        firestore,
+        userConversationIds,
+        getConversationsDebounceTimer: () => conversationsDebounceTimer,
+        setConversationsDebounceTimer: (timer) => {
+          conversationsDebounceTimer = timer;
+        },
+        patchState: (state) => patchState(store, state),
+        getConversationsUnsubscribe: () => conversationsUnsubscribe,
+        setConversationsUnsubscribe: (unsub) => {
+          conversationsUnsubscribe = unsub;
+        },
+        getConversationsRetryCount: () => conversationsRetryCount,
+        setConversationsRetryCount: (count) => {
+          conversationsRetryCount = count;
+        },
+        maxRetries: MAX_RETRIES,
+        debounceMs: DEBOUNCE_MS,
+        snapshotDebounceMs: SNAPSHOT_DEBOUNCE_MS,
+        initialState,
+      });
     };
 
     const loadMessages = (conversationId: string): void => {
-      loadMessagesHelper(
-        firestore, conversationId, messagesDebounceTimers, messagesSnapshots,
-        messagesUnsubscribers, messagesRetryCounters,
-        (state) => patchState(store, state), () => store.messages(),
-        () => store.updateCounter(), () => store.hasMoreMessages(),
-        threadStore, MAX_RETRIES, DEBOUNCE_MS, SNAPSHOT_DEBOUNCE_MS
+      loadMessagesHelper({
+        firestore,
+        conversationId,
+        messagesDebounceTimers,
+        messagesSnapshots,
+        messagesUnsubscribers,
+        messagesRetryCounters,
+        patchState: (state) => patchState(store, state),
+        getMessages: () => store.messages(),
+        getUpdateCounter: () => store.updateCounter(),
+        getHasMoreMessages: () => store.hasMoreMessages(),
+        threadStore,
+        maxRetries: MAX_RETRIES,
+        debounceMs: DEBOUNCE_MS,
+        snapshotDebounceMs: SNAPSHOT_DEBOUNCE_MS,
+      });
+    };
+
+    const shouldSkipOlderMessagesLoad = (
+      conversationId: string,
+      snapshot: QuerySnapshot<DocumentData> | undefined,
+    ): boolean => {
+      return !snapshot || store.loadingOlderMessages()[conversationId];
+    };
+
+    const markNoMoreOlderMessages = (conversationId: string): void => {
+      patchState(store, {
+        hasMoreMessages: buildHasMoreMessagesState(store.hasMoreMessages(), conversationId, false),
+      });
+    };
+
+    const startOlderMessagesLoading = (conversationId: string): void => {
+      patchState(store, {
+        loadingOlderMessages: buildLoadingOlderMessagesState(
+          store.loadingOlderMessages(),
+          conversationId,
+          true,
+        ),
+      });
+    };
+
+    const finishOlderMessagesLoading = (conversationId: string): void => {
+      patchState(store, {
+        loadingOlderMessages: buildLoadingOlderMessagesState(
+          store.loadingOlderMessages(),
+          conversationId,
+          false,
+        ),
+      });
+    };
+
+    const applyOlderMessagesSuccess = (
+      conversationId: string,
+      olderMessages: DirectMessage[],
+    ): void => {
+      patchState(
+        store,
+        buildOlderMessagesSuccessState(
+          store.messages(),
+          store.loadingOlderMessages(),
+          store.hasMoreMessages(),
+          conversationId,
+          olderMessages,
+        ),
       );
     };
 
@@ -152,11 +227,15 @@ export const DirectMessageStore = signalStore(
        */
       startConversation: async (
         currentUserId: string,
-        otherUserId: string
+        otherUserId: string,
       ): Promise<{ id: string; participants: [string, string] }> => {
         const conversationId = getConversationId(currentUserId, otherUserId);
         const { conversations, result } = await startOrResumeConversation(
-          firestore, conversationId, currentUserId, otherUserId, store.conversations()
+          firestore,
+          conversationId,
+          currentUserId,
+          otherUserId,
+          store.conversations(),
         );
         patchState(store, { conversations });
         return result;
@@ -169,9 +248,19 @@ export const DirectMessageStore = signalStore(
        * @param {string} content - Message content
        * @returns {Promise<void>}
        */
-      sendMessage: async (conversationId: string, authorId: string, content: string): Promise<void> => {
+      sendMessage: async (
+        conversationId: string,
+        authorId: string,
+        content: string,
+      ): Promise<void> => {
         const mentionedUserIds = mentionParser.extractMentionedUserIds(content);
-        await sendMessageToFirestore(firestore, conversationId, authorId, content, mentionedUserIds);
+        await sendMessageToFirestore(
+          firestore,
+          conversationId,
+          authorId,
+          content,
+          mentionedUserIds,
+        );
         const conversationSnap = await getDoc(doc(firestore, 'direct-messages', conversationId));
         if (conversationSnap.exists()) {
           await updateConversationPreview(firestore, conversationId, content, authorId);
@@ -188,7 +277,7 @@ export const DirectMessageStore = signalStore(
       updateMessage: async (
         conversationId: string,
         messageId: string,
-        content: string
+        content: string,
       ): Promise<void> => {
         await updateDoc(doc(firestore, `direct-messages/${conversationId}/messages/${messageId}`), {
           content,
@@ -244,13 +333,13 @@ export const DirectMessageStore = signalStore(
         conversationId: string,
         messageId: string,
         emojiId: string,
-        userId: string
+        userId: string,
       ): Promise<void> => {
         const messageRef = reactionService.getMessageRef(
           'direct-messages',
           conversationId,
           'messages',
-          messageId
+          messageId,
         );
         await reactionService.toggleReaction(messageRef, emojiId, userId);
       },
@@ -263,12 +352,13 @@ export const DirectMessageStore = signalStore(
        */
       leaveConversation: async (conversationId: string, userId: string): Promise<void> => {
         await removeConversationFromUserDoc(firestore, conversationId, userId);
-        const filteredConversations = filterConversationsById(store.conversations(), conversationId);
-        const filteredMessages = filterMessagesByConversationId(store.messages(), conversationId);
-        patchState(store, { conversations: filteredConversations, messages: filteredMessages });
-        if (store.activeConversationId() === conversationId) {
-          patchState(store, { activeConversationId: null });
-        }
+        const nextState = buildLeaveConversationState(
+          store.conversations(),
+          store.messages(),
+          store.activeConversationId(),
+          conversationId,
+        );
+        patchState(store, nextState);
         cleanupSingleMessageListener(messagesUnsubscribers, conversationId);
       },
       /**
@@ -278,24 +368,19 @@ export const DirectMessageStore = signalStore(
        */
       loadOlderMessages: async (conversationId: string): Promise<void> => {
         const snapshot = messagesSnapshots.get(conversationId);
-        if (!snapshot || store.loadingOlderMessages()[conversationId]) return;
+        if (!snapshot || shouldSkipOlderMessagesLoad(conversationId, snapshot)) return;
         const firstDoc = snapshot.docs[0];
         if (!firstDoc) {
-          patchState(store, { hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: false } });
+          markNoMoreOlderMessages(conversationId);
           return;
         }
-        patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: true } });
+        startOlderMessagesLoading(conversationId);
         try {
           const olderMessages = await loadOlderDMMessages(firestore, conversationId, firstDoc);
-          const allMessages = [...olderMessages, ...(store.messages()[conversationId] || [])];
-          patchState(store, {
-            messages: { ...store.messages(), [conversationId]: allMessages },
-            loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: false },
-            hasMoreMessages: { ...store.hasMoreMessages(), [conversationId]: olderMessages.length >= 100 },
-          });
+          applyOlderMessagesSuccess(conversationId, olderMessages);
         } catch (error) {
           logError('loadOlderMessages', error);
-          patchState(store, { loadingOlderMessages: { ...store.loadingOlderMessages(), [conversationId]: false } });
+          finishOlderMessagesLoading(conversationId);
         }
       },
 
@@ -304,11 +389,15 @@ export const DirectMessageStore = signalStore(
        * @returns {void}
        */
       destroy: (): void => {
-        clearDebounceTimers(conversationsDebounceTimer, messagesDebounceTimers, messagesRetryCounters);
+        clearDebounceTimers(
+          conversationsDebounceTimer,
+          messagesDebounceTimers,
+          messagesRetryCounters,
+        );
         conversationsDebounceTimer = null;
         cleanupAllListeners(conversationsUnsubscribe, messagesUnsubscribers);
         conversationsUnsubscribe = null;
       },
     };
-  })
+  }),
 );

@@ -6,7 +6,7 @@
 
 import { inject, Injectable } from '@angular/core';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { AuthStore } from '@stores/auth';
 import { InvitationService } from '@core/services/invitation/invitation.service';
 

@@ -5,10 +5,10 @@
  */
 
 import { Injectable, inject, computed, signal } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
-import { UserStore } from '@stores/user.store';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { UserStore } from '@stores/users/user.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 
 /**
  * Search result type

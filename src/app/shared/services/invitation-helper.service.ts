@@ -6,8 +6,8 @@
 
 import { inject } from '@angular/core';
 import { InvitationService } from '@core/services/invitation/invitation.service';
-import { ChannelStore } from '@stores/channel.store';
-import { UserStore } from '@stores/user.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { UserStore } from '@stores/users/user.store';
 
 /**
  * Helper class for invitation workflows

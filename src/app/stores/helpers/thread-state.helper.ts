@@ -4,45 +4,42 @@
  * @module stores/thread-state-helper
  */
 
-import { type ThreadMessage, type ThreadState } from './../thread.store';
+import { type ThreadMessage } from './../threads/thread.store';
 
 export class ThreadStateHelper {
   /**
    * Update threads in state with new snapshot data
    */
-  static updateThreadsFromSnapshot = (
+  static updateThreadsFromSnapshot(
     currentState: Record<string, ThreadMessage[]>,
     messageId: string,
-    threads: ThreadMessage[]
-  ): Record<string, ThreadMessage[]> => {
+    threads: ThreadMessage[],
+  ): Record<string, ThreadMessage[]> {
     return {
       ...currentState,
       [messageId]: threads,
     };
-  };
+  }
 
   /**
    * Update single thread in local state
    */
-  static updateThreadInState = (
+  static updateThreadInState(
     currentThreads: ThreadMessage[],
     threadId: string,
-    updates: Partial<ThreadMessage>
-  ): ThreadMessage[] => {
+    updates: Partial<ThreadMessage>,
+  ): ThreadMessage[] {
     return currentThreads.map((thread) =>
       thread.id === threadId
         ? { ...thread, ...updates, updatedAt: new Date(), isEdited: true }
-        : thread
+        : thread,
     );
-  };
+  }
 
   /**
    * Remove thread from state
    */
-  static removeThreadFromState = (
-    currentThreads: ThreadMessage[],
-    threadId: string
-  ): ThreadMessage[] => {
+  static removeThreadFromState(currentThreads: ThreadMessage[], threadId: string): ThreadMessage[] {
     return currentThreads.filter((thread) => thread.id !== threadId);
-  };
+  }
 }

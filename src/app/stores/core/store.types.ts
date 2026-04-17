@@ -21,3 +21,12 @@ export interface CleanableStore {
 export interface DestroyableStore {
   destroy(): void;
 }
+
+/**
+ * Minimal shape of a Firebase-like error object with optional code and message.
+ * Used for permission-denied and other Firestore error checks.
+ */
+export interface ErrorLike {
+  code?: string;
+  message?: string;
+}

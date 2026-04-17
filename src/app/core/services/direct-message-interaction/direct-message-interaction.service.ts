@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { DirectMessageStore } from '@stores/direct-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 
 /**
  * Service for managing direct message interactions

@@ -8,9 +8,9 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import { Firestore, collection, doc, updateDoc, getDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, getDoc, updateDoc } from '@angular/fire/firestore';
 import { Channel } from '@core/models/channel.model';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 
 /**
  * State interface for channel member management
@@ -66,15 +66,11 @@ export const ChannelMemberStore = signalStore(
        * @param {string} userId - User ID to add
        * @returns {Promise<void>}
        */
-      async addMember(channelId: string, userId: string) {
-        patchState(store, { isLoading: true, error: null });
-        try {
+      async addMember(channelId: string, userId: string): Promise<void> {
+        await this.executeChannelMemberOperation(async () => {
           const channel = await this.getChannelById(channelId);
           await this.updateChannelMembers(channelId, [...channel.members, userId]);
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to add member');
-        }
+        }, 'Failed to add member');
       },
 
       /**
@@ -85,15 +81,14 @@ export const ChannelMemberStore = signalStore(
        * @param {string} userId - User ID to remove
        * @returns {Promise<void>}
        */
-      async removeMember(channelId: string, userId: string) {
-        patchState(store, { isLoading: true, error: null });
-        try {
+      async removeMember(channelId: string, userId: string): Promise<void> {
+        await this.executeChannelMemberOperation(async () => {
           const channel = await this.getChannelById(channelId);
-          await this.updateChannelMembers(channelId, channel.members.filter((id) => id !== userId));
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to remove member');
-        }
+          await this.updateChannelMembers(
+            channelId,
+            channel.members.filter((id) => id !== userId),
+          );
+        }, 'Failed to remove member');
       },
 
       /**
@@ -104,15 +99,11 @@ export const ChannelMemberStore = signalStore(
        * @param {string} userId - User ID to promote to admin
        * @returns {Promise<void>}
        */
-      async addAdmin(channelId: string, userId: string) {
-        patchState(store, { isLoading: true, error: null });
-        try {
+      async addAdmin(channelId: string, userId: string): Promise<void> {
+        await this.executeChannelMemberOperation(async () => {
           const channel = await this.getChannelById(channelId);
           await this.updateChannelAdmins(channelId, [...channel.admins, userId]);
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to add admin');
-        }
+        }, 'Failed to add admin');
       },
 
       /**
@@ -123,15 +114,14 @@ export const ChannelMemberStore = signalStore(
        * @param {string} userId - User ID to demote from admin
        * @returns {Promise<void>}
        */
-      async removeAdmin(channelId: string, userId: string) {
-        patchState(store, { isLoading: true, error: null });
-        try {
+      async removeAdmin(channelId: string, userId: string): Promise<void> {
+        await this.executeChannelMemberOperation(async () => {
           const channel = await this.getChannelById(channelId);
-          await this.updateChannelAdmins(channelId, channel.admins.filter((id) => id !== userId));
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to remove admin');
-        }
+          await this.updateChannelAdmins(
+            channelId,
+            channel.admins.filter((id) => id !== userId),
+          );
+        }, 'Failed to remove admin');
       },
 
       /**
@@ -197,7 +187,7 @@ export const ChannelMemberStore = signalStore(
        * @param {string[]} members - Updated members array
        * @returns {Promise<void>}
        */
-      async updateChannelMembers(channelId: string, members: string[]) {
+      async updateChannelMembers(channelId: string, members: string[]): Promise<void> {
         const channelDoc = doc(channelsCollection, channelId);
         await updateDoc(channelDoc, { members, updatedAt: new Date() });
       },
@@ -210,7 +200,7 @@ export const ChannelMemberStore = signalStore(
        * @param {string[]} admins - Updated admins array
        * @returns {Promise<void>}
        */
-      async updateChannelAdmins(channelId: string, admins: string[]) {
+      async updateChannelAdmins(channelId: string, admins: string[]): Promise<void> {
         const channelDoc = doc(channelsCollection, channelId);
         await updateDoc(channelDoc, { admins, updatedAt: new Date() });
       },
@@ -221,7 +211,23 @@ export const ChannelMemberStore = signalStore(
        * @param {unknown} error - Error object
        * @param {string} defaultMessage - Default error message
        */
-      handleError(error: unknown, defaultMessage: string) {
+      /**
+       * Execute shared channel-member operation flow.
+       */
+      async executeChannelMemberOperation(
+        operation: () => Promise<void>,
+        defaultMessage: string,
+      ): Promise<void> {
+        patchState(store, { isLoading: true, error: null });
+        try {
+          await operation();
+          patchState(store, { isLoading: false });
+        } catch (error) {
+          this.handleError(error, defaultMessage);
+        }
+      },
+
+      handleError(error: unknown, defaultMessage: string): void {
         const errorMessage = error instanceof Error ? error.message : defaultMessage;
         patchState(store, { error: errorMessage, isLoading: false });
       },
@@ -229,7 +235,8 @@ export const ChannelMemberStore = signalStore(
       // === STATE MANAGEMENT ===
 
       /** Set active channel ID @function setActiveChannel @param {string | null} channelId */
-      setActiveChannel: (channelId: string | null) => patchState(store, { activeChannelId: channelId }),
+      setActiveChannel: (channelId: string | null) =>
+        patchState(store, { activeChannelId: channelId }),
 
       /** Set loading state @function setLoading @param {boolean} isLoading */
       setLoading: (isLoading: boolean) => patchState(store, { isLoading }),
@@ -240,5 +247,5 @@ export const ChannelMemberStore = signalStore(
       /** Clear error message @function clearError */
       clearError: () => patchState(store, { error: null }),
     };
-  })
+  }),
 );

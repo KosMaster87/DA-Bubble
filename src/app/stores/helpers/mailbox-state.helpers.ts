@@ -4,7 +4,7 @@
  * @module stores/helpers
  */
 
-import { MailboxMessage, MailboxMessageType } from '../mailbox.store';
+import { MailboxMessage, MailboxMessageType } from '../mailbox/mailbox.store';
 
 /**
  * Filter messages by read status

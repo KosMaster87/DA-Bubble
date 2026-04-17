@@ -8,13 +8,13 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import { collection, doc, addDoc, updateDoc, Firestore } from '@angular/fire/firestore';
-import { Message, CreateMessageRequest } from '@core/models/message.model';
+import { addDoc, collection, doc, Firestore, updateDoc } from '@angular/fire/firestore';
+import { CreateMessageRequest, Message } from '@core/models/message.model';
 import { ReactionService } from '@core/services/reaction/reaction.service';
-import { updateItemInArray, prependItem } from './helpers/shared-state.helpers';
-import { getErrorMessage, logError } from './helpers/shared-error.helpers';
-import { buildMessageUpdate, buildSoftDeleteData } from './helpers/shared-firestore.helpers';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { getErrorMessage, logError } from '../helpers/shared-error.helpers';
+import { buildMessageUpdate, buildSoftDeleteData } from '../helpers/shared-firestore.helpers';
+import { prependItem, updateItemInArray } from '../helpers/shared-state.helpers';
 
 // Export types for use in other modules
 export type { CreateMessageRequest };
@@ -96,7 +96,7 @@ export const MessageStore = signalStore(
        * @param {string} authorId - ID of the message author
        * @returns {Promise<void>}
        */
-      async sendMessage(messageData: CreateMessageRequest, authorId: string) {
+      async sendMessage(messageData: CreateMessageRequest, authorId: string): Promise<void> {
         await this.performSendMessage(messageData, authorId);
       },
 
@@ -108,7 +108,7 @@ export const MessageStore = signalStore(
        * @param {string} content - New message content
        * @returns {Promise<void>}
        */
-      async updateMessage(messageId: string, content: string) {
+      async updateMessage(messageId: string, content: string): Promise<void> {
         await this.performUpdateMessage(messageId, content);
       },
 
@@ -119,7 +119,7 @@ export const MessageStore = signalStore(
        * @param {string} messageId - Message ID to delete
        * @returns {Promise<void>}
        */
-      async deleteMessage(messageId: string) {
+      async deleteMessage(messageId: string): Promise<void> {
         await this.performDeleteMessage(messageId);
       },
 
@@ -133,16 +133,17 @@ export const MessageStore = signalStore(
        * @param {string} authorId - ID of the message author
        * @returns {Promise<void>}
        */
-      async performSendMessage(messageData: CreateMessageRequest, authorId: string) {
-        patchState(store, { isLoading: true, error: null });
-        try {
-          const newMessage = this.buildMessageData(messageData, authorId);
-          const docRef = await addDoc(messagesCollection, newMessage);
-          const message = { ...newMessage, id: docRef.id };
-          this.addMessageToState(message);
-        } catch (error) {
-          this.handleError(error, 'Failed to send message');
-        }
+      async performSendMessage(messageData: CreateMessageRequest, authorId: string): Promise<void> {
+        const newMessage = this.buildMessageData(messageData, authorId);
+        await this.executeMessageOperation(
+          async () => {
+            const docRef = await addDoc(messagesCollection, newMessage);
+            return this.buildStoredMessage(newMessage, docRef.id);
+          },
+          'Failed to send message',
+          true,
+          (message) => this.addMessageToState(message),
+        );
       },
 
       /**
@@ -153,15 +154,16 @@ export const MessageStore = signalStore(
        * @param {string} content - New message content
        * @returns {Promise<void>}
        */
-      async performUpdateMessage(messageId: string, content: string) {
-        try {
-          const messageDoc = doc(messagesCollection, messageId);
-          const updates = buildMessageUpdate(content);
-          await updateDoc(messageDoc, updates);
-          this.updateMessageInState(messageId, { content, isEdited: true });
-        } catch (error) {
-          this.handleError(error, 'Failed to update message');
-        }
+      async performUpdateMessage(messageId: string, content: string): Promise<void> {
+        await this.executeMessageOperation(
+          async () => {
+            const messageDoc = doc(messagesCollection, messageId);
+            await updateDoc(messageDoc, buildMessageUpdate(content));
+          },
+          'Failed to update message',
+          false,
+          () => this.updateMessageInState(messageId, { content, isEdited: true }),
+        );
       },
 
       /**
@@ -171,15 +173,17 @@ export const MessageStore = signalStore(
        * @param {string} messageId - Message ID to delete
        * @returns {Promise<void>}
        */
-      async performDeleteMessage(messageId: string) {
-        try {
-          const messageDoc = doc(messagesCollection, messageId);
-          const deleteData = buildSoftDeleteData();
-          await updateDoc(messageDoc, deleteData);
-          this.updateMessageInState(messageId, { content: '[Message deleted]', isEdited: true });
-        } catch (error) {
-          this.handleError(error, 'Failed to delete message');
-        }
+      async performDeleteMessage(messageId: string): Promise<void> {
+        await this.executeMessageOperation(
+          async () => {
+            const messageDoc = doc(messagesCollection, messageId);
+            await updateDoc(messageDoc, buildSoftDeleteData());
+          },
+          'Failed to delete message',
+          false,
+          () =>
+            this.updateMessageInState(messageId, { content: '[Message deleted]', isEdited: true }),
+        );
       },
 
       // === HELPER FUNCTIONS ===
@@ -201,6 +205,13 @@ export const MessageStore = signalStore(
           createdAt: new Date(),
           updatedAt: new Date(),
         };
+      },
+
+      /**
+       * Build stored message with generated document ID.
+       */
+      buildStoredMessage(message: Omit<Message, 'id'>, id: string): Message {
+        return { ...message, id };
       },
 
       /**
@@ -236,6 +247,55 @@ export const MessageStore = signalStore(
         const errorMessage = getErrorMessage(error, defaultMessage);
         logError('MessageStore', error);
         patchState(store, { error: errorMessage, isLoading: false });
+      },
+
+      /**
+       * Execute shared message operation flow.
+       */
+      async executeMessageOperation<T>(
+        operation: () => Promise<T>,
+        defaultMessage: string,
+        withLoadingState: boolean,
+        onSuccess?: (result: T) => void,
+      ): Promise<void> {
+        if (withLoadingState) {
+          this.startMessageLoading();
+        }
+
+        try {
+          const result = await operation();
+          this.completeMessageOperation(result, withLoadingState, onSuccess);
+        } catch (error) {
+          this.handleError(error, defaultMessage);
+        }
+      },
+
+      /**
+       * Apply shared message operation success effects.
+       */
+      completeMessageOperation<T>(
+        result: T,
+        withLoadingState: boolean,
+        onSuccess?: (result: T) => void,
+      ): void {
+        onSuccess?.(result);
+        this.finishMessageLoading(withLoadingState);
+      },
+
+      /**
+       * Start message write loading state.
+       */
+      startMessageLoading(): void {
+        patchState(store, { isLoading: true, error: null });
+      },
+
+      /**
+       * Finish message write loading state when applicable.
+       */
+      finishMessageLoading(withLoadingState: boolean): void {
+        if (withLoadingState) {
+          patchState(store, { isLoading: false });
+        }
       },
 
       // === STATE MANAGEMENT HELPERS ===
@@ -287,5 +347,5 @@ export const MessageStore = signalStore(
         await reactionService.toggleReaction(messageRef, emojiId, userId);
       },
     };
-  })
+  }),
 );

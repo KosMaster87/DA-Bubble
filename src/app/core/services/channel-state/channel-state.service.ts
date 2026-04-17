@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject, effect, untracked, Signal } from '@angular/core';
-import { ChannelMessageStore } from '@stores/channel-message.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 

@@ -6,9 +6,9 @@
 
 import { Injectable, inject, effect, computed } from '@angular/core';
 import { AuthStore } from '@stores/auth';
-import { ChannelStore } from '@stores/channel.store';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 
 /**
  * Service for managing dashboard initialization and message loading effects

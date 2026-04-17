@@ -1,7 +1,7 @@
 import { Injectable, inject, computed } from '@angular/core';
 import { Firestore, doc, updateDoc, setDoc } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
-import { UserStore } from '../../stores/user.store';
+import { UserStore } from '../../stores/users/user.store';
 
 /**
  * Conversation scroll state for auto-scroll and unread tracking

@@ -5,9 +5,9 @@
  */
 
 import { computed, inject, Injectable, Signal } from '@angular/core';
-import { DirectMessageStore } from '@stores/direct-message.store';
-import { UserStore } from '@stores/user.store';
-import { ThreadStore } from '@stores/thread.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { UserStore } from '@stores/users/user.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';

@@ -5,14 +5,29 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
-import { Firestore } from '@angular/fire/firestore';
-import { MessageReaction, MessageAttachment } from '../core/models/message.model';
-import { mapMailboxMessage } from './helpers/mailbox-store.helpers';
-import { sendMailboxMessage, updateMessageReadStatus, deleteMailboxMessage } from './helpers/mailbox-operations.helpers';
-import { setupMailboxListener } from './helpers/mailbox-listener.helpers';
-import { filterByType, countUnreadMessages, findMessageById, getUnreadMessages, cleanupListener } from './helpers/mailbox-state.helpers';
-import { isPermissionError, logError, getErrorMessage } from './helpers/shared-error.helpers';
+import { DocumentData, Firestore, QuerySnapshot } from '@angular/fire/firestore';
+import { MessageAttachment, MessageReaction } from '@core/models/message.model';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { setupMailboxListener } from '../helpers/mailbox-listener.helpers';
+import {
+  deleteMailboxMessage,
+  sendMailboxMessage,
+  updateMessageReadStatus,
+} from '../helpers/mailbox-operations.helpers';
+import {
+  cleanupListener,
+  countUnreadMessages,
+  filterByType,
+  findMessageById,
+  getUnreadMessages,
+} from '../helpers/mailbox-state.helpers';
+import {
+  isMissingIndexError,
+  isPermissionDeniedError,
+  logMissingIndexError,
+  mapMailboxMessage,
+} from '../helpers/mailbox-store.helpers';
+import { getErrorMessage, logError } from '../helpers/shared-error.helpers';
 
 /**
  * Mailbox message type definition
@@ -50,7 +65,7 @@ export interface CreateMailboxMessageRequest {
 /**
  * State interface for MailboxStore
  */
-interface MailboxState {
+export interface MailboxState {
   messages: MailboxMessage[];
   loading: boolean;
   error: string | null;
@@ -86,29 +101,31 @@ export const MailboxStore = signalStore(
     const firestore = inject(Firestore);
     let unsubscribe: (() => void) | null = null;
 
-    const handleSnapshot = (snapshot: any) => {
+    const handleSnapshot = (snapshot: QuerySnapshot<DocumentData>): void => {
       const messages = snapshot.docs.map(mapMailboxMessage);
       patchState(store, { messages, loading: false, error: null });
     };
 
-    const handleListenerError = (error: any) => {
-      if (isPermissionError(error)) {
+    const resetMailboxSubscription = (): void => {
+      cleanupListener(unsubscribe);
+      unsubscribe = null;
+    };
+
+    const handleListenerError = (error: unknown): void => {
+      if (isPermissionDeniedError(error)) {
         console.log('🔓 Permission error detected - cleaning up mailbox subscription');
-        cleanupListener(unsubscribe);
-        unsubscribe = null;
+        resetMailboxSubscription();
         patchState(store, initialState);
         return;
       }
       logError('Mailbox listener', error);
-      if (error.code === 'failed-precondition' && error.message?.includes('index')) {
-        console.error('❌ FIREBASE INDEX FEHLT!');
-        console.error('📋 Bitte klicke auf diesen Link um den Index zu erstellen:');
-        console.error(error.message);
-        console.error('');
-        console.error('ℹ️ Dies ist ein einmaliger Setup-Schritt (1 Klick).');
-        console.error('   Nach der Index-Erstellung funktionieren Invitations automatisch.');
+      if (isMissingIndexError(error)) {
+        logMissingIndexError(error);
       }
-      patchState(store, { error: error.message, loading: false });
+      patchState(store, {
+        error: getErrorMessage(error, 'Failed to load mailbox'),
+        loading: false,
+      });
     };
 
     const handleSetUserError = (error: unknown) => {
@@ -130,8 +147,7 @@ export const MailboxStore = signalStore(
     return {
       async setCurrentUser(userId: string): Promise<void> {
         if (store.currentUserId() === userId) return;
-        cleanupListener(unsubscribe);
-        unsubscribe = null;
+        resetMailboxSubscription();
         patchState(store, { currentUserId: userId, loading: true, error: null });
         try {
           await this.loadMessages(userId);
@@ -151,7 +167,7 @@ export const MailboxStore = signalStore(
             firestore,
             userId,
             (snapshot) => handleSnapshot(snapshot),
-            (error) => handleListenerError(error)
+            (error) => handleListenerError(error),
           );
         } catch (error) {
           handleLoadMessagesError(error);
@@ -159,71 +175,80 @@ export const MailboxStore = signalStore(
       },
 
       async sendMessage(request: CreateMailboxMessageRequest): Promise<void> {
-        patchState(store, { loading: true, error: null });
-        try {
-          await sendMailboxMessage(firestore, request);
-          patchState(store, { loading: false });
-        } catch (error) {
-          console.error('Error sending mailbox message:', error);
-          patchState(store, {
-            error: error instanceof Error ? error.message : 'Failed to send message',
-            loading: false,
-          });
-          throw error;
-        }
+        await this.executeMailboxOperation(
+          () => sendMailboxMessage(firestore, request),
+          'sendMessage',
+          'Failed to send message',
+          true,
+        );
       },
 
       async markAsRead(messageId: string): Promise<void> {
-        try {
-          await updateMessageReadStatus(firestore, messageId, true);
-        } catch (error) {
-          console.error('Error marking message as read:', error);
-          patchState(store, {
-            error: error instanceof Error ? error.message : 'Failed to update message',
-          });
-        }
+        await this.executeMailboxOperation(
+          () => updateMessageReadStatus(firestore, messageId, true),
+          'markAsRead',
+          'Failed to update message',
+        );
       },
 
       async markAsUnread(messageId: string): Promise<void> {
-        try {
-          await updateMessageReadStatus(firestore, messageId, false);
-        } catch (error) {
-          console.error('Error marking message as unread:', error);
-          patchState(store, {
-            error: error instanceof Error ? error.message : 'Failed to update message',
-          });
-        }
+        await this.executeMailboxOperation(
+          () => updateMessageReadStatus(firestore, messageId, false),
+          'markAsUnread',
+          'Failed to update message',
+        );
       },
 
       async markAllAsRead(): Promise<void> {
         const unreadMessages = store.unreadMessages();
         if (unreadMessages.length === 0) return;
-        patchState(store, { loading: true, error: null });
-        try {
-          const promises = unreadMessages.map((msg) => this.markAsRead(msg.id));
-          await Promise.all(promises);
-          patchState(store, { loading: false });
-        } catch (error) {
-          console.error('Error marking all as read:', error);
-          patchState(store, {
-            error: error instanceof Error ? error.message : 'Failed to mark all as read',
-            loading: false,
-          });
-        }
+        await this.executeMailboxOperation(
+          () =>
+            Promise.all(
+              unreadMessages.map((msg) => updateMessageReadStatus(firestore, msg.id, true)),
+            ).then(() => undefined),
+          'markAllAsRead',
+          'Failed to mark all as read',
+          true,
+        );
       },
 
       async deleteMessage(messageId: string): Promise<void> {
-        patchState(store, { loading: true, error: null });
+        await this.executeMailboxOperation(
+          () => deleteMailboxMessage(firestore, messageId),
+          'deleteMessage',
+          'Failed to delete message',
+          true,
+        );
+      },
+
+      /**
+       * Execute shared mailbox operation flow.
+       */
+      async executeMailboxOperation(
+        operation: () => Promise<void>,
+        context: string,
+        defaultMessage: string,
+        withLoadingState = false,
+      ): Promise<void> {
+        if (withLoadingState) {
+          patchState(store, { loading: true, error: null });
+        }
+
         try {
-          await deleteMailboxMessage(firestore, messageId);
-          patchState(store, { loading: false });
+          await operation();
+          if (withLoadingState) {
+            patchState(store, { loading: false });
+          }
         } catch (error) {
-          console.error('Error deleting message:', error);
+          logError(context, error);
           patchState(store, {
-            error: error instanceof Error ? error.message : 'Failed to delete message',
-            loading: false,
+            error: getErrorMessage(error, defaultMessage),
+            loading: withLoadingState ? false : store.loading(),
           });
-          throw error;
+          if (withLoadingState) {
+            throw error;
+          }
         }
       },
 
@@ -232,10 +257,9 @@ export const MailboxStore = signalStore(
       },
 
       cleanup(): void {
-        cleanupListener(unsubscribe);
-        unsubscribe = null;
+        resetMailboxSubscription();
         patchState(store, initialState);
       },
     };
-  })
+  }),
 );

@@ -11,8 +11,8 @@ import { UserListItem } from '@shared/dashboard-components/user-list-item/user-l
 import { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 import { UserSelectionComponent } from '@shared/dashboard-components/user-selection/user-selection.component';
 import { ChannelSelectionComponent } from '@shared/dashboard-components/channel-selection/channel-selection.component';
-import { UserStore } from '@stores/user.store';
-import { ChannelStore } from '@stores/channel.store';
+import { UserStore } from '@stores/users/user.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { SearchAutocompleteService } from '@shared/services/search-autocomplete.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 

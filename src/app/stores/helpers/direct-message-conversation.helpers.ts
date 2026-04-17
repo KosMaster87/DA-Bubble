@@ -4,15 +4,30 @@
  * @module DirectMessageConversationHelpers
  */
 
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { DirectMessageConversation } from '@core/models/direct-message.model';
-import { mapConversation } from './direct-message-store.helpers';
 import {
-  createConversationDoc,
+  DocumentData,
+  Firestore,
+  QueryDocumentSnapshot,
+  doc,
+  getDoc,
+} from '@angular/fire/firestore';
+import { DirectMessageConversation } from '@core/models/direct-message.model';
+import {
   buildNewConversation,
-  updateBothUsersDirectMessages,
   checkAndReaddConversation,
+  createConversationDoc,
+  updateBothUsersDirectMessages,
 } from './direct-message-operations.helpers';
+import { mapConversation } from './direct-message-store.helpers';
+
+interface StartOrResumeConversationResult {
+  conversations: DirectMessageConversation[];
+  result: { id: string; participants: [string, string] };
+}
+
+const buildSortedParticipants = (firstUserId: string, secondUserId: string): [string, string] => {
+  return firstUserId <= secondUserId ? [firstUserId, secondUserId] : [secondUserId, firstUserId];
+};
 
 /**
  * Create new conversation
@@ -28,7 +43,7 @@ export const createNewConversation = async (
   conversationId: string,
   currentUserId: string,
   otherUserId: string,
-  existingConversations: DirectMessageConversation[]
+  existingConversations: DirectMessageConversation[],
 ): Promise<DirectMessageConversation[]> => {
   await createConversationDoc(firestore, conversationId, currentUserId, otherUserId);
   const newConversation = buildNewConversation(conversationId, currentUserId, otherUserId);
@@ -40,7 +55,7 @@ export const createNewConversation = async (
  * Re-add conversation if needed
  * @param {Firestore} firestore - Firestore instance
  * @param {string} conversationId - Conversation ID
- * @param {any} conversationSnap - Firestore snapshot
+ * @param {QueryDocumentSnapshot<DocumentData>} conversationSnap - Firestore snapshot
  * @param {string} currentUserId - Current user ID
  * @param {DirectMessageConversation[]} existingConversations - Current conversations
  * @returns {Promise<DirectMessageConversation[]>} Updated conversations
@@ -48,9 +63,9 @@ export const createNewConversation = async (
 export const readdConversationIfNeeded = async (
   firestore: Firestore,
   conversationId: string,
-  conversationSnap: any,
+  conversationSnap: QueryDocumentSnapshot<DocumentData>,
   currentUserId: string,
-  existingConversations: DirectMessageConversation[]
+  existingConversations: DirectMessageConversation[],
 ): Promise<DirectMessageConversation[]> => {
   const wasReadded = await checkAndReaddConversation(firestore, conversationId, currentUserId);
   const conversationExists = existingConversations.some((c) => c.id === conversationId);
@@ -74,11 +89,8 @@ export const startOrResumeConversation = async (
   conversationId: string,
   currentUserId: string,
   otherUserId: string,
-  existingConversations: DirectMessageConversation[]
-): Promise<{
-  conversations: DirectMessageConversation[];
-  result: { id: string; participants: [string, string] };
-}> => {
+  existingConversations: DirectMessageConversation[],
+): Promise<StartOrResumeConversationResult> => {
   const conversationRef = doc(firestore, 'direct-messages', conversationId);
   const conversationSnap = await getDoc(conversationRef);
 
@@ -90,7 +102,7 @@ export const startOrResumeConversation = async (
       conversationId,
       currentUserId,
       otherUserId,
-      existingConversations
+      existingConversations,
     );
   } else {
     conversations = await readdConversationIfNeeded(
@@ -98,7 +110,7 @@ export const startOrResumeConversation = async (
       conversationId,
       conversationSnap,
       currentUserId,
-      existingConversations
+      existingConversations,
     );
   }
 
@@ -106,7 +118,7 @@ export const startOrResumeConversation = async (
     conversations,
     result: {
       id: conversationId,
-      participants: [currentUserId, otherUserId].sort() as [string, string],
+      participants: buildSortedParticipants(currentUserId, otherUserId),
     },
   };
 };

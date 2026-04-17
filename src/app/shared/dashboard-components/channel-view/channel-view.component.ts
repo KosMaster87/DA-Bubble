@@ -5,7 +5,7 @@
  */
 
 import { Component, input, output, computed, inject } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { AuthStore } from '@stores/auth';
 
 export interface ChannelViewData {

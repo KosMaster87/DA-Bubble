@@ -3,15 +3,29 @@
  * @module DirectMessageStateHelpers
  */
 
-import { Firestore, doc, updateDoc, arrayRemove, Unsubscribe } from '@angular/fire/firestore';
-import { DirectMessageConversation, DirectMessage } from '@core/models/direct-message.model';
+import { arrayRemove, doc, Firestore, Unsubscribe, updateDoc } from '@angular/fire/firestore';
+import { DirectMessage, DirectMessageConversation } from '@core/models/direct-message.model';
+
+type TimerHandle = ReturnType<typeof setTimeout>;
+
+export interface LeaveConversationState {
+  conversations: DirectMessageConversation[];
+  messages: { [conversationId: string]: DirectMessage[] };
+  activeConversationId: string | null;
+}
+
+export interface LoadOlderMessagesState {
+  messages: { [conversationId: string]: DirectMessage[] };
+  loadingOlderMessages: { [conversationId: string]: boolean };
+  hasMoreMessages: { [conversationId: string]: boolean };
+}
 
 /**
  * Filter conversations by ID
  */
 export const filterConversationsById = (
   conversations: DirectMessageConversation[],
-  excludeId: string
+  excludeId: string,
 ): DirectMessageConversation[] => conversations.filter((c) => c.id !== excludeId);
 
 /**
@@ -19,7 +33,7 @@ export const filterConversationsById = (
  */
 export const filterMessagesByConversationId = (
   messages: { [conversationId: string]: DirectMessage[] },
-  excludeId: string
+  excludeId: string,
 ): { [conversationId: string]: DirectMessage[] } =>
   Object.fromEntries(Object.entries(messages).filter(([id]) => id !== excludeId));
 
@@ -29,7 +43,7 @@ export const filterMessagesByConversationId = (
 export const removeConversationFromUserDoc = async (
   firestore: Firestore,
   conversationId: string,
-  userId: string
+  userId: string,
 ) => {
   await updateDoc(doc(firestore, 'users', userId), {
     directMessages: arrayRemove(conversationId),
@@ -41,7 +55,7 @@ export const removeConversationFromUserDoc = async (
  */
 export const cleanupSingleMessageListener = (
   messagesUnsubscribers: Map<string, Unsubscribe>,
-  conversationId: string
+  conversationId: string,
 ) => {
   if (messagesUnsubscribers.has(conversationId)) {
     messagesUnsubscribers.get(conversationId)!();
@@ -53,10 +67,10 @@ export const cleanupSingleMessageListener = (
  * Clear all debounce timers
  */
 export const clearDebounceTimers = (
-  conversationsTimer: any,
-  messagesTimers: Map<string, any>,
-  retryCounters: Map<string, number>
-): any => {
+  conversationsTimer: TimerHandle | null,
+  messagesTimers: Map<string, TimerHandle>,
+  retryCounters: Map<string, number>,
+): null => {
   if (conversationsTimer) {
     clearTimeout(conversationsTimer);
   }
@@ -71,7 +85,7 @@ export const clearDebounceTimers = (
  */
 export const cleanupAllListeners = (
   conversationsUnsubscribe: Unsubscribe | null,
-  messagesUnsubscribers: Map<string, Unsubscribe>
+  messagesUnsubscribers: Map<string, Unsubscribe>,
 ) => {
   if (conversationsUnsubscribe) conversationsUnsubscribe();
   messagesUnsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -83,5 +97,77 @@ export const cleanupAllListeners = (
  */
 export const conversationExists = (
   conversations: DirectMessageConversation[],
-  conversationId: string
+  conversationId: string,
 ): boolean => conversations.some((c) => c.id === conversationId);
+
+/**
+ * Build state patch after leaving a conversation.
+ */
+export const buildLeaveConversationState = (
+  conversations: DirectMessageConversation[],
+  messages: { [conversationId: string]: DirectMessage[] },
+  activeConversationId: string | null,
+  conversationId: string,
+): LeaveConversationState => {
+  const nextState: LeaveConversationState = {
+    conversations: filterConversationsById(conversations, conversationId),
+    messages: filterMessagesByConversationId(messages, conversationId),
+    activeConversationId,
+  };
+
+  if (activeConversationId === conversationId) {
+    nextState.activeConversationId = null;
+  }
+
+  return nextState;
+};
+
+/**
+ * Build loadingOlderMessages state patch for a single conversation.
+ */
+export const buildLoadingOlderMessagesState = (
+  loadingOlderMessages: { [conversationId: string]: boolean },
+  conversationId: string,
+  isLoading: boolean,
+): { [conversationId: string]: boolean } => ({
+  ...loadingOlderMessages,
+  [conversationId]: isLoading,
+});
+
+/**
+ * Build hasMoreMessages state patch for a single conversation.
+ */
+export const buildHasMoreMessagesState = (
+  hasMoreMessages: { [conversationId: string]: boolean },
+  conversationId: string,
+  hasMore: boolean,
+): { [conversationId: string]: boolean } => ({
+  ...hasMoreMessages,
+  [conversationId]: hasMore,
+});
+
+/**
+ * Build success state patch for older messages loading.
+ */
+export const buildOlderMessagesSuccessState = (
+  messages: { [conversationId: string]: DirectMessage[] },
+  loadingOlderMessages: { [conversationId: string]: boolean },
+  hasMoreMessages: { [conversationId: string]: boolean },
+  conversationId: string,
+  olderMessages: DirectMessage[],
+): LoadOlderMessagesState => {
+  const currentMessages = messages[conversationId] || [];
+  return {
+    messages: { ...messages, [conversationId]: [...olderMessages, ...currentMessages] },
+    loadingOlderMessages: buildLoadingOlderMessagesState(
+      loadingOlderMessages,
+      conversationId,
+      false,
+    ),
+    hasMoreMessages: buildHasMoreMessagesState(
+      hasMoreMessages,
+      conversationId,
+      olderMessages.length >= 100,
+    ),
+  };
+};

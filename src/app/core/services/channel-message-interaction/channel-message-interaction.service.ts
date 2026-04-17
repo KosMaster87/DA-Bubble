@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { ChannelMessageStore } from '@stores/channel-message.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
 
 /**
  * Service for managing channel message interactions

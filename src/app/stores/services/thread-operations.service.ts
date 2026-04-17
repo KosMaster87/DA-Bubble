@@ -4,21 +4,29 @@
  * @module stores/thread-operations
  */
 
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
-  Firestore,
-  collection,
-  doc,
   addDoc,
-  updateDoc,
-  getDocs,
+  collection,
   deleteDoc,
+  doc,
+  DocumentData,
+  DocumentReference,
+  Firestore,
+  getDocs,
   increment,
-  query,
   orderBy,
+  query,
+  QueryDocumentSnapshot,
   serverTimestamp,
+  updateDoc,
 } from '@angular/fire/firestore';
-import { type ThreadMessage } from './../thread.store';
+import { type ThreadMessage } from './../threads/thread.store';
+
+type ThreadCreateData = Omit<ThreadMessage, 'id' | 'createdAt' | 'updatedAt'> & {
+  createdAt: unknown;
+  updatedAt: unknown;
+};
 
 @Injectable({
   providedIn: 'root',
@@ -38,7 +46,10 @@ export class ThreadOperationsService {
   /**
    * Map Firestore document to ThreadMessage
    */
-  mapThreadDocument = (doc: any, messageId: string): ThreadMessage => {
+  mapThreadDocument = (
+    doc: QueryDocumentSnapshot<DocumentData>,
+    messageId: string,
+  ): ThreadMessage => {
     const data = doc.data();
     return {
       id: doc.id,
@@ -57,7 +68,12 @@ export class ThreadOperationsService {
   /**
    * Create new thread data object
    */
-  createThreadData = (content: string, authorId: string, messageId: string, channelId: string): any => {
+  createThreadData = (
+    content: string,
+    authorId: string,
+    messageId: string,
+    channelId: string,
+  ): ThreadCreateData => {
     return {
       content,
       authorId,
@@ -79,7 +95,7 @@ export class ThreadOperationsService {
     messageId: string,
     content: string,
     authorId: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> => {
     const threadsPath = this.getThreadsPath(channelId, messageId, isDirectMessage);
     const newThread = this.createThreadData(content, authorId, messageId, channelId);
@@ -93,7 +109,7 @@ export class ThreadOperationsService {
   updateParentMessageCount = async (
     channelId: string,
     messageId: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> => {
     const parentPath = isDirectMessage
       ? `direct-messages/${channelId}/messages/${messageId}`
@@ -114,7 +130,7 @@ export class ThreadOperationsService {
     messageId: string,
     threadId: string,
     updates: Partial<ThreadMessage>,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> => {
     const threadPath = this.getThreadsPath(channelId, messageId, isDirectMessage);
     const threadDoc = doc(this.firestore, threadPath, threadId);
@@ -132,7 +148,7 @@ export class ThreadOperationsService {
     channelId: string,
     messageId: string,
     threadId: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> => {
     const collectionType = isDirectMessage ? 'direct-messages' : 'channels';
     const threadPath = `${collectionType}/${channelId}/messages/${messageId}/threads`;
@@ -147,10 +163,10 @@ export class ThreadOperationsService {
     collectionType: string,
     channelId: string,
     messageId: string,
-    threadPath: string
+    threadPath: string,
   ): Promise<void> => {
     const threadsSnapshot = await getDocs(
-      query(collection(this.firestore, threadPath), orderBy('createdAt', 'desc'))
+      query(collection(this.firestore, threadPath), orderBy('createdAt', 'desc')),
     );
     const parentRef = doc(this.firestore, `${collectionType}/${channelId}/messages/${messageId}`);
 
@@ -169,7 +185,9 @@ export class ThreadOperationsService {
   /**
    * Reset parent message thread metadata to zero
    */
-  private resetParentThreadMetadata = async (parentRef: any): Promise<void> => {
+  private resetParentThreadMetadata = async (
+    parentRef: DocumentReference<DocumentData>,
+  ): Promise<void> => {
     await updateDoc(parentRef, {
       threadCount: 0,
       lastThreadTimestamp: null,

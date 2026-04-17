@@ -5,13 +5,13 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { ChannelStore } from '@stores/channel.store';
-import { UserStore } from '@stores/user.store';
-import { MailboxStore } from '@stores/mailbox.store';
-import { DirectMessageStore } from '@stores/direct-message.store';
-import { ChannelMessageStore } from '@stores/channel-message.store';
-import { ThreadStore } from '@stores/thread.store';
-import type { CleanableStore, DestroyableStore } from '@stores/store.types';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { UserStore } from '@stores/users/user.store';
+import { MailboxStore } from '@stores/mailbox/mailbox.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { ThreadStore } from '@stores/threads/thread.store';
+import type { CleanableStore, DestroyableStore } from '@stores/core/store.types';
 
 /**
  * Service to cleanup all store subscriptions

@@ -6,11 +6,18 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
+import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 import { ReactionService } from '@core/services/reaction/reaction.service';
-import { ThreadOperationsService } from './services/thread-operations.service';
-import { ThreadListenerService } from './services/thread-listener.service';
-import { ThreadStateHelper } from './helpers/thread-state.helper';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { ThreadStateHelper } from '../helpers/thread-state.helper';
+import {
+  buildThreadDocumentPath,
+  mergeMessageThreads,
+  retryThreadListenerOnPermissionError,
+  type ThreadListenerContext,
+} from '../helpers/thread-store.helpers';
+import { ThreadListenerService } from '../services/thread-listener.service';
+import { ThreadOperationsService } from '../services/thread-operations.service';
 
 /**
  * Thread message interface
@@ -117,7 +124,7 @@ export const ThreadStore = signalStore(
         messageId: string,
         content: string,
         authorId: string,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
         await this.performAddReply(channelId, messageId, content, authorId, isDirectMessage);
       },
@@ -135,7 +142,7 @@ export const ThreadStore = signalStore(
         messageId: string,
         threadId: string,
         updates: Partial<ThreadMessage>,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
         await this.performUpdateThread(channelId, messageId, threadId, updates, isDirectMessage);
       },
@@ -152,7 +159,7 @@ export const ThreadStore = signalStore(
         channelId: string,
         messageId: string,
         threadId: string,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
         await this.performDeleteThread(channelId, messageId, threadId, isDirectMessage);
       },
@@ -194,16 +201,9 @@ export const ThreadStore = signalStore(
        */
       performLoadThreads(channelId: string, messageId: string, isDirectMessage?: boolean): void {
         patchState(store, { isLoading: true, error: null });
-
         try {
-          const success = threadListener.setupListener(
-            channelId,
-            messageId,
-            isDirectMessage,
-            (snapshot, msgId) => this.handleThreadsSnapshot(snapshot, msgId),
-            (error, key, chId, msgId, isDM) => this.handleThreadsError(error, key, chId, msgId, isDM)
-          );
-
+          const context: ThreadListenerContext = { channelId, messageId, isDirectMessage };
+          const success = this.registerThreadListener(context);
           if (!success) return; // Listener already exists
         } catch (error) {
           this.handleError(error, 'Failed to setup thread listener');
@@ -211,11 +211,29 @@ export const ThreadStore = signalStore(
       },
 
       /**
+       * Register thread listener and wire callbacks.
+       */
+      registerThreadListener(context: ThreadListenerContext): boolean {
+        return threadListener.setupListener(
+          context.channelId,
+          context.messageId,
+          context.isDirectMessage,
+          (snapshot, messageId) => this.handleThreadsSnapshot(snapshot, messageId),
+          (error, key, channelId, messageId, isDirectMessage) =>
+            this.handleThreadsError(error, key, channelId, messageId, isDirectMessage),
+        );
+      },
+
+      /**
        * Handle threads snapshot update
        */
-      handleThreadsSnapshot(snapshot: any, messageId: string): void {
+      handleThreadsSnapshot(snapshot: QuerySnapshot<DocumentData>, messageId: string): void {
         const threads = threadListener.mapSnapshot(snapshot, messageId);
-        const updatedThreads = ThreadStateHelper.updateThreadsFromSnapshot(store.threads(), messageId, threads);
+        const updatedThreads = ThreadStateHelper.updateThreadsFromSnapshot(
+          store.threads(),
+          messageId,
+          threads,
+        );
         patchState(store, { threads: updatedThreads, isLoading: false });
       },
 
@@ -223,16 +241,19 @@ export const ThreadStore = signalStore(
        * Handle permission errors for threads listener
        */
       handleThreadsError(
-        error: any,
+        error: unknown,
         listenerKey: string,
         channelId: string,
         messageId: string,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): void {
-        if (threadListener.isPermissionError(error)) {
-          threadListener.scheduleRetry(listenerKey, () =>
-            this.performLoadThreads(channelId, messageId, isDirectMessage)
-          );
+        const didScheduleRetry = retryThreadListenerOnPermissionError(
+          threadListener,
+          error,
+          listenerKey,
+          () => this.performLoadThreads(channelId, messageId, isDirectMessage),
+        );
+        if (didScheduleRetry) {
           return;
         }
         this.handleError(error, 'Failed to load threads');
@@ -246,15 +267,13 @@ export const ThreadStore = signalStore(
         messageId: string,
         content: string,
         authorId: string,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
-        patchState(store, { isLoading: true, error: null });
-        try {
-          await threadOps.addThreadReply(channelId, messageId, content, authorId, isDirectMessage);
-          patchState(store, { isLoading: false });
-        } catch (error) {
-          this.handleError(error, 'Failed to add thread reply');
-        }
+        await this.executeThreadMutation(
+          () => threadOps.addThreadReply(channelId, messageId, content, authorId, isDirectMessage),
+          'Failed to add thread reply',
+          true,
+        );
       },
 
       /**
@@ -265,23 +284,33 @@ export const ThreadStore = signalStore(
         messageId: string,
         threadId: string,
         updates: Partial<ThreadMessage>,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
-        try {
-          await threadOps.updateThread(channelId, messageId, threadId, updates, isDirectMessage);
-          this.updateThreadInLocalState(messageId, threadId, updates);
-        } catch (error) {
-          this.handleError(error, 'Failed to update thread');
-        }
+        await this.executeThreadMutation(
+          () => threadOps.updateThread(channelId, messageId, threadId, updates, isDirectMessage),
+          'Failed to update thread',
+          false,
+          () => this.updateThreadInLocalState(messageId, threadId, updates),
+        );
       },
 
       /**
        * Update thread in local state
        */
-      updateThreadInLocalState(messageId: string, threadId: string, updates: Partial<ThreadMessage>): void {
+      updateThreadInLocalState(
+        messageId: string,
+        threadId: string,
+        updates: Partial<ThreadMessage>,
+      ): void {
         const currentThreads = store.threads()[messageId] || [];
-        const updatedThreads = ThreadStateHelper.updateThreadInState(currentThreads, threadId, updates);
-        patchState(store, { threads: { ...store.threads(), [messageId]: updatedThreads } });
+        const updatedThreads = ThreadStateHelper.updateThreadInState(
+          currentThreads,
+          threadId,
+          updates,
+        );
+        patchState(store, {
+          threads: mergeMessageThreads(store.threads(), messageId, updatedThreads),
+        });
       },
 
       /**
@@ -291,14 +320,14 @@ export const ThreadStore = signalStore(
         channelId: string,
         messageId: string,
         threadId: string,
-        isDirectMessage?: boolean
+        isDirectMessage?: boolean,
       ): Promise<void> {
-        try {
-          await threadOps.deleteThread(channelId, messageId, threadId, isDirectMessage);
-          this.removeThreadFromLocalState(messageId, threadId);
-        } catch (error) {
-          this.handleError(error, 'Failed to delete thread');
-        }
+        await this.executeThreadMutation(
+          () => threadOps.deleteThread(channelId, messageId, threadId, isDirectMessage),
+          'Failed to delete thread',
+          false,
+          () => this.removeThreadFromLocalState(messageId, threadId),
+        );
       },
 
       /**
@@ -307,7 +336,9 @@ export const ThreadStore = signalStore(
       removeThreadFromLocalState(messageId: string, threadId: string): void {
         const currentThreads = store.threads()[messageId] || [];
         const filteredThreads = ThreadStateHelper.removeThreadFromState(currentThreads, threadId);
-        patchState(store, { threads: { ...store.threads(), [messageId]: filteredThreads } });
+        patchState(store, {
+          threads: mergeMessageThreads(store.threads(), messageId, filteredThreads),
+        });
       },
 
       // === HELPER METHODS ===
@@ -322,6 +353,44 @@ export const ThreadStore = signalStore(
           error: errorMessage,
           isLoading: false,
         });
+      },
+
+      /**
+       * Execute thread mutation with shared error and loading handling.
+       */
+      async executeThreadMutation(
+        operation: () => Promise<void>,
+        errorMessage: string,
+        withLoadingState = false,
+        onSuccess?: () => void,
+      ): Promise<void> {
+        if (withLoadingState) {
+          this.startMutationLoading();
+        }
+
+        try {
+          await operation();
+          onSuccess?.();
+          if (withLoadingState) {
+            this.finishMutationLoading();
+          }
+        } catch (error) {
+          this.handleError(error, errorMessage);
+        }
+      },
+
+      /**
+       * Mark thread mutation as loading.
+       */
+      startMutationLoading(): void {
+        patchState(store, { isLoading: true, error: null });
+      },
+
+      /**
+       * Mark thread mutation as completed.
+       */
+      finishMutationLoading(): void {
+        patchState(store, { isLoading: false });
       },
 
       /**
@@ -357,12 +426,14 @@ export const ThreadStore = signalStore(
         threadId: string,
         emojiId: string,
         userId: string,
-        isDirectMessage = false
+        isDirectMessage = false,
       ): Promise<void> {
-        const threadsPath = isDirectMessage
-          ? ['direct-messages', channelId, 'messages', parentMessageId, 'threads', threadId]
-          : ['channels', channelId, 'messages', parentMessageId, 'threads', threadId];
-
+        const threadsPath = buildThreadDocumentPath(
+          channelId,
+          parentMessageId,
+          threadId,
+          isDirectMessage,
+        );
         const threadRef = reactionService.getMessageRef(...threadsPath);
         await reactionService.toggleReaction(threadRef, emojiId, userId);
       },
@@ -374,5 +445,5 @@ export const ThreadStore = signalStore(
         threadListener.clearAllListeners();
       },
     };
-  })
+  }),
 );

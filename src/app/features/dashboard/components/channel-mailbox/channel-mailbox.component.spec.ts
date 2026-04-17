@@ -7,7 +7,7 @@ import { MailboxInteractionService } from '@core/services/mailbox-interaction/ma
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import { AuthStore } from '@stores/auth';
 import { ChannelStore, MailboxStore } from '@stores/index';
-import type { MailboxMessage } from '@stores/mailbox.store';
+import type { MailboxMessage } from '@stores/mailbox/mailbox.store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChannelMailboxComponent } from './channel-mailbox.component';
 

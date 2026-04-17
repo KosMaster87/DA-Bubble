@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { MailboxStore } from '@stores/mailbox.store';
+import { MailboxStore } from '@stores/mailbox/mailbox.store';
 
 /**
  * Service for mailbox message interactions

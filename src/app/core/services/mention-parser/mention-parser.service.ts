@@ -5,8 +5,8 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { UserStore } from '@stores/user.store';
-import { ChannelStore } from '@stores/channel.store';
+import { UserStore } from '@stores/users/user.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 @Injectable({
   providedIn: 'root',

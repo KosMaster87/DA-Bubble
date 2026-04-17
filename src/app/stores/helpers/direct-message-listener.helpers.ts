@@ -1,21 +1,22 @@
 /**
  * @fileoverview Direct Message Listener Management Helpers
+ * @description Helper functions for setting up and managing Firestore listeners for direct messages
  * @module DirectMessageListenerHelpers
  */
 
 import {
-  Firestore,
   collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  startAfter,
-  getDocs,
-  onSnapshot as firestoreOnSnapshot,
-  Unsubscribe,
-  QueryDocumentSnapshot,
   DocumentData,
+  Firestore,
+  onSnapshot as firestoreOnSnapshot,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  QueryDocumentSnapshot,
+  startAfter,
+  Unsubscribe,
+  where,
 } from '@angular/fire/firestore';
 import { DirectMessage } from '@core/models/direct-message.model';
 
@@ -27,14 +28,14 @@ export const setupConversationsFirestoreListener = (
   userConversationIds: string[],
   currentUnsubscribe: Unsubscribe | null,
   snapshotHandler: (snapshot: any) => void,
-  errorHandler: (error: any) => void
+  errorHandler: (error: any) => void,
 ): Unsubscribe => {
   if (currentUnsubscribe) {
     currentUnsubscribe();
   }
   const q = query(
     collection(firestore, 'direct-messages'),
-    where('__name__', 'in', userConversationIds)
+    where('__name__', 'in', userConversationIds),
   );
   return firestoreOnSnapshot(q, snapshotHandler, errorHandler);
 };
@@ -47,7 +48,7 @@ export const setupMessagesFirestoreListener = (
   conversationId: string,
   messagesUnsubscribers: Map<string, Unsubscribe>,
   snapshotHandler: (snapshot: any) => void,
-  errorHandler: (error: any) => void
+  errorHandler: (error: any) => void,
 ): Unsubscribe => {
   if (messagesUnsubscribers.has(conversationId)) {
     messagesUnsubscribers.get(conversationId)!();
@@ -56,7 +57,7 @@ export const setupMessagesFirestoreListener = (
   const q = query(
     collection(firestore, 'direct-messages', conversationId, 'messages'),
     orderBy('createdAt', 'asc'),
-    limit(100)
+    limit(100),
   );
   return firestoreOnSnapshot(q, snapshotHandler, errorHandler);
 };
@@ -80,25 +81,28 @@ export const loadOlderDMMessages = async (
   firestore: Firestore,
   conversationId: string,
   lastMessage: QueryDocumentSnapshot<DocumentData>,
-  limitCount: number = 100
+  limitCount: number = 100,
 ): Promise<DirectMessage[]> => {
   const q = query(
     collection(firestore, 'direct-messages', conversationId, 'messages'),
     orderBy('createdAt', 'desc'),
     startAfter(lastMessage),
-    limit(limitCount)
+    limit(limitCount),
   );
   const snapshot = await getDocs(q);
   return snapshot.docs
-    .map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data()['createdAt']?.toDate() || new Date(),
-      updatedAt: doc.data()['updatedAt']?.toDate() || new Date(),
-      editedAt: doc.data()['editedAt']?.toDate(),
-      lastThreadTimestamp: doc.data()['lastThreadTimestamp']?.toDate(),
-      reactions: doc.data()['reactions'] || [],
-      threadCount: doc.data()['threadCount'] || 0,
-    } as DirectMessage))
+    .map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data()['createdAt']?.toDate() || new Date(),
+          updatedAt: doc.data()['updatedAt']?.toDate() || new Date(),
+          editedAt: doc.data()['editedAt']?.toDate(),
+          lastThreadTimestamp: doc.data()['lastThreadTimestamp']?.toDate(),
+          reactions: doc.data()['reactions'] || [],
+          threadCount: doc.data()['threadCount'] || 0,
+        }) as DirectMessage,
+    )
     .reverse();
 };

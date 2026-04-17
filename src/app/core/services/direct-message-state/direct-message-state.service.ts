@@ -5,7 +5,7 @@
  */
 
 import { Injectable, inject, effect, untracked, Signal } from '@angular/core';
-import { DirectMessageStore } from '@stores/direct-message.store';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
 

@@ -4,27 +4,17 @@
  * @module AuthSignupMethods
  */
 
-import {
-  Auth,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  applyActionCode,
-  sendEmailVerification,
-} from '@angular/fire/auth';
-import {
-  Firestore,
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  arrayUnion,
-} from '@angular/fire/firestore';
-import { patchState } from '@ngrx/signals';
+import { Auth, applyActionCode, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
+import { patchState } from '@ngrx/signals';
+import {
+  addSignupUserToDefaultChannels,
+  createSignupFirestoreUser,
+  sendSignupVerificationEmail,
+  updateExistingUserProfile,
+  updateSignupProfile,
+} from './auth-methods-helpers';
 
 /**
  * Create signup methods for auth store
@@ -41,11 +31,11 @@ export const createSignupMethods = (
   firestore: Firestore,
   store: any,
   handleSuccessfulAuth: (user: any) => void,
-  handleAuthError: (error: unknown, message: string) => void
+  handleAuthError: (error: unknown, message: string) => void,
 ) => ({
   /**
    * Signup new user with email and password
-   * Sends verification email but does NOT auto-login
+   * Orchestrates profile creation, Firestore sync, channel assignment, and email verification
    * @async
    * @param {string} email - User email address
    * @param {string} password - User password
@@ -56,105 +46,13 @@ export const createSignupMethods = (
     try {
       console.log('🚀 Starting signup process for:', email);
 
-      // Create Firebase Auth user
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       console.log('✅ Firebase Auth user created:', credential.user.uid);
 
-      await updateProfile(credential.user, { displayName });
-      console.log('✅ User profile updated with displayName:', displayName);
-
-      // Create Firestore user document (without photoURL initially)
-      const userDoc: Omit<User, 'photoURL'> & { photoURL?: string } = {
-        uid: credential.user.uid,
-        email: credential.user.email || email,
-        displayName: displayName,
-        isOnline: false,
-        lastSeen: new Date(),
-        channels: [],
-        directMessages: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        scrollState: {}, // Initialize empty scroll state for auto-scroll tracking
-      };
-
-      // Only add photoURL if it exists (Firestore doesn't accept undefined)
-      if (credential.user.photoURL) {
-        userDoc.photoURL = credential.user.photoURL;
-      }
-
-      console.log('📝 Attempting to create Firestore user document:', userDoc);
-      console.log('🔑 User UID:', credential.user.uid);
-      console.log('📊 User data:', JSON.stringify(userDoc, null, 2));
-
-      await setDoc(doc(firestore, 'users', credential.user.uid), userDoc);
-      console.log('✅ Firestore user document created successfully!');
-
-      // Add user to default channels (DABubble-welcome and Let's Bubble)
-      const defaultChannels = [
-        {
-          name: 'DABubble-welcome',
-          description: 'Welcome to DABubble! General announcements and introductions.',
-        },
-        {
-          name: "Let's Bubble",
-          description: 'Connect with all DABubble users! Share ideas, ask questions, and collaborate.',
-        },
-      ];
-
-      for (const channelConfig of defaultChannels) {
-        try {
-          const channelQuery = query(
-            collection(firestore, 'channels'),
-            where('name', '==', channelConfig.name)
-          );
-          const channelSnapshot = await getDocs(channelQuery);
-
-          if (!channelSnapshot.empty) {
-            // Channel exists - add user as member
-            const channel = channelSnapshot.docs[0];
-            const channelRef = doc(firestore, 'channels', channel.id);
-            await updateDoc(channelRef, {
-              members: arrayUnion(credential.user.uid),
-              updatedAt: new Date(),
-            });
-            console.log(`✅ User added to ${channelConfig.name} channel`);
-          } else {
-            // Channel doesn't exist - create it with this user as creator
-            const channelData = {
-              name: channelConfig.name,
-              description: channelConfig.description,
-              isPrivate: false,
-              createdBy: credential.user.uid,
-              members: [credential.user.uid],
-              admins: [credential.user.uid],
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              lastMessageAt: new Date(),
-              messageCount: 0,
-            };
-            await setDoc(doc(collection(firestore, 'channels')), channelData);
-            console.log(`✅ ${channelConfig.name} channel created with first user as admin`);
-          }
-        } catch (channelError) {
-          console.warn(`⚠️ Could not add user to ${channelConfig.name} channel:`, channelError);
-          // Don't fail signup if channel addition fails
-        }
-      }
-
-      // Send verification email
-      console.log('📧 Attempting to send verification email to:', email);
-      console.log('📝 User emailVerified status:', credential.user.emailVerified);
-
-      try {
-        await sendEmailVerification(credential.user);
-        console.log('✅ Verification email successfully sent to:', email);
-        console.log('📨 Please check your inbox and spam folder');
-      } catch (emailError: any) {
-        console.error('❌ Failed to send verification email:', emailError);
-        console.error('🐞 Email error code:', emailError?.code);
-        console.error('🐞 Email error message:', emailError?.message);
-        // Don't fail the whole signup if email sending fails
-      }
+      await updateSignupProfile(credential, displayName);
+      await createSignupFirestoreUser(credential, displayName, firestore);
+      await addSignupUserToDefaultChannels(credential.user.uid, firestore);
+      await sendSignupVerificationEmail(credential);
 
       patchState(store, { isLoading: false });
       console.log('✅ Signup process completed successfully!');
@@ -184,8 +82,10 @@ export const createSignupMethods = (
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('No user logged in');
 
-      // Update Firebase Auth profile
-      await updateProfile(currentUser, profile);
+      // Update Firebase Auth profile if displayName is provided
+      if (profile.displayName || profile.photoURL) {
+        await updateExistingUserProfile(currentUser, profile);
+      }
 
       // Update Firestore user document
       const userDocRef = doc(firestore, 'users', currentUser.uid);
@@ -195,12 +95,12 @@ export const createSignupMethods = (
           ...profile,
           updatedAt: new Date(),
         },
-        { merge: true }
+        { merge: true },
       );
 
       console.log('🖼️ Profile updated in Firestore:', profile);
 
-      // Immediately read back the updated user data from Firestore
+      // Read back updated data from Firestore
       const updatedUserDoc = await getDoc(userDocRef);
       if (updatedUserDoc.exists()) {
         const firestoreData = updatedUserDoc.data();
@@ -229,7 +129,6 @@ export const createSignupMethods = (
           photoURL: user.photoURL,
         });
       } else {
-        // Fallback to handleSuccessfulAuth if Firestore read fails
         await handleSuccessfulAuth(currentUser);
       }
     } catch (error) {
