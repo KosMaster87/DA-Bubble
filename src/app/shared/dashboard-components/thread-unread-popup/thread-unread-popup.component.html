@@ -6,20 +6,23 @@
 
   <div class="thread-unread-popup__list">
     @if (unreadThreads().length === 0) {
-    <div class="thread-unread-popup__empty">
-      <span>Keine ungelesenen Threads</span>
-    </div>
-    } @else { @for (thread of unreadThreads(); track thread.messageId) {
-    <div class="thread-unread-popup__item" (click)="onThreadClick(thread.messageId)">
-      <div class="thread-unread-popup__item-content">
-        <span class="thread-unread-popup__message">{{ thread.parentMessageContent }}</span>
-        <div class="thread-unread-popup__meta">
-          <span class="thread-unread-popup__count-badge">
-            {{ thread.threadCount }} {{ thread.threadCount === 1 ? 'Answer' : 'Answer' }}
-          </span>
-        </div>
+      <div class="thread-unread-popup__empty">
+        <span>Keine ungelesenen Threads</span>
       </div>
-    </div>
-    } }
+    } @else {
+      @for (thread of unreadThreads(); track thread.messageId) {
+        <div class="thread-unread-popup__item" (click)="onThreadClick(thread.messageId)">
+          <div class="thread-unread-popup__item-content">
+            <span class="thread-unread-popup__message">{{ thread.parentMessageContent }}</span>
+            <div class="thread-unread-popup__meta">
+              <span class="thread-unread-popup__count-badge">
+                {{ thread.unreadMessageCount }}
+                {{ thread.unreadMessageCount === 1 ? 'Ungelesen' : 'Ungelesen' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      }
+    }
   </div>
 </div>

@@ -4,27 +4,32 @@
  * @module shared/dashboard-components/thread-unread-popup
  */
 
+import { CommonModule } from '@angular/common';
 import {
   Component,
-  input,
-  inject,
   computed,
-  ElementRef,
-  signal,
-  output,
   effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ThreadStore, ChannelMessageStore, DirectMessageStore } from '@stores/index';
-import { Message } from '@core/models/message.model';
 import { DirectMessage } from '@core/models/direct-message.model';
+import { Message } from '@core/models/message.model';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { ChannelMessageStore, DirectMessageStore, ThreadStore } from '@stores/index';
+import { type ThreadMessage } from '@stores/threads/thread.store';
+
+type ThreadParentMessage =
+  | Pick<Message, 'id' | 'content' | 'authorId' | 'lastThreadTimestamp'>
+  | Pick<DirectMessage, 'id' | 'content' | 'authorId' | 'lastThreadTimestamp'>;
 
 export interface UnreadThreadInfo {
   messageId: string;
   channelId: string; // Channel ID where the thread belongs
   parentMessageContent: string; // Content of the parent message
-  threadCount: number;
+  unreadMessageCount: number;
   lastThreadTimestamp: Date;
   hasUnread: boolean;
   userParticipated: boolean; // Whether current user wrote in this thread
@@ -56,6 +61,30 @@ export class ThreadUnreadPopupComponent {
   protected directMessageStore = inject(DirectMessageStore);
   protected unreadService = inject(UnreadService);
   protected popupStyle = signal<Record<string, string>>({});
+
+  /**
+   * Preload unread thread snapshots while the popup is open.
+   *
+   * Why this eager preload exists:
+   * The popup should show precise unread reply counts immediately, not only after the
+   * next live update; loading candidate threads here keeps hover UX deterministic.
+   */
+  private preloadThreadSnapshotsEffect = effect(() => {
+    const convId = this.conversationId();
+    const userId = this.currentUserId();
+    const isDM = this.isDirectMessage();
+
+    if (!convId || !userId) return;
+
+    const messages = this.getMessagesForConversation(convId, isDM);
+    const unreadThreadParents = messages.filter((message) =>
+      this.shouldPreloadUnreadThread(message, convId),
+    );
+
+    unreadThreadParents.forEach((message) => {
+      this.threadStore.loadThreads(convId, message.id, isDM);
+    });
+  });
 
   ngAfterViewInit() {
     this.calculatePopupPosition();
@@ -95,8 +124,11 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Get messages for conversation (DM or channel)
+   * @description
+   * Shared accessor avoids branching in downstream collectors and keeps DM/channel
+   * behavior consistent for unread thread evaluation.
    */
-  private getMessagesForConversation = (convId: string, isDM: boolean): any[] => {
+  private getMessagesForConversation = (convId: string, isDM: boolean): ThreadParentMessage[] => {
     return isDM
       ? this.directMessageStore.messages()[convId] || []
       : this.channelMessageStore.getMessagesByChannel()(convId);
@@ -104,11 +136,14 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Collect all unread threads where user participated
+   * @description
+   * Participation is evaluated before unread checks to avoid work for threads that are
+   * not relevant to the current user.
    */
   private collectUnreadThreads = (
-    messages: any[],
+    messages: ThreadParentMessage[],
     convId: string,
-    userId: string
+    userId: string,
   ): UnreadThreadInfo[] => {
     const unreadThreads: UnreadThreadInfo[] = [];
 
@@ -126,18 +161,40 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Check if message has thread activity
+   * @description
+   * We guard early on parent metadata to avoid requesting thread state for messages
+   * that cannot produce thread-unread indicators.
    */
-  private hasThreadActivity = (msg: any): boolean => {
+  private hasThreadActivity = (msg: ThreadParentMessage): boolean => {
     return !!msg.lastThreadTimestamp;
   };
 
   /**
+   * Preload thread snapshots for unread parent messages while the popup is visible.
+   * @description
+   * This intentionally reuses unread tracker logic to keep preload and final badge
+   * calculation aligned.
+   */
+  private shouldPreloadUnreadThread = (
+    message: ThreadParentMessage,
+    conversationId: string,
+  ): boolean => {
+    if (!this.hasThreadActivity(message)) return false;
+
+    const threadTime = this.normalizeTimestamp(message.lastThreadTimestamp!);
+    return this.unreadService.hasThreadUnread(conversationId, message.id, threadTime);
+  };
+
+  /**
    * Process thread message and return info if unread and user participated
+   * @description
+   * Returns null for non-relevant rows so callers can build a compact unread list
+   * without extra filtering passes.
    */
   private processThreadMessage = (
-    msg: any,
+    msg: ThreadParentMessage,
     convId: string,
-    userId: string
+    userId: string,
   ): UnreadThreadInfo | null => {
     const threadMessages = this.threadStore.getThreadsByMessageId()(msg.id);
 
@@ -145,16 +202,22 @@ export class ThreadUnreadPopupComponent {
       return null;
     }
 
-    const threadTime = this.normalizeTimestamp(msg.lastThreadTimestamp);
+    const threadTime = this.normalizeTimestamp(msg.lastThreadTimestamp!);
     const hasUnread = this.unreadService.hasThreadUnread(convId, msg.id, threadTime);
 
-    return hasUnread ? this.createThreadInfo(msg, threadMessages, threadTime, convId) : null;
+    return hasUnread
+      ? this.createThreadInfo(msg, threadMessages, threadTime, convId, userId)
+      : null;
   };
 
   /**
    * Check if user participated in thread
    */
-  private didUserParticipate = (msg: any, threadMessages: any[], userId: string): boolean => {
+  private didUserParticipate = (
+    msg: ThreadParentMessage,
+    threadMessages: ThreadMessage[],
+    userId: string,
+  ): boolean => {
     const wroteThreadReply = threadMessages.some((threadMsg) => threadMsg.authorId === userId);
     const wroteParentMessage = msg.authorId === userId;
     return wroteThreadReply || wroteParentMessage;
@@ -163,7 +226,7 @@ export class ThreadUnreadPopupComponent {
   /**
    * Normalize timestamp to Date object
    */
-  private normalizeTimestamp = (timestamp: any): Date => {
+  private normalizeTimestamp = (timestamp: Date | string | number): Date => {
     return timestamp instanceof Date ? timestamp : new Date(timestamp);
   };
 
@@ -171,16 +234,22 @@ export class ThreadUnreadPopupComponent {
    * Create UnreadThreadInfo object
    */
   private createThreadInfo = (
-    msg: any,
-    threadMessages: any[],
+    msg: ThreadParentMessage,
+    threadMessages: ThreadMessage[],
     threadTime: Date,
-    channelId: string
+    channelId: string,
+    userId: string,
   ): UnreadThreadInfo => {
     return {
       messageId: msg.id,
       channelId: channelId,
       parentMessageContent: this.truncateContent(msg.content, 50),
-      threadCount: msg.threadCount || threadMessages.length,
+      unreadMessageCount: this.calculateUnreadThreadMessageCount(
+        channelId,
+        msg.id,
+        threadMessages,
+        userId,
+      ),
       lastThreadTimestamp: threadTime,
       hasUnread: true,
       userParticipated: true,
@@ -188,11 +257,34 @@ export class ThreadUnreadPopupComponent {
   };
 
   /**
+   * Count unread thread replies for current user.
+   * @description
+   * Returns at least 1 when the parent is marked unread but reply snapshots are still
+   * incomplete, preventing false zero badges in transitional states.
+   */
+  private calculateUnreadThreadMessageCount = (
+    conversationId: string,
+    parentMessageId: string,
+    threadMessages: ThreadMessage[],
+    userId: string,
+  ): number => {
+    if (!threadMessages.length) return 1;
+
+    const unreadCount = threadMessages.filter((threadMsg) => {
+      if (threadMsg.authorId === userId) return false;
+      const timestamp = this.normalizeTimestamp(threadMsg.createdAt);
+      return this.unreadService.hasThreadUnread(conversationId, parentMessageId, timestamp);
+    }).length;
+
+    return unreadCount > 0 ? unreadCount : 1;
+  };
+
+  /**
    * Sort threads by most recent first
    */
   private sortThreadsByMostRecent = (threads: UnreadThreadInfo[]): UnreadThreadInfo[] => {
     return threads.sort(
-      (a, b) => b.lastThreadTimestamp.getTime() - a.lastThreadTimestamp.getTime()
+      (a, b) => b.lastThreadTimestamp.getTime() - a.lastThreadTimestamp.getTime(),
     );
   };
 
@@ -206,13 +298,16 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Handle thread item click
+   * @description
+   * The click payload carries the resolved conversation ID from thread info so callers
+   * navigate correctly in both DM and channel contexts.
    */
   protected onThreadClick = (messageId: string): void => {
     const isDM = this.isDirectMessage();
 
     // Find the thread info to get the correct channel ID
     const threads = this.unreadThreads();
-    const threadInfo = threads.find(t => t.messageId === messageId);
+    const threadInfo = threads.find((t) => t.messageId === messageId);
 
     if (!threadInfo) return;
 
@@ -230,7 +325,7 @@ export class ThreadUnreadPopupComponent {
   private getParentMessage = (
     convId: string,
     messageId: string,
-    isDM: boolean
+    isDM: boolean,
   ): Message | DirectMessage | undefined => {
     const messages = isDM
       ? this.directMessageStore.messages()[convId] || []
@@ -245,7 +340,7 @@ export class ThreadUnreadPopupComponent {
     messageId: string,
     parentMessage: Message | DirectMessage,
     conversationId: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): void => {
     this.threadClicked.emit({
       messageId,
@@ -274,7 +369,7 @@ export class ThreadUnreadPopupComponent {
     minutes: number,
     hours: number,
     days: number,
-    timestamp: Date
+    timestamp: Date,
   ): string => {
     if (minutes < 1) return 'Gerade eben';
     if (minutes < 60) return `Vor ${minutes} Min.`;
