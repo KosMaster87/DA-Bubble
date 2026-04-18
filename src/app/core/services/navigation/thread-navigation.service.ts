@@ -8,9 +8,9 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
+import { type Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { NavigationStateService } from './navigation-state.service';
-import { type Message as ViewMessage } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 
 /**
  * Service for thread navigation
@@ -39,7 +39,7 @@ export class ThreadNavigationService {
   async navigateToThread(
     conversationId: string,
     isDirectMessage: boolean,
-    threadId?: string
+    threadId?: string,
   ): Promise<void> {
     if (isDirectMessage) {
       this.navigationState.setSelectedDirectMessageId(conversationId);
@@ -50,7 +50,7 @@ export class ThreadNavigationService {
     }
     this.navigationState.setNewMessageActive(false);
     this.navigationState.setMailboxActive(false);
-    this.unreadService.markAsRead(conversationId);
+    this.unreadService.markAsRead(conversationId, isDirectMessage);
 
     // Navigate with or without thread ID in URL
     if (threadId) {
@@ -79,7 +79,7 @@ export class ThreadNavigationService {
    */
   handleThreadClick(
     event: { conversationId: string; messageId: string; message: any },
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): { conversationId: string; viewMessage: ViewMessage } {
     const { conversationId, messageId, message } = event;
 

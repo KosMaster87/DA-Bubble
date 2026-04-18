@@ -4,19 +4,15 @@
  * @module DirectMessageConversationHelpers
  */
 
-import {
-  DocumentData,
-  Firestore,
-  QueryDocumentSnapshot,
-  doc,
-  getDoc,
-} from '@angular/fire/firestore';
+import { DocumentData, Firestore, QueryDocumentSnapshot } from '@angular/fire/firestore';
 import { DirectMessageConversation } from '@core/models/direct-message.model';
 import {
   buildNewConversation,
   checkAndReaddConversation,
   createConversationDoc,
+  directMessageFirestoreOps,
   updateBothUsersDirectMessages,
+  type DirectMessageFirestoreOps,
 } from './direct-message-operations.helpers';
 import { mapConversation } from './direct-message-store.helpers';
 
@@ -44,10 +40,17 @@ export const createNewConversation = async (
   currentUserId: string,
   otherUserId: string,
   existingConversations: DirectMessageConversation[],
+  firestoreOps: DirectMessageFirestoreOps = directMessageFirestoreOps,
 ): Promise<DirectMessageConversation[]> => {
-  await createConversationDoc(firestore, conversationId, currentUserId, otherUserId);
+  await createConversationDoc(firestore, conversationId, currentUserId, otherUserId, firestoreOps);
   const newConversation = buildNewConversation(conversationId, currentUserId, otherUserId);
-  await updateBothUsersDirectMessages(firestore, currentUserId, otherUserId, conversationId);
+  await updateBothUsersDirectMessages(
+    firestore,
+    currentUserId,
+    otherUserId,
+    conversationId,
+    firestoreOps,
+  );
   return [...existingConversations, newConversation];
 };
 
@@ -66,8 +69,14 @@ export const readdConversationIfNeeded = async (
   conversationSnap: QueryDocumentSnapshot<DocumentData>,
   currentUserId: string,
   existingConversations: DirectMessageConversation[],
+  firestoreOps: DirectMessageFirestoreOps = directMessageFirestoreOps,
 ): Promise<DirectMessageConversation[]> => {
-  const wasReadded = await checkAndReaddConversation(firestore, conversationId, currentUserId);
+  const wasReadded = await checkAndReaddConversation(
+    firestore,
+    conversationId,
+    currentUserId,
+    firestoreOps,
+  );
   const conversationExists = existingConversations.some((c) => c.id === conversationId);
   if (wasReadded && !conversationExists) {
     return [...existingConversations, mapConversation(conversationSnap)];
@@ -90,9 +99,10 @@ export const startOrResumeConversation = async (
   currentUserId: string,
   otherUserId: string,
   existingConversations: DirectMessageConversation[],
+  firestoreOps: DirectMessageFirestoreOps = directMessageFirestoreOps,
 ): Promise<StartOrResumeConversationResult> => {
-  const conversationRef = doc(firestore, 'direct-messages', conversationId);
-  const conversationSnap = await getDoc(conversationRef);
+  const conversationRef = firestoreOps.doc(firestore, 'direct-messages', conversationId);
+  const conversationSnap = await firestoreOps.getDoc(conversationRef);
 
   let conversations = existingConversations;
 
@@ -103,6 +113,7 @@ export const startOrResumeConversation = async (
       currentUserId,
       otherUserId,
       existingConversations,
+      firestoreOps,
     );
   } else {
     conversations = await readdConversationIfNeeded(
@@ -111,6 +122,7 @@ export const startOrResumeConversation = async (
       conversationSnap,
       currentUserId,
       existingConversations,
+      firestoreOps,
     );
   }
 

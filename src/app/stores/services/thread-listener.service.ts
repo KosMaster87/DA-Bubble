@@ -43,6 +43,9 @@ export class ThreadListenerService {
 
   /**
    * Setup real-time listener for threads
+   * @description
+   * Supports optional one-shot mode for warmup flows so thread state can be verified
+   * without retaining long-running listeners for inactive contexts.
    */
   setupListener = (
     channelId: string,
@@ -50,6 +53,7 @@ export class ThreadListenerService {
     isDirectMessage: boolean | undefined,
     onSnapshotCallback: SnapshotHandler,
     onErrorCallback: ErrorHandler,
+    options?: { once?: boolean },
   ): boolean => {
     const listenerKey = `${channelId}_${messageId}`;
     if (this.threadListeners.has(listenerKey)) return false;
@@ -60,9 +64,24 @@ export class ThreadListenerService {
       orderBy('createdAt', 'asc'),
     );
 
+    const once = options?.once === true;
+    let handledFirstSnapshot = false;
+
     const unsubscribe = onSnapshot(
       threadsQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => onSnapshotCallback(snapshot, messageId),
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        if (once && handledFirstSnapshot) return;
+        if (once) {
+          handledFirstSnapshot = true;
+          const existing = this.threadListeners.get(listenerKey);
+          if (existing) {
+            existing();
+            this.threadListeners.delete(listenerKey);
+          }
+        }
+
+        onSnapshotCallback(snapshot, messageId);
+      },
       (error: unknown) =>
         onErrorCallback(error, listenerKey, channelId, messageId, isDirectMessage),
     );
@@ -85,6 +104,9 @@ export class ThreadListenerService {
 
   /**
    * Schedule retry for thread subscription after permission error
+   * @description
+   * Retry is delayed and deduplicated per listener key to avoid rapid re-subscribe loops
+   * during temporary permission propagation windows.
    */
   scheduleRetry = (listenerKey: string, retryFn: () => void): void => {
     console.log('🔓 Permission error - will retry thread subscription');

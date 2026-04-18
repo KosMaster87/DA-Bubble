@@ -28,7 +28,7 @@ export class DirectMessageNavigationService {
   selectDirectMessage(conversationId: string): void {
     this.navigationState.setSelectedDirectMessageId(conversationId);
     this.navigationState.clearChannelSelection();
-    this.unreadService.markAsRead(conversationId);
+    this.unreadService.markAsRead(conversationId, true);
 
     // Check if a thread is open for THIS DM
     const threadInfo = this.threadManagement.threadInfo();

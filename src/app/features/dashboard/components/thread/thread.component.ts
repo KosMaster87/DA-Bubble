@@ -4,24 +4,24 @@
  * @module features/dashboard/components/thread
  */
 
-import { Component, signal, input, output, inject, effect, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
+import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
+import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
+import { ThreadStateService } from '@core/services/thread-state/thread-state.service';
+import { UnreadService } from '@core/services/unread/unread.service';
+import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
 import {
   ConversationMessagesComponent,
   type Message,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
-import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
+import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
-import { ThreadStore } from '@stores/threads/thread.store';
-import { ChannelStore } from '@stores/channels/channel.store';
+import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { AuthStore } from '@stores/auth';
-import { UnreadService } from '@core/services/unread/unread.service';
-import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
-import { ThreadStateService } from '@core/services/thread-state/thread-state.service';
-import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
-import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
-import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 
 export interface ThreadInfo {
   channelId: string;
@@ -66,8 +66,14 @@ export class ThreadComponent {
   protected isChannelViewOpen = signal<boolean>(false);
   protected selectedChannelId = signal<string | null>(null);
   protected replies = this.threadState.getReplies(this.threadInfo);
-  protected searchableReplies = this.threadState.getSearchableReplies(this.threadInfo, this.replies);
-  protected threadParticipants = this.threadState.getThreadParticipants(this.threadInfo, this.replies);
+  protected searchableReplies = this.threadState.getSearchableReplies(
+    this.threadInfo,
+    this.replies,
+  );
+  protected threadParticipants = this.threadState.getThreadParticipants(
+    this.threadInfo,
+    this.replies,
+  );
   protected channelListItems = this.threadState.getChannelListItems();
   protected repliesGroupedByDate = this.threadState.getRepliesGroupedByDate(this.replies);
   protected replyCount = this.threadState.getReplyCount(this.replies);
@@ -120,7 +126,11 @@ export class ThreadComponent {
       const currentCount = this.replies().length;
       if (this.threadState.shouldMarkAsRead(currentCount, previousReplyCount)) {
         untracked(() => {
-          this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
+          this.unreadService.markThreadAndParentAsRead(
+            info.channelId,
+            info.parentMessageId,
+            info.isDirectMessage,
+          );
         });
       }
       previousReplyCount = currentCount;
@@ -152,9 +162,13 @@ export class ThreadComponent {
       info.parentMessageId,
       content.trim(),
       currentUserId,
-      info.isDirectMessage
+      info.isDirectMessage,
     );
-    this.unreadService.markThreadAndParentAsRead(info.channelId, info.parentMessageId);
+    this.unreadService.markThreadAndParentAsRead(
+      info.channelId,
+      info.parentMessageId,
+      info.isDirectMessage,
+    );
   };
 
   /**
@@ -220,7 +234,7 @@ export class ThreadComponent {
       data.messageId,
       data.emoji,
       currentUserId,
-      info.isDirectMessage || false
+      info.isDirectMessage || false,
     );
   };
 
@@ -238,7 +252,7 @@ export class ThreadComponent {
       info.parentMessageId,
       data.messageId,
       data.newContent,
-      info.isDirectMessage || false
+      info.isDirectMessage || false,
     );
   };
 
@@ -253,7 +267,7 @@ export class ThreadComponent {
       info.channelId,
       info.parentMessageId,
       messageId,
-      info.isDirectMessage || false
+      info.isDirectMessage || false,
     );
   };
 

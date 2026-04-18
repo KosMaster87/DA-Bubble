@@ -4,11 +4,11 @@
  * @module shared/services/thread-management
  */
 
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
-import { ChannelMessageStore, DirectMessageStore } from '@stores/index';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import { ChannelMessageStore, DirectMessageStore } from '@stores/index';
 
 export interface ThreadInfo {
   channelId: string;
@@ -44,12 +44,10 @@ export class ThreadManagementService {
     const updatedMessage = this.getUpdatedParentMessage(
       baseInfo.channelId,
       baseInfo.parentMessageId,
-      baseInfo.isDirectMessage
+      baseInfo.isDirectMessage,
     );
 
-    return updatedMessage
-      ? { ...baseInfo, parentMessage: updatedMessage }
-      : baseInfo;
+    return updatedMessage ? { ...baseInfo, parentMessage: updatedMessage } : baseInfo;
   });
 
   /**
@@ -65,7 +63,7 @@ export class ThreadManagementService {
     parentMessage: Message,
     channelId: string,
     channelName: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): void {
     this._threadMessageId.set(messageId);
     this._baseThreadInfo.set({
@@ -78,7 +76,7 @@ export class ThreadManagementService {
     this._isThreadOpen.set(true);
 
     if (channelId && messageId) {
-      this.unreadService.markThreadAndParentAsRead(channelId, messageId);
+      this.unreadService.markThreadAndParentAsRead(channelId, messageId, isDirectMessage);
     }
   }
 
@@ -101,7 +99,7 @@ export class ThreadManagementService {
   private getUpdatedParentMessage(
     channelId: string,
     messageId: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): Message | undefined {
     if (isDirectMessage) {
       const rawMessages = this.directMessageStore.messages()[channelId] || [];
@@ -113,7 +111,9 @@ export class ThreadManagementService {
       const rawMessages = this.channelMessageStore.getMessagesByChannel()(channelId);
       const rawMessage = rawMessages.find((msg) => msg.id === messageId);
       if (!rawMessage) return undefined;
-      const transformed = this.userTransformation.channelMessagesToViewMessages([rawMessage as any]);
+      const transformed = this.userTransformation.channelMessagesToViewMessages([
+        rawMessage as any,
+      ]);
       return transformed[0] as Message;
     }
   }

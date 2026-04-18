@@ -39,6 +39,7 @@ interface LoadConversationsOptions {
 interface LoadMessagesOptions {
   firestore: Firestore;
   conversationId: string;
+  once?: boolean;
   messagesDebounceTimers: Map<string, TimerHandle>;
   messagesSnapshots: Map<string, QuerySnapshot<DocumentData>>;
   messagesUnsubscribers: Map<string, Unsubscribe>;
@@ -135,6 +136,9 @@ const setupConversationSubscription = (options: LoadConversationsOptions): void 
  * Load conversations with debounce and error handling
  * @param {LoadConversationsOptions} options - Conversations load options
  * @returns {void}
+ * @description
+ * Debounce and centralized retry handling prevent rapid listener churn when auth/user
+ * state changes quickly during app bootstrap.
  */
 export const loadConversations = (options: LoadConversationsOptions): void => {
   const {
@@ -197,6 +201,7 @@ const createMessagesSnapshotHandler = (
           });
         },
         options.threadStore,
+        { once: options.once },
       );
     }, options.snapshotDebounceMs);
     options.messagesDebounceTimers.set(options.conversationId, snapshotTimer);
@@ -240,6 +245,7 @@ const setupMessageSubscription = (options: LoadMessagesOptions): void => {
     options.messagesUnsubscribers,
     handleSnapshot,
     handleError,
+    { once: options.once },
   );
   options.messagesUnsubscribers.set(options.conversationId, unsub);
 };
@@ -248,6 +254,9 @@ const setupMessageSubscription = (options: LoadMessagesOptions): void => {
  * Load messages with debounce and error handling
  * @param {LoadMessagesOptions} options - Messages load options
  * @returns {void}
+ * @description
+ * Forwards `once` through the full loader chain so warmup flows and interactive flows
+ * share the same snapshot pipeline with different listener lifetimes.
  */
 export const loadMessages = (options: LoadMessagesOptions): void => {
   const { conversationId, messagesDebounceTimers, messagesRetryCounters, patchState, debounceMs } =

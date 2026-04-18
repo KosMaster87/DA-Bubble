@@ -105,9 +105,18 @@ export const ThreadStore = signalStore(
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Parent message ID
        * @param {boolean} isDirectMessage - Whether this is a direct message thread
+       * @param {boolean} once - Whether to auto-unsubscribe after first snapshot
+       * @description
+       * `once` is used by warmup and hover previews to hydrate unread/thread state
+       * without permanently attaching listeners for inactive threads.
        */
-      loadThreads(channelId: string, messageId: string, isDirectMessage?: boolean): void {
-        this.performLoadThreads(channelId, messageId, isDirectMessage);
+      loadThreads(
+        channelId: string,
+        messageId: string,
+        isDirectMessage?: boolean,
+        once?: boolean,
+      ): void {
+        this.performLoadThreads(channelId, messageId, isDirectMessage, once);
       },
 
       /**
@@ -198,11 +207,19 @@ export const ThreadStore = signalStore(
       /**
        * Implementation: Load threads from Firestore with real-time updates
        * Path: channels/{channelId}/messages/{messageId}/threads OR direct-messages/{conversationId}/messages/{messageId}/threads
+       * @description
+       * Unified path keeps channel and DM thread behavior identical; context carries the
+       * minimal flags needed for listener setup and retry continuity.
        */
-      performLoadThreads(channelId: string, messageId: string, isDirectMessage?: boolean): void {
+      performLoadThreads(
+        channelId: string,
+        messageId: string,
+        isDirectMessage?: boolean,
+        once?: boolean,
+      ): void {
         patchState(store, { isLoading: true, error: null });
         try {
-          const context: ThreadListenerContext = { channelId, messageId, isDirectMessage };
+          const context: ThreadListenerContext = { channelId, messageId, isDirectMessage, once };
           const success = this.registerThreadListener(context);
           if (!success) return; // Listener already exists
         } catch (error) {
@@ -212,6 +229,9 @@ export const ThreadStore = signalStore(
 
       /**
        * Register thread listener and wire callbacks.
+       * @description
+       * Callback wiring is centralized so retry paths reuse the same snapshot/error handling
+       * logic for both persistent and one-shot listeners.
        */
       registerThreadListener(context: ThreadListenerContext): boolean {
         return threadListener.setupListener(
@@ -220,7 +240,15 @@ export const ThreadStore = signalStore(
           context.isDirectMessage,
           (snapshot, messageId) => this.handleThreadsSnapshot(snapshot, messageId),
           (error, key, channelId, messageId, isDirectMessage) =>
-            this.handleThreadsError(error, key, channelId, messageId, isDirectMessage),
+            this.handleThreadsError(
+              error,
+              key,
+              channelId,
+              messageId,
+              isDirectMessage,
+              context.once,
+            ),
+          { once: context.once },
         );
       },
 
@@ -239,6 +267,9 @@ export const ThreadStore = signalStore(
 
       /**
        * Handle permission errors for threads listener
+       * @description
+       * The `once` flag is forwarded into retries so fallback behavior matches the original
+       * intent of the calling pipeline.
        */
       handleThreadsError(
         error: unknown,
@@ -246,12 +277,13 @@ export const ThreadStore = signalStore(
         channelId: string,
         messageId: string,
         isDirectMessage?: boolean,
+        once?: boolean,
       ): void {
         const didScheduleRetry = retryThreadListenerOnPermissionError(
           threadListener,
           error,
           listenerKey,
-          () => this.performLoadThreads(channelId, messageId, isDirectMessage),
+          () => this.performLoadThreads(channelId, messageId, isDirectMessage, once),
         );
         if (didScheduleRetry) {
           return;

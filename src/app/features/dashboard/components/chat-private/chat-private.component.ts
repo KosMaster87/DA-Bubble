@@ -4,24 +4,24 @@
  * @module features/dashboard/components/chat-private
  */
 
-import { Component, signal, input, inject, computed, output } from '@angular/core';
-import { DirectMessageStore, ChannelStore } from '@stores/index';
-import { AuthStore } from '@stores/auth';
-import { UnreadService } from '@core/services/unread/unread.service';
-import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
-import { DirectMessageInteractionService } from '@core/services/direct-message-interaction/direct-message-interaction.service';
-import { DirectMessageStateService } from '@core/services/direct-message-state/direct-message-state.service';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
 import { ChatPrivateStateService } from '@core/services/chat-private-state/chat-private-state.service';
-import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
+import { DirectMessageInteractionService } from '@core/services/direct-message-interaction/direct-message-interaction.service';
+import { DirectMessageStateService } from '@core/services/direct-message-state/direct-message-state.service';
+import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
+import { UnreadService } from '@core/services/unread/unread.service';
+import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
 import {
   ConversationMessagesComponent,
   type Message,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
-import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
+import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { UserListItemComponent } from '@shared/dashboard-components/user-list-item/user-list-item.component';
-import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
+import { AuthStore } from '@stores/auth';
+import { ChannelStore, DirectMessageStore } from '@stores/index';
 
 export interface DMInfo {
   conversationId: string;
@@ -117,7 +117,7 @@ export class ChatPrivateComponent {
 
     const conversationId = this.dmInfo().conversationId;
     await this.directMessageStore.sendMessage(conversationId, currentUserId, content.trim());
-    this.unreadService.markAsRead(conversationId);
+    this.unreadService.markAsRead(conversationId, true);
   };
 
   /**

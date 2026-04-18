@@ -10,6 +10,7 @@ export interface ThreadListenerContext {
   channelId: string;
   messageId: string;
   isDirectMessage?: boolean;
+  once?: boolean;
 }
 
 export interface ThreadRetryController {
