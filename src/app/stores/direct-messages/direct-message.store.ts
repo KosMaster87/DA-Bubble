@@ -130,10 +130,11 @@ export const DirectMessageStore = signalStore(
       });
     };
 
-    const loadMessages = (conversationId: string): void => {
+    const loadMessages = (conversationId: string, options?: { once?: boolean }): void => {
       loadMessagesHelper({
         firestore,
         conversationId,
+        once: options?.once,
         messagesDebounceTimers,
         messagesSnapshots,
         messagesUnsubscribers,
@@ -212,10 +213,11 @@ export const DirectMessageStore = signalStore(
       /**
        * Load messages for conversation
        * @param {string} conversationId - Conversation ID
+       * @param options - Optional loading behavior
        * @returns {Promise<void>}
        */
-      loadMessages: (conversationId: string): Promise<void> => {
-        loadMessages(conversationId);
+      loadMessages: (conversationId: string, options?: { once?: boolean }): Promise<void> => {
+        loadMessages(conversationId, options);
         return Promise.resolve();
       },
 

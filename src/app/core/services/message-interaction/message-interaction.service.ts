@@ -6,11 +6,11 @@
  */
 
 import { inject, Injectable } from '@angular/core';
+import { ConversationLoaderService } from '@core/services/conversation-loader/conversation-loader.service';
+import { AuthStore } from '@stores/auth';
 import { ChannelMessageStore } from '@stores/channels/channel-message.store';
 import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { ThreadStore } from '@stores/threads/thread.store';
-import { AuthStore } from '@stores/auth';
-import { ConversationLoaderService } from '@core/services/conversation-loader/conversation-loader.service';
 
 @Injectable({
   providedIn: 'root',
@@ -52,7 +52,7 @@ export class MessageInteractionService {
   async editChannelMessage(
     channelId: string,
     messageId: string,
-    newContent: string
+    newContent: string,
   ): Promise<void> {
     await this.channelMessageStore.updateMessage(channelId, messageId, newContent);
   }
@@ -77,7 +77,7 @@ export class MessageInteractionService {
   async toggleChannelMessageReaction(
     channelId: string,
     messageId: string,
-    emojiId: string
+    emojiId: string,
   ): Promise<void> {
     const currentUser = this.authStore.user();
     if (!currentUser) {
@@ -104,7 +104,7 @@ export class MessageInteractionService {
     }
 
     await this.directMessageStore.sendMessage(conversationId, content.trim(), currentUser.uid);
-    this.conversationLoader.markAsReadImmediate(conversationId);
+    this.conversationLoader.markAsReadImmediate(conversationId, true);
   }
 
   /**
@@ -117,7 +117,7 @@ export class MessageInteractionService {
   async editDirectMessage(
     conversationId: string,
     messageId: string,
-    newContent: string
+    newContent: string,
   ): Promise<void> {
     await this.directMessageStore.updateMessage(conversationId, messageId, newContent);
   }
@@ -142,7 +142,7 @@ export class MessageInteractionService {
   async toggleDirectMessageReaction(
     conversationId: string,
     messageId: string,
-    emojiId: string
+    emojiId: string,
   ): Promise<void> {
     const currentUser = this.authStore.user();
     if (!currentUser) {
@@ -153,7 +153,7 @@ export class MessageInteractionService {
       conversationId,
       messageId,
       emojiId,
-      currentUser.uid
+      currentUser.uid,
     );
   }
 
@@ -173,7 +173,7 @@ export class MessageInteractionService {
     channelId: string,
     messageId: string,
     content: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> {
     const currentUser = this.authStore.user();
     if (!currentUser) {
@@ -185,7 +185,7 @@ export class MessageInteractionService {
       messageId,
       content.trim(),
       currentUser.uid,
-      isDirectMessage
+      isDirectMessage,
     );
     this.conversationLoader.markAsReadImmediate(messageId);
   }
@@ -204,14 +204,14 @@ export class MessageInteractionService {
     messageId: string,
     threadId: string,
     newContent: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> {
     await this.threadStore.updateThread(
       channelId,
       messageId,
       threadId,
       { content: newContent },
-      isDirectMessage
+      isDirectMessage,
     );
   }
 
@@ -227,7 +227,7 @@ export class MessageInteractionService {
     channelId: string,
     messageId: string,
     threadId: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> {
     await this.threadStore.deleteThread(channelId, messageId, threadId, isDirectMessage);
   }
@@ -246,7 +246,7 @@ export class MessageInteractionService {
     messageId: string,
     threadId: string,
     emojiId: string,
-    isDirectMessage?: boolean
+    isDirectMessage?: boolean,
   ): Promise<void> {
     const currentUser = this.authStore.user();
     if (!currentUser) {
@@ -259,7 +259,7 @@ export class MessageInteractionService {
       threadId,
       emojiId,
       currentUser.uid,
-      isDirectMessage
+      isDirectMessage,
     );
   }
 }

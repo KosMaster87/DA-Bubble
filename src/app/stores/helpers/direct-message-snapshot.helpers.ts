@@ -4,15 +4,15 @@
  * @module DirectMessageSnapshotHelpers
  */
 
-import { DirectMessageConversation, DirectMessage } from '@core/models/direct-message.model';
-import { mapConversation, mapMessage } from './direct-message-store.helpers';
+import { Firestore, Unsubscribe } from '@angular/fire/firestore';
+import { DirectMessage, DirectMessageConversation } from '@core/models/direct-message.model';
 import {
+  filterMessagesWithThreads,
   setupConversationsFirestoreListener,
   setupMessagesFirestoreListener,
-  filterMessagesWithThreads,
 } from './direct-message-listener.helpers';
-import { isPermissionError, isFirestoreInternalError, logError } from './shared-error.helpers';
-import { Firestore, Unsubscribe, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
+import { mapConversation, mapMessage } from './direct-message-store.helpers';
+import { isFirestoreInternalError, isPermissionError, logError } from './shared-error.helpers';
 
 /**
  * Handle conversations snapshot update
@@ -23,7 +23,7 @@ import { Firestore, Unsubscribe, QuerySnapshot, DocumentData } from '@angular/fi
  */
 export const handleConversationsSnapshot = (
   snapshot: any,
-  updateStore: (conversations: DirectMessageConversation[]) => void
+  updateStore: (conversations: DirectMessageConversation[]) => void,
 ): void => {
   const conversations = snapshot.docs.map(mapConversation);
   updateStore(conversations);
@@ -48,7 +48,7 @@ export const handleConversationsError = (
   retry: (userConversationIds: string[]) => void,
   setError: (error: string) => void,
   retryCount: number,
-  maxRetries: number
+  maxRetries: number,
 ): void => {
   if (isPermissionError(error)) {
     console.log('🔓 Permission error - cleaning up conversations subscription');
@@ -76,7 +76,7 @@ export const retryConversationsLoad = (
   userConversationIds: string[],
   retry: (userConversationIds: string[]) => void,
   retryCount: number,
-  maxRetries: number
+  maxRetries: number,
 ): void => {
   console.warn(`⚠️ Firestore error in DM conversations (${retryCount + 1}/${maxRetries})`);
   if (retryCount < maxRetries) {
@@ -100,14 +100,14 @@ export const setupConversationsListener = (
   userConversationIds: string[],
   existingUnsubscribe: Unsubscribe | null,
   onSnapshot: (snapshot: any) => void,
-  onError: (error: any) => void
+  onError: (error: any) => void,
 ): Unsubscribe => {
   return setupConversationsFirestoreListener(
     firestore,
     userConversationIds,
     existingUnsubscribe,
     onSnapshot,
-    onError
+    onError,
   );
 };
 
@@ -119,15 +119,19 @@ export const setupConversationsListener = (
  * @param {(conversationId: string, messages: DirectMessage[]) => void} updateStore - Store update callback
  * @param {any} threadStore - Thread store instance
  * @returns {void}
+ * @description
+ * Snapshot docs are reversed intentionally because the listener reads newest-first for
+ * efficiency, while UI and unread logic expect chronological ordering.
  */
 export const handleMessagesSnapshot = (
   conversationId: string,
   snapshot: any,
   updateStore: (conversationId: string, messages: DirectMessage[]) => void,
-  threadStore: any
+  threadStore: any,
+  options?: { once?: boolean },
 ): void => {
-  const messages = snapshot.docs.map(mapMessage);
-  loadThreadsForMessages(conversationId, messages, threadStore);
+  const messages = snapshot.docs.map(mapMessage).reverse();
+  loadThreadsForMessages(conversationId, messages, threadStore, options);
   updateStore(conversationId, messages);
 };
 
@@ -137,15 +141,20 @@ export const handleMessagesSnapshot = (
  * @param {DirectMessage[]} messages - Messages to check for threads
  * @param {any} threadStore - Thread store instance
  * @returns {void}
+ * @description
+ * Propagates one-shot intent to thread loads so warmup stays bounded end-to-end.
  */
 export const loadThreadsForMessages = (
   conversationId: string,
   messages: DirectMessage[],
-  threadStore: any
+  threadStore: any,
+  options?: { once?: boolean },
 ): void => {
   const messagesWithThreads = filterMessagesWithThreads(messages);
   if (messagesWithThreads.length > 0) {
-    messagesWithThreads.forEach((msg) => threadStore.loadThreads(conversationId, msg.id, true));
+    messagesWithThreads.forEach((msg) =>
+      threadStore.loadThreads(conversationId, msg.id, true, options?.once),
+    );
   }
 };
 
@@ -167,7 +176,7 @@ export const handleMessagesError = (
   retry: (conversationId: string) => void,
   setError: (error: string) => void,
   retryCount: number,
-  maxRetries: number
+  maxRetries: number,
 ): void => {
   if (isPermissionError(error)) {
     console.log('🔓 Permission error - cleaning up DM messages subscription');
@@ -194,9 +203,11 @@ export const retryMessagesLoad = (
   conversationId: string,
   retry: (conversationId: string) => void,
   retryCount: number,
-  maxRetries: number
+  maxRetries: number,
 ): void => {
-  console.warn(`⚠️ Firestore error in DM messages ${conversationId} (${retryCount + 1}/${maxRetries})`);
+  console.warn(
+    `⚠️ Firestore error in DM messages ${conversationId} (${retryCount + 1}/${maxRetries})`,
+  );
   if (retryCount < maxRetries) {
     setTimeout(() => retry(conversationId), 500 * (retryCount + 1));
     return;
@@ -212,19 +223,23 @@ export const retryMessagesLoad = (
  * @param {(snapshot: any) => void} onSnapshot - Snapshot handler
  * @param {(error: any) => void} onError - Error handler
  * @returns {Unsubscribe}
+ * @description
+ * Wrapper keeps listener setup consistent across persistent and one-shot consumers.
  */
 export const setupMessagesListener = (
   firestore: Firestore,
   conversationId: string,
   messagesUnsubscribers: Map<string, Unsubscribe>,
   onSnapshot: (snapshot: any) => void,
-  onError: (error: any) => void
+  onError: (error: any) => void,
+  options?: { once?: boolean },
 ): Unsubscribe => {
   return setupMessagesFirestoreListener(
     firestore,
     conversationId,
     messagesUnsubscribers,
     onSnapshot,
-    onError
+    onError,
+    options,
   );
 };

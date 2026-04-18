@@ -42,6 +42,9 @@ export const setupConversationsFirestoreListener = (
 
 /**
  * Setup Firestore listener for messages
+ * @description
+ * Uses newest-first query to bound reads to recent data, then downstream helpers can
+ * normalize order for rendering and unread calculations.
  */
 export const setupMessagesFirestoreListener = (
   firestore: Firestore,
@@ -49,6 +52,7 @@ export const setupMessagesFirestoreListener = (
   messagesUnsubscribers: Map<string, Unsubscribe>,
   snapshotHandler: (snapshot: any) => void,
   errorHandler: (error: any) => void,
+  options?: { once?: boolean },
 ): Unsubscribe => {
   if (messagesUnsubscribers.has(conversationId)) {
     messagesUnsubscribers.get(conversationId)!();
@@ -56,14 +60,36 @@ export const setupMessagesFirestoreListener = (
   // Load only last 100 messages to reduce Firestore reads
   const q = query(
     collection(firestore, 'direct-messages', conversationId, 'messages'),
-    orderBy('createdAt', 'asc'),
+    orderBy('createdAt', 'desc'),
     limit(100),
   );
-  return firestoreOnSnapshot(q, snapshotHandler, errorHandler);
+  const once = options?.once === true;
+  let handledFirstSnapshot = false;
+
+  return firestoreOnSnapshot(
+    q,
+    (snapshot) => {
+      if (once && handledFirstSnapshot) return;
+      if (once) {
+        handledFirstSnapshot = true;
+        const existing = messagesUnsubscribers.get(conversationId);
+        if (existing) {
+          existing();
+          messagesUnsubscribers.delete(conversationId);
+        }
+      }
+
+      snapshotHandler(snapshot);
+    },
+    errorHandler,
+  );
 };
 
 /**
  * Filter messages that have threads
+ * @description
+ * Thread loads are restricted to candidate parent messages to avoid unnecessary
+ * subcollection listeners.
  */
 export const filterMessagesWithThreads = (messages: DirectMessage[]): DirectMessage[] =>
   messages.filter((m) => m.lastThreadTimestamp);

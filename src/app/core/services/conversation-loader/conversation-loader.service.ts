@@ -6,10 +6,10 @@
  */
 
 import { inject, Injectable } from '@angular/core';
+import { UnreadService } from '@core/services/unread/unread.service';
 import { ChannelMessageStore } from '@stores/channels/channel-message.store';
 import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { ThreadStore } from '@stores/threads/thread.store';
-import { UnreadService } from '@core/services/unread/unread.service';
 
 /**
  * Service for loading and managing conversations
@@ -47,7 +47,7 @@ export class ConversationLoaderService {
     this.directMessageStore.loadMessages(conversationId);
 
     // Debounce markAsRead to prevent race conditions
-    this.debouncedMarkAsRead(conversationId);
+    this.debouncedMarkAsRead(conversationId, true);
   }
 
   /**
@@ -69,12 +69,12 @@ export class ConversationLoaderService {
    * Use this when user actively sends a message
    * @param conversationId - Channel or DM ID
    */
-  markAsReadImmediate(conversationId: string): void {
+  markAsReadImmediate(conversationId: string, isDirectMessage: boolean = false): void {
     // Clear any pending debounced markAsRead
     this.clearMarkAsReadTimer(conversationId);
 
     // Mark as read immediately
-    this.unreadService.markAsRead(conversationId);
+    this.unreadService.markAsRead(conversationId, isDirectMessage);
   }
 
   /**
@@ -82,21 +82,25 @@ export class ConversationLoaderService {
    * @param channelId - Channel or DM ID
    * @param messageId - Parent message ID
    */
-  markThreadAsReadImmediate(channelId: string, messageId: string): void {
-    this.unreadService.markThreadAsRead(channelId, messageId);
+  markThreadAsReadImmediate(
+    channelId: string,
+    messageId: string,
+    isDirectMessage: boolean = false,
+  ): void {
+    this.unreadService.markThreadAsRead(channelId, messageId, isDirectMessage);
   }
 
   /**
    * Debounced mark as read - prevents race conditions on rapid navigation
    * @param conversationId - Conversation ID to mark as read
    */
-  private debouncedMarkAsRead(conversationId: string): void {
+  private debouncedMarkAsRead(conversationId: string, isDirectMessage: boolean = false): void {
     // Clear existing timer for this conversation
     this.clearMarkAsReadTimer(conversationId);
 
     // Set new debounced timer
     const timer = setTimeout(() => {
-      this.unreadService.markAsRead(conversationId);
+      this.unreadService.markAsRead(conversationId, isDirectMessage);
       this.markAsReadTimers.delete(conversationId);
     }, this.MARK_AS_READ_DEBOUNCE_MS);
 

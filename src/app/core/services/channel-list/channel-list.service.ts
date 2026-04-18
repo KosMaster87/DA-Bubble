@@ -5,17 +5,19 @@
  */
 
 import { computed, inject, Injectable, Signal } from '@angular/core';
-import { ChannelStore } from '@stores/channels/channel.store';
-import { ChannelMessageStore } from '@stores/channels/channel-message.store';
-import { ThreadStore } from '@stores/threads/thread.store';
-import { AuthStore } from '@stores/auth';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { AuthStore } from '@stores/auth';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { ThreadStore } from '@stores/threads/thread.store';
 
 export interface ChannelListItem {
   id: string;
   name: string;
   hasUnread: boolean;
   hasThreadUnread: boolean;
+  unreadMessageCount: number;
+  unreadThreadCount: number;
 }
 
 @Injectable({
@@ -69,7 +71,14 @@ export class ChannelListService {
   private mapToListItem = (channel: any): ChannelListItem => {
     const currentUser = this.authStore.user();
     if (!currentUser) {
-      return { id: channel.id, name: channel.name, hasUnread: false, hasThreadUnread: false };
+      return {
+        id: channel.id,
+        name: channel.name,
+        hasUnread: false,
+        hasThreadUnread: false,
+        unreadMessageCount: 0,
+        unreadThreadCount: 0,
+      };
     }
     const isMember = channel.members.includes(currentUser.uid);
     const messages = this.channelMessageStore.getMessagesByChannel()(channel.id);
@@ -85,14 +94,44 @@ export class ChannelListService {
    * @returns {ChannelListItem} Complete channel list item
    */
   private buildListItem = (channel: any, messages: any[], isMember: boolean): ChannelListItem => {
-    const hasNormalUnread = this.calculateNormalUnread(channel, messages, isMember);
-    const hasThreadUnread = this.calculateThreadUnread(channel, messages, isMember);
+    const unreadMessageCount = this.calculateNormalUnreadCount(channel, messages, isMember);
+    const unreadThreadCount = this.calculateThreadUnreadCount(channel, messages, isMember);
     return {
       id: channel.id,
       name: channel.name,
-      hasUnread: hasNormalUnread,
-      hasThreadUnread: hasThreadUnread,
+      hasUnread: unreadMessageCount > 0,
+      hasThreadUnread: unreadThreadCount > 0,
+      unreadMessageCount,
+      unreadThreadCount,
     };
+  };
+
+  /**
+   * Calculate unread normal message count
+   * @private
+   * @param {any} channel - Channel data
+   * @param {any[]} messages - Channel messages
+   * @param {boolean} isMember - User membership status
+   * @returns {number} Number of unread normal messages
+   */
+  private calculateNormalUnreadCount = (
+    channel: any,
+    messages: any[],
+    isMember: boolean,
+  ): number => {
+    if (!isMember) return 0;
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return 0;
+
+    const unreadMessages = messages.filter((msg) => {
+      if (msg.authorId === currentUserId) return false;
+      const timestamp = msg.createdAt instanceof Date ? msg.createdAt : new Date(msg.createdAt);
+      return this.unreadService.hasUnread(channel.id, timestamp);
+    });
+
+    if (unreadMessages.length > 0) return unreadMessages.length;
+
+    return this.calculateNormalUnread(channel, messages, isMember) ? 1 : 0;
   };
 
   /**
@@ -150,8 +189,10 @@ export class ChannelListService {
    */
   private getFallbackTimestamp = (channel: any, messages: any[]): Date | undefined => {
     if (!channel.lastMessageAt) return undefined;
-    const lastMsgTime = channel.lastMessageAt instanceof Date
-      ? channel.lastMessageAt : new Date(channel.lastMessageAt);
+    const lastMsgTime =
+      channel.lastMessageAt instanceof Date
+        ? channel.lastMessageAt
+        : new Date(channel.lastMessageAt);
     const latestThreadTime = this.getLatestThreadTime(messages);
     if (!latestThreadTime) return lastMsgTime;
     const isThreadUpdate = Math.abs(lastMsgTime.getTime() - latestThreadTime.getTime()) < 1000;
@@ -167,8 +208,10 @@ export class ChannelListService {
   private getLatestThreadTime = (messages: any[]): Date | undefined => {
     return messages.reduce((latest: Date | undefined, msg) => {
       if (!msg.lastThreadTimestamp) return latest;
-      const threadTime = msg.lastThreadTimestamp instanceof Date
-        ? msg.lastThreadTimestamp : new Date(msg.lastThreadTimestamp);
+      const threadTime =
+        msg.lastThreadTimestamp instanceof Date
+          ? msg.lastThreadTimestamp
+          : new Date(msg.lastThreadTimestamp);
       return !latest || threadTime > latest ? threadTime : latest;
     }, undefined);
   };
@@ -189,6 +232,32 @@ export class ChannelListService {
   };
 
   /**
+   * Calculate unread thread count
+   * @private
+   * @param {any} channel - Channel data
+   * @param {any[]} messages - Channel messages
+   * @param {boolean} isMember - User membership status
+   * @returns {number} Number of parent messages with unread thread activity
+   */
+  private calculateThreadUnreadCount = (
+    channel: any,
+    messages: any[],
+    isMember: boolean,
+  ): number => {
+    if (!isMember) return 0;
+    const currentUserId = this.authStore.user()?.uid;
+    if (!currentUserId) return 0;
+
+    const unreadThreads = messages.filter((msg) =>
+      this.hasUnreadThread(msg, channel.id, currentUserId),
+    );
+
+    if (unreadThreads.length > 0) return unreadThreads.length;
+
+    return this.calculateThreadUnread(channel, messages, isMember) ? 1 : 0;
+  };
+
+  /**
    * Check if message has unread thread
    * @private
    * @param {any} message - Message data
@@ -201,8 +270,10 @@ export class ChannelListService {
     const threadMessages = this.threadStore.getThreadsByMessageId()(message.id);
     const userParticipated = this.checkUserParticipation(message, threadMessages, userId);
     if (!userParticipated) return false;
-    const threadTime = message.lastThreadTimestamp instanceof Date
-      ? message.lastThreadTimestamp : new Date(message.lastThreadTimestamp);
+    const threadTime =
+      message.lastThreadTimestamp instanceof Date
+        ? message.lastThreadTimestamp
+        : new Date(message.lastThreadTimestamp);
     return this.unreadService.hasThreadUnread(channelId, message.id, threadTime);
   };
 
@@ -214,7 +285,11 @@ export class ChannelListService {
    * @param {string} userId - Current user ID
    * @returns {boolean} True if user participated
    */
-  private checkUserParticipation = (message: any, threadMessages: any[], userId: string): boolean => {
+  private checkUserParticipation = (
+    message: any,
+    threadMessages: any[],
+    userId: string,
+  ): boolean => {
     const wroteThreadReply = threadMessages.some((threadMsg) => threadMsg.authorId === userId);
     const wroteParentMessage = message.authorId === userId;
     return wroteThreadReply || wroteParentMessage;

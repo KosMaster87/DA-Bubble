@@ -4,10 +4,10 @@
  * @module core/services/direct-message-state
  */
 
-import { Injectable, inject, effect, untracked, Signal } from '@angular/core';
-import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
-import { AuthStore } from '@stores/auth';
+import { Injectable, Signal, effect, inject, untracked } from '@angular/core';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { AuthStore } from '@stores/auth';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 
 /**
  * Service for managing direct message conversation state
@@ -41,7 +41,7 @@ export class DirectMessageStateService {
    */
   loadMessagesForConversation = (conversationId: string): void => {
     this.directMessageStore.loadMessages(conversationId);
-    setTimeout(() => this.unreadService.markAsRead(conversationId), 200);
+    setTimeout(() => this.unreadService.markAsRead(conversationId, true), 200);
   };
 
   /**
@@ -81,7 +81,7 @@ export class DirectMessageStateService {
   private shouldMarkAsRead = (
     conversationId: string,
     currentCount: number,
-    previousCount: number
+    previousCount: number,
   ): boolean => {
     const currentUserId = untracked(() => this.authStore.user()?.uid);
     return !!conversationId && !!currentUserId && currentCount > previousCount && currentCount > 0;
@@ -92,7 +92,7 @@ export class DirectMessageStateService {
    * @param conversationId Conversation ID to mark
    */
   private markConversationAsRead = (conversationId: string): void => {
-    untracked(() => this.unreadService.markAsRead(conversationId));
+    untracked(() => this.unreadService.markAsRead(conversationId, true));
   };
 
   /**

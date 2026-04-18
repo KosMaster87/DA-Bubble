@@ -14,6 +14,7 @@ import { ChannelMessageListenerService } from '@core/services/channel-message-li
 import { ChannelMessageOperationsService } from '@core/services/channel-message-operations/channel-message-operations.service';
 import { ReactionService } from '@core/services/reaction/reaction.service';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { ThreadStore } from '@stores/threads/thread.store';
 import { ChannelMessageStateHelper } from '../helpers/channel-message-state.helper';
 
 /**
@@ -90,6 +91,28 @@ export const ChannelMessageStore = signalStore(
     const reactionService = inject(ReactionService);
     const operations = inject(ChannelMessageOperationsService);
     const listener = inject(ChannelMessageListenerService);
+    const threadStore = inject(ThreadStore);
+
+    /**
+     * Trigger thread loading only for parent messages that can carry thread activity.
+     *
+     * Why this selective fan-out exists:
+     * It keeps thread hydration aligned with unread/thread indicators without opening
+     * listeners for messages that cannot produce thread badges.
+     */
+    const loadThreadsForMessages = (
+      channelId: string,
+      messages: Message[],
+      options?: { once?: boolean },
+    ): void => {
+      const threadedMessages = messages.filter(
+        (message) => !!message.lastThreadTimestamp || (message.threadCount ?? 0) > 0,
+      );
+
+      threadedMessages.forEach((message) => {
+        threadStore.loadThreads(channelId, message.id, false, options?.once);
+      });
+    };
 
     const shouldSkipOlderMessagesLoad = (
       channelId: string,
@@ -153,14 +176,19 @@ export const ChannelMessageStore = signalStore(
       /**
        * Load messages for channel with real-time listener
        * @param {string} channelId - Channel ID
+       * @param options - Optional loading behavior
        * @returns {void}
+       * @description
+       * `once` mode is primarily used for dashboard warmup so the first snapshot can
+       * restore unread state without retaining non-active channel listeners.
        */
-      loadChannelMessages(channelId: string): void {
+      loadChannelMessages(channelId: string, options?: { once?: boolean }): void {
         patchState(store, { isLoading: true, error: null });
         listener.setupListener(
           channelId,
-          (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot),
+          (messages, snapshot) => this.handleMessagesLoaded(channelId, messages, snapshot, options),
           (error) => this.handleError(error, 'Failed to load channel messages'),
+          options,
         );
       },
 
@@ -234,13 +262,18 @@ export const ChannelMessageStore = signalStore(
        * @param channelId - Channel ID
        * @param messages - Loaded messages
        * @param snapshot - Firestore snapshot for pagination
+       * @description
+       * Thread preloading is chained here so channel message and thread state stay
+       * synchronized from the same snapshot boundary.
        */
       handleMessagesLoaded(
         channelId: string,
         messages: Message[],
         snapshot: QuerySnapshot<DocumentData>,
+        options?: { once?: boolean },
       ): void {
         channelSnapshots.set(channelId, snapshot);
+        loadThreadsForMessages(channelId, messages, options);
         patchState(
           store,
           ChannelMessageStateHelper.buildMessagesLoadedState(

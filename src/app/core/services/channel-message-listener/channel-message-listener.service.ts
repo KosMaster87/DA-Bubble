@@ -4,8 +4,17 @@
  * @module core/services/channel-message-listener
  */
 
-import { Injectable, inject } from '@angular/core';
-import { Firestore, query, orderBy, limit, onSnapshot, Unsubscribe, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
+import { inject, Injectable } from '@angular/core';
+import {
+  DocumentData,
+  Firestore,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  QuerySnapshot,
+  Unsubscribe,
+} from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
 import { ChannelMessageOperationsService } from '../channel-message-operations/channel-message-operations.service';
 
@@ -33,14 +42,19 @@ export class ChannelMessageListenerService {
    * @param {string} channelId - Channel ID
    * @param {Function} onSuccess - Success callback with messages and snapshot
    * @param {Function} onError - Error callback
+   * @param options - Optional listener mode (`once` for warmup snapshots)
+   * @description
+   * `once` mode exists for reload warmup paths where we only need one fresh snapshot
+   * and want to avoid keeping long-lived listeners for non-active channels.
    */
   setupListener = (
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    options?: { once?: boolean },
   ): void => {
     this.clearDebounceTimer(channelId);
-    this.scheduleListenerSetup(channelId, onSuccess, onError);
+    this.scheduleListenerSetup(channelId, onSuccess, onError, options);
   };
 
   /**
@@ -63,10 +77,11 @@ export class ChannelMessageListenerService {
   private scheduleListenerSetup = (
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    options?: { once?: boolean },
   ): void => {
     const timer = setTimeout(() => {
-      this.initializeListener(channelId, onSuccess, onError);
+      this.initializeListener(channelId, onSuccess, onError, options);
     }, this.DEBOUNCE_MS);
     this.debounceTimers.set(channelId, timer);
   };
@@ -81,11 +96,12 @@ export class ChannelMessageListenerService {
   private initializeListener = (
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    options?: { once?: boolean },
   ): void => {
     this.clearExistingListener(channelId);
     this.retryCounters.set(channelId, 0);
-    const unsubscribe = this.createListener(channelId, onSuccess, onError);
+    const unsubscribe = this.createListener(channelId, onSuccess, onError, options);
     this.messageListeners.set(channelId, unsubscribe);
     this.debounceTimers.delete(channelId);
   };
@@ -114,10 +130,11 @@ export class ChannelMessageListenerService {
   private createListener = (
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    options?: { once?: boolean },
   ): Unsubscribe => {
     const q = this.buildMessagesQuery(channelId);
-    return this.attachSnapshotListener(q, channelId, onSuccess, onError);
+    return this.attachSnapshotListener(q, channelId, onSuccess, onError, options);
   };
 
   /**
@@ -139,17 +156,32 @@ export class ChannelMessageListenerService {
    * @param {Function} onSuccess - Success callback
    * @param {Function} onError - Error callback
    * @returns {Unsubscribe} Unsubscribe function
+   * @description
+   * When `once` is enabled we unsubscribe immediately after the first snapshot to cap
+   * read pressure during initialization while preserving the same mapping pipeline.
    */
   private attachSnapshotListener = (
     q: any,
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
+    options?: { once?: boolean },
   ): Unsubscribe => {
+    const once = options?.once === true;
+    let handledFirstSnapshot = false;
+
     return onSnapshot(
       q,
-      (snapshot: QuerySnapshot<DocumentData>) => this.handleSnapshotSuccess(snapshot, channelId, onSuccess),
-      (error: any) => this.handleListenerError(error, channelId, onError, onSuccess)
+      (snapshot: QuerySnapshot<DocumentData>) => {
+        if (once && handledFirstSnapshot) return;
+        if (once) {
+          handledFirstSnapshot = true;
+          this.clearExistingListener(channelId);
+        }
+
+        this.handleSnapshotSuccess(snapshot, channelId, onSuccess);
+      },
+      (error: any) => this.handleListenerError(error, channelId, onError, onSuccess),
     );
   };
 
@@ -163,7 +195,7 @@ export class ChannelMessageListenerService {
   private handleSnapshotSuccess = (
     snapshot: QuerySnapshot<DocumentData>,
     channelId: string,
-    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
   ): void => {
     this.clearDebounceTimer(`snapshot-${channelId}`);
     this.scheduleSnapshotProcessing(snapshot, channelId, onSuccess);
@@ -179,7 +211,7 @@ export class ChannelMessageListenerService {
   private scheduleSnapshotProcessing = (
     snapshot: QuerySnapshot<DocumentData>,
     channelId: string,
-    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
   ): void => {
     const timer = setTimeout(() => {
       this.processSnapshot(snapshot, channelId, onSuccess);
@@ -197,7 +229,7 @@ export class ChannelMessageListenerService {
   private processSnapshot = (
     snapshot: QuerySnapshot<DocumentData>,
     channelId: string,
-    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
   ): void => {
     const messages = this.mapSnapshot(snapshot);
     onSuccess(messages, snapshot);
@@ -228,7 +260,7 @@ export class ChannelMessageListenerService {
     error: any,
     channelId: string,
     onError: (msg: string) => void,
-    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void
+    onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
   ): void => {
     if (this.isFirestoreStateError(error)) {
       this.handleFirestoreStateError(error, channelId, onSuccess, onError);
@@ -245,12 +277,15 @@ export class ChannelMessageListenerService {
    * @param channelId - Channel ID
    * @param onSuccess - Success callback for retry
    * @param onError - Error callback
+   * @description
+   * State errors are retried with bounded backoff to absorb transient SDK/internal races
+   * without surfacing noisy errors to users.
    */
   private handleFirestoreStateError = (
     error: any,
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (msg: string) => void
+    onError: (msg: string) => void,
   ): void => {
     const retryCount = this.retryCounters.get(channelId) || 0;
     if (retryCount < this.MAX_RETRIES) {
@@ -271,13 +306,16 @@ export class ChannelMessageListenerService {
     channelId: string,
     retryCount: number,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (msg: string) => void
+    onError: (msg: string) => void,
   ): void => {
     this.retryCounters.set(channelId, retryCount + 1);
     this.logRetryAttempt(channelId, retryCount);
-    setTimeout(() => {
-      this.retryListener(channelId, onSuccess, onError);
-    }, 500 * (retryCount + 1));
+    setTimeout(
+      () => {
+        this.retryListener(channelId, onSuccess, onError);
+      },
+      500 * (retryCount + 1),
+    );
   };
 
   /**
@@ -289,7 +327,7 @@ export class ChannelMessageListenerService {
   private retryListener = (
     channelId: string,
     onSuccess: (messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void,
-    onError: (msg: string) => void
+    onError: (msg: string) => void,
   ): void => {
     this.clearExistingListener(channelId);
     const unsubscribe = this.createListener(channelId, onSuccess, onError);
@@ -302,8 +340,7 @@ export class ChannelMessageListenerService {
    * @param {string} channelId - Channel ID
    * @param {number} retryCount - Current retry count
    */
-  private logRetryAttempt = (channelId: string, retryCount: number): void => {
-  };
+  private logRetryAttempt = (channelId: string, retryCount: number): void => {};
 
   /**
    * Log max retries reached
