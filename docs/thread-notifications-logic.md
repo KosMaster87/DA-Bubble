@@ -1,15 +1,15 @@
-# Thread Notifications: Eigene Erklärung
+# Thread Notifications: Explained
 
-## Was ist eine Thread Notification hier?
+## What is a Thread Notification here?
 
-Im aktuellen DA-Bubble-Kontext bedeutet das:
+In the DA-Bubble context, this means:
 
-1. Ein Parent-Message-Thread hat neue Replies.
-2. Die Replies sind für den User unread.
-3. Der User hat am Thread teilgenommen (Reply geschrieben oder Parent erstellt).
-4. Die Information erscheint als Thread-Unread-Indikator in Sidebar/Popup.
+1. A parent message thread has new replies.
+2. The replies are unread for the user.
+3. The user has participated in the thread (wrote a reply or created the parent).
+4. The information appears as a thread-unread indicator in the sidebar/popup.
 
-## Datenbasis
+## Data Sources
 
 1. Parent Message
 
@@ -18,69 +18,69 @@ Im aktuellen DA-Bubble-Kontext bedeutet das:
 
 2. Thread Replies
 
-- liegen unter Thread-Subcollection
+- stored in the thread subcollection
 
-3. User Read-Stand
+3. User Read State
 
 - `lastRead.<conversationId>_thread_<messageId>`
 
-## Entscheidungslogik (vereinfacht)
+## Decision Logic (simplified)
 
-Ein Thread wird als unread gewertet, wenn:
+A thread is considered unread when:
 
-1. Thread-Aktivität vorhanden ist (`lastThreadTimestamp` oder Replies).
-2. User-Teilnahme erfüllt ist.
-3. Letzte Thread-Aktivität nach dem gespeicherten Thread-Read-Zeitpunkt liegt.
+1. Thread activity exists (`lastThreadTimestamp` or replies).
+2. User participation is confirmed.
+3. Last thread activity is after the stored thread-read timestamp.
 
-## Wo diese Logik lebt
+## Where This Logic Lives
 
 1. Thread-Unread Tracking/Checks
 
 - [src/app/core/services/unread/unread-tracker.service.ts](../../src/app/core/services/unread/unread-tracker.service.ts)
 - [src/app/core/services/unread/unread.service.ts](../../src/app/core/services/unread/unread.service.ts)
 
-2. Thread Popup Darstellung
+2. Thread Popup Rendering
 
 - [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts](../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts)
 
-3. Sidebar-Verknüpfung
+3. Sidebar Integration
 
 - [src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts](../../src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts)
 
-## Warum eigene Logik statt nur Conversation-Unread?
+## Why Separate Logic Instead of Conversation-Unread?
 
-Normale Conversation-Unread und Thread-Unread sind unterschiedliche Signale:
+Conversation-unread and thread-unread are distinct signals:
 
-1. Conversation-Unread zeigt neue Nachrichten auf Konversationsebene.
-2. Thread-Unread zeigt neue Antworten innerhalb bestehender Message-Threads.
+1. Conversation-unread shows new messages at the conversation level.
+2. Thread-unread shows new replies within existing message threads.
 
-Dadurch kann ein Zustand entstehen mit:
+This means a state can exist where:
 
-- keine neue Hauptnachricht
-- aber neue Thread-Replies
+- no new top-level message
+- but new thread replies
 
-Genau diese Fälle sollen sichtbar bleiben.
+These cases must remain visible.
 
-## Reload-Verhalten
+## Reload Behavior
 
-1. Warmup lädt priorisierte Kandidaten als One-Shot.
-2. Thread-Kontexte werden bei Bedarf nachgeladen.
-3. Sidebar/Popup zeigen daraus Thread-Unread ohne globale Dauer-Listener.
+1. Warmup loads prioritized candidates as one-shot.
+2. Thread contexts are loaded on demand.
+3. Sidebar/popup derive thread-unread without global persistent listeners.
 
-## Typische Fehlerbilder
+## Known Failure Patterns
 
-1. Thread-Unread erscheint erst nach neuer Live-Nachricht.
-2. DM-Thread-only-Fälle werden nicht gewarmt.
-3. Reihenfolgefehler in Snapshot-Verarbeitung verfälschen die Anzeige.
+1. Thread-unread only appears after a new live message arrives.
+2. DM-thread-only cases are not warmed up.
+3. Ordering errors in snapshot processing skew the display.
 
-## Was wir aktuell dagegen tun
+## Current Mitigations
 
-1. One-Shot Warmup für unread-relevante Kandidaten.
-2. Top-N Priorisierung für kontrollierte Kosten.
-3. DM-Thread-only-Fallback über potenzielle Thread-Aktivität.
-4. Testabdeckung auf Service- und UI-Ebene.
+1. One-shot warmup for unread-relevant candidates.
+2. Top-N prioritization for controlled Firestore costs.
+3. DM-thread-only fallback via potential thread activity detection.
+4. Test coverage at service and UI level.
 
-## Zugehörige Tests
+## Related Tests
 
 - [src/app/shared/services/dashboard-initialization.service.spec.ts](../../src/app/shared/services/dashboard-initialization.service.spec.ts)
 - [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.spec.ts](../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.spec.ts)

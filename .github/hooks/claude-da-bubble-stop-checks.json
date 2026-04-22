@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "type": "command",
+        "command": "git diff --name-only -- da-bubble/src/app da-bubble/firestore.rules da-bubble/storage.rules da-bubble/functions/src | head -50"
+      },
+      {
+        "matcher": "",
+        "type": "command",
+        "command": "cd da-bubble && npx tsc -p tsconfig.app.json --noEmit 2>&1 | head -20 || true"
+      }
+    ]
+  }
+}

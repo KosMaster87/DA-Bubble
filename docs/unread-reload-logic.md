@@ -2,27 +2,27 @@
 
 ## Problem
 
-Nach Reload waren Thread-Unread-Indikatoren in bestimmten Fällen verzögert sichtbar, besonders wenn nur Thread-Aktivität ohne normale Nachricht-Unread vorlag.
+After a reload, thread-unread indicators were sometimes delayed, especially when only thread activity existed without a regular message-unread.
 
-## Zielbild
+## Target Behavior
 
-Der Sidebar-Status soll nach Reload schnell und korrekt sein, ohne breitflächige Dauer-Listener.
+Sidebar state should be fast and accurate after reload, without broad persistent listeners.
 
-## Architektur in Kurzform
+## Architecture Overview
 
-1. Reload startet Dashboard-Initialisierung.
-2. Unread-relevante Kandidaten werden ermittelt.
-3. Kandidaten werden priorisiert und begrenzt (Stage 1.1).
-4. Nachrichten und Thread-Kontexte werden als One-Shot geladen.
-5. Sidebar und Popup rendern daraus Message- und Thread-Unread.
+1. Reload triggers dashboard initialization.
+2. Unread-relevant candidates are identified.
+3. Candidates are prioritized and limited (Stage 1.1).
+4. Messages and thread contexts are loaded as one-shot.
+5. Sidebar and popup render message and thread unreads from that data.
 
-## Kernbausteine
+## Core Building Blocks
 
-1. Dashboard Warmup Orchestrierung
+1. Dashboard Warmup Orchestration
 
 - [src/app/shared/services/dashboard-initialization.service.ts](../../src/app/shared/services/dashboard-initialization.service.ts)
 
-2. Channel/DM Message Load und Snapshot-Verarbeitung
+2. Channel/DM Message Load and Snapshot Processing
 
 - [src/app/stores/channels/channel-message.store.ts](../../src/app/stores/channels/channel-message.store.ts)
 - [src/app/stores/direct-messages/direct-message.store.ts](../../src/app/stores/direct-messages/direct-message.store.ts)
@@ -33,31 +33,31 @@ Der Sidebar-Status soll nach Reload schnell und korrekt sein, ohne breitflächig
 - [src/app/stores/threads/thread.store.ts](../../src/app/stores/threads/thread.store.ts)
 - [src/app/stores/services/thread-listener.service.ts](../../src/app/stores/services/thread-listener.service.ts)
 
-4. Unread Tracking und Markierung
+4. Unread Tracking and Marking
 
 - [src/app/core/services/unread/unread.service.ts](../../src/app/core/services/unread/unread.service.ts)
 - [src/app/core/services/unread/unread-tracker.service.ts](../../src/app/core/services/unread/unread-tracker.service.ts)
 
-## Wichtige Fachlogik
+## Key Business Logic
 
-1. DM-Thread-only-Fallback
-   Wenn normale DM-Unread nicht greift, kann dennoch Thread-Aktivität über bestehende Thread-Read-Keys erkannt werden.
+1. DM Thread-only Fallback
+   When regular DM unread does not apply, thread activity can still be detected via existing thread-read keys.
 
 2. DM Snapshot Order
-   DM-Snapshots werden in zeitlich korrekte Reihenfolge normalisiert, damit UI/Unread-Berechnungen konsistent sind.
+   DM snapshots are normalized into chronological order to keep UI/unread calculations consistent.
 
-3. One-Shot statt Dauer-Listener
-   Warmup lädt Initialzustand, beendet dann den Listener. Live-Verhalten bleibt über aktive Konversationen verfügbar.
+3. One-Shot Instead of Persistent Listener
+   Warmup loads the initial state, then terminates the listener. Live behavior remains available through active conversations.
 
-## Debug-Checkliste
+## Debug Checklist
 
-1. Wird der Kandidat durch `hasUnread` oder `hasPotentialThreadUnreadActivity` erkannt?
-2. Liegt der Kandidat in Top-N nach `lastMessageAt`?
-3. Läuft der One-Shot-Snapshot durch?
-4. Sind Thread-Snapshots für betroffene Parent-Messages geladen?
-5. Ist die Sidebar auf denselben Unread-Quellen aufgebaut?
+1. Is the candidate detected via `hasUnread` or `hasPotentialThreadUnreadActivity`?
+2. Does the candidate fall within Top-N by `lastMessageAt`?
+3. Does the one-shot snapshot complete?
+4. Are thread snapshots loaded for affected parent messages?
+5. Is the sidebar built from the same unread sources?
 
-## Zugehörige Doku
+## Related Docs
 
-- Stage 1.1 Details: [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
-- Thread Notifications separat: [thread-notifications-logic.md](thread-notifications-logic.md)
+- Stage 1.1 details: [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
+- Thread notifications: [thread-notifications-logic.md](thread-notifications-logic.md)

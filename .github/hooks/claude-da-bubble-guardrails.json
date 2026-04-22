@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "type": "command",
+        "command": "for file in $CLAUDE_FILE_PATHS; do case \"$file\" in *.ts) if rg -n \"BehaviorSubject|ReplaySubject|Subject<\" \"$file\" >/dev/null 2>&1; then echo \"DA-Bubble guardrail: observable state container detected in $file. Prefer signals or Signal Store.\"; fi ;; esac; done"
+      },
+      {
+        "matcher": "Edit|Write",
+        "type": "command",
+        "command": "for file in $CLAUDE_FILE_PATHS; do case \"$file\" in *.ts|*.html) if rg -n \"ngx-translate|TranslateService|translate\\|\" \"$file\" >/dev/null 2>&1; then echo \"DA-Bubble guardrail: possible second i18n system detected in $file. Use the existing I18nService unless migration was requested.\"; fi ;; esac; done"
+      },
+      {
+        "matcher": "Edit|Write",
+        "type": "command",
+        "command": "for file in $CLAUDE_FILE_PATHS; do case \"$file\" in *firestore.rules|*storage.rules|*functions/src/*) echo \"DA-Bubble guardrail: Firebase-sensitive file changed: $file. Review rules, contracts, and auth assumptions together.\" ;; esac; done"
+      },
+      {
+        "matcher": "Edit|Write",
+        "type": "command",
+        "command": "for file in $CLAUDE_FILE_PATHS; do case \"$file\" in *features/dashboard/*|*shared/dashboard-components/*|*.scss) echo \"DA-Bubble reminder: dashboard or styling change detected in $file. Check desktop, tablet, mobile, and PWA behavior.\" ;; esac; done"
+      }
+    ]
+  }
+}

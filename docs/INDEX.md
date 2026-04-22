@@ -1,25 +1,25 @@
-# Docs X: Unread, Reload, Warmup, Thread Notifications
+# Docs: Unread, Reload, Warmup, Thread Notifications
 
-Diese Seite ist der Einstieg für die aktuelle Unread- und Thread-Logik im Dashboard.
+This is the entry point for the current unread and thread logic in the dashboard.
 
-## Dokumente
+## Documents
 
 1. Warmup Stage 1.1 (Top-N + Config)
    [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
 
-2. End-to-End Reload/Unread-Logik
+2. End-to-End Reload/Unread Logic
    [unread-reload-logic.md](unread-reload-logic.md)
 
-3. Eigene Erklärung: Thread Notifications
+3. Thread Notifications Explained
    [thread-notifications-logic.md](thread-notifications-logic.md)
 
-## Empfohlene Lesereihenfolge
+## Recommended Reading Order
 
 1. [unread-reload-logic.md](unread-reload-logic.md)
 2. [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
 3. [thread-notifications-logic.md](thread-notifications-logic.md)
 
-## Relevante Code-Startpunkte
+## Relevant Code Entry Points
 
 - [src/app/shared/services/dashboard-initialization.service.ts](../../src/app/shared/services/dashboard-initialization.service.ts)
 - [src/app/core/services/unread/unread.service.ts](../../src/app/core/services/unread/unread.service.ts)

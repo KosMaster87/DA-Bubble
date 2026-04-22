@@ -1,39 +1,39 @@
 # Dashboard Warmup Stage 1.1
 
-## Ziel
+## Goal
 
-Beim ersten Dashboard-Reload korrekte Unread/Thread-Unread-Indikatoren zeigen und gleichzeitig Firestore-Reads deckeln.
+On the first dashboard reload, show correct unread/thread-unread indicators while capping Firestore reads.
 
-## Ausgangslage
+## Background
 
-Ohne Begrenzung konnten viele unread-relevante Kontexte gleichzeitig gewarmt werden. Das führt zu unnötigen parallelen Reads.
+Without limits, many unread-relevant contexts could be warmed up simultaneously, leading to unnecessary parallel reads.
 
-## Stage-1.1 Lösung
+## Stage 1.1 Solution
 
-1. Kandidaten nur aus unread-relevanten Channels/DMs.
-2. Sortierung nach `lastMessageAt` absteigend.
-3. Begrenzung auf Top-N.
-4. Warmup immer als One-Shot (`once: true`).
+1. Candidates only from unread-relevant channels/DMs.
+2. Sorted by `lastMessageAt` descending.
+3. Limited to Top-N.
+4. Warmup always as one-shot (`once: true`).
 
-Implementierung in:
+Implemented in:
 
 - [src/app/shared/services/dashboard-initialization.service.ts](../../src/app/shared/services/dashboard-initialization.service.ts)
 
-## Konfigurierbarkeit
+## Configuration
 
-Die Limits sind per Injection Token konfigurierbar:
+Limits are configurable via injection token:
 
 - `DASHBOARD_WARMUP_CONFIG`
-- Typ: `DashboardWarmupConfig`
+- Type: `DashboardWarmupConfig`
 
-Default-Werte:
+Defaults:
 
 - `maxChannelWarmupCandidates = 5`
 - `maxDmWarmupCandidates = 5`
 
-Ungültige Werte werden geschützt (Minimum 1).
+Invalid values are guarded (minimum 1).
 
-## Override Beispiel
+## Override Example
 
 In [src/app/app.config.ts](../../src/app/app.config.ts):
 
@@ -49,26 +49,26 @@ import { DASHBOARD_WARMUP_CONFIG } from './shared/services/dashboard-initializat
 }
 ```
 
-## Wirkung
+## Effect
 
-Das Reload-Warmup hat eine klare obere Schranke:
+The reload warmup has a clear upper bound:
 
-- maximal N Channel-Warmups
-- maximal N DM-Warmups
+- at most N channel warmups
+- at most N DM warmups
 
-Dadurch stabilere Kosten und vorhersehbares Startverhalten.
+This results in more stable costs and predictable startup behavior.
 
 ## Trade-off
 
-Kontexte außerhalb Top-N werden nicht sofort gewarmt. Der vollständige Zustand wird beim Öffnen der jeweiligen Konversation geladen.
+Contexts outside Top-N are not warmed up immediately. The full state is loaded when the respective conversation is opened.
 
-## Testabdeckung
+## Test Coverage
 
 - [src/app/shared/services/dashboard-initialization.service.spec.ts](../../src/app/shared/services/dashboard-initialization.service.spec.ts)
 
-Abgedeckt sind:
+Covered cases:
 
-1. Standardverhalten (Top-5)
-2. Begrenzung bei Channels
-3. Begrenzung bei DMs
-4. Custom-Config Override
+1. Default behavior (Top-5)
+2. Channel limit enforcement
+3. DM limit enforcement
+4. Custom config override
