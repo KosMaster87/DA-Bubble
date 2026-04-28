@@ -1,11 +1,11 @@
 /**
  * @fileoverview Channel Listener Service
- * @description Manages Firestore real-time listeners for channels
+ * @description Provides reusable channel realtime subscription plumbing so channel lists stay synchronized with backend updates.
  * @module core/services/channel-listener
  */
 
-import { Injectable, inject } from '@angular/core';
-import { Firestore, query, orderBy, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
+import { inject, Injectable } from '@angular/core';
+import { Firestore, onSnapshot, orderBy, query, Unsubscribe } from '@angular/fire/firestore';
 import { Channel } from '@core/models/channel.model';
 import { ChannelOperationsService } from '../channel-operations/channel-operations.service';
 
@@ -23,6 +23,7 @@ export class ChannelListenerService {
 
   /**
    * Setup real-time listener for channels
+   * @description Debounces repeated setup calls and creates a fresh Firestore snapshot listener, replacing any existing one.
    * @param onSuccess - Success callback with channels
    * @param onError - Error callback
    */
@@ -37,6 +38,7 @@ export class ChannelListenerService {
 
   /**
    * Clear existing listener
+   * @description Unsubscribes from the active Firestore listener to prevent memory leaks during re-setup or cleanup.
    */
   private clearExistingListener = (): void => {
     if (this.unsubscribe) {
@@ -47,13 +49,14 @@ export class ChannelListenerService {
 
   /**
    * Create Firestore snapshot listener
+   * @description Wires the Firestore query to snapshot callbacks with built-in debouncing and retry delegation on error.
    * @param onSuccess - Success callback
    * @param onError - Error callback
    * @returns Unsubscribe function
    */
   private createListener = (
     onSuccess: (channels: Channel[]) => void,
-    onError: (error: string) => void
+    onError: (error: string) => void,
   ): Unsubscribe => {
     const channelsRef = this.operations.getChannelsCollectionRef();
     const q = query(channelsRef, orderBy('createdAt', 'desc'));
@@ -68,12 +71,13 @@ export class ChannelListenerService {
           this.retryCount = 0;
         }, 50);
       },
-      (error: any) => this.handleListenerError(error, onError, onSuccess)
+      (error: any) => this.handleListenerError(error, onError, onSuccess),
     );
   };
 
   /**
    * Map Firestore snapshot to channels array
+   * @description Converts a raw Firestore QuerySnapshot into typed Channel objects and delegates deduplication.
    * @param snapshot - Firestore query snapshot
    * @returns Array of channels
    */
@@ -86,6 +90,7 @@ export class ChannelListenerService {
 
   /**
    * Remove duplicate channels by ID
+   * @description Guards against edge cases where Firestore may emit duplicate doc IDs in rapid successive snapshots.
    * @param channels - Array of channels
    * @returns Deduplicated array
    */
@@ -101,6 +106,7 @@ export class ChannelListenerService {
 
   /**
    * Handle Firestore listener errors
+   * @description Categorises errors: silently drops permission errors, retries transient Firestore state errors, and escalates the rest.
    * @param error - Error object
    * @param onError - Error callback
    * @param onSuccess - Success callback for retry
@@ -108,7 +114,7 @@ export class ChannelListenerService {
   private handleListenerError = (
     error: any,
     onError: (msg: string) => void,
-    onSuccess: (channels: Channel[]) => void
+    onSuccess: (channels: Channel[]) => void,
   ): void => {
     if (this.isPermissionError(error)) {
       this.clearExistingListener();
@@ -130,6 +136,7 @@ export class ChannelListenerService {
 
   /**
    * Check if error is permission-related
+   * @description Identifies permission-denied errors so the listener can exit cleanly without triggering a user-visible error.
    * @param error - Error object
    * @returns True if permission error
    */
@@ -139,6 +146,7 @@ export class ChannelListenerService {
 
   /**
    * Check if error is Firestore internal state error
+   * @description Detects known transient Firestore SDK errors that are safe to retry automatically without surfacing to the user.
    * @param error - Error object
    * @returns True if state error
    */
@@ -155,6 +163,7 @@ export class ChannelListenerService {
 
   /**
    * Clear all active listeners
+   * @description Cancels the debounce timer and the active Firestore listener — call on service destroy or user logout.
    */
   clearAllListeners = (): void => {
     if (this.debounceTimer) {

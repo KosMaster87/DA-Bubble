@@ -24,6 +24,7 @@ export class SettingsComponent {
 
   /**
    * Navigate back to dashboard or sidebar (on mobile)
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   goBack() {
     if (this.isMobileView()) {

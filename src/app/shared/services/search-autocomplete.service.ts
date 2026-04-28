@@ -1,22 +1,24 @@
 /**
  * @fileoverview Search Autocomplete Service
- * @description Service for autocomplete search functionality with filtering by channels, users, and messages
+ * @description Bündelt prefixbasierte Suche über Channels, Nutzer und Nachrichten, damit die Autocomplete-Logik an einer Stelle konsistent bleibt.
  * @module shared/services/search-autocomplete
  */
 
-import { Injectable, inject, computed, signal } from '@angular/core';
-import { ChannelStore } from '@stores/channels/channel.store';
-import { UserStore } from '@stores/users/user.store';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { ChannelMessageStore } from '@stores/channels/channel-message.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { UserStore } from '@stores/users/user.store';
 
 /**
  * Search result type
+ * @description Definiert die drei Ergebnisdomänen für UI-spezifisches Rendering und Navigation.
  */
 export type SearchResultType = 'channel' | 'user' | 'message';
 
 /**
  * Search result interface
+ * @description Vereinheitlicht Ergebnisdaten aus unterschiedlichen Quellen in ein gemeinsames UI-Contract-Format.
  */
 export interface SearchResult {
   id: string;
@@ -30,6 +32,7 @@ export interface SearchResult {
 
 /**
  * Search filter prefix
+ * @description Modelliert unterstützte Präfixe zur Einschränkung auf Channels, Nutzer oder Nachrichten.
  */
 export type SearchPrefix = '#' | '@' | '$' | '';
 
@@ -47,6 +50,7 @@ export class SearchAutocompleteService {
 
   /**
    * Detect search prefix (# for channels, @ for users, $ for messages)
+   * @description Leitet den aktiven Suchmodus aus dem ersten Zeichen ab, damit alle nachfolgenden Filter dieselbe Regelbasis nutzen.
    */
   private searchPrefix = computed<SearchPrefix>(() => {
     const query = this._searchQuery();
@@ -58,6 +62,7 @@ export class SearchAutocompleteService {
 
   /**
    * Clean search term without prefix
+   * @description Normalisiert die Eingabe durch Entfernen des Präfixes und Kleinschreibung für robuste, case-insensitive Vergleiche.
    */
   private searchTerm = computed(() => {
     const query = this._searchQuery();
@@ -67,6 +72,7 @@ export class SearchAutocompleteService {
 
   /**
    * Filter channels based on search term
+   * @description Liefert nur channelrelevante Treffer entsprechend Präfix und Suchbegriff.
    */
   private filteredChannels = computed<SearchResult[]>(() => {
     const prefix = this.searchPrefix();
@@ -77,7 +83,7 @@ export class SearchAutocompleteService {
 
     if (!term) {
       // Return all channels if no search term
-      return this.channelStore.channels().map(channel => ({
+      return this.channelStore.channels().map((channel) => ({
         id: channel.id,
         type: 'channel' as SearchResultType,
         displayName: `#${channel.name}`,
@@ -88,8 +94,8 @@ export class SearchAutocompleteService {
 
     return this.channelStore
       .channels()
-      .filter(channel => channel.name.toLowerCase().includes(term))
-      .map(channel => ({
+      .filter((channel) => channel.name.toLowerCase().includes(term))
+      .map((channel) => ({
         id: channel.id,
         type: 'channel' as SearchResultType,
         displayName: `#${channel.name}`,
@@ -100,6 +106,7 @@ export class SearchAutocompleteService {
 
   /**
    * Filter users based on search term
+   * @description Liefert nutzerrelevante Treffer auf Basis von Name oder E-Mail je nach aktivem Präfixmodus.
    */
   private filteredUsers = computed<SearchResult[]>(() => {
     const prefix = this.searchPrefix();
@@ -110,7 +117,7 @@ export class SearchAutocompleteService {
 
     if (!term) {
       // Return all users if no search term
-      return this.userStore.users().map(user => ({
+      return this.userStore.users().map((user) => ({
         id: user.uid,
         type: 'user' as SearchResultType,
         displayName: `@${user.displayName}`,
@@ -122,11 +129,10 @@ export class SearchAutocompleteService {
     return this.userStore
       .users()
       .filter(
-        user =>
-          user.displayName.toLowerCase().includes(term) ||
-          user.email?.toLowerCase().includes(term)
+        (user) =>
+          user.displayName.toLowerCase().includes(term) || user.email?.toLowerCase().includes(term),
       )
-      .map(user => ({
+      .map((user) => ({
         id: user.uid,
         type: 'user' as SearchResultType,
         displayName: `@${user.displayName}`,
@@ -137,6 +143,7 @@ export class SearchAutocompleteService {
 
   /**
    * Search in messages (within channels and direct messages)
+   * @description Durchsucht Channel- und DM-Nachrichten, priorisiert neueste Treffer und begrenzt Ergebnisse für performantes Autocomplete.
    */
   private searchMessages = computed<SearchResult[]>(() => {
     const prefix = this.searchPrefix();
@@ -159,7 +166,7 @@ export class SearchAutocompleteService {
           allChannelMessages.push({
             ...msg,
             channelId,
-            searchDate: msg.createdAt
+            searchDate: msg.createdAt,
           });
         }
       });
@@ -176,7 +183,7 @@ export class SearchAutocompleteService {
 
     // Create results for top channel messages
     topChannelMessages.forEach((msg: any) => {
-      const channel = this.channelStore.channels().find(c => c.id === msg.channelId);
+      const channel = this.channelStore.channels().find((c) => c.id === msg.channelId);
       if (channel) {
         const msgDate = msg.searchDate instanceof Date ? msg.searchDate : new Date(msg.searchDate);
         results.push({
@@ -186,7 +193,7 @@ export class SearchAutocompleteService {
             displayName: `#${channel.name}`,
             description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
           },
-          date: msgDate
+          date: msgDate,
         });
       }
     });
@@ -202,7 +209,7 @@ export class SearchAutocompleteService {
           allDirectMessages.push({
             ...msg,
             conversationId,
-            searchDate: msg.createdAt
+            searchDate: msg.createdAt,
           });
         }
       });
@@ -219,13 +226,17 @@ export class SearchAutocompleteService {
 
     // Create results for top DM messages
     topDirectMessages.forEach((msg: any) => {
-      const conversation = this.directMessageStore.conversations().find((c: any) => c.id === msg.conversationId);
+      const conversation = this.directMessageStore
+        .conversations()
+        .find((c: any) => c.id === msg.conversationId);
       if (conversation) {
         const otherParticipantId = conversation.participants.find((uid: string) => {
           return true; // For now, just use the first participant
         });
 
-        const otherUser = otherParticipantId ? this.userStore.users().find(u => u.uid === otherParticipantId) : null;
+        const otherUser = otherParticipantId
+          ? this.userStore.users().find((u) => u.uid === otherParticipantId)
+          : null;
         const msgDate = msg.searchDate instanceof Date ? msg.searchDate : new Date(msg.searchDate);
 
         results.push({
@@ -235,7 +246,7 @@ export class SearchAutocompleteService {
             displayName: otherUser ? `@${otherUser.displayName}` : 'Direct Message',
             description: msg.content.substring(0, 60) + (msg.content.length > 60 ? '...' : ''),
           },
-          date: msgDate
+          date: msgDate,
         });
       }
     });
@@ -243,11 +254,12 @@ export class SearchAutocompleteService {
     // Sort all results by date (newest first) and take top 5
     results.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-    return results.slice(0, 5).map(r => r.result);
+    return results.slice(0, 5).map((r) => r.result);
   });
 
   /**
    * Combined search results
+   * @description Vereinigt alle Teilergebnisse oder liefert bei Präfixnutzung ausschließlich die passende Ergebnisgruppe.
    */
   readonly searchResults = computed<SearchResult[]>(() => {
     const prefix = this.searchPrefix();
@@ -266,6 +278,7 @@ export class SearchAutocompleteService {
 
   /**
    * Update search query
+   * @description Setzt die aktuelle Suchanfrage als Single-Entry-Mutation, damit alle abgeleiteten Computed-Werte konsistent neu berechnet werden.
    */
   setSearchQuery(query: string): void {
     this._searchQuery.set(query);
@@ -273,6 +286,7 @@ export class SearchAutocompleteService {
 
   /**
    * Clear search
+   * @description Setzt die Suche auf leer zurück und entfernt dadurch alle aktiven Filter- und Präfixzustände.
    */
   clearSearch(): void {
     this._searchQuery.set('');
@@ -280,8 +294,9 @@ export class SearchAutocompleteService {
 
   /**
    * Get result by ID and type
+   * @description Sucht ein konkretes Ergebnis im aggregierten Resultset für nachgelagerte Selection- oder Routing-Logik.
    */
   getResultById(id: string, type: SearchResultType): SearchResult | undefined {
-    return this.searchResults().find(result => result.id === id && result.type === type);
+    return this.searchResults().find((result) => result.id === id && result.type === type);
   }
 }

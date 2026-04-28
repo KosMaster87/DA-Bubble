@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message List Service
- * @description Handles DM list sorting, filtering, and unread badge calculations
+ * @description Produces sidebar-ready DM list models with stable ordering and unread/thread badge semantics derived from conversation and message state.
  * @module core/services/direct-message-list
  */
 
@@ -44,6 +44,7 @@ export class DirectMessageListService {
 
   /**
    * Get sorted DM conversations with unread badges
+   * @description Main entry point for the DM sidebar list; updates are driven by the store's updateCounter signal so the list re-evaluates whenever unread state changes.
    * @returns {Signal<DirectMessageListItem[]>} Computed signal of DM conversations
    */
   getSortedConversations = (): Signal<DirectMessageListItem[]> => {
@@ -62,6 +63,7 @@ export class DirectMessageListService {
 
   /**
    * Get DM conversations with self-DM at top
+   * @description Pins the "Notes to self" entry at the top regardless of alphabetical order so users can always find their personal notes quickly.
    * @returns {Signal<DirectMessageListItem[]>} Conversations with Notes to self first
    */
   getConversationsWithSelfDM = (): Signal<DirectMessageListItem[]> => {
@@ -79,6 +81,7 @@ export class DirectMessageListService {
 
   /**
    * Sort conversations alphabetically by name
+    * @description Applies a deterministic name sort so DM ordering stays consistent across reactive updates and route transitions.
    * @private
    * @param {DirectMessageListItem[]} conversations - Unsorted conversations
    * @returns {DirectMessageListItem[]} Alphabetically sorted conversations
@@ -91,6 +94,7 @@ export class DirectMessageListService {
 
   /**
    * Create self-DM entry
+   * @description Reuses an existing self-conversation entry if the store has one, so unread state is preserved; falls back to a default when no conversation exists yet.
    * @private
    * @param {CurrentDirectMessageUser} currentUser - Current user data
    * @param {DirectMessageListItem[]} sortedList - Sorted conversations
@@ -110,6 +114,7 @@ export class DirectMessageListService {
 
   /**
    * Build default self-DM entry
+   * @description Constructs a placeholder list item for the self-DM when no Firestore conversation document exists yet.
    * @private
    * @param {CurrentDirectMessageUser} currentUser - Current user data
    * @returns {DirectMessageListItem} Default self-DM
@@ -130,6 +135,7 @@ export class DirectMessageListService {
 
   /**
    * Map conversation to list item
+    * @description Normalizes one raw conversation into a renderable sidebar item so identity data and unread metrics are computed together.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {string} currentUserId - Current user ID
@@ -165,6 +171,7 @@ export class DirectMessageListService {
 
   /**
    * Build list item from conversation data
+   * @description Final assembly step that combines resolved user data and calculated unread counts into the view-model consumed by the sidebar.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {string} otherUserId - Other user ID
@@ -195,15 +202,12 @@ export class DirectMessageListService {
 
   /**
    * Calculate unread normal message count
+   * @description Prefers the persisted unreadCount from conversation metadata for accuracy; falls back to timestamp comparison when the counter is absent.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {DirectMessage[]} messages - Conversation messages
    * @param {string} currentUserId - Current user ID
    * @returns {number} Number of unread normal messages
-   * @description
-   * The service intentionally returns the raw unread counters from conversation metadata or
-   * message timestamps. Hiding badges for the currently open DM is a presentation concern and
-   * is derived in the sidebar component so other consumers can still access the real unread state.
    */
   private calculateNormalUnreadCount = (
     conversation: DirectMessageConversation,
@@ -228,6 +232,7 @@ export class DirectMessageListService {
 
   /**
    * Get other participant user ID
+   * @description Falls back to the current user's own ID for self-DM conversations so the list item always has a valid userId.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {string} currentUserId - Current user ID
@@ -243,6 +248,7 @@ export class DirectMessageListService {
 
   /**
    * Calculate normal message unread status
+    * @description Prioritizes mention unread over generic timestamp heuristics so direct @mention intent is never hidden by fallback unread logic.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {DirectMessage[]} messages - Conversation messages
@@ -262,6 +268,7 @@ export class DirectMessageListService {
 
   /**
    * Check if user has unread mentions
+   * @description Checks for unread mentions specifically so that @ mentions always surface a badge even when the general unread heuristic would not.
    * @private
    * @param {DirectMessage[]} messages - Conversation messages
    * @param {string} userId - Current user ID
@@ -282,6 +289,7 @@ export class DirectMessageListService {
 
   /**
    * Get latest normal message timestamp
+   * @description Folds over all messages to find the newest createdAt so unread detection can compare against a single timestamp.
    * @private
    * @param {DirectMessage[]} messages - Conversation messages
    * @returns {Date | undefined} Latest message timestamp
@@ -295,6 +303,7 @@ export class DirectMessageListService {
 
   /**
    * Get fallback timestamp from conversation
+   * @description Returns undefined when the conversation's lastMessageAt appears to be a thread update so the normal unread badge isn't shown for thread-only activity.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {DirectMessage[]} messages - Conversation messages
@@ -317,6 +326,7 @@ export class DirectMessageListService {
 
   /**
    * Get latest thread timestamp
+   * @description Finds the most recent thread activity across all messages to distinguish thread updates from normal message updates in the fallback heuristic.
    * @private
    * @param {DirectMessage[]} messages - Conversation messages
    * @returns {Date | undefined} Latest thread timestamp
@@ -334,6 +344,7 @@ export class DirectMessageListService {
 
   /**
    * Calculate thread unread status
+   * @description Checks whether any message in the conversation has an unread thread the current user participated in.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {DirectMessage[]} messages - Conversation messages
@@ -350,6 +361,7 @@ export class DirectMessageListService {
 
   /**
    * Calculate unread thread count
+   * @description Counts parent messages with unread thread activity and falls back to 1 (boolean-style badge) when the thread unread heuristic fires.
    * @private
    * @param {DirectMessageConversation} conversation - Conversation data
    * @param {DirectMessage[]} messages - Conversation messages
@@ -372,6 +384,7 @@ export class DirectMessageListService {
 
   /**
    * Check if message has unread thread
+   * @description Only flags thread unread for users who actually participated so threads the user never saw don't create phantom badges.
    * @private
    * @param {DirectMessage} message - Message data
    * @param {string} conversationId - Conversation ID
@@ -396,6 +409,7 @@ export class DirectMessageListService {
 
   /**
    * Check if user participated in thread
+   * @description Determines participation by checking both thread replies and the parent message authorship so thread starters are not excluded from unread tracking.
    * @private
    * @param {DirectMessage} message - Parent message
    * @param {ThreadMessage[]} threadMessages - Thread messages
@@ -414,6 +428,7 @@ export class DirectMessageListService {
 
   /**
    * Start or open DM conversation
+    * @description Encapsulates open-conversation side effects so message hydration and unread reset happen atomically for every DM entry path.
    * @param {string} currentUserId - Current user ID
    * @param {string} otherUserId - Other user ID
    * @returns {Promise<StartedConversation | null>} Conversation or null
@@ -437,6 +452,7 @@ export class DirectMessageListService {
 
   /**
    * Select conversation with self-DM handling
+   * @description Intercepts the "self-" prefix used for placeholder entries and creates the real self-conversation on demand before returning the actual ID.
    * @param {string} conversationId - Conversation ID (can be "self-{userId}")
    * @param {string} currentUserId - Current user ID
    * @returns {Promise<string | null>} Actual conversation ID or null
@@ -454,6 +470,7 @@ export class DirectMessageListService {
 
   /**
    * Start DM conversation and auto-select
+   * @description Combines conversation creation with navigation selection so callers can open a DM in one call without managing routing separately.
    * @param {string} currentUserId - Current user ID
    * @param {string} otherUserId - Other user ID
    * @returns {Promise<StartedConversation | null>} Conversation or null

@@ -23,6 +23,7 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 /**
  * State interface for user presence management
  * @interface UserPresenceState
+ * @description Keeps the presence surface intentionally minimal — only online UIDs are stored, not full user objects, to avoid duplication with UserStore.
  */
 export interface UserPresenceState {
   /** Array of UIDs for users currently online */
@@ -36,6 +37,7 @@ export interface UserPresenceState {
 /**
  * Initial user presence state
  * @constant {UserPresenceState}
+ * @description Zero-state baseline used both for store creation and cleanup resets on logout.
  */
 const initialState: UserPresenceState = {
   onlineUsers: [],
@@ -46,6 +48,7 @@ const initialState: UserPresenceState = {
 /**
  * User presence management store with Firestore integration
  * Provides methods for tracking user online/offline status
+ * @description Encapsulates presence reads and writes so components consume a small API instead of managing Firestore presence queries directly.
  * @constant {SignalStore}
  */
 export const UserPresenceStore = signalStore(
@@ -55,18 +58,21 @@ export const UserPresenceStore = signalStore(
     /**
      * Computed property for online user count
      * @returns {Signal<number>} Number of online users
+     * @description Exposes count as a reactive signal so badge components don't need to read the full onlineUsers array.
      */
     onlineUserCount: computed(() => store.onlineUsers().length),
 
     /**
      * Computed function to check if user is online
      * @returns {Signal<Function>} Function that takes uid and returns online status
+     * @description Returns a stable function reference so templates can call isUserOnline(uid) inside computed expressions without breaking signal tracking.
      */
     isUserOnline: computed(() => (uid: string) => store.onlineUsers().includes(uid)),
 
     /**
      * Computed property to get all online user IDs
      * @returns {Signal<string[]>} Array of online user IDs
+     * @description Exposes the raw array for consumers that need to iterate over all online user IDs.
      */
     onlineUserIds: computed(() => store.onlineUsers()),
   })),
@@ -83,6 +89,7 @@ export const UserPresenceStore = signalStore(
        * @function setUserOnline
        * @param {string} uid - User ID to set online
        * @returns {Promise<void>}
+       * @description Public facade that keeps the API stable while the actual Firestore write and state update live in performSetUserOnline.
        */
       async setUserOnline(uid: string): Promise<void> {
         await this.performSetUserOnline(uid);
@@ -94,6 +101,7 @@ export const UserPresenceStore = signalStore(
        * @function setUserOffline
        * @param {string} uid - User ID to set offline
        * @returns {Promise<void>}
+       * @description Public facade that keeps the API stable while the actual Firestore write and state update live in performSetUserOffline.
        */
       async setUserOffline(uid: string): Promise<void> {
         await this.performSetUserOffline(uid);
@@ -103,6 +111,7 @@ export const UserPresenceStore = signalStore(
        * Entry point: Batch update multiple users online status
        * @function updateMultipleUserPresence
        * @param {string[]} onlineUserIds - Array of online user IDs
+       * @description Used after a Firestore snapshot update to sync all online IDs in one patchState call instead of per-user updates.
        */
       updateMultipleUserPresence(onlineUserIds: string[]): void {
         patchState(store, { onlineUsers: onlineUserIds });
@@ -113,6 +122,7 @@ export const UserPresenceStore = signalStore(
        * @async
        * @function loadOnlineUsers
        * @returns {Promise<void>}
+       * @description One-shot fetch for initial load; use startPresenceListener for ongoing real-time updates.
        */
       async loadOnlineUsers(): Promise<void> {
         try {
@@ -128,6 +138,7 @@ export const UserPresenceStore = signalStore(
        * Entry point: Start listening to online user changes
        * @function startPresenceListener
        * @returns {Function} Unsubscribe function
+       * @description Returns an unsubscribe function so the caller controls when the listener is torn down (e.g. on logout).
        */
       startPresenceListener(): () => void {
         const q = query(usersCollection, where('isOnline', '==', true), limit(100));
@@ -144,6 +155,7 @@ export const UserPresenceStore = signalStore(
        * @function performSetUserOnline
        * @param {string} uid - User ID to set online
        * @returns {Promise<void>}
+       * @description Delegates to the shared presence operation to keep set-online and set-offline code paths DRY.
        */
       async performSetUserOnline(uid: string): Promise<void> {
         await this.executePresenceOperation(uid, true, 'Failed to set user online');
@@ -155,6 +167,7 @@ export const UserPresenceStore = signalStore(
        * @function performSetUserOffline
        * @param {string} uid - User ID to set offline
        * @returns {Promise<void>}
+       * @description Delegates to the shared presence operation to keep set-online and set-offline code paths DRY.
        */
       async performSetUserOffline(uid: string): Promise<void> {
         await this.executePresenceOperation(uid, false, 'Failed to set user offline');
@@ -169,6 +182,7 @@ export const UserPresenceStore = signalStore(
        * @param {string} uid - User ID
        * @param {boolean} isOnline - Online status
        * @returns {Promise<void>}
+       * @description Writes both isOnline and lastSeen atomically so the Firestore document always reflects when the status changed.
        */
       async updateUserPresenceInFirestore(uid: string, isOnline: boolean): Promise<void> {
         const userDoc = doc(usersCollection, uid);
@@ -183,6 +197,7 @@ export const UserPresenceStore = signalStore(
        * @function updateUserPresence
        * @param {string} uid - User ID
        * @param {boolean} isOnline - Online status
+       * @description Immutably updates the onlineUsers array to add or remove a single UID without replacing the whole array.
        */
       updateUserPresence(uid: string, isOnline: boolean): void {
         const currentOnlineUsers = store.onlineUsers();
@@ -195,6 +210,7 @@ export const UserPresenceStore = signalStore(
 
       /**
        * Execute shared presence update flow.
+       * @description Shared implementation for online/offline flows to avoid duplicating error handling and Firestore write logic.
        */
       async executePresenceOperation(
         uid: string,
@@ -211,6 +227,7 @@ export const UserPresenceStore = signalStore(
 
       /**
        * Set online users from a Firestore snapshot.
+       * @description Extracts document IDs from a snapshot to update the onlineUsers array in one patchState call.
        */
       setOnlineUsersFromSnapshot(snapshot: { docs: Array<{ id: string }> }): void {
         patchState(store, { onlineUsers: snapshot.docs.map((doc) => doc.id) });
@@ -221,6 +238,7 @@ export const UserPresenceStore = signalStore(
        * @function handleError
        * @param {unknown} error - Error object
        * @param {string} defaultMessage - Default error message
+       * @description Normalises errors to strings before storing in state so templates can bind the error message without type guards.
        */
       handleError(error: unknown, defaultMessage: string): void {
         const errorMessage = error instanceof Error ? error.message : defaultMessage;
@@ -233,6 +251,7 @@ export const UserPresenceStore = signalStore(
        * Set loading state
        * @function setLoading
        * @param {boolean} isLoading - Loading state
+       * @description Allows callers to control the loading indicator independently of async operation lifecycle.
        */
       setLoading(isLoading: boolean): void {
         patchState(store, { isLoading });
@@ -242,6 +261,7 @@ export const UserPresenceStore = signalStore(
        * Set error message
        * @function setError
        * @param {string | null} error - Error message or null to clear
+       * @description Exposes direct error mutation so callers can pre-set or clear errors before async operations.
        */
       setError(error: string | null): void {
         patchState(store, { error });
@@ -250,6 +270,7 @@ export const UserPresenceStore = signalStore(
       /**
        * Clear error message
        * @function clearError
+       * @description Convenience reset for components that need to dismiss errors after the user acknowledges them.
        */
       clearError(): void {
         patchState(store, { error: null });
@@ -258,6 +279,7 @@ export const UserPresenceStore = signalStore(
       /**
        * Clear all online users from state
        * @function clearOnlineUsers
+       * @description Used on logout to reset the presence list so stale online indicators don't persist into the next session.
        */
       clearOnlineUsers(): void {
         patchState(store, { onlineUsers: [] });

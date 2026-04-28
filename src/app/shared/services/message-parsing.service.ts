@@ -28,6 +28,7 @@ export interface Channel {
 export class MessageParsingService {
   /**
    * Parse message content into segments
+   * @description Tokenizes message text into text, mention, and channel segments so renderers can style and link entities consistently.
    * @param {string} text - Message text to parse
    * @param {User[]} users - Available users for mentions
    * @param {Channel[]} channels - Available channels for mentions
@@ -46,6 +47,7 @@ export class MessageParsingService {
 
   /**
    * Parse segment at current index
+   * @description Dispatches per-character parsing to mention/channel matching or plain-text accumulation based on current symbol.
    * @param {string} text - Full message text
    * @param {number} currentIndex - Current parsing position
    * @param {MessageSegment[]} segments - Accumulated segments array
@@ -58,7 +60,7 @@ export class MessageParsingService {
     currentIndex: number,
     segments: MessageSegment[],
     users: User[],
-    channels: Channel[]
+    channels: Channel[],
   ): number => {
     const char = text[currentIndex];
 
@@ -81,12 +83,17 @@ export class MessageParsingService {
 
   /**
    * Create text segment from string
+   * @description Builds plain-text segments only when content exists, preventing empty tokens in the parsed output.
    * @param {string} text - Text content
    * @param {number} startIndex - Start position
    * @param {number} endIndex - End position
    * @returns {MessageSegment | null} Text segment or null if empty
    */
-  private createTextSegment = (text: string, startIndex: number, endIndex: number): MessageSegment | null => {
+  private createTextSegment = (
+    text: string,
+    startIndex: number,
+    endIndex: number,
+  ): MessageSegment | null => {
     const textContent = text.slice(startIndex, endIndex);
     if (!textContent) return null;
     return { type: 'text', content: textContent };
@@ -94,12 +101,17 @@ export class MessageParsingService {
 
   /**
    * Add text segment until next special character
+   * @description Consumes contiguous non-entity text until the next @ or # marker to preserve original message ordering.
    * @param {string} text - Full message text
    * @param {number} currentIndex - Current parsing position
    * @param {MessageSegment[]} segments - Accumulated segments array
    * @returns {number} New index position
    */
-  private addTextSegment = (text: string, currentIndex: number, segments: MessageSegment[]): number => {
+  private addTextSegment = (
+    text: string,
+    currentIndex: number,
+    segments: MessageSegment[],
+  ): number => {
     const nextSpecial = text.slice(currentIndex).search(/[@#]/);
     const endIndex = nextSpecial === -1 ? text.length : currentIndex + nextSpecial;
     const textSegment = this.createTextSegment(text, currentIndex, endIndex);
@@ -110,6 +122,7 @@ export class MessageParsingService {
 
   /**
    * Find maximum end index for mention search
+   * @description Calculates the farthest candidate boundary for greedy backtracking when matching mentions or channel tags.
    * @param {string} text - Full message text
    * @param {number} startIndex - Start position of @ or # symbol
    * @returns {number} Maximum end index
@@ -121,6 +134,7 @@ export class MessageParsingService {
 
   /**
    * Try to find user by name
+   * @description Resolves display-name tokens against known users to validate @mention candidates.
    * @param {string} name - User display name to search for
    * @param {User[]} users - Available users
    * @returns {User | null} User object or null
@@ -131,6 +145,7 @@ export class MessageParsingService {
 
   /**
    * Create mention segment from user
+   * @description Maps a resolved user match into a mention segment including identifier and avatar fallback metadata.
    * @param {string} name - User display name
    * @param {User} user - User object
    * @param {number} startIndex - Start position
@@ -150,6 +165,7 @@ export class MessageParsingService {
 
   /**
    * Match a user mention starting at the given index
+   * @description Performs greedy-to-shortest backtracking to find the longest valid @mention token at the current index.
    * Uses greedy matching with backtracking to find longest valid user name
    * @param {string} text - Full message text
    * @param {number} startIndex - Start position of @ symbol
@@ -159,7 +175,7 @@ export class MessageParsingService {
   private matchMention = (
     text: string,
     startIndex: number,
-    users: User[]
+    users: User[],
   ): { segment: MessageSegment; endIndex: number } | null => {
     const maxEnd = this.findMaxEndIndex(text, startIndex);
 
@@ -175,6 +191,7 @@ export class MessageParsingService {
 
   /**
    * Try to find channel by name
+   * @description Resolves channel-name tokens against known channels to validate #channel candidates.
    * @param {string} name - Channel name to search for
    * @param {Channel[]} channels - Available channels
    * @returns {Channel | null} Channel object or null
@@ -185,6 +202,7 @@ export class MessageParsingService {
 
   /**
    * Create channel segment from channel
+   * @description Maps a resolved channel match into a channel segment with stable identifier data for navigation hooks.
    * @param {string} name - Channel name
    * @param {Channel} channel - Channel object
    * @param {number} startIndex - Start position
@@ -203,6 +221,7 @@ export class MessageParsingService {
 
   /**
    * Match a channel mention starting at the given index
+   * @description Performs greedy-to-shortest backtracking to find the longest valid #channel token at the current index.
    * Uses greedy matching with backtracking to find longest valid channel name
    * @param {string} text - Full message text
    * @param {number} startIndex - Start position of # symbol
@@ -212,7 +231,7 @@ export class MessageParsingService {
   private matchChannel = (
     text: string,
     startIndex: number,
-    channels: Channel[]
+    channels: Channel[],
   ): { segment: MessageSegment; endIndex: number } | null => {
     const maxEnd = this.findMaxEndIndex(text, startIndex);
 

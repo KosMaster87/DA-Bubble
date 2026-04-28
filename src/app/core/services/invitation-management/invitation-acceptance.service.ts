@@ -1,12 +1,12 @@
 /**
  * @fileoverview Invitation Acceptance Service
- * @description Handles invitation acceptance/decline logic with duplicate prevention
+ * @description Executes invitation status transitions with debounce guards to prevent duplicate processing from rapid repeated actions.
  * @module core/services/invitation-management
  */
 
 import { Injectable, inject } from '@angular/core';
-import { InvitationService } from '@core/services/invitation/invitation.service';
 import { Invitation } from '@core/models/invitation.model';
+import { InvitationService } from '@core/services/invitation/invitation.service';
 import { InvitationNavigationService } from './invitation-navigation.service';
 
 /**
@@ -25,6 +25,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Accept invitation and trigger appropriate handler
+    * @description Provides the single acceptance pipeline so validation, duplicate prevention, status updates, and type-specific handling stay synchronized.
    * @param invitation Invitation to accept
    * @param currentUserId Current user's ID
    * @param onChannelInvitation Callback for channel invitation handling
@@ -36,7 +37,7 @@ export class InvitationAcceptanceService {
     currentUserId: string,
     onChannelInvitation: (invitation: Invitation, userId: string) => Promise<void>,
     onDmInvitation: (invitation: Invitation) => Promise<void>,
-    onError: (error: any, invitationId: string) => void
+    onError: (error: any, invitationId: string) => void,
   ): Promise<void> => {
     if (!currentUserId) {
       return;
@@ -73,13 +74,11 @@ export class InvitationAcceptanceService {
    * Navigate to channel without adding as member - user must accept rules first
    * DON'T select channel in store - the router navigation will trigger the component
    * which will load the channel and handle subscriptions properly
+   * @description Navigates to the channel route only; member addition is intentionally deferred until the user explicitly accepts the channel rules.
    * @param invitation Channel invitation
    * @param userId User ID (unused - kept for API compatibility)
    */
-  handleChannelInvitation = async (
-    invitation: Invitation,
-    userId: string
-  ): Promise<void> => {
+  handleChannelInvitation = async (invitation: Invitation, userId: string): Promise<void> => {
     if (!invitation.channelId) return;
 
     await this.invitationNavigationService.navigateToChannel(invitation.channelId);
@@ -87,6 +86,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Handle direct message invitation acceptance
+    * @description Acknowledges DM invitation acceptance now while preserving a dedicated extension point for future auto-open DM routing.
    * @param invitation DM invitation
    */
   handleDirectMessageInvitation = async (invitation: Invitation): Promise<void> => {
@@ -96,6 +96,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Decline invitation
+    * @description Applies decline status through the invitation service and captures outcome logs so failure diagnosis remains straightforward.
    * @param invitationId Invitation ID to decline
    */
   declineInvitation = async (invitationId: string): Promise<void> => {

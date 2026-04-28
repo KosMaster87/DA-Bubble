@@ -7,8 +7,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { NavigationService } from '@core/services/navigation/navigation.service';
-import { WorkspaceInitializationService } from '@core/services/workspace-initialization/workspace-initialization.service';
 import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
+import { WorkspaceInitializationService } from '@core/services/workspace-initialization/workspace-initialization.service';
 import { DashboardThreadCoordinatorService } from './dashboard-thread-coordinator.service';
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +21,7 @@ export class RouteHandlersService {
 
   /**
    * Handle dashboard root route
+   * @description Applies root-entry behavior by resetting thread context and optionally auto-selecting welcome content.
    * @param showWelcome - Callback to show welcome view
    */
   handleDashboardRoot = (showWelcome: () => void): void => {
@@ -37,6 +38,7 @@ export class RouteHandlersService {
 
   /**
    * Handle mailbox route
+   * @description Switches route state to mailbox after thread teardown and channel selection synchronization.
    * @param showMailbox - Callback to show mailbox view
    */
   handleMailboxRoute = (showMailbox: () => void): void => {
@@ -47,6 +49,7 @@ export class RouteHandlersService {
 
   /**
    * Handle legal route
+   * @description Switches route state to legal page while ensuring thread UI does not remain open from prior contexts.
    * @param showLegal - Callback to show legal view
    */
   handleLegalRoute = (showLegal: () => void): void => {
@@ -57,6 +60,7 @@ export class RouteHandlersService {
 
   /**
    * Handle settings route
+   * @description Switches route state to settings and normalizes selection/thread state before rendering settings content.
    * @param showSettings - Callback to show settings view
    */
   handleSettingsRoute = (showSettings: () => void): void => {
@@ -67,6 +71,7 @@ export class RouteHandlersService {
 
   /**
    * Handle channel route
+   * @description Coordinates channel navigation, thread-preservation rules, and optional URL-driven thread opening.
    * @param channelId - Unique identifier of the channel
    * @param threadId - Optional thread ID to open
    * @param showChannel - Callback to show channel view
@@ -74,7 +79,7 @@ export class RouteHandlersService {
   handleChannelRoute = (
     channelId: string,
     threadId: string | undefined,
-    showChannel: (id: string) => void
+    showChannel: (id: string) => void,
   ): void => {
     const previousId = this.navigationService.getSelectedChannelId()();
     const shouldKeepThread = !!threadId;
@@ -95,6 +100,7 @@ export class RouteHandlersService {
 
   /**
    * Handle direct message route
+   * @description Coordinates DM navigation, thread-preservation rules, and optional URL-driven DM-thread opening.
    * @param dmId - Unique identifier of the direct message conversation
    * @param threadId - Optional thread ID to open
    * @param showDirectMessage - Callback to show DM view
@@ -102,7 +108,7 @@ export class RouteHandlersService {
   handleDirectMessageRoute = (
     dmId: string,
     threadId: string | undefined,
-    showDirectMessage: (id: string) => void
+    showDirectMessage: (id: string) => void,
   ): void => {
     const previousId = this.navigationService.getSelectedDirectMessageId()();
     const shouldKeepThread = !!threadId;
@@ -123,7 +129,7 @@ export class RouteHandlersService {
 
   /**
    * Ensure clean dashboard URL
-   * @description Navigates to /dashboard if URL contains additional segments
+   * @description Normalizes the route to bare /dashboard when stale path segments are present.
    */
   private ensureCleanDashboardUrl = (): void => {
     const url = this.router.url;

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Thread Interaction Service
- * @description Handles thread message interactions (reactions, edit, delete)
+ * @description Provides a unified mutation boundary for thread message reactions, edits, and deletions.
  * @module core/services/thread-interaction
  */
 
@@ -18,6 +18,7 @@ export class ThreadInteractionService {
 
   /**
    * Toggle reaction on thread message
+   * @description Delegates to the thread store with the DM flag so the correct Firestore path is used for channel vs. DM threads.
    * @param channelId Channel or conversation ID
    * @param parentMessageId Parent message ID
    * @param messageId Thread message ID
@@ -31,7 +32,7 @@ export class ThreadInteractionService {
     messageId: string,
     emoji: string,
     userId: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): Promise<void> {
     try {
       await this.threadStore.toggleReaction(
@@ -40,7 +41,7 @@ export class ThreadInteractionService {
         messageId,
         emoji,
         userId,
-        isDirectMessage
+        isDirectMessage,
       );
       console.log('✅ Thread Reaction toggled:', messageId, emoji);
     } catch (error) {
@@ -51,6 +52,7 @@ export class ThreadInteractionService {
 
   /**
    * Edit thread message
+   * @description Updates the thread reply content in the store; the DM flag ensures the right Firestore collection path is targeted.
    * @param channelId Channel or conversation ID
    * @param parentMessageId Parent message ID
    * @param messageId Thread message ID to edit
@@ -62,19 +64,20 @@ export class ThreadInteractionService {
     parentMessageId: string,
     messageId: string,
     newContent: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): Promise<void> {
     await this.threadStore.updateThread(
       channelId,
       parentMessageId,
       messageId,
       { content: newContent },
-      isDirectMessage
+      isDirectMessage,
     );
   }
 
   /**
    * Delete thread message
+   * @description Deletes the thread reply from the store and rethrows on failure so the UI can show an error state.
    * @param channelId Channel or conversation ID
    * @param parentMessageId Parent message ID
    * @param messageId Thread message ID to delete
@@ -84,7 +87,7 @@ export class ThreadInteractionService {
     channelId: string,
     parentMessageId: string,
     messageId: string,
-    isDirectMessage: boolean
+    isDirectMessage: boolean,
   ): Promise<void> {
     try {
       await this.threadStore.deleteThread(channelId, parentMessageId, messageId, isDirectMessage);

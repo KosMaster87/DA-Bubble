@@ -26,6 +26,7 @@ export class MembersMiniatureComponent {
 
   /**
    * Handle click event
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onClick(): void {
     this.memberClicked.emit();
@@ -33,6 +34,7 @@ export class MembersMiniatureComponent {
 
   /**
    * Handle image load error - use fallback avatar
+   * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
    */
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;

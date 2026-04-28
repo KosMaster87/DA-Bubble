@@ -1,22 +1,22 @@
 /**
  * @fileoverview User Service for Firestore operations
- * @description Handles all Firestore operations for user data
+ * @description Encapsulates user document reads, writes, and mapping rules so profile data access remains consistent across the app.
  * @module core/services/user
  */
 
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore,
-  collection,
-  doc,
-  updateDoc,
-  getDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  limit,
-  Unsubscribe,
+    Firestore,
+    Unsubscribe,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    limit,
+    onSnapshot,
+    orderBy,
+    query,
+    updateDoc,
 } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
 
@@ -29,16 +29,13 @@ export class UserService {
 
   /**
    * Setup real-time listener for users with limit
+   * @description Starts a reactive Firestore listener limited to the most recent 200 users so the app never over-fetches on large deployments.
    */
   setupUsersListener(
     onSuccess: (users: User[]) => void,
-    onError: (error: any) => void
+    onError: (error: any) => void,
   ): Unsubscribe {
-    const q = query(
-      this.usersCollection,
-      orderBy('createdAt', 'desc'),
-      limit(200)
-    );
+    const q = query(this.usersCollection, orderBy('createdAt', 'desc'), limit(200));
 
     return onSnapshot(
       q,
@@ -46,12 +43,13 @@ export class UserService {
         const users = this.mapSnapshot(snapshot);
         onSuccess(users);
       },
-      onError
+      onError,
     );
   }
 
   /**
    * Create or update user document
+   * @description Uses updateDoc (not setDoc) so partial existing fields like lastRead are preserved on re-creation.
    */
   async createUser(userData: User): Promise<void> {
     const userDoc = doc(this.usersCollection, userData.uid);
@@ -61,6 +59,7 @@ export class UserService {
 
   /**
    * Update user data
+   * @description Automatically appends updatedAt so consumers don't have to manage the timestamp manually.
    */
   async updateUser(uid: string, updates: Partial<User>): Promise<void> {
     const userDoc = doc(this.usersCollection, uid);
@@ -70,6 +69,7 @@ export class UserService {
 
   /**
    * Delete user document
+   * @description Removes the Firestore document permanently; callers are responsible for cascading cleanup of auth or related data.
    */
   async deleteUser(uid: string): Promise<void> {
     const userDoc = doc(this.usersCollection, uid);
@@ -78,6 +78,7 @@ export class UserService {
 
   /**
    * Get user by ID from Firestore
+   * @description One-off fetch used for single-user lookups where subscribing to a real-time listener would be wasteful.
    */
   async getUserById(uid: string): Promise<User | null> {
     const userDoc = doc(this.usersCollection, uid);
@@ -87,6 +88,7 @@ export class UserService {
 
   /**
    * Map Firestore snapshot to User array
+   * @description Centralises snapshot mapping so all caller sites get consistent User shapes including photo URL normalisation.
    */
   private mapSnapshot(snapshot: any): User[] {
     return snapshot.docs.map((doc: any) => {
@@ -103,6 +105,7 @@ export class UserService {
 
   /**
    * Normalize Google profile photo URL
+   * @description Forces a fixed 96px crop on Google profile photos so avatars appear at a consistent size regardless of the original URL parameter.
    */
   private normalizePhotoURL(photoURL: string | null | undefined): string | undefined {
     if (!photoURL) return undefined;
@@ -117,6 +120,7 @@ export class UserService {
 
   /**
    * Add timestamps to user data
+   * @description Preserves an existing createdAt on upserts while always bumping updatedAt to now.
    */
   private addTimestamps(userData: User): User {
     const now = new Date();

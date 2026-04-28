@@ -19,16 +19,19 @@ export class ReactionCountingComponent {
 
   /**
    * Array of reactions for the current message
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   reactions = input<MessageReaction[]>([]);
 
   /**
    * Emits when a reaction is clicked
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   reactionClicked = output<string>();
 
   /**
    * Get emoji icon path by ID
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @param emojiId - The emoji ID
    */
   getEmojiIcon(emojiId: string): string {
@@ -38,6 +41,7 @@ export class ReactionCountingComponent {
 
   /**
    * Handle reaction button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @param emoji - The emoji that was clicked
    */
   onReactionClick(emoji: string): void {

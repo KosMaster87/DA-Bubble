@@ -1,6 +1,6 @@
 /**
  * @fileoverview Channel Message Interaction Service
- * @description Handles channel message interactions (reactions, edit, delete)
+ * @description Encapsulates channel message mutations so reaction, edit, and delete operations share consistent side-effect handling.
  * @module core/services/channel-message-interaction
  */
 
@@ -18,6 +18,7 @@ export class ChannelMessageInteractionService {
 
   /**
    * Toggle reaction on channel message
+   * @description Delegates to the store and throws on failure so the UI layer can show an appropriate error toast.
    * @param channelId Channel ID
    * @param messageId Message ID
    * @param emoji Emoji to toggle
@@ -27,7 +28,7 @@ export class ChannelMessageInteractionService {
     channelId: string,
     messageId: string,
     emoji: string,
-    userId: string
+    userId: string,
   ): Promise<void> => {
     try {
       await this.channelMessageStore.toggleReaction(channelId, messageId, emoji, userId);
@@ -40,6 +41,7 @@ export class ChannelMessageInteractionService {
 
   /**
    * Edit channel message
+   * @description Updates the message content in Firestore; the store snapshot listener propagates the change to all open views.
    * @param channelId Channel ID
    * @param messageId Message ID to edit
    * @param newContent New message content
@@ -50,6 +52,7 @@ export class ChannelMessageInteractionService {
 
   /**
    * Delete channel message
+   * @description Deletes the message and its thread replies; throws on failure so the UI can surface an error state.
    * @param channelId Channel ID
    * @param messageId Message ID to delete
    */
@@ -65,6 +68,7 @@ export class ChannelMessageInteractionService {
 
   /**
    * Send message to channel
+   * @description Guards against empty-content submissions before delegating to the store's send path.
    * @param channelId Channel ID
    * @param content Message content
    * @param userId Current user ID

@@ -1,20 +1,21 @@
 /**
  * @fileoverview Responsive Panel Management Service
- * @description Manages automatic panel visibility at responsive breakpoints
+ * @description Applies breakpoint-aware panel visibility rules so sidebar/content/thread layouts stay coherent during viewport and route changes.
  * @module shared/services
  */
 
-import { Injectable, inject, signal, effect, untracked } from '@angular/core';
+import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
-import { ResponsiveViewService } from './responsive-view.service';
-import { WorkspaceSidebarService } from './workspace-sidebar.service';
 import { DashboardStateService } from './dashboard-state.service';
+import { ResponsiveViewService } from './responsive-view.service';
 import { ThreadManagementService } from './thread-management.service';
+import { WorkspaceSidebarService } from './workspace-sidebar.service';
 
 type ClosedContent = { type: 'channel' | 'dm'; id: string } | null;
 
 /**
  * Service managing responsive panel behavior
+ * @description Applies responsive panel rules that coordinate sidebar, content, and thread visibility across breakpoints.
  * Handles automatic hiding/showing of panels based on viewport width
  */
 @Injectable({ providedIn: 'root' })
@@ -31,6 +32,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Initialize panel management effects
+   * @description Registers the three viewport rules once so responsive panel behavior stays centralized and deterministic.
    * Sets up all three responsive behavior rules
    *
    */
@@ -42,6 +44,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Rule 1: Under 1024px with thread - save content, CSS hides it
+   * @description Captures the currently visible conversation before narrow layouts hide content behind the thread panel.
    * Saves content state when viewport is under 1024px with thread open
    *
    */
@@ -54,7 +57,9 @@ export class ResponsivePanelManagementService {
       const alreadyClosed = this.closedContentByRule();
 
       untracked(() => {
-        if (this.shouldSaveContentUnder1024px(viewportWidth, hasContent, isThreadOpen, alreadyClosed)) {
+        if (
+          this.shouldSaveContentUnder1024px(viewportWidth, hasContent, isThreadOpen, alreadyClosed)
+        ) {
           this.saveCurrentContent(currentView);
         }
       });
@@ -63,6 +68,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Rule 2: Between 1024-1280px - sidebar and content mutually exclusive
+   * @description Enforces sidebar/content exclusivity in mid-range widths where thread view competes for horizontal space.
    * Manages panel exclusivity in mid-range viewport widths
    *
    */
@@ -85,6 +91,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Rule 3: Restore content when conditions met
+   * @description Re-opens previously hidden conversation context when layout constraints are relaxed.
    * Restores previously closed content when viewport is wide enough
    *
    */
@@ -105,6 +112,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Check if view has active content
+   * @description Classifies dashboard views into content-bearing and non-content views for responsive rule evaluation.
    * @param view - Current view name
    * @returns True if view is channel or direct message
    *
@@ -115,6 +123,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Check if should save content under 1024px
+   * @description Collects the threshold checks for the under-1024 rule so effect logic stays readable and testable.
    * @param width - Viewport width
    * @param hasContent - Whether content is active
    * @param threadOpen - Whether thread is open
@@ -129,16 +138,13 @@ export class ResponsivePanelManagementService {
     alreadyClosed: ClosedContent,
   ): boolean => {
     return (
-      width < 1024 &&
-      hasContent &&
-      threadOpen &&
-      !this.responsiveView.isMobile() &&
-      !alreadyClosed
+      width < 1024 && hasContent && threadOpen && !this.responsiveView.isMobile() && !alreadyClosed
     );
   };
 
   /**
    * Check if viewport is in mid range
+   * @description Encodes the mid-range viewport predicate used by the sidebar/content exclusivity rule.
    * @param width - Viewport width
    * @param threadOpen - Whether thread is open
    * @returns True if in 1024-1280px range
@@ -150,6 +156,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Save current content state
+   * @description Stores the currently visible channel or DM so it can be restored after responsive rule-driven hiding.
    * @param currentView - Current view name
    *
    */
@@ -166,6 +173,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Handle mid-range panel behavior
+   * @description Applies transition-specific actions when sidebar/content visibility changes under mid-range constraints.
    * @param isSidebarOpen - Whether sidebar is open
    * @param hasContent - Whether content is active
    * @param currentView - Current view name
@@ -193,6 +201,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Update previous state tracking
+   * @description Persists previous sidebar/content flags so the next effect run can detect open/close edges.
    * @param isSidebarOpen - Whether sidebar is open
    * @param hasContent - Whether content is active
    *
@@ -204,6 +213,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Check if should restore content
+   * @description Gates content restoration to cases where layout constraints are gone and the same content is not already visible.
    * @param closedContent - Closed content state
    * @param width - Viewport width
    * @param threadOpen - Whether thread is open
@@ -227,6 +237,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Check if currently showing the closed content
+   * @description Prevents redundant navigation by comparing stored closed-content state with the currently selected conversation.
    * @param closedContent - Closed content state
    * @param currentView - Current view name
    * @returns True if showing the same content
@@ -250,6 +261,7 @@ export class ResponsivePanelManagementService {
 
   /**
    * Restore previously closed content
+   * @description Navigates back to the stored channel or DM and clears recovery state once restoration is complete.
    * @param closedContent - Closed content state to restore
    *
    */

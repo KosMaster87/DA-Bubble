@@ -32,6 +32,7 @@ export class MessageContentComponent {
 
   /**
    * Parse message content into segments using parsing service
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @returns {MessageSegment[]} Array of parsed segments
    */
   protected segments = computed<MessageSegment[]>(() => {
@@ -44,6 +45,7 @@ export class MessageContentComponent {
 
   /**
    * Handle mention click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits user ID when mention is clicked
    * @param {string} userId - ID of mentioned user
    * @returns {void}
@@ -54,6 +56,7 @@ export class MessageContentComponent {
 
   /**
    * Handle channel click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits channel ID when channel mention is clicked
    * @param {string} channelId - ID of mentioned channel
    * @returns {void}

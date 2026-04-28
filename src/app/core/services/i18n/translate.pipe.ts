@@ -1,10 +1,10 @@
 /**
  * @fileoverview Translate Pipe for I18n
- * @description Pipe for translating keys in templates
+ * @description Template pipe that resolves translation keys via I18nService while staying reactive to language changes.
  * @module services/i18n/translate.pipe
  */
 
-import { Pipe, PipeTransform, inject, computed } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { I18nService } from './i18n.service';
 
 @Pipe({
@@ -17,6 +17,7 @@ export class TranslatePipe implements PipeTransform {
 
   /**
    * Transform a translation key to translated text
+    * @description Keeps templates free of imperative i18n calls while always resolving keys against the currently active language.
    * @param key Translation key (e.g., 'AUTH.LOGIN')
    * @returns Translated string
    *

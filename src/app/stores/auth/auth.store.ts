@@ -5,20 +5,22 @@
  */
 
 import { computed, inject } from '@angular/core';
-import { signalStore, withState, withMethods, withComputed, patchState } from '@ngrx/signals';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { Firestore } from '@angular/fire/firestore';
 import { StoreCleanupService } from '@core/services/store-cleanup.service';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 
-import { initialAuthState } from './auth.types';
 import { createAuthStateHandlers } from './auth.helpers';
 import { createLoginMethods } from './auth.login.methods';
-import { createSignupMethods } from './auth.signup.methods';
 import { createPasswordMethods } from './auth.password.methods';
+import { createSignupMethods } from './auth.signup.methods';
+import { initialAuthState } from './auth.types';
 
 /**
  * Authentication store with Firebase integration
  * Provides methods for login, logout, registration and state management
+ * @description Central auth facade that wires Firebase Auth events to NgRx signal state,
+ * ensuring the rest of the app reacts to authentication changes through a single reactive source.
  * @constant {SignalStore}
  */
 export const AuthStore = signalStore(
@@ -47,14 +49,14 @@ export const AuthStore = signalStore(
       firestore,
       store,
       handlers.handleSuccessfulAuth,
-      handlers.handleAuthError
+      handlers.handleAuthError,
     );
     const signupMethods = createSignupMethods(
       auth,
       firestore,
       store,
       handlers.handleSuccessfulAuth,
-      handlers.handleAuthError
+      handlers.handleAuthError,
     );
     const passwordMethods = createPasswordMethods(auth);
 
@@ -75,5 +77,5 @@ export const AuthStore = signalStore(
         patchState(store, { error: null });
       },
     };
-  })
+  }),
 );

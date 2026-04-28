@@ -1,6 +1,6 @@
 /**
  * @fileoverview Invitation Navigation Service
- * @description Handles navigation logic for accepted invitations with debouncing
+ * @description Coordinates invitation-driven routing with debounce and cancellation guards so automatic redirects never override active user navigation.
  * @module core/services/invitation-management
  */
 
@@ -24,6 +24,7 @@ export class InvitationNavigationService {
   /**
    * Navigate to channel after delay
    * Cancellable to prevent race conditions with manual navigation
+    * @description Runs channel redirects through a guarded delayed path so invitation clicks are deduplicated and still cancellable during user-driven route changes.
    * @param channelId Channel ID to navigate to
    */
   navigateToChannel = async (channelId: string): Promise<void> => {
@@ -36,6 +37,7 @@ export class InvitationNavigationService {
 
   /**
    * Check if navigation should be skipped due to debounce
+   * @description Returns true when the same channel was navigated to within the debounce window, preventing duplicate navigations from rapid invitation clicks.
    * @param channelId Channel ID to check
    * @returns True if navigation should be skipped
    */
@@ -50,6 +52,7 @@ export class InvitationNavigationService {
 
   /**
    * Track navigation attempt for debouncing
+   * @description Records the channel ID and current timestamp so subsequent calls within the debounce window can be detected.
    * @param channelId Channel ID being navigated to
    */
   private trackNavigation(channelId: string): void {
@@ -58,6 +61,7 @@ export class InvitationNavigationService {
 
   /**
    * Schedule navigation with timeout
+   * @description Wraps the timeout in a Promise so the caller can await the entire navigation attempt, including cancellation detection.
    * @param channelId Channel ID to navigate to
    */
   private scheduleNavigation(channelId: string): Promise<void> {
@@ -73,6 +77,7 @@ export class InvitationNavigationService {
 
   /**
    * Execute navigation if still valid and user hasn't navigated away
+   * @description Checks that the pending navigation hasn’t been cancelled and that the user is still on a dashboard route before executing.
    * @param channelId Channel ID to navigate to
    */
   private async executeNavigationIfValid(channelId: string): Promise<void> {
@@ -91,6 +96,7 @@ export class InvitationNavigationService {
 
   /**
    * Check if navigation is still pending for given channel
+   * @description Validates that the pending navigation target hasn’t changed since the timeout was set, guarding against mid-flight cancellations.
    * @param channelId Channel ID to check
    * @returns True if navigation is still pending
    */
@@ -100,6 +106,7 @@ export class InvitationNavigationService {
 
   /**
    * Check if navigation should execute based on current URL
+   * @description Limits invitation-driven navigation to dashboard entry/mailbox routes so it can’t override a channel or DM the user has already opened.
    * @param currentUrl Current router URL
    * @returns True if navigation should execute
    */
@@ -110,13 +117,14 @@ export class InvitationNavigationService {
   /**
    * Cancel any pending invitation-triggered navigation
    * Call this when user manually navigates to prevent override
+   * @description Clears the scheduled timeout and nullifies the pending navigation so no automatic redirect fires after manual navigation.
    */
   cancelPendingNavigation(): void {
     if (this.pendingNavigation) {
       clearTimeout(this.pendingNavigation.timeoutId);
       console.log(
         '🚫 User navigation - cancelled pending invitation navigation to:',
-        this.pendingNavigation.channelId
+        this.pendingNavigation.channelId,
       );
       this.pendingNavigation = null;
     }

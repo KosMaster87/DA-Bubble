@@ -23,12 +23,10 @@ export class UnreadTrackerService {
 
   /**
    * Check if conversation has unread messages
+   * @description Missing lastRead is treated as unread so first-load users see existing activity in channels they haven’t opened yet.
    * @param conversationId Channel ID or Conversation ID
    * @param lastMessageAt Last message timestamp in conversation
    * @returns true if unread
-   * @description
-   * Missing lastRead is treated as unread on purpose so first-load users do not miss
-   * existing activity before they open a conversation once.
    */
   hasUnread(conversationId: string, lastMessageAt?: Date): boolean {
     if (!lastMessageAt) return false;
@@ -42,13 +40,11 @@ export class UnreadTrackerService {
   /**
    * Check if a specific thread has unread messages
    * Uses per-thread tracking: conversationId_thread_messageId
+   * @description Thread-level keys are intentionally separate from conversation keys because thread and channel unread badges are independent UX signals.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID of the thread
    * @param lastThreadTimestamp Last thread activity timestamp
    * @returns true if this specific thread has unread messages
-   * @description
-   * Thread-level keys intentionally do not reuse conversation-level keys because
-   * thread unread and normal unread are separate UX signals.
    */
   hasThreadUnread(conversationId: string, messageId: string, lastThreadTimestamp?: Date): boolean {
     if (!lastThreadTimestamp) return false;
@@ -63,6 +59,7 @@ export class UnreadTrackerService {
   /**
    * Check whether a conversation should be reloaded to verify possible unread thread activity.
    * This is a conservative fallback for reload scenarios where only conversation metadata is loaded.
+   * @description Scans the lastRead cache for any thread key under this conversation to determine if a Firestore load is worth triggering on reload.
    * @param conversationId Channel ID or Conversation ID
    * @param lastMessageAt Latest conversation activity timestamp
    * @returns true if prior thread tracking exists and the conversation has newer activity
@@ -80,11 +77,10 @@ export class UnreadTrackerService {
 
   /**
    * Build thread key for lastRead tracking
+   * @description Produces a stable key format so old read markers remain compatible across releases.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID
    * @returns Thread key in format: conversationId_thread_messageId
-   * @description
-   * Stable key format keeps old read markers compatible across releases.
    */
   private buildThreadKey(conversationId: string, messageId: string): string {
     return `${conversationId}_thread_${messageId}`;

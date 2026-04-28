@@ -4,8 +4,8 @@
  * @module shared/dashboard-components/user-options-menu-mobile
  */
 
-import { Component, output, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, input, output, signal } from '@angular/core';
 
 @Component({
   selector: 'app-user-options-menu-mobile',
@@ -28,6 +28,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle close click (overlay)
+   * @description Closes the bottom sheet using the shared animated close path.
    */
   onClose(): void {
     this.triggerClose();
@@ -35,6 +36,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle click on drag handle
+   * @description Treats a drag-handle tap as explicit dismiss action for quick close behavior.
    */
   onHandleClick(): void {
     this.triggerClose();
@@ -42,6 +44,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Trigger close with animation
+   * @description Starts close animation and emits close after animation delay to keep transitions smooth.
    */
   private triggerClose(): void {
     this.isClosing.set(true);
@@ -53,6 +56,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle touch start on drag handle
+   * @description Captures initial touch position and enters drag mode for gesture-based dismissal.
    */
   onTouchStart(event: TouchEvent): void {
     this.isDragging.set(true);
@@ -61,6 +65,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle touch move on drag handle
+   * @description Updates downward translation while dragging to provide real-time visual feedback.
    */
   onTouchMove(event: TouchEvent): void {
     if (!this.isDragging()) return;
@@ -76,6 +81,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle touch end on drag handle
+   * @description Closes sheet when drag threshold is exceeded, otherwise snaps the panel back to its resting position.
    */
   onTouchEnd(): void {
     if (!this.isDragging()) return;
@@ -102,6 +108,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle profile click
+   * @description Closes sheet first, then emits profile action to avoid interaction overlap during transition.
    */
   onProfileClick(): void {
     this.triggerClose();
@@ -112,6 +119,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle mailbox click
+   * @description Closes sheet first, then emits mailbox action to keep navigation transitions visually clean.
    */
   onMailboxClick(): void {
     this.triggerClose();
@@ -122,6 +130,7 @@ export class UserOptionsMenuMobileComponent {
 
   /**
    * Handle logout click
+   * @description Closes sheet first, then emits logout action so auth flow starts after UI dismissal.
    */
   onLogoutClick(): void {
     this.triggerClose();

@@ -7,14 +7,14 @@
  * This facade will be kept for backward compatibility.
  */
 
-import { Injectable, inject, Signal } from '@angular/core';
+import { inject, Injectable, Signal } from '@angular/core';
+import type { ChannelInfoData } from '@shared/dashboard-components/channel-info/channel-info.component';
 import { ChannelAccessService } from '../channel-access/channel-access.service';
 import {
-  ChannelTransformationService,
   ChannelAccessInfo,
   ChannelInfo,
+  ChannelTransformationService,
 } from '../channel-transformation/channel-transformation.service';
-import type { ChannelInfoData } from '@shared/dashboard-components/channel-info/channel-info.component';
 import type { UserListItem } from '../user-transformation/user-transformation.service';
 
 // Re-export types for backward compatibility
@@ -33,6 +33,7 @@ export class ChannelDataService {
 
   /**
    * Check if user is member of channel
+   * @description Facade delegation — keeps consumers decoupled from ChannelAccessService while the refactoring is in progress.
    * @param channelId Channel ID
    * @returns True if user is member
    */
@@ -42,6 +43,7 @@ export class ChannelDataService {
 
   /**
    * Check if current user is channel owner
+   * @description Facade delegation for the owner-check; hides which underlying service performs the computation.
    * @param channelId Channel ID
    * @returns True if current user is owner
    */
@@ -55,6 +57,7 @@ export class ChannelDataService {
 
   /**
    * Get channel access info for access screen
+   * @description Facade delegation — assembles the access-screen data shape (name, member count, privacy) from the transformation service.
    * @param channelInfo Basic channel info
    * @returns Channel access information
    */
@@ -64,6 +67,7 @@ export class ChannelDataService {
 
   /**
    * Get channel info data for channel-info component
+   * @description Facade delegation — transforms channel store data into the shape required by the channel-info component.
    * @param channelInfo Basic channel info
    * @returns Channel info data
    */
@@ -73,6 +77,7 @@ export class ChannelDataService {
 
   /**
    * Get channel members as user list items
+   * @description Facade delegation — converts raw member IDs into display-ready UserListItem shapes for the member list UI.
    * @param channelId Channel ID
    * @returns Members list
    */
@@ -82,6 +87,7 @@ export class ChannelDataService {
 
   /**
    * Get available users (not yet members)
+   * @description Facade delegation — returns users not yet in the channel, used to populate the add-members picker.
    * @param channelId Channel ID
    * @returns Available users list
    */

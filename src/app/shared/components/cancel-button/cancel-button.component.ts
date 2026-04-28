@@ -8,6 +8,7 @@ import { Component, input, output } from '@angular/core';
 
 /**
  * Cancel button component for dismissing actions
+ * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
  * @component CancelButtonComponent
  */
 @Component({
@@ -24,6 +25,7 @@ export class CancelButtonComponent {
 
   /**
    * Handle button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function handleClick
    * @returns {void}
    */

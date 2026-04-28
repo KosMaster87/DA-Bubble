@@ -4,30 +4,30 @@
  * @module shared/dashboard-components/conversation-messages
  */
 
+import { DatePipe } from '@angular/common';
 import {
+  AfterViewChecked,
   Component,
+  effect,
+  ElementRef,
+  inject,
   input,
   output,
   ViewChild,
-  ElementRef,
-  AfterViewChecked,
-  effect,
-  inject,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
-import { MessageEdit } from '../message-edit/message-edit';
-import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
-import { MessageContentComponent } from '../message-content/message-content.component';
-import { DeleteMessageModalComponent } from '../delete-message-modal/delete-message-modal.component';
+import { MessageReaction } from '@core/models/message.model';
+import { UserPresenceStore } from '../../../stores';
 import {
   ChatScrollService,
-  MessageScrollCoordinatorService,
-  MessageInteractionService,
   MessageHelperService,
+  MessageInteractionService,
+  MessageScrollCoordinatorService,
 } from '../../services';
-import { UserPresenceStore } from '../../../stores';
-import { MessageReaction } from '@core/models/message.model';
+import { DeleteMessageModalComponent } from '../delete-message-modal/delete-message-modal.component';
+import { MessageContentComponent } from '../message-content/message-content.component';
+import { MessageEdit } from '../message-edit/message-edit';
+import { ReactionBarComponent, type ReactionType } from '../reaction-bar/reaction-bar.component';
+import { ReactionCountingComponent } from '../reaction-counting/reaction-counting.component';
 
 export interface Message {
   id: string;
@@ -92,6 +92,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Constructor - initializes component effects
+   * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
    */
   constructor() {
     this.setupMessageChangeEffect();
@@ -99,6 +100,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Setup effect to track message changes and auto-scroll
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Monitors message count changes and triggers auto-scroll when appropriate
    * @returns {void}
    */
@@ -117,6 +119,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message count change (initial load or new messages)
+   * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
    * Determines if this is initial load or new messages and triggers appropriate handling
    * @param {string} conversationId - Unique identifier for the conversation
    * @param {number} currentCount - Current total message count
@@ -126,12 +129,12 @@ export class ConversationMessagesComponent implements AfterViewChecked {
   private handleMessageCountChange = (
     conversationId: string,
     currentCount: number,
-    autoScrollEnabled: boolean
+    autoScrollEnabled: boolean,
   ): void => {
     const result = this.scrollCoordinator.handleMessageCountChange(
       conversationId,
       currentCount,
-      autoScrollEnabled
+      autoScrollEnabled,
     );
 
     if (result.shouldScroll) {
@@ -144,6 +147,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Angular lifecycle hook - runs after view is checked
+   * @description Executes deferred scroll/read updates after DOM rendering has stabilized.
    * Performs pending scroll operations after view updates
    * @returns {void}
    */
@@ -156,6 +160,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle scroll event to detect manual scrolling
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Event handler triggered on container scroll, initiates debounced processing
    * @returns {void}
    */
@@ -170,6 +175,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Update read status if scrolled to bottom
+   * @description Marks the latest visible message as read when auto-scroll indicates the user is at the bottom.
    * @returns {void}
    */
   private updateReadStatus = (): void => {
@@ -182,6 +188,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle message click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits message click event with message ID
    * @param {string} messageId - Unique identifier of the clicked message
    * @returns {void}
@@ -192,6 +199,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle avatar click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits avatar click event with sender ID and stops event propagation
    * @param {string} senderId - Unique identifier of the message sender
    * @param {Event} event - DOM click event
@@ -204,6 +212,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle sender name click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits sender click event with sender ID and stops event propagation
    * @param {string} senderId - Unique identifier of the message sender
    * @param {Event} event - DOM click event
@@ -216,6 +225,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle reaction click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits reaction added event with message ID and emoji
    * @param {string} messageId - Unique identifier of the message
    * @param {string} emoji - Emoji string to add as reaction
@@ -227,6 +237,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle reaction bar button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Routes reaction bar clicks to appropriate handlers (thread, add-reaction, or emoji)
    * @param {string} messageId - Unique identifier of the message
    * @param {ReactionType} type - Type of reaction bar action (comment, add-reaction, or emoji)
@@ -242,6 +253,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle thread button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits thread click event with message ID
    * @param {string} messageId - Unique identifier of the message to open thread for
    * @returns {void}
@@ -252,6 +264,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle edit message request
+   * @description Enters edit mode for the targeted message via the interaction state service.
    * Activates edit mode for the specified message
    * @param {string} messageId - Unique identifier of the message to edit
    * @returns {void}
@@ -262,6 +275,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle cancel edit
+   * @description Exits edit mode without emitting update events so the original message content remains unchanged.
    * Deactivates edit mode without saving changes
    * @returns {void}
    */
@@ -271,6 +285,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle save edited message
+   * @description Emits the edited payload and clears edit mode to return the row to normal display state.
    * Emits message edited event and deactivates edit mode
    * @param {string} messageId - Unique identifier of the edited message
    * @param {string} newContent - Updated message content
@@ -283,6 +298,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete message request
+   * @description Marks the selected message for delete confirmation before destructive action is executed.
    * Shows delete confirmation modal for the specified message
    * @param {string} messageId - Unique identifier of the message to delete
    * @returns {void}
@@ -293,6 +309,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation cancel
+   * @description Clears pending delete state so confirmation UI closes without side effects.
    * Closes delete confirmation modal without deleting
    * @returns {void}
    */
@@ -302,6 +319,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle delete confirmation confirm
+   * @description Emits deletion for the pending message and then clears delete-confirmation state.
    * Emits message deleted event and closes confirmation modal
    * @returns {void}
    */
@@ -315,6 +333,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Check if message is being edited
+   * @description Resolves whether a given message ID matches the current edit target for conditional template rendering.
    * Determines if the specified message is currently in edit mode
    * @param {string} messageId - Unique identifier of the message to check
    * @returns {boolean} True if message is being edited
@@ -325,6 +344,7 @@ export class ConversationMessagesComponent implements AfterViewChecked {
 
   /**
    * Handle image load error - use fallback avatar
+   * @description Replaces broken avatar URLs with the default profile image to keep message rows visually stable.
    * Replaces failed avatar image with default fallback image
    * @param {Event} event - DOM error event from image element
    * @returns {void}

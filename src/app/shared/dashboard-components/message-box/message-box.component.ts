@@ -4,21 +4,21 @@
  * @module shared/dashboard-components/message-box
  */
 
-import { Component, output, input, computed, inject } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { UserSelectionComponent } from '../user-selection/user-selection.component';
-import { UserListItem } from '../user-list-item/user-list-item.component';
-import { ChannelSelectionComponent } from '../channel-selection/channel-selection.component';
-import { ChannelListItem } from '../channel-list-item/channel-list-item.component';
-import { ReactionBarComponent, ReactionType } from '../reaction-bar/reaction-bar.component';
-import { MessageSelectionComponent } from '../message-selection/message-selection.component';
-import { MessageSearchItem } from '../message-search-item/message-search-item.component';
-import { MentionChipComponent, MentionChipData } from '../mention-chip/mention-chip.component';
 import {
   MessageBoxStateService,
   MessageComposerService,
   MessageSearchService,
 } from '../../services';
+import { ChannelListItem } from '../channel-list-item/channel-list-item.component';
+import { ChannelSelectionComponent } from '../channel-selection/channel-selection.component';
+import { MentionChipComponent, MentionChipData } from '../mention-chip/mention-chip.component';
+import { MessageSearchItem } from '../message-search-item/message-search-item.component';
+import { MessageSelectionComponent } from '../message-selection/message-selection.component';
+import { ReactionBarComponent, ReactionType } from '../reaction-bar/reaction-bar.component';
+import { UserListItem } from '../user-list-item/user-list-item.component';
+import { UserSelectionComponent } from '../user-selection/user-selection.component';
 
 @Component({
   selector: 'app-message-box',
@@ -55,6 +55,7 @@ export class MessageBoxComponent {
 
   /**
    * Mention chips computed from service
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected mentionChips = computed(() => {
     return this.composerService.getMentionChips();
@@ -62,6 +63,7 @@ export class MessageBoxComponent {
 
   /**
    * Update message text
+   * @description Updates composer draft text through the composer service so derived mention/search state recalculates consistently.
    * @param {string} text - New message text
    * @returns {void}
    */
@@ -71,6 +73,7 @@ export class MessageBoxComponent {
 
   /**
    * Available users that are NOT yet selected
+   * @description Filters mention candidates to users not already represented by chips.
    */
   protected availableUsers = computed<UserListItem[]>(() => {
     const selectedIds = this.selectedUsers().map((u) => u.id);
@@ -79,6 +82,7 @@ export class MessageBoxComponent {
 
   /**
    * Available channels that are NOT yet selected
+   * @description Filters channel mention candidates to channels not already represented by chips.
    */
   protected availableChannels = computed<ChannelListItem[]>(() => {
     const selectedIds = this.selectedChannels().map((c) => c.id);
@@ -87,6 +91,7 @@ export class MessageBoxComponent {
 
   /**
    * Get search prefix from message input
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected searchPrefix = computed(() => {
     return this.searchService.getSearchPrefix(this.message());
@@ -94,6 +99,7 @@ export class MessageBoxComponent {
 
   /**
    * Get search term without prefix
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected searchTerm = computed(() => {
     return this.searchService.getSearchTerm(this.message());
@@ -101,6 +107,7 @@ export class MessageBoxComponent {
 
   /**
    * Filtered messages based on $ search
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected filteredMessages = computed<MessageSearchItem[]>(() => {
     if (this.searchPrefix() !== '$') return [];
@@ -109,6 +116,7 @@ export class MessageBoxComponent {
 
   /**
    * Filtered channels based on # search
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected filteredChannels = computed<ChannelListItem[]>(() => {
     if (this.searchPrefix() !== '#') return [];
@@ -117,6 +125,7 @@ export class MessageBoxComponent {
 
   /**
    * Show message search popup when $ prefix is used
+   * @description Shows message-search overlay only when search mode is active and at least one result is available.
    */
   protected showMessageSearch = computed(() => {
     return (
@@ -128,6 +137,7 @@ export class MessageBoxComponent {
 
   /**
    * Show channel selection popup when # prefix is used
+   * @description Restricts channel-picker visibility to active channel-prefix mode.
    */
   protected showChannelSelection = computed(() => {
     return this.isChannelSelectionOpen() && this.searchPrefix() === '#';
@@ -135,6 +145,7 @@ export class MessageBoxComponent {
 
   /**
    * Send message
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Builds and emits message if not empty, then resets state
    * @returns {void}
    */
@@ -150,6 +161,7 @@ export class MessageBoxComponent {
 
   /**
    * Handle message input change to detect search prefix
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Detects @, #, or $ prefixes and opens appropriate selection popup
    * @returns {void}
    */
@@ -177,6 +189,7 @@ export class MessageBoxComponent {
 
   /**
    * Toggle emoji picker
+   * @description Toggles emoji picker state while preserving mutual exclusivity rules managed by popup state service.
    * Opens emoji picker and closes other popups
    * @returns {void}
    */
@@ -186,6 +199,7 @@ export class MessageBoxComponent {
 
   /**
    * Handle emoji reaction selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Inserts emoji at cursor position and closes picker
    * @param {ReactionType} reaction - Reaction type to insert
    * @returns {void}
@@ -197,6 +211,7 @@ export class MessageBoxComponent {
 
   /**
    * Toggle user mention picker
+   * @description Toggles user mention picker through centralized popup state handling.
    * Opens user selection popup and closes other popups
    * @returns {void}
    */
@@ -206,6 +221,7 @@ export class MessageBoxComponent {
 
   /**
    * Handle user selection from mention picker
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Adds user as chip and clears search input
    * @param {UserListItem} user - Selected user to mention
    * @returns {void}
@@ -218,6 +234,7 @@ export class MessageBoxComponent {
 
   /**
    * Handle channel selection from mention picker
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Adds channel as chip and clears search input
    * @param {ChannelListItem} channel - Selected channel to mention
    * @returns {void}
@@ -230,6 +247,7 @@ export class MessageBoxComponent {
 
   /**
    * Remove a mention chip
+   * @description Removes a selected mention chip by delegating to user/channel-specific composer removal handlers.
    * Removes user or channel from selected mentions
    * @param {MentionChipData} chip - Mention chip to remove
    * @returns {void}
@@ -244,6 +262,7 @@ export class MessageBoxComponent {
 
   /**
    * Close user selection popup
+   * @description Closes user picker explicitly after cancel or external close interactions.
    * @returns {void}
    */
   protected onUserSelectionClosed = (): void => {
@@ -252,6 +271,7 @@ export class MessageBoxComponent {
 
   /**
    * Close channel selection popup
+   * @description Closes channel picker explicitly after cancel or external close interactions.
    * @returns {void}
    */
   protected onChannelSelectionClosed = (): void => {
@@ -260,6 +280,7 @@ export class MessageBoxComponent {
 
   /**
    * Handle message search result selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits message ID to scroll to that message
    * @param {MessageSearchItem} message - Selected message from search
    * @returns {void}
@@ -272,6 +293,7 @@ export class MessageBoxComponent {
 
   /**
    * Close message search popup
+   * @description Closes message-search overlay while keeping draft text state intact.
    * @returns {void}
    */
   protected onMessageSearchClosed = (): void => {

@@ -7,12 +7,12 @@
 import { DocumentData, Firestore, QuerySnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { DirectMessage, DirectMessageConversation } from '@core/models/direct-message.model';
 import {
-  handleConversationsError,
-  handleConversationsSnapshot,
-  handleMessagesError,
-  handleMessagesSnapshot,
-  setupConversationsListener as setupConvListener,
-  setupMessagesListener as setupMsgListener,
+    handleConversationsError,
+    handleConversationsSnapshot,
+    handleMessagesError,
+    handleMessagesSnapshot,
+    setupConversationsListener as setupConvListener,
+    setupMessagesListener as setupMsgListener,
 } from './direct-message-snapshot.helpers';
 import { logError } from './shared-error.helpers';
 
@@ -85,6 +85,12 @@ const retryConversationsLoad = (options: LoadConversationsOptions, ids: string[]
 const createConversationSnapshotHandler = (
   options: LoadConversationsOptions,
 ): ((snapshot: QuerySnapshot<DocumentData>) => void) => {
+  /**
+   * Build debounced conversations snapshot handler.
+   * @description Coalesces rapid snapshot bursts into one state patch cycle to reduce unnecessary signal churn.
+   * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot payload
+   * @returns {void}
+   */
   return (snapshot: QuerySnapshot<DocumentData>): void => {
     const timer = options.getConversationsDebounceTimer();
     if (timer) {
@@ -102,6 +108,12 @@ const createConversationSnapshotHandler = (
 const createConversationErrorHandler = (
   options: LoadConversationsOptions,
 ): ((error: unknown) => void) => {
+  /**
+   * Build conversations listener error handler.
+   * @description Routes reset-or-retry decisions through a single handler so retry policy stays consistent across failures.
+   * @param {unknown} error - Listener error
+   * @returns {void}
+   */
   return (error: unknown): void => {
     handleConversationsError(
       error,
@@ -186,6 +198,12 @@ const clearMessageTimer = (
 const createMessagesSnapshotHandler = (
   options: LoadMessagesOptions,
 ): ((snapshot: QuerySnapshot<DocumentData>) => void) => {
+  /**
+   * Build debounced messages snapshot handler.
+   * @description Buffers message snapshot updates per conversation so expensive patching and thread-sync logic run at controlled intervals.
+   * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot payload
+   * @returns {void}
+   */
   return (snapshot: QuerySnapshot<DocumentData>): void => {
     options.messagesSnapshots.set(options.conversationId, snapshot);
     clearMessageTimer(options.messagesDebounceTimers, options.conversationId);
@@ -209,6 +227,12 @@ const createMessagesSnapshotHandler = (
 };
 
 const createMessagesErrorHandler = (options: LoadMessagesOptions): ((error: unknown) => void) => {
+  /**
+   * Build messages listener error handler.
+   * @description Centralizes conversation-specific retry bookkeeping so transient failures do not fork inconsistent retry counters.
+   * @param {unknown} error - Listener error
+   * @returns {void}
+   */
   return (error: unknown): void => {
     const retryCount = options.messagesRetryCounters.get(options.conversationId) || 0;
     handleMessagesError(

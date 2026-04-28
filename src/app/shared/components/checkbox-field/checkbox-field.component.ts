@@ -11,6 +11,7 @@ import { slideDownAnimation } from '../../animations/slide.animations';
 
 /**
  * Reusable checkbox field component with custom styling and error display
+ * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
  * @component CheckboxFieldComponent
  */
 @Component({
@@ -28,6 +29,7 @@ export class CheckboxFieldComponent {
 
   /**
    * Get error message for current validation state
+   * @description Maps current control validation errors to a user-facing error message.
    * @function getErrorMessage
    * @returns {string} Error message or empty string
    */
@@ -50,6 +52,7 @@ export class CheckboxFieldComponent {
 
   /**
    * Get default error message for common validation errors
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function getDefaultErrorMessage
    * @param {string} errorKey - Validation error key
    * @returns {string} Default error message

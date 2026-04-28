@@ -4,9 +4,9 @@
  * @module core/services/navigation
  */
 
-import { Injectable, inject, Signal } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { inject, Injectable, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 
 /**
@@ -34,13 +34,14 @@ export class RouteParserService {
   private routeParams = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map(() => this.parseUrl(this.router.url))
+      map(() => this.parseUrl(this.router.url)),
     ),
-    { initialValue: { path: undefined, id: undefined, threadId: undefined } }
+    { initialValue: { path: undefined, id: undefined, threadId: undefined } },
   );
 
   /**
    * Get current route parameters as signal
+   * @description Exposes the reactive params signal so NavigationService and components can consume route state without subscribing to the Router event stream directly.
    */
   getRouteParams(): Signal<RouteParams> {
     return this.routeParams;
@@ -56,6 +57,7 @@ export class RouteParserService {
    * - /dashboard/channel/123/thread/456 → {path: 'channel', id: '123', threadId: '456'}
    * - /dashboard/dm/789 → {path: 'dm', id: '789', threadId: undefined}
    * - /dashboard/dm/789/thread/456 → {path: 'dm', id: '789', threadId: '456'}
+   * @description Splits the Angular router URL into typed segments so consumers receive structured route parameters instead of raw URL strings.
    */
   parseUrl(url: string): RouteParams {
     const parts = url.split('/').filter((p) => p); // Remove empty strings

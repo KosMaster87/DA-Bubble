@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message State Service
- * @description Manages direct message conversation state and effects
+ * @description Coordinates DM conversation loading and read-state effects so message views remain synchronized with unread tracking.
  * @module core/services/direct-message-state
  */
 
@@ -22,6 +22,7 @@ export class DirectMessageStateService {
 
   /**
    * Setup message loading effect for conversation
+   * @description Reacts to conversation ID changes and triggers a fresh message load each time the user navigates to a different DM.
    * @param conversationIdSignal Signal containing current conversation ID
    */
   setupLoadMessagesEffect = (conversationIdSignal: Signal<string>): void => {
@@ -37,6 +38,7 @@ export class DirectMessageStateService {
 
   /**
    * Load messages and mark conversation as read
+   * @description Loads DM messages and marks the conversation as read after a short delay to allow the snapshot to settle.
    * @param conversationId Conversation ID to load
    */
   loadMessagesForConversation = (conversationId: string): void => {
@@ -46,6 +48,7 @@ export class DirectMessageStateService {
 
   /**
    * Setup auto-mark-as-read effect when new messages arrive
+   * @description Watches the message count and automatically marks the conversation as read whenever new messages appear while the user is viewing it.
    * @param conversationIdSignal Signal containing current conversation ID
    */
   setupAutoMarkAsReadEffect = (conversationIdSignal: Signal<string>): void => {
@@ -63,6 +66,7 @@ export class DirectMessageStateService {
 
   /**
    * Get message count for conversation
+   * @description Reads the message count from the store for change-detection comparisons; returns 0 if the conversation hasn’t loaded yet.
    * @param conversationId Conversation ID
    * @returns Number of messages in conversation
    */
@@ -73,6 +77,7 @@ export class DirectMessageStateService {
 
   /**
    * Check if conversation should be marked as read
+   * @description Returns true only when the count has grown and the user is authenticated, preventing redundant read-marks.
    * @param conversationId Conversation ID
    * @param currentCount Current message count
    * @param previousCount Previous message count
@@ -89,6 +94,7 @@ export class DirectMessageStateService {
 
   /**
    * Mark conversation as read
+   * @description Wraps the read-mark in untracked() to prevent the effect from re-triggering itself when unread state changes.
    * @param conversationId Conversation ID to mark
    */
   private markConversationAsRead = (conversationId: string): void => {
@@ -97,6 +103,7 @@ export class DirectMessageStateService {
 
   /**
    * Get other participant ID from conversation
+   * @description Extracts the partner’s UID from the composite conversation ID format “uid1_uid2” without a Firestore read.
    * @param conversationId Conversation ID in format "uid1_uid2"
    * @param currentUserId Current user's ID
    * @returns Other participant's ID or null
@@ -109,6 +116,7 @@ export class DirectMessageStateService {
 
   /**
    * Leave conversation with validation and error handling
+   * @description Validates required IDs before delegating to the store; swallows errors and returns a boolean for UI feedback.
    * @param conversationId Conversation ID to leave
    * @param userId User ID leaving
    * @returns True if successful, false otherwise
@@ -130,6 +138,7 @@ export class DirectMessageStateService {
 
   /**
    * Validate leave conversation requirements
+   * @description Guards against missing IDs before the async leave operation to avoid partial state updates.
    * @param conversationId Conversation ID
    * @param userId User ID
    * @returns True if valid, false otherwise

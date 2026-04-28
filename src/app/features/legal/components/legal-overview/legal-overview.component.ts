@@ -59,6 +59,7 @@ export class LegalOverviewComponent {
 
   /**
    * Navigate to legal document or external link
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   navigateTo(link: LegalLink): void {
     if (link.external) {
@@ -70,6 +71,7 @@ export class LegalOverviewComponent {
 
   /**
    * Navigate back to dashboard or sidebar (on mobile)
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   goBack() {
     if (this.isMobileView()) {

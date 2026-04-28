@@ -11,6 +11,7 @@ import { UserStore } from '@stores/users/user.store';
 
 /**
  * Helper class for invitation workflows
+ * @description Provides static invitation helpers for channel and DM flows with lightweight guard checks.
  */
 export class InvitationHelper {
   static invitationService = inject(InvitationService);
@@ -19,12 +20,13 @@ export class InvitationHelper {
 
   /**
    * Invite a user to a channel
+   * @description Validates channel context and pending state before creating a new channel invitation.
    */
   static async inviteToChannel(
     channelId: string,
     senderId: string,
     recipientId: string,
-    message?: string
+    message?: string,
   ): Promise<boolean> {
     try {
       // Get channel info
@@ -39,7 +41,7 @@ export class InvitationHelper {
       // Check if there's already a pending invitation
       const hasPending = await this.invitationService.hasPendingChannelInvitation(
         recipientId,
-        channelId
+        channelId,
       );
       if (hasPending) {
         return false;
@@ -63,11 +65,12 @@ export class InvitationHelper {
 
   /**
    * Invite a user to a direct message
+   * @description Creates a direct-message invitation payload for recipient onboarding into DM conversations.
    */
   static async inviteToDM(
     senderId: string,
     recipientId: string,
-    message?: string
+    message?: string,
   ): Promise<boolean> {
     try {
       // Create invitation
@@ -86,6 +89,7 @@ export class InvitationHelper {
 
   /**
    * Get invitation count for current user
+   * @description Retrieves pending invitations and returns a safe numeric fallback when loading fails.
    */
   static async getPendingCount(userId: string): Promise<number> {
     try {

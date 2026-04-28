@@ -88,6 +88,7 @@ export class ThreadComponent {
 
   /**
    * Setup effect to load threads when threadInfo changes
+   * @description Rehydrates thread data only when parent context changes so listeners are not recreated on unrelated signal updates.
    * @private
    * @returns {void}
    */
@@ -113,6 +114,7 @@ export class ThreadComponent {
 
   /**
    * Setup effect to auto-mark thread as read when new replies arrive
+   * @description Couples unread clearing to visible reply growth so thread unread state stays accurate without requiring manual user actions.
    * @private
    * @returns {void}
    */
@@ -139,6 +141,7 @@ export class ThreadComponent {
 
   /**
    * Handle close button click
+   * @description Emits a pure UI intent so parent containers own panel layout decisions and this component stays reusable.
    * @returns {void}
    */
   onClose = (): void => {
@@ -147,6 +150,7 @@ export class ThreadComponent {
 
   /**
    * Send reply to thread
+   * @description Co-locates optimistic user intent with thread write orchestration so reply submit behavior is consistent across entry points.
    * @param {string} content - Reply content
    * @returns {Promise<void>}
    */
@@ -173,6 +177,7 @@ export class ThreadComponent {
 
   /**
    * Scroll to a specific message in thread
+   * @description Implements deep-link style in-thread navigation so highlight and scroll behavior remains consistent for search and jump actions.
    * @param {string} messageId - Message ID in format containerId_messageId
    * @returns {void}
    */
@@ -189,6 +194,7 @@ export class ThreadComponent {
 
   /**
    * Handle message click
+   * @description Keeps a no-op extension point in place so future thread message actions can be introduced without changing template contracts.
    * @param {string} messageId - Message ID
    * @returns {void}
    */
@@ -198,6 +204,7 @@ export class ThreadComponent {
 
   /**
    * Handle avatar click to show profile
+   * @description Normalizes profile-open behavior from avatar interactions so all user-entry points resolve through the same selection state.
    * @param {string} senderId - Sender user ID
    * @returns {void}
    */
@@ -208,6 +215,7 @@ export class ThreadComponent {
 
   /**
    * Handle sender name click to show profile
+   * @description Mirrors avatar behavior to keep sender-name interactions consistent and avoid divergent profile-opening paths.
    * @param {string} senderId - Sender user ID
    * @returns {void}
    */
@@ -218,6 +226,7 @@ export class ThreadComponent {
 
   /**
    * Handle reaction added to message
+   * @description Routes thread reaction toggles through the shared interaction service so DM and channel-thread behavior stays aligned.
    * @param {Object} data - Reaction data
    * @param {string} data.messageId - Message ID
    * @param {string} data.emoji - Emoji ID
@@ -240,6 +249,7 @@ export class ThreadComponent {
 
   /**
    * Handle message edited
+   * @description Delegates thread edits to a single interaction path so edit permissions and unread side effects remain consistent.
    * @param {Object} data - Edit data
    * @param {string} data.messageId - Message ID
    * @param {string} data.newContent - New message content
@@ -258,6 +268,7 @@ export class ThreadComponent {
 
   /**
    * Handle message deleted
+   * @description Sends thread deletion through one interaction boundary so parent metadata and unread state stay synchronized.
    * @param {string} messageId - Message ID
    * @returns {Promise<void>}
    */
@@ -273,6 +284,7 @@ export class ThreadComponent {
 
   /**
    * Handle profile view close
+   * @description Resets both visibility and selection state atomically so stale user selection cannot leak into subsequent profile opens.
    * @returns {void}
    */
   onProfileViewClose = (): void => {
@@ -282,6 +294,7 @@ export class ThreadComponent {
 
   /**
    * Handle profile edit click
+   * @description Transitions profile modal from read-only to edit mode through one path to avoid overlapping overlay states.
    * @returns {void}
    */
   onProfileEdit = (): void => {
@@ -291,6 +304,7 @@ export class ThreadComponent {
 
   /**
    * Handle profile message click - opens DM with selected user
+   * @description Bridges profile context into DM navigation so users can transition directly from participant inspection to conversation.
    * @returns {void}
    */
   onProfileMessage = (): void => {
@@ -303,6 +317,7 @@ export class ThreadComponent {
 
   /**
    * Handle edit profile close
+   * @description Closes edit mode and clears selection context to prevent stale profile targets between edit sessions.
    * @returns {void}
    */
   onEditProfileClose = (): void => {
@@ -312,6 +327,7 @@ export class ThreadComponent {
 
   /**
    * Handle edit profile save
+   * @description Persists profile updates via profile service from one handler so thread profile UX follows the same update contract as other views.
    * @param {Object} data - Profile data to update
    * @param {string} data.displayName - New display name
    * @param {boolean} data.isAdmin - Admin status
@@ -328,6 +344,7 @@ export class ThreadComponent {
 
   /**
    * Handle channel mention click
+   * @description Opens channel-preview context from mentions without hard navigation so users can confirm before leaving the thread.
    * @param {string} channelId - Channel ID
    * @returns {void}
    */
@@ -341,6 +358,7 @@ export class ThreadComponent {
 
   /**
    * Handle channel view close
+   * @description Clears channel-preview state in one place so mention-preview overlays never leak stale channel context.
    * @returns {void}
    */
   onChannelViewClose = (): void => {
@@ -350,6 +368,7 @@ export class ThreadComponent {
 
   /**
    * Handle channel view join
+   * @description Couples join action with mention-navigation intent so mention-driven joins continue directly to the destination channel.
    * @param {string} channelId - Channel ID
    * @returns {Promise<void>}
    */
@@ -361,6 +380,7 @@ export class ThreadComponent {
 
   /**
    * Handle channel view navigate
+   * @description Closes preview modal before emitting navigation intent so overlay state stays deterministic across navigation triggers.
    * @param {string} channelId - Channel ID
    * @returns {void}
    */
@@ -371,6 +391,7 @@ export class ThreadComponent {
 
   /**
    * Open profile view from mention click
+   * @description Reuses profile-open state handling for mention interactions so all profile entry paths behave consistently.
    * @param {string} userId - User ID
    * @returns {void}
    */

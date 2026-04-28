@@ -27,6 +27,7 @@ const buildSortedParticipants = (firstUserId: string, secondUserId: string): [st
 
 /**
  * Create new conversation
+ * @description Orchestrates first-time conversation setup by creating the conversation doc and attaching it to both users.
  * @param {Firestore} firestore - Firestore instance
  * @param {string} conversationId - Conversation ID
  * @param {string} currentUserId - Current user ID
@@ -56,6 +57,7 @@ export const createNewConversation = async (
 
 /**
  * Re-add conversation if needed
+ * @description Restores a missing conversation reference on the user document when the conversation exists but is no longer linked.
  * @param {Firestore} firestore - Firestore instance
  * @param {string} conversationId - Conversation ID
  * @param {QueryDocumentSnapshot<DocumentData>} conversationSnap - Firestore snapshot
@@ -86,6 +88,7 @@ export const readdConversationIfNeeded = async (
 
 /**
  * Start or resume conversation with user
+ * @description Provides a single entry point that decides between conversation creation and re-linking while returning updated local state.
  * @param {Firestore} firestore - Firestore instance
  * @param {string} conversationId - Conversation ID
  * @param {string} currentUserId - Current user ID

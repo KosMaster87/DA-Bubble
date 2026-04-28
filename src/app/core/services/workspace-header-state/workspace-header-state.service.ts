@@ -1,12 +1,12 @@
 /**
  * @fileoverview Workspace Header State Service
- * @description Manages computed state for workspace header component
+ * @description Centralizes header-specific derived signals so the workspace header stays declarative and store access remains encapsulated.
  * @module core/services/workspace-header-state
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
-import { AuthStore } from '@stores/auth';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import type { User } from '@core/models/user.model';
+import { AuthStore } from '@stores/auth';
 
 export interface ProfileUser {
   id: string;
@@ -31,6 +31,7 @@ export class WorkspaceHeaderStateService {
 
   /**
    * Get current user as ProfileUser
+   * @description Wraps auth state in a computed signal so the header view stays reactive to login/logout without subscribing to observables.
    * @returns {Signal<ProfileUser | null>} Profile user or null
    */
   getProfileUser = (): Signal<ProfileUser | null> => {
@@ -43,6 +44,7 @@ export class WorkspaceHeaderStateService {
 
   /**
    * Get current user as EditProfileUser
+   * @description Provides the mutable subset of the current user for the profile edit form, reactive to auth state.
    * @returns {Signal<EditProfileUser | null>} Edit profile user or null
    */
   getEditProfileUser = (): Signal<EditProfileUser | null> => {
@@ -55,6 +57,7 @@ export class WorkspaceHeaderStateService {
 
   /**
    * Transform User to ProfileUser
+   * @description Derives online status and sets a safe photoURL fallback so the profile view never renders a broken image.
    * @private
    * @param {User} user - User model
    * @returns {ProfileUser} Profile user
@@ -72,6 +75,7 @@ export class WorkspaceHeaderStateService {
 
   /**
    * Transform User to EditProfileUser
+   * @description Omits status so the edit form only exposes fields the user is actually allowed to change.
    * @private
    * @param {User} user - User model
    * @returns {EditProfileUser} Edit profile user

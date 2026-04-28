@@ -37,12 +37,19 @@ export class NotificationContainerComponent {
       });
   }
 
+  /**
+   * Dismiss a single toast notification.
+   * @description Delegates toast removal to notification service so component remains a pure rendering and interaction shell.
+   * @param {string} toastId - Toast identifier
+   * @returns {void}
+   */
   protected dismiss(toastId: string): void {
     this.notificationService.remove(toastId);
   }
 
   /**
    * Dismiss the last visible toast when Escape key is pressed.
+    * @description Provides a keyboard-only dismissal path so stacked notifications remain manageable without pointer interaction.
    */
   @HostListener('document:keydown', ['$event'])
   onEscapeKey(event: KeyboardEvent): void {

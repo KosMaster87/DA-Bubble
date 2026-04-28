@@ -42,7 +42,7 @@ export class App implements OnDestroy {
 
   /**
    * Initialize user presence listener based on auth state
-   * @description Sets up reactive effect to manage presence listener lifecycle
+    * @description Couples auth-state changes to presence-listener lifecycle so online status tracking starts and stops exactly with login state.
    */
   private initializePresenceListener(): void {
     effect(() => {
@@ -58,6 +58,7 @@ export class App implements OnDestroy {
 
   /**
    * Start presence tracking for logged-in user
+   * @description Recreates the presence listener on each authenticated transition so stale subscriptions cannot report outdated user status.
    */
   private startPresenceTracking(): void {
     if (this.presenceUnsubscribe) {
@@ -69,6 +70,7 @@ export class App implements OnDestroy {
 
   /**
    * Stop presence tracking and clear data
+   * @description Stops listener and clears in-memory presence state together so logout immediately removes obsolete online indicators.
    */
   private stopPresenceTracking(): void {
     if (this.presenceUnsubscribe) {

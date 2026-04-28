@@ -1,15 +1,15 @@
 /**
  * @fileoverview Footer Component
- * @description Footer with popup-signup and legal-information components
+ * @description Renders the auth-page footer with legal links and route-aware signup affordance.
  * @module FooterComponent
  */
 
 import { Component, computed, inject } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
 import { PopupSignupComponent } from '@features/auth/components/popup-signup/popup-signup.component';
 import { LegalInformationComponent } from '@shared/components/legal-information/legal-information.component';
+import { filter, map, startWith } from 'rxjs';
 
 @Component({
   selector: 'app-footer',
@@ -28,13 +28,13 @@ export class FooterComponent {
     this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
       map(() => this.router.url),
-      startWith(this.router.url)
-    )
+      startWith(this.router.url),
+    ),
   );
 
   /**
    * Computed signal that determines if popup-signup should be shown
-   * Only displays the signup link on the signin page (home)
+   * @description Restricts signup-link visibility to the signin route so footer actions remain relevant to current auth context.
    * @protected
    * @returns {boolean} True if on signin page
    */

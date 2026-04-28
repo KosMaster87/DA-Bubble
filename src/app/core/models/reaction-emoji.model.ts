@@ -1,6 +1,6 @@
 /**
  * @fileoverview Reaction Emoji Model
- * @description Available emojis for message reactions
+ * @description Defines typed reaction-emoji metadata and curated default reaction sets for message UI components.
  * @module ReactionEmojiModel
  */
 

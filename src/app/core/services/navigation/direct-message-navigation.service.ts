@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message Navigation Service
- * @description Handles DM navigation and routing
+ * @description Provides DM-specific routing helpers that preserve thread context and keep navigation signals in sync.
  * @module core/services/navigation
  */
 
@@ -24,6 +24,7 @@ export class DirectMessageNavigationService {
 
   /**
    * Select direct message conversation
+   * @description Marks the DM as read and preserves any open thread in the URL to prevent the thread panel from closing on DM re-navigation.
    */
   selectDirectMessage(conversationId: string): void {
     this.navigationState.setSelectedDirectMessageId(conversationId);
@@ -53,6 +54,7 @@ export class DirectMessageNavigationService {
   /**
    * Select direct message by ID (programmatic, no routing)
    * Used to sync state with URL changes to avoid navigation loops
+   * @description State-only update used by route watchers that have already navigated and just need to sync signals.
    */
   selectDirectMessageById(conversationId: string): void {
     this.navigationState.setSelectedChannelId(null);
@@ -61,6 +63,7 @@ export class DirectMessageNavigationService {
 
   /**
    * Deselect current direct message
+   * @description Clears only the DM selection without touching other navigation state.
    */
   deselectDirectMessage(): void {
     this.navigationState.setSelectedDirectMessageId(null);
@@ -69,6 +72,7 @@ export class DirectMessageNavigationService {
   /**
    * Navigate to direct message (explicit routing)
    * Wrapper around selectDirectMessage() for backwards compatibility
+   * @description Preserved for backwards compatibility; prefer selectDirectMessage() for new call sites.
    */
   navigateToDirectMessage(conversationId: string): void {
     this.selectDirectMessage(conversationId);

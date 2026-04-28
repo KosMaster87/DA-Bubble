@@ -1,6 +1,6 @@
 /**
  * @fileoverview Navigation State Service
- * @description Manages internal navigation state signals
+ * @description Holds shared navigation signals that coordinate selected views across workspace routing flows.
  * @module core/services/navigation
  */
 
@@ -30,6 +30,7 @@ export class NavigationStateService {
 
   /**
    * Get selected channel ID signal (read-only)
+   * @description Returns readonly so consumers can observe state changes without being able to mutate the signal directly.
    */
   getSelectedChannelId() {
     return this.selectedChannelId.asReadonly();
@@ -37,6 +38,7 @@ export class NavigationStateService {
 
   /**
    * Get selected DM ID signal (read-only)
+   * @description Returns readonly so consumers can observe state changes without being able to mutate the signal directly.
    */
   getSelectedDirectMessageId() {
     return this.selectedDirectMessageId.asReadonly();
@@ -44,6 +46,7 @@ export class NavigationStateService {
 
   /**
    * Set selected channel ID
+   * @description Centralises all channel-selection writes so derived signals and effects react consistently.
    */
   setSelectedChannelId(id: string | null): void {
     this.selectedChannelId.set(id);
@@ -51,6 +54,7 @@ export class NavigationStateService {
 
   /**
    * Set selected direct message ID
+   * @description Centralises all DM-selection writes so derived signals and effects react consistently.
    */
   setSelectedDirectMessageId(id: string | null): void {
     this.selectedDirectMessageId.set(id);
@@ -58,6 +62,7 @@ export class NavigationStateService {
 
   /**
    * Set new message active state
+   * @description Allows navigation actions to activate the compose view without routing concerns leaking into the state layer.
    */
   setNewMessageActive(active: boolean): void {
     this.isNewMessageActive.set(active);
@@ -65,6 +70,7 @@ export class NavigationStateService {
 
   /**
    * Set mailbox active state
+   * @description Allows navigation actions to activate the mailbox without routing concerns leaking into the state layer.
    */
   setMailboxActive(active: boolean): void {
     this.isMailboxActive.set(active);
@@ -72,6 +78,7 @@ export class NavigationStateService {
 
   /**
    * Get current navigation state snapshot
+   * @description Returns a plain object snapshot for guards and services that need to inspect multiple state values synchronously.
    */
   getState(): NavigationState {
     return {
@@ -84,6 +91,7 @@ export class NavigationStateService {
 
   /**
    * Clear all selections
+   * @description Full reset used on logout and route guard teardown to ensure no stale selection bleeds into the next session.
    */
   clearAll(): void {
     this.selectedChannelId.set(null);
@@ -94,6 +102,7 @@ export class NavigationStateService {
 
   /**
    * Clear channel selection
+   * @description Resets only channel-related flags so DM state remains intact when switching away from a channel view.
    */
   clearChannelSelection(): void {
     this.selectedChannelId.set(null);
@@ -103,6 +112,7 @@ export class NavigationStateService {
 
   /**
    * Clear DM selection
+   * @description Resets only DM-related flags so channel state remains intact when switching away from a DM view.
    */
   clearDMSelection(): void {
     this.selectedDirectMessageId.set(null);

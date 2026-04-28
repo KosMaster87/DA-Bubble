@@ -1,23 +1,23 @@
 /**
  * @fileoverview Thread State Service
- * @description Manages computed state for thread component
+ * @description Builds all thread-view derived state in one place so ThreadComponent remains focused on interaction wiring.
  * @module core/services/thread-state
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
-import { ThreadStore } from '@stores/threads/thread.store';
-import { ChannelStore } from '@stores/channels/channel.store';
-import { UserStore } from '@stores/users/user.store';
-import { AuthStore } from '@stores/auth';
-import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
-import type { Message, MessageGroup } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
-import type { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
-import type { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
-import type { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
-import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
-import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import type { ThreadInfo } from '@features/dashboard/components/thread/thread.component';
+import type { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
+import type { Message, MessageGroup } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import type { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
+import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
+import type { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
+import { AuthStore } from '@stores/auth';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { ThreadStore } from '@stores/threads/thread.store';
+import { UserStore } from '@stores/users/user.store';
 
 @Injectable({ providedIn: 'root' })
 export class ThreadStateService {
@@ -30,6 +30,7 @@ export class ThreadStateService {
 
   /**
    * Get thread replies loaded from store
+   * @description Converts raw thread store messages to view-ready Message objects; returns an empty array until the parent message ID is available.
    * @param {Signal<ThreadInfo>} threadInfo - Thread info signal
    * @returns {Signal<Message[]>} Thread replies as view messages
    */
@@ -45,6 +46,7 @@ export class ThreadStateService {
 
   /**
    * Get searchable replies formatted for MessageBox
+   * @description Maps thread replies to MessageSearchItem shapes sorted newest-first for the inline search overlay.
    * @param {Signal<ThreadInfo>} threadInfo - Thread info signal
    * @param {Signal<Message[]>} replies - Replies signal
    * @returns {Signal<MessageSearchItem[]>} Searchable message items
@@ -61,6 +63,7 @@ export class ThreadStateService {
 
   /**
    * Get thread participants for mentions
+   * @description Returns the single DM partner for DM threads, or the full channel member list for channel threads, so the mention picker shows the right people.
    * @param {Signal<ThreadInfo>} threadInfo - Thread info signal
    * @param {Signal<Message[]>} replies - Replies signal
    * @returns {Signal<UserListItem[]>} Thread participants
@@ -80,6 +83,7 @@ export class ThreadStateService {
 
   /**
    * Get public channels for channel mentions
+   * @description Provides the channel list for the # channel-mention picker inside thread conversations.
    * @returns {Signal<ChannelListItem[]>} Channel list items
    */
   getChannelListItems = () => {
@@ -93,6 +97,7 @@ export class ThreadStateService {
 
   /**
    * Get replies grouped by date
+   * @description Delegates to the MessageGroupingService to bucket replies by calendar date for date-divider rendering.
    * @param {Signal<Message[]>} replies - Replies signal
    * @returns {Signal<MessageGroup[]>} Grouped messages
    */
@@ -104,6 +109,7 @@ export class ThreadStateService {
 
   /**
    * Get reply count
+   * @description Exposes the reply count as a reactive signal so the thread header updates without manual subscriptions.
    * @param {Signal<Message[]>} replies - Replies signal
    * @returns {Signal<number>} Total reply count
    */
@@ -113,6 +119,7 @@ export class ThreadStateService {
 
   /**
    * Get selected user profile
+   * @description Resolves the selected user’s profile for the profile-view overlay within the thread sidebar.
    * @param {Signal<string | null>} selectedUserId - Selected user ID signal
    * @returns {Signal<ProfileUser | null>} Profile user or null
    */
@@ -124,6 +131,7 @@ export class ThreadStateService {
 
   /**
    * Get edit profile user
+   * @description Resolves the edit-profile shape for the selected user inside the thread sidebar.
    * @param {Signal<string | null>} selectedUserId - Selected user ID signal
    * @returns {Signal<EditProfileUser | null>} Edit profile user or null
    */
@@ -135,6 +143,7 @@ export class ThreadStateService {
 
   /**
    * Check if selected profile is own profile
+   * @description Determines whether to show edit controls in the thread sidebar’s profile overlay.
    * @param {Signal<string | null>} selectedUserId - Selected user ID signal
    * @returns {Signal<boolean>} True if own profile
    */
@@ -146,6 +155,7 @@ export class ThreadStateService {
 
   /**
    * Create search items from replies
+   * @description Builds MessageSearchItem objects using a composite ID (containerId_messageId) for unique identification across channels and DMs.
    * @private
    * @param {ThreadInfo} info - Thread info
    * @param {Message[]} replies - Reply messages
@@ -165,6 +175,7 @@ export class ThreadStateService {
 
   /**
    * Truncate message content for search display
+   * @description Clips content at 60 characters so search result previews fit a single line.
    * @private
    * @param {string} content - Message content
    * @returns {string} Truncated content
@@ -175,6 +186,7 @@ export class ThreadStateService {
 
   /**
    * Sort search items by timestamp descending
+   * @description Orders results newest-first using the source message timestamps for consistent ordering in the search overlay.
    * @private
    * @param {MessageSearchItem[]} items - Search items
    * @param {Message[]} replies - Reply messages
@@ -194,6 +206,7 @@ export class ThreadStateService {
 
   /**
    * Get DM participant from replies
+   * @description Finds the non-current-user reply author so DM thread participants always show the other person rather than the current user.
    * @private
    * @param {Message[]} replies - Reply messages
    * @returns {UserListItem[]} DM participant list
@@ -214,6 +227,7 @@ export class ThreadStateService {
 
   /**
    * Get channel members as user list items
+   * @description Resolves channel member UIDs to UserListItem shapes for the mention picker without leaking store access into the component.
    * @private
    * @param {string} channelId - Channel ID
    * @returns {UserListItem[]} Channel members
@@ -238,6 +252,7 @@ export class ThreadStateService {
 
   /**
    * Check if thread info is valid
+   * @description Guards against rendering the thread panel before both required IDs (parentMessageId and channelId) are available.
    * @param {ThreadInfo} info - Thread info to validate
    * @returns {boolean} True if valid
    */
@@ -247,6 +262,7 @@ export class ThreadStateService {
 
   /**
    * Check if thread info has changed
+   * @description Compares the new thread info against the last-rendered IDs to avoid reloading the same thread on signal re-evaluations.
    * @param {ThreadInfo} info - Current thread info
    * @param {string | null} lastChannelId - Last channel ID
    * @param {string | null} lastMessageId - Last message ID
@@ -262,6 +278,7 @@ export class ThreadStateService {
 
   /**
    * Check if thread can be marked as read
+   * @description Validates all three required fields before triggering a read-mark call to avoid writing incomplete Firestore paths.
    * @param {ThreadInfo} info - Thread info
    * @param {string | undefined} currentUserId - Current user ID
    * @returns {boolean} True if can mark as read
@@ -272,6 +289,7 @@ export class ThreadStateService {
 
   /**
    * Check if thread should be marked as read
+   * @description Returns true only when the count has grown, preventing redundant read-marks when the signal re-evaluates without new replies.
    * @param {number} currentCount - Current reply count
    * @param {number} previousCount - Previous reply count
    * @returns {boolean} True if should mark as read

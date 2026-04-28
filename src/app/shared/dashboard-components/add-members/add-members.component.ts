@@ -4,11 +4,11 @@
  * @module shared/dashboard-components/add-members
  */
 
-import { Component, input, output, signal, computed } from '@angular/core';
-import { InputFieldBasicComponent } from '../input-field-basic/input-field-basic.component';
+import { Component, computed, input, output, signal } from '@angular/core';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
-import { UserSelectionComponent } from '../user-selection/user-selection.component';
+import { InputFieldBasicComponent } from '../input-field-basic/input-field-basic.component';
 import { UserListItem } from '../user-list-item/user-list-item.component';
+import { UserSelectionComponent } from '../user-selection/user-selection.component';
 
 @Component({
   selector: 'app-add-members',
@@ -28,6 +28,7 @@ export class AddMembersComponent {
 
   /**
    * Check if dropdown is open for mobile expansion
+   * @description Drives expanded mobile sheet styling when the user picker is currently open.
    */
   isExpanded = computed(() => {
     return this.isUserSelectionOpen();
@@ -35,6 +36,7 @@ export class AddMembersComponent {
 
   /**
    * Show user dropdown when selection is open
+   * @description Exposes dropdown visibility state for template conditions and animation hooks.
    */
   showUserDropdown = computed(() => {
     return this.isUserSelectionOpen();
@@ -42,6 +44,7 @@ export class AddMembersComponent {
 
   /**
    * Available users (excluding already selected ones)
+   * @description Filters candidate users to only those not yet staged in the selection chips.
    */
   availableUsers = computed(() => {
     const selectedUserIds = this.selectedUsers().map((u) => u.id);
@@ -50,6 +53,7 @@ export class AddMembersComponent {
 
   /**
    * Handle close button click
+   * @description Emits close intent and resets local state so reopening starts from a clean selection context.
    */
   onClose(): void {
     this.closeClicked.emit();
@@ -58,6 +62,7 @@ export class AddMembersComponent {
 
   /**
    * Handle search input change
+   * @description Stores the latest search input to drive user filtering in the selection list.
    */
   onSearchChange(value: string): void {
     this.searchValue.set(value);
@@ -65,6 +70,7 @@ export class AddMembersComponent {
 
   /**
    * Open user selection dropdown when input is focused
+   * @description Opens the user picker on focus so available members can be chosen immediately.
    */
   onInputFocused(): void {
     this.isUserSelectionOpen.set(true);
@@ -72,6 +78,7 @@ export class AddMembersComponent {
 
   /**
    * Handle user selection
+   * @description Adds a picked user to staged members with duplicate protection.
    */
   onUserSelected(user: UserListItem): void {
     const isAlreadySelected = this.selectedUsers().some((u) => u.id === user.id);
@@ -82,6 +89,7 @@ export class AddMembersComponent {
 
   /**
    * Handle user selection close
+   * @description Closes the user picker after explicit dismiss or completion actions.
    */
   onUserSelectionClose(): void {
     this.isUserSelectionOpen.set(false);
@@ -89,6 +97,7 @@ export class AddMembersComponent {
 
   /**
    * Remove selected user
+   * @description Removes one staged user from the pending member list without resetting other selections.
    */
   removeSelectedUser(userId: string): void {
     this.selectedUsers.update((users) => users.filter((u) => u.id !== userId));
@@ -96,6 +105,7 @@ export class AddMembersComponent {
 
   /**
    * Handle add member button click
+   * @description Emits selected member IDs only when at least one user is staged, then resets component-local state.
    */
   onAddMember(): void {
     if (this.selectedUsers().length > 0) {
@@ -107,6 +117,7 @@ export class AddMembersComponent {
 
   /**
    * Check if add button should be disabled
+   * @description Prevents submission when no members are selected by exposing a simple disabled predicate.
    */
   isAddDisabled(): boolean {
     return this.selectedUsers().length === 0;
@@ -114,6 +125,7 @@ export class AddMembersComponent {
 
   /**
    * Reset component state
+   * @description Clears search, staged users, and dropdown visibility so subsequent opens start from baseline state.
    */
   private resetComponent(): void {
     this.searchValue.set('');

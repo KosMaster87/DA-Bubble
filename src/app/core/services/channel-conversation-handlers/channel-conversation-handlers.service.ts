@@ -5,11 +5,11 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { AuthStore } from '@stores/auth';
-import { ChannelStore } from '@stores/index';
+import { ChannelConversationUIService } from '@core/services/channel-conversation-ui/channel-conversation-ui.service';
 import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
-import { ChannelConversationUIService } from '@core/services/channel-conversation-ui/channel-conversation-ui.service';
+import { AuthStore } from '@stores/auth';
+import { ChannelStore } from '@stores/index';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelConversationHandlersService {
@@ -21,6 +21,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle members added - send invitations
+   * @description Orchestrates the invitation flow when new members are confirmed in the channel settings dialog.
    * @param channelId - Channel ID
    * @param userIds - User IDs to add
    */
@@ -36,6 +37,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Validate channel and user data for adding members
+   * @description Guards the invitation flow — ensures channel and current user are resolved before async operations begin.
    * @param channel - Channel data
    * @param currentUser - Current user
    * @returns True if valid
@@ -50,6 +52,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Send invitations to new members
+   * @description Dispatches one invitation per selected user via ChannelMembershipService and closes the add-members panel on completion.
    * @param channel - Channel data
    * @param currentUser - Current user
    * @param userIds - User IDs to invite
@@ -57,20 +60,21 @@ export class ChannelConversationHandlersService {
   private sendMemberInvitations = async (
     channel: any,
     currentUser: any,
-    userIds: string[]
+    userIds: string[],
   ): Promise<void> => {
     await this.channelMembership.sendInvitations(
       channel.id,
       userIds,
       currentUser.uid,
       currentUser.displayName,
-      channel.name
+      channel.name,
     );
     console.log('✉️ Sent invitations to:', userIds.length, 'users');
   };
 
   /**
    * Handle channel accepted
+   * @description Coordinates the full join lifecycle — fires loading feedback, performs the guarded join with sync wait, then restores UI.
    * @param channelId - Channel ID
    * @param onJoiningStart - Callback when joining starts
    * @param onJoiningEnd - Callback when joining ends
@@ -78,7 +82,7 @@ export class ChannelConversationHandlersService {
   handleChannelAccepted = async (
     channelId: string,
     onJoiningStart: () => void,
-    onJoiningEnd: () => void
+    onJoiningEnd: () => void,
   ): Promise<void> => {
     console.log('✅ User accepted channel rules and joining:', channelId);
     onJoiningStart();
@@ -95,6 +99,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle remove member from channel
+   * @description Removes a single member and resets the profile-view panel so the sidebar returns to its default state.
    * @param channelId - Channel ID
    * @param memberId - Member ID to remove
    */
@@ -105,12 +110,13 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle edit profile save
+   * @description Persists profile changes, dismisses the edit form, and catches errors so the UI does not hard-crash on failure.
    * @param userId - User ID to update
    * @param data - Profile data
    */
   handleEditProfileSave = async (
     userId: string,
-    data: { displayName: string; isAdmin: boolean }
+    data: { displayName: string; isAdmin: boolean },
   ): Promise<void> => {
     try {
       await this.profileManagement.updateUserProfile(userId, data);
@@ -123,18 +129,20 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle channel info updated
+   * @description Delegates metadata changes (name, description, privacy) to the membership service without adding UI logic here.
    * @param channelId - Channel ID
    * @param data - Updated channel data
    */
   handleChannelUpdated = async (
     channelId: string,
-    data: { name?: string; description?: string; isPrivate?: boolean }
+    data: { name?: string; description?: string; isPrivate?: boolean },
   ): Promise<void> => {
     await this.channelMembership.updateChannelInfo(channelId, data);
   };
 
   /**
    * Handle leave channel
+   * @description Wraps the leave operation with error containment and returns a boolean so callers can react to failure without coupling to internals.
    * @param channelId - Channel ID
    * @param currentUserId - Current user ID
    * @returns True if successfully left
@@ -151,6 +159,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle delete channel
+   * @description Entry point for the owner-guarded delete flow; owner-check and confirmation dialog are handled downstream in ChannelMembershipService.
    * @param channelId - Channel ID
    * @param currentUserId - Current user ID
    * @param channelName - Channel name
@@ -159,7 +168,7 @@ export class ChannelConversationHandlersService {
   handleDeleteChannel = async (
     channelId: string,
     currentUserId: string,
-    channelName: string
+    channelName: string,
   ): Promise<boolean> => {
     return await this.channelMembership.deleteChannel(channelId, currentUserId, channelName);
   };

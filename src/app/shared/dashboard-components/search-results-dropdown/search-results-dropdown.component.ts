@@ -5,9 +5,15 @@
  */
 
 import { Component, input, output } from '@angular/core';
-import { UserListItemComponent, UserListItem } from '../user-list-item/user-list-item.component';
-import { ChannelListItemComponent, ChannelListItem } from '../channel-list-item/channel-list-item.component';
-import { MessageSearchItemComponent, MessageSearchItem } from '../message-search-item/message-search-item.component';
+import {
+  ChannelListItem,
+  ChannelListItemComponent,
+} from '../channel-list-item/channel-list-item.component';
+import {
+  MessageSearchItem,
+  MessageSearchItemComponent,
+} from '../message-search-item/message-search-item.component';
+import { UserListItem, UserListItemComponent } from '../user-list-item/user-list-item.component';
 
 @Component({
   selector: 'app-search-results-dropdown',
@@ -27,6 +33,7 @@ export class SearchResultsDropdownComponent {
 
   /**
    * Handle overlay click to close dropdown
+   * @description Closes the dropdown when the backdrop is clicked.
    * Emits closed event when overlay is clicked
    * @returns {void}
    */
@@ -36,6 +43,7 @@ export class SearchResultsDropdownComponent {
 
   /**
    * Handle user selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits user ID when user is clicked
    * @param {string} userId - ID of selected user
    * @returns {void}
@@ -46,6 +54,7 @@ export class SearchResultsDropdownComponent {
 
   /**
    * Handle channel selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits channel ID when channel is clicked
    * @param {string} channelId - ID of selected channel
    * @returns {void}
@@ -56,6 +65,7 @@ export class SearchResultsDropdownComponent {
 
   /**
    * Handle message result selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Emits message ID when message is clicked
    * @param {string} id - ID of selected message
    * @returns {void}

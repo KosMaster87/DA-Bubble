@@ -33,6 +33,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Select avatar by ID
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function selectAvatar
    * @param {number} avatarId - Avatar ID
    * @returns {void}
@@ -43,6 +44,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Get selected avatar source
+   * @description Keeps state transitions explicit so derived UI behavior stays deterministic and testable.
    * @function selectedAvatarSrc
    * @returns {string} Avatar source URL
    */
@@ -54,6 +56,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Get user display name
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function userName
    * @returns {string} User name
    */
@@ -63,6 +66,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Confirm avatar selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function confirmSelection
    * @returns {Promise<void>}
@@ -76,6 +80,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Update user avatar
+   * @description Concentrates mutation behavior in one path so validation, side effects, and state updates remain aligned.
    * @async
    * @function updateAvatar
    * @param {number} avatarId - Avatar ID
@@ -97,6 +102,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Navigate to dashboard page
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function navigateToDashboard
    * @returns {Promise<void>}
@@ -107,6 +113,7 @@ export class AvatarSelectionComponent {
 
   /**
    * Logout and navigate back to signin
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function goBack
    * @returns {Promise<void>}

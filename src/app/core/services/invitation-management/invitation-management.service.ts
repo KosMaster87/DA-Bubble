@@ -1,6 +1,6 @@
 /**
  * @fileoverview Invitation Management Service
- * @description Facade service coordinating invitation acceptance workflow
+ * @description Facade that composes invitation acceptance, navigation cancellation, and user-facing error reporting behind one entry point.
  * @module core/services/invitation-management
  */
 
@@ -25,6 +25,7 @@ export class InvitationManagementService {
 
   /**
    * Accept invitation and handle channel/DM logic
+    * @description Orchestrates the acceptance flow through delegated handlers so channel and DM invitation paths share one guarded execution contract.
    * @param invitation Invitation to accept
    * @param currentUserId Current user's ID
    */
@@ -41,6 +42,7 @@ export class InvitationManagementService {
   /**
    * Cancel any pending invitation-triggered navigation
    * Call this when user manually navigates to prevent override
+   * @description Delegates to the navigation service to abort any in-flight invitation redirect so the user’s own navigation isn’t overridden.
    */
   cancelPendingNavigation(): void {
     this.navigationService.cancelPendingNavigation();
@@ -48,6 +50,7 @@ export class InvitationManagementService {
 
   /**
    * Decline invitation
+    * @description Routes decline through the acceptance service so status transitions use the same state-management boundary as acceptance.
    * @param invitationId Invitation ID to decline
    */
   declineInvitation = async (invitationId: string): Promise<void> => {
@@ -56,6 +59,7 @@ export class InvitationManagementService {
 
   /**
    * Handle invitation acceptance errors
+   * @description Logs structured error details and shows a user-facing notification so acceptance failures are visible without crashing the flow.
    * @param error Error object containing error details, message, and code
    * @param invitationId Invitation ID that failed to be accepted
    */

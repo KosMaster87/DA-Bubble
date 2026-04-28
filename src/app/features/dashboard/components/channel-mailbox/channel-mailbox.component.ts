@@ -43,6 +43,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Get sender name for invitation
+   * @description Resolves invitation sender labels through shared user transformation so mailbox rendering stays consistent with the rest of the app.
    */
   protected getSenderName = (senderId: string): string => {
     return this.userTransformation.getUserDisplayName(senderId, 'Unbekannter User');
@@ -50,6 +51,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Get sender avatar for invitation
+   * @description Uses centralized avatar resolution with fallback to prevent broken invitation rows when user data is incomplete.
    */
   protected getSenderAvatar = (senderId: string): string => {
     return this.userTransformation.getUserAvatar(senderId, '/img/profile/profile-1.png');
@@ -70,6 +72,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Mailbox title from ChannelStore
+   * @description Derives mailbox meta text from channel data so this view follows the same naming source as sidebar navigation.
    */
   protected mailboxTitle = computed(() => {
     const channel = this.channelStore.getChannelById()('mailbox');
@@ -78,6 +81,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Mailbox description from ChannelStore
+   * @description Keeps mailbox subtitle centralized in channel metadata to avoid hard-coded copy divergence across components.
    */
   protected mailboxDescription = computed(() => {
     const channel = this.channelStore.getChannelById()('mailbox');
@@ -86,26 +90,31 @@ export class ChannelMailboxComponent {
 
   /**
    * Messages from mailbox store
+   * @description Exposes mailbox store data as a computed signal so template bindings react to updates without additional plumbing.
    */
   protected messages = computed(() => this.mailboxStore.messages());
 
   /**
    * Unread message count
+   * @description Keeps unread badge state tied to store truth so invitation and message actions immediately reflect in the UI.
    */
   protected unreadCount = computed(() => this.mailboxStore.unreadCount());
 
   /**
    * Loading state
+   * @description Surfaces async mailbox loading state for consistent skeleton/disabled behavior during store operations.
    */
   protected loading = computed(() => this.mailboxStore.loading());
 
   /**
    * Error state from mailbox store
+   * @description Forwards mailbox error state so failure messaging stays aligned with store-side error normalization.
    */
   protected storeError = computed(() => this.mailboxStore.error());
 
   /**
    * Load invitations for current user
+   * @description Rebinds invitation listeners on user changes so mailbox invitation state always reflects the active account.
    */
   private loadInvitations = (userId: string): void => {
     this.unsubscribeFromInvitations();
@@ -114,6 +123,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Unsubscribe from previous invitation listener
+   * @description Keeps realtime subscription flow centralized so lifecycle, cleanup, and error handling stay consistent across call sites.
    */
   private unsubscribeFromInvitations = (): void => {
     if (this.invitationUnsubscribe) {
@@ -123,6 +133,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Subscribe to real-time invitation updates
+   * @description Keeps invitation subscription wiring in one method so listener setup and error reset remain paired.
    */
   private subscribeToInvitations = (userId: string): void => {
     this.invitationUnsubscribe = this.invitationService.subscribeToInvitations(
@@ -137,6 +148,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Handle message click
+   * @description Delegates mailbox click handling to a dedicated interaction service to keep this component focused on rendering concerns.
    */
   onMessageClick = async (messageId: string): Promise<void> => {
     await this.mailboxInteraction.handleMessageClick(messageId);
@@ -144,6 +156,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Accept an invitation
+   * @description Routes invitation acceptance through management service so membership updates and side effects remain centralized.
    */
   acceptInvitation = async (invitation: Invitation): Promise<void> => {
     const currentUserId = this.authStore.user()?.uid;
@@ -154,6 +167,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Decline an invitation
+   * @description Uses the same invitation management boundary as acceptance to keep status transitions consistent.
    */
   declineInvitation = async (invitationId: string): Promise<void> => {
     await this.invitationManagement.declineInvitation(invitationId);
@@ -161,6 +175,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Mark all messages as read
+   * @description Provides a single bulk-read action so unread badge state can be cleared atomically from one user intent.
    */
   markAllAsRead = async (): Promise<void> => {
     await this.mailboxInteraction.markAllAsRead();
@@ -168,6 +183,7 @@ export class ChannelMailboxComponent {
 
   /**
    * Delete a message
+   * @description Consolidates teardown cleanup in one method so subscriptions and transient UI state are reliably cleared.
    */
   deleteMessage = async (messageId: string): Promise<void> => {
     await this.mailboxInteraction.deleteMessage(messageId);

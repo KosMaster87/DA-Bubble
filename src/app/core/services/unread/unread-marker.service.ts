@@ -48,11 +48,9 @@ export class UnreadMarkerService {
 
   /**
    * Mark a channel or conversation as read
+   * @description Writes the lastRead timestamp for the conversation key; also resets the persisted DM unread counter for surfaces that read explicit counts.
    * @param conversationId Channel ID or Conversation ID
    * @param isDirectMessage Whether the conversation is a direct message
-   * @description
-   * For DMs we intentionally perform a second write to reset persisted unread counters,
-   * because some surfaces read counters directly from conversation metadata.
    */
   async markAsRead(conversationId: string, isDirectMessage: boolean = false): Promise<void> {
     const userId = this.authStore.user()?.uid;
@@ -73,12 +71,10 @@ export class UnreadMarkerService {
 
   /**
    * Mark a specific thread as read
+   * @description Writes only the thread-level lastRead key so the parent conversation’s read marker is left untouched.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID of the thread
    * @param isDirectMessage Whether the conversation is a direct message
-   * @description
-   * Thread read markers are separate from conversation markers so users can clear a thread
-   * without losing other unread context in the same conversation.
    */
   async markThreadAsRead(
     conversationId: string,
@@ -105,12 +101,10 @@ export class UnreadMarkerService {
   /**
    * Mark both thread and parent message/conversation as read
    * Convenience method to prevent own messages from showing as unread
+   * @description Batches all three lastRead keys in a single Firestore write to avoid partial-update races after send/reply flows.
    * @param conversationId Channel ID or Conversation ID
    * @param parentMessageId Parent message ID of the thread
    * @param isDirectMessage Whether the conversation is a direct message
-   * @description
-   * This combined write avoids race-prone partial updates after send/reply flows where both
-   * parent and thread indicators should clear in the same user action.
    */
   async markThreadAndParentAsRead(
     conversationId: string,
@@ -138,6 +132,7 @@ export class UnreadMarkerService {
 
   /**
    * Build thread key for lastRead tracking
+   * @description Produces the composite thread key used for consistent read-marker lookups.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID
    * @returns Thread key in format: conversationId_thread_messageId
@@ -148,10 +143,9 @@ export class UnreadMarkerService {
 
   /**
    * Update user lastRead map.
+   * @description Shared helper that keeps the timestamp write shape consistent across all mark-as-read variants so new variants can’t accidentally use a different field path.
    * @param userId Current user ID
    * @param payload Firestore update payload
-   * @description
-   * Shared helper keeps timestamp write shape consistent across all mark-as-read variants.
    */
   private async updateUserLastRead(
     userId: string,
@@ -163,11 +157,9 @@ export class UnreadMarkerService {
 
   /**
    * Reset persisted unread counter for a DM participant.
+   * @description DM-only operation because channel unread badges are derived from timestamps while DM list items may display explicit numeric counts.
    * @param conversationId DM conversation ID
    * @param userId Current user ID
-   * @description
-   * Counter reset is DM-only because channel unread badges are derived from timestamps,
-   * while DM lists may consume explicit unread counts.
    */
   private async resetDirectMessageUnreadCount(
     conversationId: string,
@@ -185,6 +177,7 @@ export class UnreadMarkerService {
 
   /**
    * Handle Firestore errors
+   * @description Silently swallows internal Firestore assertion errors (known transient issue) and logs all other failures.
    * @param error Error object
    * @param operation Operation description
    */

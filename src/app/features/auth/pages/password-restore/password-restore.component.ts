@@ -41,6 +41,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Check for oobCode in URL
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function checkOobCode
    * @returns {void}
    */
@@ -55,6 +56,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Create restore form
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    * @function createForm
    * @returns {FormGroup} Form group
    */
@@ -67,6 +69,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Handle form submission
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onSubmit
    * @returns {Promise<void>}
@@ -82,6 +85,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Reset password with new password
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function resetPassword
    * @returns {Promise<void>}
@@ -107,6 +111,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Navigate to signin page
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function navigateToSignin
    * @returns {Promise<void>}
@@ -117,6 +122,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Toggle password visibility
+   * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
    * @function togglePasswordVisibility
    * @returns {void}
    */
@@ -126,6 +132,7 @@ export class PasswordRestoreComponent {
 
   /**
    * Toggle confirm password visibility
+   * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
    * @function toggleConfirmPasswordVisibility
    * @returns {void}
    */

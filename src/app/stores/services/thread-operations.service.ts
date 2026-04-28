@@ -36,6 +36,7 @@ export class ThreadOperationsService {
 
   /**
    * Get Firestore path for threads collection
+   * @description Centralises path construction for both channel and DM thread sub-collections so all callers use the same string template.
    */
   getThreadsPath = (channelId: string, messageId: string, isDirectMessage?: boolean): string => {
     return isDirectMessage
@@ -45,6 +46,7 @@ export class ThreadOperationsService {
 
   /**
    * Map Firestore document to ThreadMessage
+   * @description Converts raw Firestore DocumentData to a typed ThreadMessage, providing safe defaults for optional fields.
    */
   mapThreadDocument = (
     doc: QueryDocumentSnapshot<DocumentData>,
@@ -67,6 +69,7 @@ export class ThreadOperationsService {
 
   /**
    * Create new thread data object
+   * @description Builds the canonical Firestore write payload for a thread reply so serverTimestamp fields are set consistently.
    */
   createThreadData = (
     content: string,
@@ -89,6 +92,7 @@ export class ThreadOperationsService {
 
   /**
    * Add thread reply to Firestore
+   * @description Persists a new thread reply and atomically increments the parent message's thread count via updateParentMessageCount.
    */
   addThreadReply = async (
     channelId: string,
@@ -105,6 +109,7 @@ export class ThreadOperationsService {
 
   /**
    * Update parent message thread count and timestamp
+   * @description Keeps parent message metadata in sync after each reply so the thread-count badge and last-reply indicator update in real time.
    */
   updateParentMessageCount = async (
     channelId: string,
@@ -124,6 +129,7 @@ export class ThreadOperationsService {
 
   /**
    * Update thread in Firestore
+   * @description Handles partial content edits by merging caller-supplied updates with a mandatory updatedAt and isEdited flag.
    */
   updateThread = async (
     channelId: string,
@@ -143,6 +149,7 @@ export class ThreadOperationsService {
 
   /**
    * Delete thread from Firestore
+   * @description Removes the thread document and recalculates parent message metadata to reflect the correct remaining thread count.
    */
   deleteThread = async (
     channelId: string,
@@ -158,6 +165,7 @@ export class ThreadOperationsService {
 
   /**
    * Update parent message metadata after thread deletion
+   * @description Re-queries remaining threads after deletion to set an accurate count and the correct lastThreadTimestamp on the parent.
    */
   private updateParentAfterDelete = async (
     collectionType: string,
@@ -184,6 +192,7 @@ export class ThreadOperationsService {
 
   /**
    * Reset parent message thread metadata to zero
+   * @description Resets threadCount and lastThreadTimestamp on the parent when its last thread reply is deleted.
    */
   private resetParentThreadMetadata = async (
     parentRef: DocumentReference<DocumentData>,

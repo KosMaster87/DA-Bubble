@@ -26,6 +26,7 @@ import {
 
 /**
  * Create login methods for auth store
+ * @description Factory keeps AuthStore wiring thin by building strategy-specific login methods from shared dependencies and handlers.
  * @function createLoginMethods
  * @param {Auth} auth - Firebase Auth instance
  * @param {Firestore} firestore - Firestore instance
@@ -43,6 +44,8 @@ export const createLoginMethods = (
 ) => ({
   /**
    * Login with email and password
+   * @description Delegates to the shared `performLogin` handler so all login strategies
+   * share identical Firestore bootstrap and error-handling behavior.
    * @async
    * @param {string} email - User email address
    * @param {string} password - User password
@@ -59,6 +62,8 @@ export const createLoginMethods = (
 
   /**
    * Login with Google OAuth provider
+   * @description Delegates to `performLogin` so Google sign-in follows the same Firestore
+   * user-document creation and default-channel bootstrapping path as email login.
    * @async
    */
   async loginWithGoogle(): Promise<void> {
@@ -74,6 +79,9 @@ export const createLoginMethods = (
 
   /**
    * Login anonymously as guest
+   * @description Provides a zero-friction entry point that creates a time-limited guest
+   * account, leveraging the same `performLogin` bootstrap path so guests receive the
+   * same channel assignments as registered users.
    * @async
    */
   async loginAnonymously(): Promise<void> {
@@ -90,6 +98,8 @@ export const createLoginMethods = (
    * Logout current user
    * For regular users: updates offline status
    * For guests: deletes all account data completely
+   * @description Guest accounts are fully deleted on logout to respect the ephemeral
+   * nature of anonymous sessions and prevent orphaned Firestore data.
    * @async
    */
   async logout(): Promise<void> {
@@ -118,6 +128,7 @@ export const createLoginMethods = (
 /**
  * Generic login handler for different authentication methods
  * Creates Firestore user document if it doesn't exist and adds to default channels
+ * @description Centralizes post-auth bootstrap so every login strategy executes the same user-document initialization and channel assignment flow.
  * @async
  * @function performLogin
  * @param {Function} loginFn - Function that returns UserCredential promise

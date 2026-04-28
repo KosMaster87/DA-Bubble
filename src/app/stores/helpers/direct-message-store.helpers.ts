@@ -63,11 +63,13 @@ const asNumber = (value: unknown, fallback = 0): number =>
 
 /**
  * Convert Firestore Timestamp to Date
+ * @description Converts Firestore Timestamp to JS Date with a new Date() fallback, preventing null reference errors in template date pipes.
  */
 export const toDate = (ts: Timestamp | null): Date => (ts ? ts.toDate() : new Date());
 
 /**
  * Map Firestore document to DirectMessageConversation
+ * @description Uses typed helper functions for each field so malformed Firestore data silently falls back to safe defaults instead of crashing.
  */
 export const mapConversation = (docSnap: SnapshotLike): DirectMessageConversation => {
   const data = docSnap.data();
@@ -84,6 +86,7 @@ export const mapConversation = (docSnap: SnapshotLike): DirectMessageConversatio
 
 /**
  * Map Firestore document to DirectMessage
+ * @description Converts raw Firestore DocumentData to a fully typed DirectMessage with safe defaults for all optional fields.
  */
 export const mapMessage = (docSnap: SnapshotLike): DirectMessage => {
   const data = docSnap.data();
@@ -104,6 +107,7 @@ export const mapMessage = (docSnap: SnapshotLike): DirectMessage => {
 
 /**
  * Check if error is a Firestore internal state error
+ * @description Detects known Firestore SDK internal-assertion errors by message content so they can be swallowed rather than shown to users.
  */
 export const isFirestoreStateError = (error: unknown): boolean => {
   const msg = (error as FirestoreErrorLike).message || '';

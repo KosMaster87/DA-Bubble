@@ -5,13 +5,13 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { ChannelStore } from '@stores/channels/channel.store';
-import { UserStore } from '@stores/users/user.store';
-import { MailboxStore } from '@stores/mailbox/mailbox.store';
-import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { ChannelMessageStore } from '@stores/channels/channel-message.store';
-import { ThreadStore } from '@stores/threads/thread.store';
+import { ChannelStore } from '@stores/channels/channel.store';
 import type { CleanableStore, DestroyableStore } from '@stores/core/store.types';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
+import { MailboxStore } from '@stores/mailbox/mailbox.store';
+import { ThreadStore } from '@stores/threads/thread.store';
+import { UserStore } from '@stores/users/user.store';
 
 /**
  * Service to cleanup all store subscriptions
@@ -31,6 +31,7 @@ export class StoreCleanupService {
   /**
    * Cleanup all store subscriptions
    * Should be called before user logout to prevent Firebase permission errors
+   * @description Stops all active Firestore listeners before the auth token is revoked so Firebase doesn't emit permission-denied errors during logout.
    */
   cleanupAll(): void {
     try {

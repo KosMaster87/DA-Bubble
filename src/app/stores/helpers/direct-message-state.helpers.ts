@@ -22,6 +22,7 @@ export interface LoadOlderMessagesState {
 
 /**
  * Filter conversations by ID
+ * @description Returns a new array excluding the given conversation so the leave-conversation flow can update state immutably.
  */
 export const filterConversationsById = (
   conversations: DirectMessageConversation[],
@@ -30,6 +31,7 @@ export const filterConversationsById = (
 
 /**
  * Filter messages by conversation ID
+ * @description Removes a single conversation's message map entry so the store state stays in sync with the conversation list after leaving.
  */
 export const filterMessagesByConversationId = (
   messages: { [conversationId: string]: DirectMessage[] },
@@ -39,6 +41,7 @@ export const filterMessagesByConversationId = (
 
 /**
  * Remove conversation ID from user's directMessages array
+ * @description Cleans up the user document so re-fetching the DM list on the next login no longer includes the left conversation.
  */
 export const removeConversationFromUserDoc = async (
   firestore: Firestore,
@@ -52,6 +55,7 @@ export const removeConversationFromUserDoc = async (
 
 /**
  * Cleanup single message listener
+ * @description Tears down a specific per-conversation Firestore listener to prevent memory leaks when a conversation is left.
  */
 export const cleanupSingleMessageListener = (
   messagesUnsubscribers: Map<string, Unsubscribe>,
@@ -65,6 +69,7 @@ export const cleanupSingleMessageListener = (
 
 /**
  * Clear all debounce timers
+ * @description Cancels all pending debounce timers and clears retry counters so no stale callbacks fire after a full cleanup.
  */
 export const clearDebounceTimers = (
   conversationsTimer: TimerHandle | null,
@@ -82,6 +87,7 @@ export const clearDebounceTimers = (
 
 /**
  * Cleanup all listeners
+ * @description Unsubscribes both the conversation-level and all per-message Firestore listeners in one call to prevent duplicate updates.
  */
 export const cleanupAllListeners = (
   conversationsUnsubscribe: Unsubscribe | null,
@@ -94,6 +100,7 @@ export const cleanupAllListeners = (
 
 /**
  * Check if conversation exists in list
+ * @description Guards against duplicate conversation entries before adding a newly loaded conversation to the store.
  */
 export const conversationExists = (
   conversations: DirectMessageConversation[],
@@ -102,6 +109,7 @@ export const conversationExists = (
 
 /**
  * Build state patch after leaving a conversation.
+ * @description Computes the full leave-conversation state patch in one place so the store's patchState call stays readable.
  */
 export const buildLeaveConversationState = (
   conversations: DirectMessageConversation[],
@@ -124,6 +132,7 @@ export const buildLeaveConversationState = (
 
 /**
  * Build loadingOlderMessages state patch for a single conversation.
+ * @description Immutably merges the loading flag for one conversation without touching flags for other conversations.
  */
 export const buildLoadingOlderMessagesState = (
   loadingOlderMessages: { [conversationId: string]: boolean },
@@ -136,6 +145,7 @@ export const buildLoadingOlderMessagesState = (
 
 /**
  * Build hasMoreMessages state patch for a single conversation.
+ * @description Immutably merges the hasMore flag for one conversation so pagination state is managed per-conversation.
  */
 export const buildHasMoreMessagesState = (
   hasMoreMessages: { [conversationId: string]: boolean },
@@ -148,6 +158,7 @@ export const buildHasMoreMessagesState = (
 
 /**
  * Build success state patch for older messages loading.
+ * @description Prepends older messages to the existing list and resets pagination flags for the conversation in one combined patch.
  */
 export const buildOlderMessagesSuccessState = (
   messages: { [conversationId: string]: DirectMessage[] },

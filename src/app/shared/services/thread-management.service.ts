@@ -1,6 +1,6 @@
 /**
  * @fileoverview Thread Management Service
- * @description Manages thread panel state and operations
+ * @description Owns thread panel lifecycle state so open, close, and parent-message binding remain synchronized across channel and DM contexts.
  * @module shared/services/thread-management
  */
 
@@ -36,6 +36,7 @@ export class ThreadManagementService {
 
   /**
    * Thread info with live parent message updates from store
+   * @description Rehydrates parent message data from stores so open thread views reflect live edits and metadata updates.
    */
   readonly threadInfo = computed(() => {
     const baseInfo = this._baseThreadInfo();
@@ -52,6 +53,7 @@ export class ThreadManagementService {
 
   /**
    * Open thread panel and mark thread as read
+   * @description Initializes thread state and immediately marks parent/thread as read to keep unread indicators in sync.
    * @param messageId - Parent message ID
    * @param parentMessage - Parent message data
    * @param channelId - Channel or conversation ID
@@ -82,6 +84,7 @@ export class ThreadManagementService {
 
   /**
    * Close thread panel and reset thread state
+   * @description Clears all thread-related signals so subsequent opens start from a clean state.
    */
   closeThread(): void {
     this._isThreadOpen.set(false);
@@ -91,6 +94,7 @@ export class ThreadManagementService {
 
   /**
    * Get updated parent message from store
+   * @description Resolves the latest parent message snapshot from DM or channel stores and normalizes it for thread rendering.
    * @param channelId - Channel or conversation ID
    * @param messageId - Message ID
    * @param isDirectMessage - Whether this is a DM

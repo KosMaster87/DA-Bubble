@@ -24,6 +24,7 @@ import {
  * Provides convenient access to all SignalStores in the application
  * @function useStores
  * @returns {Object} Object containing all store instances
+ * @description Centralises inject() calls for all stores so components receive a single dependency instead of injecting each store individually.
  */
 export function useStores() {
   const authStore = inject(AuthStore);
@@ -53,6 +54,7 @@ export function useStores() {
  * @param {string} user1Id - First user ID
  * @param {string} user2Id - Second user ID
  * @returns {string} Conversation ID
+ * @description Sorts UIDs before joining to ensure the same conversation ID regardless of which user initiates the lookup.
  */
 export function getConversationId(user1Id: string, user2Id: string): string {
   return [user1Id, user2Id].sort().join('_');
@@ -63,6 +65,7 @@ export function getConversationId(user1Id: string, user2Id: string): string {
  * @function formatTimestamp
  * @param {Date} date - Date to format
  * @returns {string} Formatted timestamp string
+ * @description Formats relative timestamps for display, falling back to absolute date for messages older than a week.
  */
 export function formatTimestamp(date: Date): string {
   const now = new Date();
@@ -83,6 +86,7 @@ export function formatTimestamp(date: Date): string {
  * @function isValidEmail
  * @param {string} email - Email to validate
  * @returns {boolean} True if email is valid
+ * @description Provides a lightweight client-side format check before any Firestore or auth call is made.
  */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -93,6 +97,7 @@ export function isValidEmail(email: string): boolean {
  * Helper to generate unique message ID
  * @function generateMessageId
  * @returns {string} Unique message ID
+ * @description Generates a client-side ID combining timestamp and random suffix when Firestore auto-IDs are not available offline.
  */
 export function generateMessageId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -103,6 +108,7 @@ export function generateMessageId(): string {
  * @function sanitizeInput
  * @param {string} input - Input to sanitize
  * @returns {string} Sanitized input
+ * @description Strips leading/trailing whitespace and angle brackets to prevent basic XSS injection into message content.
  */
 export function sanitizeInput(input: string): string {
   return input.trim().replace(/[<>]/g, '');

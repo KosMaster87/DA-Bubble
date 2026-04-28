@@ -1,14 +1,14 @@
 /**
  * @fileoverview Channel Management Service
- * @description Handles channel creation, updates, and invitation management
+ * @description Orchestrates multi-step channel creation flows, invitation fan-out, and post-create navigation under one guarded workflow.
  * @module core/services/channel-management
  */
 
 import { Injectable, inject, signal } from '@angular/core';
-import { ChannelStore } from '@stores/channels/channel.store';
 import { InvitationService } from '@core/services/invitation/invitation.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 export interface CreateChannelWithMembersData {
   type: 'all' | 'specific';
@@ -34,6 +34,7 @@ export class ChannelManagementService {
 
   /**
    * Create a new channel and send invitations to selected users
+   * @description Top-level orchestrator: creates the channel first, then sends invitations so a failure in invitations doesn’t block channel creation.
    * @param {Object} channelData - Channel name, description, isPrivate
    * @param {string} creatorId - Current user ID (will be the only initial member)
    * @param {Set<string>} inviteUserIds - User IDs to send invitations to
@@ -46,15 +47,16 @@ export class ChannelManagementService {
       isPrivate: boolean;
     },
     creatorId: string,
-    inviteUserIds: Set<string>
+    inviteUserIds: Set<string>,
   ): Promise<string> => {
     const newChannelId = await this.createChannel(channelData, creatorId);
     await this.sendInvitations(inviteUserIds, creatorId, newChannelId, channelData.name);
     return newChannelId;
-  }
+  };
 
   /**
    * Create channel in store
+   * @description Thin wrapper around the store’s createChannel to keep the public method readable and testable in isolation.
    * @private
    * @param {Object} channelData - Channel data
    * @param {string} creatorId - Creator user ID
@@ -62,7 +64,7 @@ export class ChannelManagementService {
    */
   private createChannel = async (
     channelData: { name: string; description: string; isPrivate: boolean },
-    creatorId: string
+    creatorId: string,
   ): Promise<string> => {
     return await this.channelStore.createChannel(
       {
@@ -71,12 +73,13 @@ export class ChannelManagementService {
         isPrivate: channelData.isPrivate,
         members: [creatorId],
       },
-      creatorId
+      creatorId,
     );
-  }
+  };
 
   /**
    * Send invitations to users
+   * @description Early-exits if there are no users to invite, avoiding unnecessary async work.
    * @private
    * @param {Set<string>} inviteUserIds - User IDs to invite
    * @param {string} senderId - Sender user ID
@@ -88,14 +91,15 @@ export class ChannelManagementService {
     inviteUserIds: Set<string>,
     senderId: string,
     channelId: string,
-    channelName: string
+    channelName: string,
   ): Promise<void> => {
     if (inviteUserIds.size === 0) return;
     await this.sendInvitationPromises(inviteUserIds, senderId, channelId, channelName);
-  }
+  };
 
   /**
    * Send invitation promises
+   * @description Runs all invitation writes in parallel via Promise.all for minimum total latency.
    * @private
    * @param {Set<string>} inviteUserIds - User IDs to invite
    * @param {string} senderId - Sender ID
@@ -107,19 +111,20 @@ export class ChannelManagementService {
     inviteUserIds: Set<string>,
     senderId: string,
     channelId: string,
-    channelName: string
+    channelName: string,
   ): Promise<void> => {
     const invitationPromises = this.buildInvitationPromises(
       inviteUserIds,
       senderId,
       channelId,
-      channelName
+      channelName,
     );
     await Promise.all(invitationPromises);
-  }
+  };
 
   /**
    * Build invitation promises for all users
+   * @description Maps each user ID to an InvitationService.createInvitation call, keeping the parallel execution logic in the caller.
    * @private
    * @param {Set<string>} inviteUserIds - User IDs to invite
    * @param {string} senderId - Sender ID
@@ -131,7 +136,7 @@ export class ChannelManagementService {
     inviteUserIds: Set<string>,
     senderId: string,
     channelId: string,
-    channelName: string
+    channelName: string,
   ): Promise<string>[] => {
     return Array.from(inviteUserIds).map((userId) =>
       this.invitationService.createInvitation({
@@ -140,13 +145,14 @@ export class ChannelManagementService {
         recipientId: userId,
         channelId: channelId,
         channelName: channelName,
-      })
+      }),
     );
-  }
+  };
 
   /**
    * Create channel with member selection and invitations
    * Includes lock mechanism to prevent duplicate creations
+   * @description Acquires a creation lock to prevent double-submission, collects all user IDs to invite, then delegates to createChannelWithInvitations.
    * @param {Object} channelData - Channel name, description, isPrivate
    * @param {CreateChannelWithMembersData} memberData - Selected users and channels for invitations
    * @param {string} currentUserId - Current user ID
@@ -159,7 +165,7 @@ export class ChannelManagementService {
       isPrivate: boolean;
     },
     memberData: CreateChannelWithMembersData,
-    currentUserId: string
+    currentUserId: string,
   ): Promise<string | null> => {
     if (!this.acquireLock()) return null;
 
@@ -169,10 +175,11 @@ export class ChannelManagementService {
     } finally {
       this.releaseLock();
     }
-  }
+  };
 
   /**
    * Acquire creation lock
+   * @description Prevents double-submission by setting a signal-based lock; returns false if already locked.
    * @private
    * @returns {boolean} True if lock acquired, false if already locked
    */
@@ -182,10 +189,11 @@ export class ChannelManagementService {
     }
     this._isCreating.set(true);
     return true;
-  }
+  };
 
   /**
    * Release creation lock after delay
+   * @description Uses a short timeout to keep the lock active long enough to absorb rapid re-submissions before unlocking.
    * @private
    * @returns {void}
    */
@@ -193,10 +201,11 @@ export class ChannelManagementService {
     setTimeout(() => {
       this._isCreating.set(false);
     }, 1000);
-  }
+  };
 
   /**
    * Collect all user IDs to invite from member data
+   * @description Merges individually selected users with all members from selected channels, excluding the current user.
    * @private
    * @param {CreateChannelWithMembersData} memberData - Selected users and channels
    * @param {string} currentUserId - Current user ID to exclude
@@ -204,16 +213,17 @@ export class ChannelManagementService {
    */
   private collectUsersToInvite = (
     memberData: CreateChannelWithMembersData,
-    currentUserId: string
+    currentUserId: string,
   ): Set<string> => {
     const usersToInvite = new Set<string>();
     this.addSelectedUsers(memberData.selectedUsers, currentUserId, usersToInvite);
     this.addChannelMembers(memberData.selectedChannels, currentUserId, usersToInvite);
     return usersToInvite;
-  }
+  };
 
   /**
    * Add selected users to invite set
+   * @description Iterates the picker’s selected users and adds them to the invite set, skipping the current user.
    * @private
    * @param {Array<{id: string, name: string, avatar: string}>} selectedUsers - Users selected for invitation
    * @param {string} currentUserId - Current user ID to exclude
@@ -223,17 +233,18 @@ export class ChannelManagementService {
   private addSelectedUsers = (
     selectedUsers: Array<{ id: string; name: string; avatar: string }>,
     currentUserId: string,
-    usersToInvite: Set<string>
+    usersToInvite: Set<string>,
   ): void => {
     selectedUsers.forEach((user) => {
       if (user.id !== currentUserId) {
         usersToInvite.add(user.id);
       }
     });
-  }
+  };
 
   /**
    * Add members from selected channels to invite set
+   * @description Expands a “copy all members from channel” selection into individual user IDs, excluding the current user.
    * @private
    * @param {Array<{id: string, name: string}>} selectedChannels - Channels whose members should be invited
    * @param {string} currentUserId - Current user ID to exclude
@@ -243,7 +254,7 @@ export class ChannelManagementService {
   private addChannelMembers = (
     selectedChannels: Array<{ id: string; name: string }>,
     currentUserId: string,
-    usersToInvite: Set<string>
+    usersToInvite: Set<string>,
   ): void => {
     selectedChannels.forEach((selectedChannel) => {
       const channel = this.channelStore.channels().find((ch) => ch.id === selectedChannel.id);
@@ -251,10 +262,11 @@ export class ChannelManagementService {
         this.addMembersFromChannel(channel.members, currentUserId, usersToInvite);
       }
     });
-  }
+  };
 
   /**
    * Add members from channel to invite set
+   * @description Loops through a channel’s raw member list and adds each ID to the invite set, excluding the current user.
    * @private
    * @param {string[]} members - Channel member IDs
    * @param {string} currentUserId - Current user ID to exclude
@@ -264,39 +276,41 @@ export class ChannelManagementService {
   private addMembersFromChannel = (
     members: string[],
     currentUserId: string,
-    usersToInvite: Set<string>
+    usersToInvite: Set<string>,
   ): void => {
     members.forEach((memberId) => {
       if (memberId !== currentUserId) {
         usersToInvite.add(memberId);
       }
     });
-  }
+  };
 
   /**
    * Create channel from pending data in WorkspaceSidebarService
    * Handles channel creation, cleanup, and navigation
+   * @description Reads the pending channel name/description/privacy from the sidebar service, runs the full creation flow, and navigates to the new channel.
    * @param {CreateChannelWithMembersData} memberData - Selected users and channels for invitations
    * @param {string} currentUserId - Current user ID
    * @returns {Promise<string | null>} New channel ID or null if failed
    */
   createChannelFromPending = async (
     memberData: CreateChannelWithMembersData,
-    currentUserId: string
+    currentUserId: string,
   ): Promise<string | null> => {
     const channelData = this.getPendingChannelData();
     const newChannelId = await this.createChannelWithMembers(
       channelData,
       memberData,
-      currentUserId
+      currentUserId,
     );
     if (!newChannelId) return null;
     this.finalizeChannelCreation(newChannelId);
     return newChannelId;
-  }
+  };
 
   /**
    * Get pending channel data from workspace sidebar service
+   * @description Reads the three pending channel fields from WorkspaceSidebarService into a typed object for safe downstream use.
    * @private
    * @returns {Object} Channel data with name, description, and isPrivate
    */
@@ -310,10 +324,11 @@ export class ChannelManagementService {
       description: this.workspaceSidebarService.pendingChannelDescription(),
       isPrivate: this.workspaceSidebarService.pendingChannelIsPrivate(),
     };
-  }
+  };
 
   /**
    * Finalize channel creation with cleanup and navigation
+   * @description Closes the member-selection step and navigates to the newly created channel so the user lands in it immediately.
    * @private
    * @param {string} channelId - Channel ID to navigate to
    * @returns {void}
@@ -321,5 +336,5 @@ export class ChannelManagementService {
   private finalizeChannelCreation = (channelId: string): void => {
     this.workspaceSidebarService.closeAddMemberAfterChannel();
     this.navigationService.selectChannel(channelId);
-  }
+  };
 }

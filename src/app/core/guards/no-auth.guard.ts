@@ -1,6 +1,6 @@
 /**
  * @fileoverview No Authentication Guard
- * @description Prevents authenticated users from accessing signin/signup pages
+ * @description Prevents signed-in users from revisiting auth-entry routes and redirects them to dashboard.
  * @module guards/no-auth
  */
 
@@ -10,6 +10,7 @@ import { AuthStore } from '@stores/auth';
 
 /**
  * Guard to prevent authenticated users from accessing auth pages
+ * @description Allows activation only for unauthenticated users once auth loading has completed.
  * @function noAuthGuard
  * @returns {boolean | Promise<boolean>} True if user is not authenticated, otherwise redirects to dashboard
  */
@@ -22,6 +23,7 @@ export const noAuthGuard: CanActivateFn = async () => {
 
 /**
  * Check if user is not authenticated (waits for auth state to load)
+ * @description Gates auth-entry routes until loading settles, then redirects authenticated users to dashboard.
  * @async
  * @function checkNoAuthentication
  * @param {InstanceType<typeof AuthStore>} store - Auth store instance
@@ -30,7 +32,7 @@ export const noAuthGuard: CanActivateFn = async () => {
  */
 async function checkNoAuthentication(
   store: InstanceType<typeof AuthStore>,
-  router: Router
+  router: Router,
 ): Promise<boolean> {
   while (store.isLoading()) {
     await new Promise((resolve) => setTimeout(resolve, 50));

@@ -1,18 +1,18 @@
 /**
  * @fileoverview Auth Layout Component
- * @description Layout wrapper for all authentication-related pages with Header and Footer
+ * @description Provides a shared shell for authentication routes so branding, navigation affordances, and legal links stay consistent.
  * @module AuthLayoutComponent
  */
 
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from '@layout/header/header.component';
 import { FooterComponent } from '@layout/footer/footer.component';
+import { HeaderComponent } from '@layout/header/header.component';
 
 /**
  * Auth Layout Component
  * @class AuthLayoutComponent
- * @description Provides consistent layout (Header + Content + Footer) for all auth pages
+ * @description Composes header, routed auth content, and footer in one layout to prevent per-page structural duplication.
  */
 @Component({
   selector: 'app-auth-layout',

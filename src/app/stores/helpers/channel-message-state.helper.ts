@@ -26,6 +26,7 @@ export class ChannelMessageStateHelper {
    * @param channelId - Channel ID to update
    * @param messages - New messages array
    * @returns Updated state object
+   * @description Immutably replaces the message array for a single channel without touching other channels' entries.
    */
   static updateChannelMessages(
     currentState: { [channelId: string]: Message[] },
@@ -44,6 +45,7 @@ export class ChannelMessageStateHelper {
    * @param channelId - Channel ID
    * @param message - Message to add
    * @returns Updated state object
+   * @description Prepends the new message so that the latest message always appears at index 0 for reverse-sorted lists.
    */
   static addMessageToChannel(
     currentState: { [channelId: string]: Message[] },
@@ -60,6 +62,7 @@ export class ChannelMessageStateHelper {
    * @param messageId - Message ID to update
    * @param updates - Partial updates to apply
    * @returns Updated state object
+   * @description Scans all channel buckets when the caller doesn't know which channel owns the message, e.g. after a reaction update from a push notification.
    */
   static updateMessageInAllChannels(
     currentState: { [channelId: string]: Message[] },
@@ -77,6 +80,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Update older-message loading flag for one channel.
+   * @description Isolates the per-channel loading flag update so other channels' loading states are not inadvertently reset.
    */
   static updateLoadingOlderMessages(
     currentState: { [channelId: string]: boolean },
@@ -91,6 +95,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Update has-more-messages flag for one channel.
+   * @description Isolates the per-channel hasMore flag so pagination state is tracked independently for each channel.
    */
   static updateHasMoreMessages(
     currentState: { [channelId: string]: boolean },
@@ -105,6 +110,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Build state patch when no older messages remain.
+   * @description Returns a minimal patch that only sets hasMoreMessages to false, avoiding a redundant message list rebuild.
    */
   static buildNoMoreMessagesState(
     hasMoreMessages: { [channelId: string]: boolean },
@@ -117,6 +123,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Build state patch when older message loading finishes with no results.
+   * @description Clears both loading and hasMore flags in one patch when an older-messages query returns an empty result set.
    */
   static buildEmptyOlderMessagesState(
     hasMoreMessages: { [channelId: string]: boolean },
@@ -131,6 +138,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Build state patch for successful older-message loading.
+   * @description Prepends older messages to the channel's existing list and updates both pagination flags in a single state patch.
    */
   static buildOlderMessagesSuccessState(
     channelMessages: { [channelId: string]: Message[] },
@@ -156,6 +164,7 @@ export class ChannelMessageStateHelper {
 
   /**
    * Build state patch for freshly loaded channel messages.
+   * @description Replaces the channel's message list after a full reload and increments updateCounter to trigger dependent computed signals.
    */
   static buildMessagesLoadedState(
     channelMessages: { [channelId: string]: Message[] },

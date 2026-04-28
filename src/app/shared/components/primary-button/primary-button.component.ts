@@ -8,6 +8,7 @@ import { Component, input, output } from '@angular/core';
 
 /**
  * Primary button component with loading spinner
+ * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
  * @component PrimaryButtonComponent
  */
 @Component({
@@ -25,6 +26,7 @@ export class PrimaryButtonComponent {
 
   /**
    * Handle button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function handleClick
    * @returns {void}
    */

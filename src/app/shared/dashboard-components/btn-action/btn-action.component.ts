@@ -17,6 +17,11 @@ export class BtnActionComponent {
   title = input<string>();
   clicked = output<void>();
 
+  /**
+   * Emit click action when button is interactable.
+   * @description Guards event emission with disabled state so parent handlers receive only valid user intents.
+   * @returns {void}
+   */
   onClick(): void {
     if (!this.disabled()) {
       this.clicked.emit();

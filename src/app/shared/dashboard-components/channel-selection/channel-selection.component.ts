@@ -24,6 +24,7 @@ export class ChannelSelectionComponent {
 
   /**
    * Filtered channels based on search
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   filteredChannels = computed(() => {
     const search = this.searchValue().toLowerCase();
@@ -42,6 +43,7 @@ export class ChannelSelectionComponent {
 
   /**
    * Handle channel selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @param {string} channelId - Channel ID to select
    * @returns {void}
    */
@@ -54,6 +56,7 @@ export class ChannelSelectionComponent {
 
   /**
    * Handle overlay click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @returns {void}
    */
   onOverlayClick = (): void => {

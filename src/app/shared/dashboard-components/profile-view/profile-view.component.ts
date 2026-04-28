@@ -4,9 +4,9 @@
  * @module shared/dashboard-components/profile-view
  */
 
-import { Component, input, output, inject, computed } from '@angular/core';
-import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
+import { Component, inject, input, output } from '@angular/core';
 import { UserPresenceStore } from '../../../stores';
+import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
 
 export interface ProfileUser {
   id: string;
@@ -41,6 +41,7 @@ export class ProfileViewComponent {
 
   /**
    * Handle close button click
+   * @description Emits close intent for parent-level modal dismissal handling.
    */
   onClose(): void {
     this.closeClicked.emit();
@@ -48,6 +49,7 @@ export class ProfileViewComponent {
 
   /**
    * Handle edit button click
+   * @description Emits edit intent so parent components can open profile edit flow.
    */
   onEdit(): void {
     this.editClicked.emit();
@@ -55,6 +57,7 @@ export class ProfileViewComponent {
 
   /**
    * Handle message button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onMessage(): void {
     this.messageClicked.emit();
@@ -62,6 +65,7 @@ export class ProfileViewComponent {
 
   /**
    * Handle remove member button click
+   * @description Consolidates teardown cleanup in one method so subscriptions and transient UI state are reliably cleared.
    */
   onRemoveMember(): void {
     this.removeMemberClicked.emit();
@@ -69,6 +73,7 @@ export class ProfileViewComponent {
 
   /**
    * Handle leave conversation button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onLeaveConversation(): void {
     this.leaveConversationClicked.emit();
@@ -76,6 +81,7 @@ export class ProfileViewComponent {
 
   /**
    * Get status icon based on user status
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   getStatusIcon(): string {
     const isOnline = this.userPresenceStore.isUserOnline()(this.user().id);
@@ -84,6 +90,7 @@ export class ProfileViewComponent {
 
   /**
    * Get status text based on user status
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   getStatusText(): string {
     const isOnline = this.userPresenceStore.isUserOnline()(this.user().id);

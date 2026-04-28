@@ -1,14 +1,14 @@
 /**
  * @fileoverview Channel Membership Service
- * @description Handles channel membership operations (join, leave, delete, add members)
+ * @description Coordinates channel membership mutations with propagation checks so permission-sensitive follow-up reads run against synchronized state.
  * @module core/services/channel-membership
  */
 
 import { inject, Injectable } from '@angular/core';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { ChannelStore } from '@stores/channels/channel.store';
-import { AuthStore } from '@stores/auth';
+import { doc, Firestore, getDoc } from '@angular/fire/firestore';
 import { InvitationService } from '@core/services/invitation/invitation.service';
+import { AuthStore } from '@stores/auth';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +21,7 @@ export class ChannelMembershipService {
 
   /**
    * Add current user to channel members
+   * @description Performs the join write and waits 150ms to give Firestore replication a head start before callers rely on membership.
    * @param channelId Channel ID to join
    */
   joinChannel = async (channelId: string): Promise<void> => {
@@ -33,6 +34,7 @@ export class ChannelMembershipService {
 
   /**
    * Get current authenticated user
+   * @description Centralises the auth guard for membership operations; throws early so callers don’t need to handle null users.
    * @throws Error if no user authenticated
    */
   private getCurrentUser = () => {
@@ -43,6 +45,7 @@ export class ChannelMembershipService {
 
   /**
    * Get channel or throw error
+   * @description Guards channel operations against missing channel data, providing a descriptive error for easier debugging.
    * @param channelId Channel ID to fetch
    * @throws Error if channel not found
    */
@@ -54,6 +57,7 @@ export class ChannelMembershipService {
 
   /**
    * Add user to members list (no duplicates)
+   * @description Uses a Set spread to guarantee idempotency — re-adding an existing member leaves the list unchanged.
    * @param members Current members array
    * @param userId User ID to add
    * @returns Updated members array
@@ -64,6 +68,7 @@ export class ChannelMembershipService {
 
   /**
    * Update channel members in Firestore
+   * @description Persists the updated members array to Firestore via the store’s updateChannel method.
    * @param channelId Channel ID
    * @param members Updated members array
    * @param userId User ID being added
@@ -71,13 +76,14 @@ export class ChannelMembershipService {
   private updateChannelMembers = async (
     channelId: string,
     members: string[],
-    userId: string
+    userId: string,
   ): Promise<void> => {
     await this.channelStore.updateChannel(channelId, { members });
   };
 
   /**
    * Wait for membership sync in Firestore and local store
+   * @description Polls both Firestore and the local store to confirm the member write has propagated before security-rule-sensitive operations proceed.
    * @param channelId Channel ID to check
    * @param userId User ID to check for membership
    */
@@ -96,6 +102,7 @@ export class ChannelMembershipService {
 
   /**
    * Check if membership is synced in both Firestore and store
+   * @description Reads the Firestore document directly to bypass any local cache and cross-checks with the signal store.
    * @param channelId Channel ID
    * @param userId User ID
    * @param attempt Current attempt number
@@ -106,7 +113,7 @@ export class ChannelMembershipService {
     channelId: string,
     userId: string,
     attempt: number,
-    maxAttempts: number
+    maxAttempts: number,
   ): Promise<boolean> => {
     try {
       const firestoreUpdated = await this.isUserInFirestoreChannel(channelId, userId);
@@ -124,13 +131,14 @@ export class ChannelMembershipService {
 
   /**
    * Check if user is in Firestore channel members
+   * @description Direct Firestore read (not cached) to verify the member array has been written before proceeding with security-rule-dependent operations.
    * @param channelId Channel ID
    * @param userId User ID
    * @returns True if user is member in Firestore
    */
   private isUserInFirestoreChannel = async (
     channelId: string,
-    userId: string
+    userId: string,
   ): Promise<boolean> => {
     const channelDocRef = doc(this.firestore, `channels/${channelId}`);
     const snapshot = await getDoc(channelDocRef);
@@ -143,6 +151,7 @@ export class ChannelMembershipService {
 
   /**
    * Check if user is in local store channel members
+   * @description Verifies the signal store has updated so the UI reflects membership before any navigation occurs.
    * @param channelId Channel ID
    * @param userId User ID
    * @returns True if user is member in store
@@ -155,6 +164,7 @@ export class ChannelMembershipService {
   /**
    * Wait for Firestore Security Rules cache to update
    * Reduced delay since retry mechanisms handle remaining cache delays
+   * @description Adds a fixed pause after membership sync to let Firestore’s security-rule cache catch up; this prevents immediate permission-denied errors on the next read.
    */
   private waitForSecurityRulesCache = async (): Promise<void> => {
     const delayMs = 2000;
@@ -163,6 +173,7 @@ export class ChannelMembershipService {
 
   /**
    * Delay helper
+   * @description Wraps setTimeout in a Promise for clean async/await usage throughout the sync-wait logic.
    * @param ms Milliseconds to delay
    */
   private delay = (ms: number): Promise<void> => {
@@ -171,6 +182,7 @@ export class ChannelMembershipService {
 
   /**
    * Complete channel join flow with sync wait
+   * @description Convenience method that combines joinChannel and waitForMembershipSync for callers that need the full guaranteed join flow.
    * @param channelId Channel ID to join
    */
   joinChannelAndWaitForSync = async (channelId: string): Promise<void> => {
@@ -181,6 +193,7 @@ export class ChannelMembershipService {
 
   /**
    * Leave channel
+   * @description Prevents channel owners from accidentally leaving their own channel; all other members can leave freely.
    * @param channelId Channel ID to leave
    * @param userId User ID leaving (optional, uses current user if not provided)
    */
@@ -200,6 +213,7 @@ export class ChannelMembershipService {
 
   /**
    * Delete channel (owner only)
+   * @description Validates owner status and shows a browser confirmation dialog before permanently deleting; returns false on any abort.
    * @param channelId Channel ID to delete
    * @param userId User ID requesting deletion
    * @param channelName Channel name for confirmation
@@ -208,7 +222,7 @@ export class ChannelMembershipService {
   deleteChannel = async (
     channelId: string,
     userId: string,
-    channelName: string
+    channelName: string,
   ): Promise<boolean> => {
     if (!this.validateChannelOwner(channelId, userId)) return false;
     if (!this.confirmChannelDeletion(channelName)) return false;
@@ -217,6 +231,7 @@ export class ChannelMembershipService {
 
   /**
    * Validate user is channel owner
+   * @description Gate for delete/owner-only operations — reads from the signal store to avoid an extra Firestore fetch.
    * @param channelId Channel ID
    * @param userId User ID
    * @returns True if user is owner
@@ -233,17 +248,19 @@ export class ChannelMembershipService {
 
   /**
    * Show confirmation dialog for channel deletion
+   * @description Uses browser confirm() so the user explicitly acknowledges the irreversible action before deletion proceeds.
    * @param channelName Channel name
    * @returns True if confirmed
    */
   private confirmChannelDeletion = (channelName: string): boolean => {
     return confirm(
-      `Are you sure you want to delete the channel "${channelName}"? This action cannot be undone.`
+      `Are you sure you want to delete the channel "${channelName}"? This action cannot be undone.`,
     );
   };
 
   /**
    * Perform channel deletion
+   * @description Delegates to the store’s deleteChannel and swallows errors, returning false so the caller can show an error state.
    * @param channelId Channel ID
    * @returns True if successful
    */
@@ -258,6 +275,7 @@ export class ChannelMembershipService {
 
   /**
    * Remove member from channel
+   * @description Filters the current members array and updates Firestore in one operation; does nothing if the channel is not found.
    * @param channelId Channel ID
    * @param memberId Member ID to remove
    */
@@ -271,6 +289,7 @@ export class ChannelMembershipService {
 
   /**
    * Send invitations to users to join channel
+   * @description Sends invitations sequentially (not in parallel) to avoid overloading Firestore writes; individual failures are silently swallowed.
    * @param channelId Channel ID
    * @param userIds User IDs to invite
    * @param senderId Sender user ID
@@ -282,7 +301,7 @@ export class ChannelMembershipService {
     userIds: string[],
     senderId: string,
     senderName: string,
-    channelName: string
+    channelName: string,
   ): Promise<void> => {
     for (const userId of userIds) {
       try {
@@ -294,19 +313,19 @@ export class ChannelMembershipService {
           channelName,
           message: `${senderName} lädt dich ein, dem Channel #${channelName} beizutreten.`,
         });
-      } catch (error) {
-      }
+      } catch (error) {}
     }
   };
 
   /**
    * Update channel information
+   * @description Builds a sparse updates object (only changed fields) before calling the store, avoiding unnecessary Firestore writes.
    * @param channelId Channel ID
    * @param data Updated channel data
    */
   updateChannelInfo = async (
     channelId: string,
-    data: { name?: string; description?: string; isPrivate?: boolean }
+    data: { name?: string; description?: string; isPrivate?: boolean },
   ): Promise<void> => {
     const updates = this.buildChannelUpdates(data);
     if (Object.keys(updates).length > 0) {
@@ -316,6 +335,7 @@ export class ChannelMembershipService {
 
   /**
    * Build channel updates object from data
+   * @description Produces a minimal partial update object so unchanged fields are not written to Firestore.
    * @param data Update data
    * @returns Updates object
    */

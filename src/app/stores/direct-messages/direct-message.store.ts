@@ -202,6 +202,8 @@ export const DirectMessageStore = signalStore(
     return {
       /**
        * Load conversations for user
+       * @description Delegates to the loader helper so the store method stays thin
+       * while the subscription and debounce logic is centralized in one place.
        * @param {string[]} userConversationIds - User conversation IDs
        * @returns {Promise<void>}
        */
@@ -212,6 +214,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Load messages for conversation
+       * @description Sets up a real-time Firestore listener for the conversation's
+       * messages so the store stays in sync without manual refreshes.
        * @param {string} conversationId - Conversation ID
        * @param options - Optional loading behavior
        * @returns {Promise<void>}
@@ -223,6 +227,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Start or resume conversation with user
+       * @description Reuses an existing conversation document when one already exists
+       * so Firestore does not accumulate duplicate conversation records.
        * @param {string} currentUserId - Current user ID
        * @param {string} otherUserId - Other user ID
        * @returns {Promise<{id: string; participants: [string, string]}>}
@@ -245,6 +251,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Send message to conversation
+       * @description Writes the message to Firestore and updates the conversation
+       * preview atomically so the conversation list reflects the latest content.
        * @param {string} conversationId - Conversation ID
        * @param {string} authorId - Author user ID
        * @param {string} content - Message content
@@ -271,6 +279,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Update message content
+       * @description Marks the message as edited with a server timestamp so
+       * recipients see the edit indicator without polling.
        * @param {string} conversationId - Conversation ID
        * @param {string} messageId - Message ID
        * @param {string} content - New content
@@ -291,6 +301,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Delete message and its threads
+       * @description Cascades deletion to child thread documents so no orphaned
+       * subcollection data accumulates after a message is removed.
        * @param {string} conversationId - Conversation ID
        * @param {string} messageId - Message ID
        * @returns {Promise<void>}
@@ -301,6 +313,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Set active conversation
+       * @description Lazily starts the message listener when switching to a
+       * conversation whose messages have not been loaded yet.
        * @param {string | null} conversationId - Conversation ID or null
        * @returns {void}
        */
@@ -313,6 +327,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Mark conversation as read
+       * @description Resets the unread counter in Firestore so the badge disappears
+       * for this user without affecting other participants' counters.
        * @param {string} conversationId - Conversation ID
        * @param {string} userId - User ID
        * @returns {Promise<void>}
@@ -325,6 +341,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Toggle reaction on message
+       * @description Delegates to `ReactionService` so DM reaction logic is consistent
+       * with channel message reactions and lives in a single location.
        * @param {string} conversationId - Conversation ID
        * @param {string} messageId - Message ID
        * @param {string} emojiId - Emoji ID
@@ -348,6 +366,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Leave conversation
+       * @description Removes the user from the conversation document and cleans up
+       * the local listener so no stale data remains after leaving.
        * @param {string} conversationId - Conversation ID
        * @param {string} userId - User ID
        * @returns {Promise<void>}
@@ -365,6 +385,8 @@ export const DirectMessageStore = signalStore(
       },
       /**
        * Load older messages for conversation
+       * @description Uses the oldest known snapshot as a cursor for the Firestore
+       * query so earlier pages are fetched without re-downloading recent messages.
        * @param {string} conversationId - Conversation ID
        * @returns {Promise<void>}
        */
@@ -388,6 +410,8 @@ export const DirectMessageStore = signalStore(
 
       /**
        * Cleanup store listeners and timers
+       * @description Detaches all Firestore listeners and clears pending debounce
+       * timers to prevent memory leaks when the store is destroyed.
        * @returns {void}
        */
       destroy: (): void => {

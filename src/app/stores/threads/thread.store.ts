@@ -22,6 +22,8 @@ import { ThreadOperationsService } from '../services/thread-operations.service';
 /**
  * Thread message interface
  * Represents a reply to a parent message
+ * @description Captures the full shape of a thread reply so the thread view can
+ * render content, reactions, and edit state without additional Firestore reads.
  */
 export interface ThreadMessage {
   id: string;
@@ -38,6 +40,8 @@ export interface ThreadMessage {
 
 /**
  * Thread state interface
+ * @description Groups all loaded threads by parent message ID so the store can
+ * serve multiple thread panels simultaneously without cross-contamination.
  */
 export interface ThreadState {
   /** All thread messages grouped by parent message ID */
@@ -54,6 +58,8 @@ export interface ThreadState {
 
 /**
  * Initial thread state
+ * @description Deterministic zero-value baseline used at startup and after logout
+ * so the thread panel always renders from a consistent empty state.
  */
 const initialState: ThreadState = {
   threads: {},
@@ -66,6 +72,8 @@ const initialState: ThreadState = {
 /**
  * Thread management store with Firestore integration
  * Manages thread messages as subcollection of channel messages
+ * @description Owns thread listener registration and teardown so components only
+ * call `loadThreads` and react to the grouped `threads` signal.
  * @constant {SignalStore}
  */
 export const ThreadStore = signalStore(
@@ -74,6 +82,8 @@ export const ThreadStore = signalStore(
   withComputed((store) => ({
     /**
      * Get thread count for a specific message
+     * @description Returns a stable function reference so templates can look up
+     * thread counts per message without breaking signal dependency tracking.
      */
     getThreadCount: computed(() => (messageId: string) => {
       return store.threads()[messageId]?.length || 0;
@@ -81,6 +91,8 @@ export const ThreadStore = signalStore(
 
     /**
      * Check if a message has threads
+     * @description Derives a boolean from the threads map so templates can toggle
+     * thread indicator icons reactively without their own array checks.
      */
     hasThreads: computed(() => (messageId: string) => {
       return !!store.threads()[messageId] && store.threads()[messageId].length > 0;
@@ -88,6 +100,8 @@ export const ThreadStore = signalStore(
 
     /**
      * Get threads for a specific message
+     * @description Returns a stable accessor function so consumers can retrieve
+     * thread arrays by ID inside computed or template expressions.
      */
     getThreadsByMessageId: computed(() => (messageId: string) => {
       return store.threads()[messageId] || [];
@@ -121,6 +135,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Add a thread reply to a message
+       * @description Public entry point that keeps the add-reply contract stable
+       * while `performAddReply` handles Firestore writes and loading state.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Parent message ID
@@ -140,6 +156,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Update a thread message
+       * @description Thin wrapper delegating to `performUpdateThread` so callers
+       * do not need to know about the optimistic local-state update strategy.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Parent message ID
@@ -158,6 +176,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Delete a thread message
+       * @description Public facade so components do not need to know whether the
+       * delete path differs between channel and DM threads.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Parent message ID
@@ -175,6 +195,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Select a thread to view
+       * @description Stores the thread selection in the store rather than component
+       * scope so multiple panels can react to the active thread consistently.
        * @param {string} messageId - Parent message ID
        */
       selectThread(messageId: string): void {
@@ -187,6 +209,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Clear selected thread
+       * @description Resets selection signals atomically so the thread panel closes
+       * cleanly without leaving a stale `selectedParentId` in state.
        */
       clearSelectedThread(): void {
         patchState(store, {
@@ -197,6 +221,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Clear all thread listeners
+       * @description Delegates to `ThreadListenerService` to detach all active
+       * Firestore listeners, preventing memory leaks after route changes.
        */
       clearAllListeners(): void {
         threadListener.clearAllListeners();
@@ -254,6 +280,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Handle threads snapshot update
+       * @description Maps the raw Firestore snapshot to typed `ThreadMessage` objects
+       * and merges them into the existing threads map via `ThreadStateHelper`.
        */
       handleThreadsSnapshot(snapshot: QuerySnapshot<DocumentData>, messageId: string): void {
         const threads = threadListener.mapSnapshot(snapshot, messageId);
@@ -293,6 +321,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Implementation: Add thread reply to Firestore
+       * @description Writes the reply document through `ThreadOperationsService` and
+       * manages loading state via the shared mutation executor.
        */
       async performAddReply(
         channelId: string,
@@ -310,6 +340,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Implementation: Update thread in Firestore
+       * @description Applies an optimistic local update then persists to Firestore so
+       * the UI reflects changes immediately without waiting for a snapshot.
        */
       async performUpdateThread(
         channelId: string,
@@ -328,6 +360,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Update thread in local state
+       * @description Mutates the in-memory threads map immutably via `ThreadStateHelper`
+       * so only the targeted thread triggers signal re-evaluation.
        */
       updateThreadInLocalState(
         messageId: string,
@@ -347,6 +381,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Implementation: Delete thread from Firestore
+       * @description Removes the thread document from Firestore then prunes it from
+       * local state to keep the UI in sync without waiting for a snapshot.
        */
       async performDeleteThread(
         channelId: string,
@@ -364,6 +400,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Remove thread from local state
+       * @description Filters the thread array through `ThreadStateHelper` and merges
+       * the result back into the threads map immutably.
        */
       removeThreadFromLocalState(messageId: string, threadId: string): void {
         const currentThreads = store.threads()[messageId] || [];
@@ -377,6 +415,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Handle errors consistently
+       * @description Normalizes the error value to a string and clears loading state
+       * atomically so the store never stays stuck in an in-progress state.
        */
       handleError(error: unknown, defaultMessage: string): void {
         console.error(defaultMessage, error);
@@ -389,6 +429,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Execute thread mutation with shared error and loading handling.
+       * @description Provides uniform loading-state lifecycle and error propagation
+       * so each thread mutation only contains its specific Firestore call.
        */
       async executeThreadMutation(
         operation: () => Promise<void>,
@@ -413,6 +455,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Mark thread mutation as loading.
+       * @description Pairs with `finishMutationLoading` to bookend loading state so
+       * the UI can show a spinner for operations that warrant one.
        */
       startMutationLoading(): void {
         patchState(store, { isLoading: true, error: null });
@@ -420,6 +464,8 @@ export const ThreadStore = signalStore(
 
       /**
        * Mark thread mutation as completed.
+       * @description Clears the loading flag set by `startMutationLoading` after
+       * a successful mutation so the UI returns to its idle state.
        */
       finishMutationLoading(): void {
         patchState(store, { isLoading: false });
@@ -427,6 +473,7 @@ export const ThreadStore = signalStore(
 
       /**
        * Clear error
+       * @description Clears the error signal so the UI can dismiss error banners after user acknowledgement.
        */
       clearError(): void {
         patchState(store, { error: null });
@@ -434,6 +481,7 @@ export const ThreadStore = signalStore(
 
       /**
        * Clear all threads
+       * @description Resets the full threads map to an empty state, used on logout to prevent thread data from leaking into the next session.
        */
       clearAllThreads(): void {
         patchState(store, {
@@ -451,6 +499,7 @@ export const ThreadStore = signalStore(
        * @param emojiId Emoji ID
        * @param userId User ID who reacted
        * @param isDirectMessage Whether this is a direct message thread
+       * @description Delegates to ReactionService so reaction toggle logic is not duplicated between the thread and message stores.
        */
       async toggleReaction(
         channelId: string,
@@ -472,6 +521,7 @@ export const ThreadStore = signalStore(
 
       /**
        * Cleanup all listeners
+       * @description Alias for `clearAllListeners` exposed as `destroy` so Angular lifecycle hooks can call it uniformly.
        */
       destroy(): void {
         threadListener.clearAllListeners();

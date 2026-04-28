@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message ID normalization helpers
- * @description Utilities for handling self-DM IDs and canonical DM ID resolution
+ * @description Canonicalizes DM identifier variants so self-DM placeholders and persisted conversation IDs resolve to a stable routing key.
  * @module core/services/direct-message-list
  */
 

@@ -1,10 +1,10 @@
 /**
  * @fileoverview Unread Listener Service
- * @description Manages real-time listener for lastRead updates from Firestore
+ * @description Synchronizes per-user lastRead snapshots from Firestore so unread calculations always use current backend state.
  * @module core/services/unread
  */
 
-import { Injectable, inject, signal, effect } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
 import { Firestore, doc, onSnapshot } from '@angular/fire/firestore';
 import { AuthStore } from '@stores/auth';
 
@@ -25,6 +25,7 @@ export class UnreadListenerService {
   /**
    * Initialize listener - sets up real-time sync when user becomes available
    * Should be called once during app initialization
+   * @description Uses an effect to react to auth state changes: starts a Firestore listener on login and cleans up on logout.
    */
   initialize(): void {
     effect(() => {
@@ -39,6 +40,7 @@ export class UnreadListenerService {
 
   /**
    * Get lastRead cache signal (read-only)
+   * @description Exposes the cache as readonly so consumers can derive unread state reactively without writing to the cache.
    */
   getLastReadCache() {
     return this.lastReadCache.asReadonly();
@@ -46,6 +48,7 @@ export class UnreadListenerService {
 
   /**
    * Setup real-time listener for lastRead field in user document
+   * @description Cancels any existing listener before creating a new one so switching accounts doesn’t leave orphaned subscriptions.
    */
   private setupListener(userId: string): void {
     if (this.listenerUnsubscribe) {
@@ -67,6 +70,7 @@ export class UnreadListenerService {
   /**
    * Update cache with new lastRead data
    * Convert Firestore timestamps to Dates
+   * @description Converts all Firestore Timestamp values to JS Dates before writing to the signal so comparison logic doesn’t need to handle heterogeneous types.
    */
   private updateCache(lastRead: any): void {
     const converted: Record<string, Date> = {};
@@ -80,6 +84,7 @@ export class UnreadListenerService {
 
   /**
    * Cleanup listener and cache
+   * @description Cancels the Firestore listener and empties the cache to prevent stale unread indicators after logout.
    */
   private cleanup(): void {
     if (this.listenerUnsubscribe) {

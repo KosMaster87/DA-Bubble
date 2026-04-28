@@ -5,8 +5,8 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { UserStore } from '@stores/users/user.store';
 import { ChannelStore } from '@stores/channels/channel.store';
+import { UserStore } from '@stores/users/user.store';
 
 @Injectable({
   providedIn: 'root',
@@ -40,12 +40,12 @@ export class MentionParserService {
 
   /**
    * Match user mention using greedy backtracking
+   * @description Tries the longest possible substring first (up to 100 chars) then backs off one character at a time, matching display names case-sensitively.
    * @private
    * @param {string} text - Full message text
    * @param {number} startIndex - Index of @ character
    * @param {any[]} users - Array of users from UserStore
    * @returns {string | null} User ID if match found, null otherwise
-   * @description Tries longest possible name first (max 100 chars), then backs off
    */
   private matchUserMention = (text: string, startIndex: number, users: any[]): string | null => {
     const maxEnd = Math.min(text.length, startIndex + 100);

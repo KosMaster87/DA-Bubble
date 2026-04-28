@@ -26,6 +26,7 @@ export class MessageSearchItemComponent {
 
   /**
    * Handle click event
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onClick(): void {
     this.itemClicked.emit(this.item().id);

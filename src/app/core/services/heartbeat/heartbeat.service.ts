@@ -3,8 +3,8 @@
  * @description Updates Firestore with periodic heartbeats to detect disconnections
  */
 
-import { Injectable, inject, effect } from '@angular/core';
-import { Firestore, doc, updateDoc, serverTimestamp } from '@angular/fire/firestore';
+import { Injectable, effect, inject } from '@angular/core';
+import { Firestore, doc, serverTimestamp, updateDoc } from '@angular/fire/firestore';
 import { AuthStore } from '@stores/auth';
 
 @Injectable({
@@ -34,6 +34,7 @@ export class HeartbeatService {
 
   /**
    * Start sending periodic heartbeats to Firestore
+   * @description Clears any existing interval and starts a fresh one, sending an immediate heartbeat so the user appears online without waiting for the first interval.
    * @param userId - The user's UID
    */
   private startHeartbeat(userId: string): void {
@@ -51,6 +52,7 @@ export class HeartbeatService {
 
   /**
    * Stop sending heartbeats
+   * @description Clears the interval timer; called on logout so presence isn’t written for a signed-out user.
    */
   private stopHeartbeat(): void {
     if (this.heartbeatInterval) {
@@ -61,6 +63,7 @@ export class HeartbeatService {
 
   /**
    * Send a single heartbeat update to Firestore
+   * @description Writes lastHeartbeat and isOnline to the user document; errors are swallowed so a single failed write doesn’t break the session.
    * @param userId - The user's UID
    */
   private async sendHeartbeat(userId: string): Promise<void> {
@@ -77,6 +80,7 @@ export class HeartbeatService {
 
   /**
    * Cleanup on service destroy
+   * @description Stops the heartbeat interval to prevent dangling timers after the service is torn down.
    */
   ngOnDestroy(): void {
     this.stopHeartbeat();

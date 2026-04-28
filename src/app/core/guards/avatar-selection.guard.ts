@@ -1,15 +1,16 @@
 /**
  * @fileoverview Avatar Selection Guard
- * @description Only allows access to avatar selection if user is authenticated and email is verified
+ * @description Restricts avatar-selection access to authenticated users who completed email verification but still lack an avatar.
  * @module guards/avatar-selection
  */
 
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
+import { CanActivateFn, Router } from '@angular/router';
 
 /**
  * Guard to protect avatar selection page
+ * @description Allows activation only during the onboarding step where avatar selection is still pending.
  * Requires authentication AND email verification
  * @function avatarSelectionGuard
  * @returns {boolean | Promise<boolean>} True if user can access, otherwise redirects
@@ -23,6 +24,7 @@ export const avatarSelectionGuard: CanActivateFn = async () => {
 
 /**
  * Check if user can access avatar selection
+ * @description Enforces onboarding order by redirecting users who are unauthenticated, unverified, or already configured.
  * @async
  * @function checkAvatarSelectionAccess
  * @param {Auth} auth - Firebase Auth instance

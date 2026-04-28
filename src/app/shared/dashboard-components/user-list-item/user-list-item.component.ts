@@ -29,6 +29,7 @@ export class UserListItemComponent {
 
   /**
    * Handle click event
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected onClick = (): void => {
     this.itemClicked.emit(this.user().id);
@@ -36,6 +37,7 @@ export class UserListItemComponent {
 
   /**
    * Handle image load error - use fallback avatar
+   * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
    */
   protected onImageError = (event: Event): void => {
     const img = event.target as HTMLImageElement;

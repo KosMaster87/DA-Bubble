@@ -1,19 +1,19 @@
 /**
  * @fileoverview Channel Message Listener Service
- * @description Manages Firestore real-time listeners and retry logic for channel messages
+ * @description Owns channel-message realtime subscriptions with retry safeguards so message streams remain resilient to transient listener failures.
  * @module core/services/channel-message-listener
  */
 
 import { inject, Injectable } from '@angular/core';
 import {
-  DocumentData,
-  Firestore,
-  limit,
-  onSnapshot,
-  orderBy,
-  query,
-  QuerySnapshot,
-  Unsubscribe,
+    DocumentData,
+    Firestore,
+    limit,
+    onSnapshot,
+    orderBy,
+    query,
+    QuerySnapshot,
+    Unsubscribe,
 } from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
 import { ChannelMessageOperationsService } from '../channel-message-operations/channel-message-operations.service';
@@ -59,6 +59,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear debounce timer for channel
+   * @description Cancels any pending setup timer to prevent stale listeners from being created after rapid re-setup calls.
    * @private
    * @param {string} channelId - Channel ID
    */
@@ -69,6 +70,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule listener setup after debounce
+   * @description Defers actual listener creation by DEBOUNCE_MS to absorb rapid successive setup calls from the same channel.
    * @private
    * @param {string} channelId - Channel ID
    * @param {Function} onSuccess - Success callback
@@ -88,6 +90,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Initialize listener for channel
+   * @description Tears down any existing listener, resets the retry counter, and creates a fresh subscription.
    * @private
    * @param {string} channelId - Channel ID
    * @param {Function} onSuccess - Success callback
@@ -108,6 +111,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear existing listener for channel
+   * @description Unsubscribes and removes the stored listener for a channel to prevent duplicate listeners on re-setup.
    * @private
    * @param {string} channelId - Channel ID
    */
@@ -121,6 +125,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Create Firestore snapshot listener
+   * @description Builds the Firestore query and attaches the snapshot handler; the returned Unsubscribe must be stored for later cleanup.
    * @private
    * @param {string} channelId - Channel ID
    * @param {Function} onSuccess - Success callback
@@ -139,6 +144,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Build Firestore query for messages
+   * @description Constructs an ordered, limited query; the 100-message limit keeps initial load fast while still covering most active channels.
    * @private
    * @param {string} channelId - Channel ID
    * @returns {any} Firestore query
@@ -187,6 +193,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Handle successful snapshot
+   * @description Debounces rapid successive snapshots (e.g. from bulk writes) before forwarding the mapped messages to the callback.
    * @private
    * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
    * @param {string} channelId - Channel ID
@@ -203,6 +210,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule snapshot processing after debounce
+   * @description Adds a 50ms debounce after each snapshot to coalesce rapid Firestore writes into a single UI update.
    * @private
    * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
    * @param {string} channelId - Channel ID
@@ -221,6 +229,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Process snapshot and trigger callback
+   * @description Maps the Firestore snapshot to typed Message objects, fires the success callback, and resets the retry counter.
    * @private
    * @param {QuerySnapshot<DocumentData>} snapshot - Firestore snapshot
    * @param {string} channelId - Channel ID
@@ -239,6 +248,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Map Firestore snapshot to messages array
+   * @description Converts raw Firestore documents to typed Message objects using the operations service mapper.
    * @private
    * @param {any} snapshot - Firestore query snapshot
    * @returns {Message[]} Array of messages
@@ -251,6 +261,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Handle Firestore listener errors
+   * @description Routes errors to the appropriate handler: retryable SDK state errors, silent permission errors, or escalated unknown errors.
    * @param error - Error object
    * @param channelId - Channel ID
    * @param onError - Error callback
@@ -297,6 +308,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule retry attempt
+   * @description Uses exponential-style backoff (500ms × attempt) to give Firestore time to recover before retrying.
    * @param channelId - Channel ID
    * @param retryCount - Current retry count
    * @param onSuccess - Success callback
@@ -320,6 +332,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Retry listener setup
+   * @description Clears the dead listener and establishes a new one as part of the bounded retry loop.
    * @param channelId - Channel ID
    * @param onSuccess - Success callback
    * @param onError - Error callback
@@ -336,6 +349,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Log retry attempt
+   * @description No-op stub kept for debugging — can be re-enabled to surface retry traces in development without touching callers.
    * @private
    * @param {string} channelId - Channel ID
    * @param {number} retryCount - Current retry count
@@ -344,6 +358,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Log max retries reached
+   * @description Cleans up the retry counter when all attempts are exhausted to prevent stale state on future listener setups.
    * @private
    * @param {string} channelId - Channel ID
    */
@@ -353,6 +368,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Check if error is permission-related
+   * @description Identifies permission-denied errors so the listener can be stopped cleanly rather than entering an infinite retry loop.
    * @param error - Error object
    * @returns True if permission error
    */
@@ -362,6 +378,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Check if error is Firestore internal state error
+   * @description Detects known transient Firestore SDK error strings that are safe to retry automatically.
    * @param error - Error object
    * @returns True if state error
    */
@@ -378,6 +395,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Handle permission-denied errors
+   * @description Clears the listener and schedules a later retry rather than showing an error — permission may resolve after login propagation.
    * @param channelId - Channel ID
    */
   private handlePermissionError = (channelId: string): void => {
@@ -387,6 +405,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Schedule retry for channel subscription
+   * @description Registers the channel for a pending retry, skipping it if already queued to prevent duplicate retry entries.
    * @param channelId - Channel ID
    */
   private scheduleRetry = (channelId: string): void => {
@@ -398,6 +417,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear all active listeners
+   * @description Unsubscribes every active channel listener and clears retry state — call on user logout or app teardown.
    */
   clearAllListeners = (): void => {
     this.messageListeners.forEach((unsubscribe) => unsubscribe());

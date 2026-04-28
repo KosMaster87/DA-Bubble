@@ -4,7 +4,7 @@
  * @module features/dashboard/components/channel-access
  */
 
-import { Component, input, output, inject, computed } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { AuthStore } from '@stores/auth';
 import { ChannelStore } from '@stores/channels/channel.store';
 
@@ -28,16 +28,19 @@ export class ChannelAccessComponent {
 
   /**
    * Channel information
+    * @description Receives the access context as input so this component stays purely presentational and reusable across channel entry points.
    */
   channelInfo = input.required<ChannelAccessInfo>();
 
   /**
    * Output when user accepts and enters channel
+    * @description Emits intent instead of mutating stores directly so membership changes remain orchestrated by parent-level handlers.
    */
   channelAccepted = output<string>();
 
   /**
    * Check if user is already a member
+    * @description Derives membership from auth and channel store state to render access actions based on authoritative data.
    */
   protected isMember = computed(() => {
     const currentUser = this.authStore.user();
@@ -51,6 +54,7 @@ export class ChannelAccessComponent {
 
   /**
    * Accept and join public channel
+    * @description Validates authentication locally and forwards a join intent so parent flows can handle navigation and side effects centrally.
    */
   protected acceptAndJoin = (): void => {
     const currentUser = this.authStore.user();

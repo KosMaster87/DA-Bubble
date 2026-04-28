@@ -4,11 +4,12 @@
  * @module shared/services/responsive-view
  */
 
-import { Injectable, signal, computed, effect, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { computed, effect, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 
 /**
  * Breakpoint configuration interface
+ * @description Defines the canonical breakpoint map consumed by responsive computed signals and helpers.
  */
 export interface Breakpoints {
   mobile: number;
@@ -23,6 +24,7 @@ export interface Breakpoints {
 
 /**
  * Default breakpoint values matching SCSS mixins
+ * @description Keeps TypeScript breakpoint logic aligned with styling breakpoints used in SCSS mixins.
  */
 const DEFAULT_BREAKPOINTS: Breakpoints = {
   mobile: 768, // max-width for mobile (<= 768px)
@@ -101,6 +103,7 @@ export class ResponsiveViewService {
 
   /**
    * Initialize window resize listener
+   * @description Keeps realtime subscription flow centralized so lifecycle, cleanup, and error handling stay consistent across call sites.
    * Updates viewport width on resize events
    * @private
    * @returns {void}
@@ -114,6 +117,7 @@ export class ResponsiveViewService {
 
   /**
    * Update mobile state tracking
+   * @description Refreshes previous mobile-state marker so transition detection can compare old and new viewport modes.
    * Tracks mobile state changes for transition detection
    * @private
    * @returns {void}
@@ -124,6 +128,7 @@ export class ResponsiveViewService {
 
   /**
    * Register callback for mobile-to-desktop transition
+   * @description Executes a callback only on mobile-to-desktop edge transitions to centralize cross-breakpoint reactions.
    * Executes callback when viewport changes from mobile to desktop
    * @param {() => void} callback - Function to execute on transition
    * @returns {void}
@@ -143,6 +148,7 @@ export class ResponsiveViewService {
 
   /**
    * Manually update viewport width
+   * @description Allows controlled viewport updates for tests or non-window-driven scenarios.
    * Useful for testing or manual updates
    * @param {number} width - New viewport width
    * @returns {void}
@@ -153,6 +159,7 @@ export class ResponsiveViewService {
 
   /**
    * Get current viewport width
+   * @description Exposes the current width as an imperative helper for call sites that cannot consume signals.
    * @returns {number} Current viewport width in pixels
    */
   getCurrentWidth(): number {
@@ -161,6 +168,7 @@ export class ResponsiveViewService {
 
   /**
    * Check if viewport matches specific breakpoint
+   * @description Evaluates breakpoint thresholds with direction-aware rules for min-width and max-width style breakpoints.
    * @param {keyof Breakpoints} breakpoint - Breakpoint name to check
    * @returns {boolean} True if viewport is at or above breakpoint
    */
@@ -182,6 +190,7 @@ export class ResponsiveViewService {
 
   /**
    * Get breakpoint name for current viewport
+   * @description Maps the current width to a named breakpoint label for diagnostics and conditional UI logic.
    * @returns {string} Current breakpoint name
    */
   getCurrentBreakpoint(): string {

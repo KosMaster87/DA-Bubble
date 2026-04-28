@@ -4,9 +4,9 @@
  * @module shared/dashboard-components/channel-view
  */
 
-import { Component, input, output, computed, inject } from '@angular/core';
-import { ChannelStore } from '@stores/channels/channel.store';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { AuthStore } from '@stores/auth';
+import { ChannelStore } from '@stores/channels/channel.store';
 
 export interface ChannelViewData {
   id: string;
@@ -37,6 +37,7 @@ export class ChannelViewComponent {
 
   /**
    * Get channel data from store
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected channel = computed(() => {
     const id = this.channelId();
@@ -45,6 +46,7 @@ export class ChannelViewComponent {
 
   /**
    * Check if current user is member of this channel
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected isMember = computed(() => {
     const channel = this.channel();
@@ -55,6 +57,7 @@ export class ChannelViewComponent {
 
   /**
    * Get member count
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected memberCount = computed(() => {
     const channel = this.channel();
@@ -63,6 +66,7 @@ export class ChannelViewComponent {
 
   /**
    * Handle close button click
+   * @description Emits close intent for parent-level channel-view dismissal handling.
    * @returns {void}
    */
   onClose = (): void => {
@@ -71,6 +75,7 @@ export class ChannelViewComponent {
 
   /**
    * Handle join channel button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @returns {void}
    */
   onJoin = (): void => {
@@ -82,6 +87,7 @@ export class ChannelViewComponent {
 
   /**
    * Handle navigate to channel button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @returns {void}
    */
   onNavigate = (): void => {

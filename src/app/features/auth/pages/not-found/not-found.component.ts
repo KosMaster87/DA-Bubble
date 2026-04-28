@@ -21,6 +21,7 @@ export class NotFoundComponent {
 
   /**
    * Navigate back to appropriate page based on authentication status
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @returns {Promise<void>}
    */
   async goBack(): Promise<void> {

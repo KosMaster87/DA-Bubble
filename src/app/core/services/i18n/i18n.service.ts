@@ -4,30 +4,23 @@
  * @module I18nService
  */
 
-import { Injectable, signal, computed, effect } from '@angular/core';
-import { translations, SupportedLanguage, TranslationKey } from './translations';
+import { computed, effect, Injectable, signal } from '@angular/core';
+import { SupportedLanguage, translations } from './translations';
 
 @Injectable({
   providedIn: 'root',
 })
 export class I18nService {
-  // Current language as signal
   private currentLangSignal = signal<SupportedLanguage>('de');
-
-  // Public readonly computed for current language
   currentLang = computed(() => this.currentLangSignal());
-
-  // Current translations computed signal
   translations = computed(() => translations[this.currentLangSignal()]);
 
   constructor() {
-    // Load language from localStorage on init
     const savedLang = this.loadLanguageFromStorage();
     if (savedLang) {
       this.currentLangSignal.set(savedLang);
     }
 
-    // Save language to localStorage whenever it changes
     effect(() => {
       this.saveLanguageToStorage(this.currentLangSignal());
     });
@@ -35,6 +28,7 @@ export class I18nService {
 
   /**
    * Translate a key to current language
+   * @description Resolves a dot-notation key against the active translations map; logs a warning and returns the raw key if not found, so missing keys are visible during development.
    * @param key Translation key in dot notation (e.g., 'AUTH.LOGIN')
    * @returns Translated string
    */
@@ -55,6 +49,7 @@ export class I18nService {
 
   /**
    * Set the current language
+   * @description Updates the language signal, which automatically triggers the translations computed and the localStorage-persist effect.
    * @param lang Language code
    */
   setLanguage(lang: SupportedLanguage): void {
@@ -63,6 +58,7 @@ export class I18nService {
 
   /**
    * Toggle between German and English
+   * @description Cycles between the two supported languages without requiring the caller to know which is currently active.
    */
   toggleLanguage(): void {
     const current = this.currentLangSignal();
@@ -71,6 +67,7 @@ export class I18nService {
 
   /**
    * Load language preference from localStorage
+   * @description Reads the persisted language code on startup so the user’s choice survives page reloads; swallows storage errors to avoid blocking initialisation.
    */
   private loadLanguageFromStorage(): SupportedLanguage | null {
     try {
@@ -86,6 +83,7 @@ export class I18nService {
 
   /**
    * Save language preference to localStorage
+   * @description Persists the active language code so it can be restored on the next page load; swallows storage errors (e.g. private browsing) gracefully.
    */
   private saveLanguageToStorage(lang: SupportedLanguage): void {
     try {

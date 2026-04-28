@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message Model Definitions for DABubble
- * @description TypeScript interfaces for Direct Message and Conversation data structures
+ * @description Defines DM conversation and message contracts, including helper utilities for stable conversation identity.
  * @module DirectMessageModel
  */
 
@@ -57,6 +57,7 @@ export interface UpdateDirectMessageRequest {
 
 /**
  * Helper to generate conversation ID from two UIDs
+ * @description Produces a deterministic DM conversation key so both participants resolve to the same document path.
  * @param uid1 First user ID
  * @param uid2 Second user ID
  * @returns Conversation ID (alphabetically sorted UIDs joined with underscore)
@@ -67,6 +68,7 @@ export function getConversationId(uid1: string, uid2: string): string {
 
 /**
  * Helper to extract other participant UID from conversation
+ * @description Resolves the counterpart UID for DM header and participant-specific rendering logic.
  * @param conversationId Conversation ID (format: "uid1_uid2")
  * @param currentUid Current user's UID
  * @returns Other participant's UID

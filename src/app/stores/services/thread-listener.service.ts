@@ -92,6 +92,7 @@ export class ThreadListenerService {
 
   /**
    * Check if permission error should trigger retry
+   * @description Checks both Firebase error code and message text to catch permission errors regardless of how the SDK reports them.
    */
   isPermissionError = (error: unknown): boolean => {
     if (!(error instanceof Error)) {
@@ -130,6 +131,7 @@ export class ThreadListenerService {
 
   /**
    * Clear all thread listeners
+   * @description Unsubscribes every active Firestore listener in one call, used on logout or store destruction to prevent stale updates.
    */
   clearAllListeners = (): void => {
     this.threadListeners.forEach((unsubscribe) => unsubscribe());
@@ -138,6 +140,7 @@ export class ThreadListenerService {
 
   /**
    * Map snapshot to thread messages
+   * @description Wraps ThreadOperationsService.mapThreadDocument to provide a single entry point for snapshot-to-model conversion in this service.
    */
   mapSnapshot = (snapshot: QuerySnapshot<DocumentData>, messageId: string): ThreadMessage[] => {
     return snapshot.docs.map((doc) => this.threadOps.mapThreadDocument(doc, messageId));

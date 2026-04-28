@@ -1,6 +1,6 @@
 /**
  * @fileoverview Invitation Channel Service
- * @description Handles channel-specific logic for invitation acceptance
+ * @description Resolves invitation target channels and applies safe membership updates during channel-invitation acceptance.
  * @module core/services/invitation-management
  */
 
@@ -18,6 +18,7 @@ export class InvitationChannelService {
 
   /**
    * Get channel by ID from store or fetch
+   * @description First checks the in-memory store to avoid a Firestore round-trip; falls back to the full channels array if the computed lookup returns undefined.
    * @param channelId Channel ID
    * @returns Channel or undefined
    */
@@ -31,6 +32,7 @@ export class InvitationChannelService {
 
   /**
    * Add user to channel members
+   * @description Uses a Set to deduplicate before updating so accepting the same invitation twice doesn’t cause duplicate member entries.
    * @param channelId Channel ID
    * @param currentMembers Current member array
    * @param userId User ID to add
@@ -38,7 +40,7 @@ export class InvitationChannelService {
   addUserToChannel = async (
     channelId: string,
     currentMembers: string[],
-    userId: string
+    userId: string,
   ): Promise<void> => {
     const updatedMembers = [...new Set([...currentMembers, userId])];
     await this.channelStore.updateChannel(channelId, { members: updatedMembers });

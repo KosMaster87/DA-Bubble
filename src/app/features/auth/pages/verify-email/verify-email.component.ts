@@ -44,6 +44,7 @@ export class VerifyEmailComponent {
 
   /**
    * Check if email is verified and navigate to avatar selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function checkVerification
    * @returns {Promise<void>}
@@ -72,6 +73,7 @@ export class VerifyEmailComponent {
 
   /**
    * Resend verification email
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function resendVerificationEmail
    * @returns {Promise<void>}
@@ -94,6 +96,7 @@ export class VerifyEmailComponent {
 
   /**
    * Logout and navigate back to signin
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function goToSignin
    * @returns {Promise<void>}

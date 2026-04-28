@@ -19,6 +19,7 @@ export class CheckboxPrivateChannelComponent {
 
   /**
    * Handle checkbox change
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onChange(event: Event): void {
     const checkbox = event.target as HTMLInputElement;

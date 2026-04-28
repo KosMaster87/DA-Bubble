@@ -1,6 +1,6 @@
 /**
  * @fileoverview Invitation Model for DABubble Application
- * @description Defines invitation types and structures for channel/DM invitations
+ * @description Defines invitation lifecycle contracts for channel and direct-message onboarding flows.
  * @module core/models/invitation
  */
 

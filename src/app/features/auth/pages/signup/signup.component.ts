@@ -50,6 +50,7 @@ export class SignupComponent {
 
   /**
    * Create registration form with validation
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    * @function createForm
    * @returns {FormGroup} Form group with validators
    */
@@ -64,6 +65,7 @@ export class SignupComponent {
 
   /**
    * Handle form submission
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onSubmit
    * @returns {Promise<void>}
@@ -80,6 +82,7 @@ export class SignupComponent {
 
   /**
    * Perform registration with AuthStore
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Routes to verify-email page after successful signup
    * @async
    * @function performRegistration
@@ -105,6 +108,7 @@ export class SignupComponent {
 
   /**
    * Navigate back to login page
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function goBack
    * @returns {void}
    */

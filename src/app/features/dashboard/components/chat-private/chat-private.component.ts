@@ -13,8 +13,8 @@ import { ProfileManagementService } from '@core/services/profile-management/prof
 import { UnreadService } from '@core/services/unread/unread.service';
 import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
 import {
-  ConversationMessagesComponent,
-  type Message,
+    ConversationMessagesComponent,
+    type Message,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';
@@ -96,6 +96,7 @@ export class ChatPrivateComponent {
   protected isOwnProfile = this.chatPrivateState.getIsOwnProfile(this.selectedUserId);
   /**
    * Load older messages for pagination
+   * @description Paginates historical DM messages via store-level cursor handling so scrolling remains performant in long conversations.
    * @protected
    * @returns {Promise<void>}
    */
@@ -106,6 +107,7 @@ export class ChatPrivateComponent {
 
   /**
    * Send message to conversation
+   * @description Validates sender and content at the boundary so DM writes are only issued for actionable user input.
    * @param {string} content - Message content
    * @returns {Promise<void>}
    */
@@ -122,6 +124,7 @@ export class ChatPrivateComponent {
 
   /**
    * Scroll to a specific message
+   * @description Standardizes in-chat jump-and-highlight behavior for search results and deep-link style navigation.
    * @param {string} messageId - Message ID in format conversationId_messageId
    * @returns {void}
    */
@@ -140,6 +143,7 @@ export class ChatPrivateComponent {
 
   /**
    * Open user profile view
+   * @description Centralizes profile-open flow from multiple click targets so user selection state is always set consistently.
    * @param {string} userId - User ID
    * @returns {void}
    */
@@ -154,6 +158,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle reaction added to message
+   * @description Routes reaction toggles through interaction service so DM reaction logic stays aligned with channel behavior.
    * @param {Object} data - Reaction data
    * @param {string} data.messageId - Message ID
    * @param {string} data.emoji - Emoji ID
@@ -174,6 +179,7 @@ export class ChatPrivateComponent {
 
   /**
    * Get current user ID with validation
+   * @description Provides a single guard point for authenticated user access used by mutation handlers in this component.
    * @private
    * @returns {string | undefined} Current user ID or undefined
    */
@@ -183,6 +189,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle message edited
+   * @description Funnels DM edit operations through one interaction entry point so edit permissions and side effects remain uniform.
    * @param {Object} data - Edit data
    * @param {string} data.messageId - Message ID
    * @param {string} data.newContent - New message content
@@ -195,6 +202,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle message deleted
+   * @description Consolidates teardown cleanup in one method so subscriptions and transient UI state are reliably cleared.
    * @param {string} messageId - Message ID
    * @returns {Promise<void>}
    */
@@ -205,6 +213,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle thread click to open thread view
+   * @description Bridges DM message context into the thread panel contract so threaded replies open with correct parent metadata.
    * @param {string} messageId - Message ID
    * @returns {void}
    */
@@ -221,6 +230,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle user button click to show profile
+   * @description Resolves fallback identity for self-DM and normal DM cases so the profile action is always available.
    * @protected
    * @returns {void}
    */
@@ -232,6 +242,7 @@ export class ChatPrivateComponent {
 
   /**
    * Close profile view and reset state
+   * @description Resets profile overlay and selected user together so stale profile context cannot leak into later interactions.
    * @returns {void}
    */
   protected onProfileViewClose = (): void => {
@@ -249,6 +260,7 @@ export class ChatPrivateComponent {
 
   /**
    * Save edited profile data
+   * @description Commits profile edits through profile management service so user updates propagate consistently across all UI surfaces.
    * @param {Object} data - Profile data to update
    * @param {string} data.displayName - New display name
    * @param {boolean} data.isAdmin - Admin status
@@ -264,6 +276,7 @@ export class ChatPrivateComponent {
 
   /**
    * Leave current conversation
+   * @description Executes leave flow through state service so listener cleanup and conversation removal stay transactionally aligned.
    * @returns {Promise<void>}
    */
   onLeaveConversation = async (): Promise<void> => {
@@ -276,6 +289,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle channel mention click
+   * @description Opens channel-preview context from mentions without immediate navigation so users can confirm before switching.
    * @param {string} channelId - Channel ID
    * @returns {void}
    */
@@ -289,6 +303,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle channel view close
+   * @description Resets channel preview state in one action to prevent stale mention targets across modal reopens.
    * @returns {void}
    */
   protected onChannelViewClose = (): void => {
@@ -298,6 +313,7 @@ export class ChatPrivateComponent {
 
   /**
    * Handle channel view join
+   * @description Couples join action with navigation intent emission so mention-driven joins immediately continue to destination channel.
    * @param {string} channelId - Channel ID
    * @returns {Promise<void>}
    */

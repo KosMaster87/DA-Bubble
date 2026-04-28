@@ -87,12 +87,14 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Channels from ChannelListService - sorted with DABubble-welcome first, Let's Bubble second, then alphabetically
+   * @description Exposes pre-sorted channel state so ordering rules are enforced once and not reimplemented in template logic.
    * Includes unread badge calculation
    */
   protected sortedChannels = this.channelListService.getVisibleChannels();
 
   /**
    * Selected channel ID (from NavigationService)
+   * @description Mirrors navigation selection as a signal so row highlighting stays route-driven and resilient to hard reloads.
    */
   protected selectedChannelId = this.navigationService.getSelectedChannelId();
 
@@ -107,6 +109,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Direct messages from DirectMessageListService with self-DM (Notes to self) at the top
+   * @description Keeps DM ordering and inclusion policy service-driven so the sidebar only renders prepared view data.
    * Shows all DM conversations sorted alphabetically with unread badges
    */
   protected directMessages = this.directMessageListService.getConversationsWithSelfDM();
@@ -168,6 +171,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * All users from UserStore mapped to UserListItem for add-member popup (from UserTransformationService)
+   * @description Provides popup-ready user projection so channel-member flows can reuse one normalized list shape.
    */
   protected allUsers = this.userTransformationService.getUserList();
 
@@ -188,15 +192,56 @@ export class WorkspaceSidebarComponent {
     });
   }
 
+  /**
+   * Open the new-message composer view.
+   * @description Triggers compose navigation and emits the same intent upward so parent layout state and route state stay in sync.
+   * @returns {void}
+   */
   openNewMessage = (): void => {
     this.navigationService.selectNewMessage();
     this.newMessageRequested.emit();
   };
+
+  /**
+   * Open mailbox view.
+   * @description Emits mailbox intent without coupling sidebar actions to mailbox implementation details.
+   * @returns {void}
+   */
   openMailbox = (): void => this.mailboxRequested.emit();
+
+  /**
+   * Toggle channel section collapse state.
+   * @description Delegates section visibility state to sidebar service so accordion behavior remains centralized.
+   * @returns {void}
+   */
   toggleChannels = (): void => this.workspaceSidebarService.toggleChannels();
+
+  /**
+   * Toggle direct-message section collapse state.
+   * @description Keeps DM list expansion logic in one shared service path used by all sidebar interaction points.
+   * @returns {void}
+   */
   toggleDirectMessages = (): void => this.workspaceSidebarService.toggleDirectMessages();
+
+  /**
+   * Toggle system-control section collapse state.
+   * @description Routes system-section expansion through the sidebar service so state survives component-level render churn.
+   * @returns {void}
+   */
   toggleSystemControl = (): void => this.workspaceSidebarService.toggleSystemControl();
+
+  /**
+   * Open legal information page.
+   * @description Uses navigation service to preserve global routing behavior and tracking hooks for legal navigation.
+   * @returns {void}
+   */
   openLegal = (): void => this.navigationService.navigateToLegal();
+
+  /**
+   * Open workspace settings page.
+   * @description Delegates settings navigation to the central navigation service so route transitions stay consistent with other sidebar actions.
+   * @returns {void}
+   */
   openSettings = (): void => {
     this.navigationService.navigateToSettings();
   };
@@ -217,18 +262,55 @@ export class WorkspaceSidebarComponent {
     this.channelSelected.emit(channelId);
   };
 
+  /**
+   * Select channel by ID via navigation service.
+   * @description Exposes a narrow forwarding path for template bindings that already resolve channel IDs.
+   * @param {string} channelId - Target channel ID
+   * @returns {void}
+   */
   selectChannelById = (channelId: string): void =>
     this.navigationService.selectChannelById(channelId);
+
+  /**
+   * Select direct message by ID via navigation service.
+   * @description Keeps ID-based DM navigation as a dedicated API so callers do not depend on full DM object shapes.
+   * @param {string} messageId - Target direct message ID
+   * @returns {void}
+   */
   selectDirectMessageById = (messageId: string): void =>
     this.navigationService.selectDirectMessageById(messageId);
+
+  /**
+   * Clear active direct-message selection.
+   * @description Provides an explicit deselect action for transitions where no DM should stay active.
+   * @returns {void}
+   */
   deselectDirectMessage = (): void => this.navigationService.deselectDirectMessage();
 
+  /**
+   * Open create-channel flow.
+   * @description Starts the staged channel-creation UI in the sidebar service so modal state remains centralized.
+   * @returns {void}
+   */
   addChannel = (): void => this.workspaceSidebarService.startAddChannel();
+
+  /**
+   * Close create-channel modal.
+   * @description Delegates closure to sidebar service to keep modal lifecycle rules in one state owner.
+   * @returns {void}
+   */
   onCreateChannelClose = (): void => this.workspaceSidebarService.closeCreateChannel();
+
+  /**
+   * Close add-member-after-channel modal.
+   * @description Uses the sidebar service close path so staged channel creation can be cancelled consistently.
+   * @returns {void}
+   */
   onClose = (): void => this.workspaceSidebarService.closeAddMemberAfterChannel();
 
   /**
    * Handle create channel submit
+   * @description Captures the first step of channel creation into pending state so member selection can run before final persistence.
    * @param {Object} data - Channel data
    * @param {string} data.name - Channel name
    * @param {string} data.description - Channel description
@@ -243,6 +325,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Handle add member after channel create - create channel and send invitations
+   * @description Finalizes the staged channel flow in one place so creation, invitations, and auto-selection remain transactionally aligned.
    * @param {Object} data - Channel creation data
    * @returns {Promise<void>}
    */
@@ -298,6 +381,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Start or open a direct message conversation with a user
+   * @description Consolidates DM bootstrap and selection so sidebar interactions produce one consistent conversation-entry flow.
    * @param {string} userId - The other user's ID
    * @returns {Promise<{id: string, participants: string[]} | null>} Conversation data or null
    */
@@ -317,6 +401,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Handle thread click from popup
+   * @description Adapts popup thread events to the global thread-open contract so parent shells receive consistent payload structure.
    * @param {Object} event - Thread event data
    * @param {string} event.messageId - Message ID
    * @param {PopupMessage} event.parentMessage - Parent message
@@ -351,13 +436,32 @@ export class WorkspaceSidebarComponent {
     });
   };
 
+  /**
+   * Keep thread-unread popup visible when hovering trigger badge.
+   * @description Delegates hover enter to shared sidebar state so popup timing stays synchronized across trigger and popup elements.
+   * @param {string} id - Sidebar item ID
+   * @returns {void}
+   */
   onThreadUnreadMouseEnter = (id: string): void =>
     this.workspaceSidebarService.onThreadUnreadMouseEnter(id);
+
+  /**
+   * Handle mouse leave from thread-unread trigger.
+   * @description Delegates leave handling to shared hover state so delayed popup hide behavior stays consistent.
+   * @returns {void}
+   */
   onThreadUnreadMouseLeave = (): void => this.workspaceSidebarService.onThreadUnreadMouseLeave();
+
+  /**
+   * Keep thread-unread popup open while pointer is inside popup.
+   * @description Routes popup hover events through shared state owner to prevent flicker during trigger-to-popup transitions.
+   * @returns {void}
+   */
   onPopupMouseEnter = (): void => this.workspaceSidebarService.onPopupMouseEnter();
 
   /**
    * Handle image load error - use fallback avatar
+   * @description Applies a deterministic avatar fallback so broken image URLs never degrade sidebar identity cues.
    * @param {Event} event - Error event
    * @returns {void}
    */
@@ -433,6 +537,7 @@ export class WorkspaceSidebarComponent {
 
   /**
    * Normalize direct message IDs so temporary self-DM IDs map to the canonical conversation ID.
+   * @description Normalizes temporary and canonical DM IDs before comparisons so unread suppression logic remains correct for self-DM transitions.
    */
   private normalizeDirectMessageIdLocal(directMessageId: string): string {
     const currentUserId = this.authStore.user()?.uid;

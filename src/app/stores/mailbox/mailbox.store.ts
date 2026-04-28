@@ -31,11 +31,15 @@ import { getErrorMessage, logError } from '../helpers/shared-error.helpers';
 
 /**
  * Mailbox message type definition
+ * @description Discriminates between user-to-user messages, admin broadcasts,
+ * and system notifications so the UI can filter and style each type distinctly.
  */
 export type MailboxMessageType = 'user' | 'admin' | 'system';
 
 /**
  * Mailbox message interface
+ * @description Represents a full mailbox message as it exists in Firestore,
+ * including read state and reaction data needed for the inbox view.
  */
 export interface MailboxMessage {
   id: string;
@@ -53,6 +57,8 @@ export interface MailboxMessage {
 
 /**
  * Request interface for creating a mailbox message
+ * @description Carries only the fields required for creation; server-generated
+ * fields such as `id`, `createdAt`, and `reactions` are omitted intentionally.
  */
 export interface CreateMailboxMessageRequest {
   recipientId: string;
@@ -64,6 +70,8 @@ export interface CreateMailboxMessageRequest {
 
 /**
  * State interface for MailboxStore
+ * @description Holds the flat message list and current user identity so the
+ * store can scope Firestore queries to the authenticated user's inbox.
  */
 export interface MailboxState {
   messages: MailboxMessage[];
@@ -74,6 +82,8 @@ export interface MailboxState {
 
 /**
  * Initial state
+ * @description Zero-value baseline used at startup and after logout to ensure
+ * the store never exposes stale data from a previous session.
  */
 const initialState: MailboxState = {
   messages: [],
@@ -85,6 +95,8 @@ const initialState: MailboxState = {
 /**
  * Mailbox management store with Firestore integration
  * Manages inbox messages for the current user
+ * @description Owns the real-time inbox listener lifecycle so components only
+ * need to call `setCurrentUser` and react to the derived computed signals.
  */
 export const MailboxStore = signalStore(
   { providedIn: 'root' },
@@ -224,6 +236,8 @@ export const MailboxStore = signalStore(
 
       /**
        * Execute shared mailbox operation flow.
+       * @description Centralizes optional loading-state management and error
+       * normalization so each mailbox mutation only contains its Firestore call.
        */
       async executeMailboxOperation(
         operation: () => Promise<void>,
@@ -252,10 +266,21 @@ export const MailboxStore = signalStore(
         }
       },
 
+      /**
+       * Get mailbox message by ID.
+       * @description Provides a single lookup entry point so callers avoid duplicating message-array traversal logic.
+       * @param {string} messageId - Message identifier
+       * @returns {MailboxMessage | undefined} Matching message or undefined
+       */
       getMessageById(messageId: string): MailboxMessage | undefined {
         return findMessageById(store.messages(), messageId);
       },
 
+      /**
+       * Cleanup mailbox listeners and local state.
+       * @description Resets subscription and store state together so teardown never leaves stale listener side effects behind.
+       * @returns {void}
+       */
       cleanup(): void {
         resetMailboxSubscription();
         patchState(store, initialState);

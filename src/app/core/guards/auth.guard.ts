@@ -1,16 +1,17 @@
 /**
  * @fileoverview Authentication Guard
- * @description Protects routes from unauthenticated access and requires email verification
+ * @description Enforces authenticated and verified access for protected routes before dashboard features are reachable.
  * @module guards/auth
  */
 
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 
 /**
  * Guard to protect routes that require authentication and email verification
+ * @description Blocks route activation until auth state is loaded and verification constraints are satisfied.
  * @function authGuard
  * @returns {boolean | Promise<boolean>} True if user is authenticated and email verified
  */
@@ -24,6 +25,7 @@ export const authGuard: CanActivateFn = async () => {
 
 /**
  * Check if user is authenticated and email is verified
+ * @description Waits for auth-store stabilization, then enforces signin and verification prerequisites.
  * @async
  * @function checkAuthentication
  * @param {InstanceType<typeof AuthStore>} store - Auth store instance
@@ -34,7 +36,7 @@ export const authGuard: CanActivateFn = async () => {
 async function checkAuthentication(
   store: InstanceType<typeof AuthStore>,
   auth: Auth,
-  router: Router
+  router: Router,
 ): Promise<boolean> {
   while (store.isLoading()) {
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -52,6 +54,7 @@ async function checkAuthentication(
 
 /**
  * Check if user's email is verified and has avatar
+ * @description Redirects users to required onboarding checkpoints when verification or avatar prerequisites are missing.
  * @async
  * @function checkEmailVerification
  * @param {Auth} auth - Firebase Auth instance

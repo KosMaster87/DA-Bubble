@@ -4,33 +4,33 @@
  * @module features/dashboard/pages/main/dashboard
  */
 
-import { Component, inject, ViewChild, effect, untracked, signal, computed } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
-import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
-import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
-import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
-import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 import { NavigationService } from '@core/services/navigation/navigation.service';
-import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
-import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
-import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
-import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
-import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
-import { ThreadComponent } from '../../components/thread/thread.component';
-import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
-import { SettingsComponent } from '../../../settings/pages/settings/settings.component';
+import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
+import { MobileSearchComponent } from '@shared/components/mobile-search/mobile-search.component';
+import { WorkspaceMenuToggleComponent } from '@shared/dashboard-components';
 import { type Message } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import {
-  WorkspaceSidebarService,
-  ResponsiveViewService,
-  DashboardStateService,
   DashboardInitializationService,
-  ThreadManagementService,
   DashboardRouteHandlerService,
+  DashboardStateService,
   DashboardThreadCoordinatorService,
   ResponsivePanelManagementService,
+  ResponsiveViewService,
+  ThreadManagementService,
+  WorkspaceSidebarService,
 } from '@shared/services';
+import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
+import { SettingsComponent } from '../../../settings/pages/settings/settings.component';
+import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
+import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
+import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
+import { ChatNewMsgComponent } from '../../components/chat-new-msg/chat-new-msg.component';
+import { ChatPrivateComponent } from '../../components/chat-private/chat-private.component';
+import { ThreadComponent } from '../../components/thread/thread.component';
+import { WorkspaceHeaderComponent } from '../../components/workspace-header/workspace-header.component';
+import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/workspace-sidebar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -116,6 +116,7 @@ export class DashboardComponent {
 
   /**
    * Handle mobile sidebar visibility
+   * @description Keeps mobile sidebar recovery in the page shell so breakpoint changes cannot leave navigation unreachable.
    * Shows sidebar on mobile to let CSS control visibility
    * @private
    * @returns {void}
@@ -128,6 +129,7 @@ export class DashboardComponent {
 
   /**
    * Handle desktop sidebar collapse
+   * @description Centralizes desktop collapse behavior so breakpoint-driven layout changes stay consistent across routes.
    * Auto-collapses sidebar at 1440px breakpoint
    * @private
    * @param {boolean} shouldCollapse - Whether sidebar should collapse
@@ -143,6 +145,7 @@ export class DashboardComponent {
 
   /**
    * Setup responsive sidebar auto-collapse effect
+   * @description Owns viewport-to-layout orchestration at the shell level so child components remain unaware of responsive rules.
    * Automatically collapses/expands sidebar based on viewport width
    * Only applies on non-mobile viewports (>= 768px)
    * @private
@@ -163,6 +166,7 @@ export class DashboardComponent {
 
   /**
    * Setup thread mobile effect
+   * @description Forces the mobile panel stack to prioritize thread context when a thread opens, preventing hidden active content.
    * Switches to thread view when thread opens on mobile
    * @private
    * @returns {void}
@@ -177,6 +181,7 @@ export class DashboardComponent {
 
   /**
    * Setup content mobile effect
+   * @description Synchronizes view-based navigation with the mobile content pane so route changes immediately reflect in layout state.
    * Switches to content view for various content types on mobile
    * @private
    * @returns {void}
@@ -194,6 +199,7 @@ export class DashboardComponent {
 
   /**
    * Check if view is a content view type
+   * @description Encapsulates the shell's notion of content-capable views so panel-switching rules are maintained in one place.
    * @private
    * @param {string} view - Current view name
    * @returns {boolean} True if view is content type
@@ -212,6 +218,7 @@ export class DashboardComponent {
 
   /**
    * Setup mobile to desktop transition effect
+   * @description Preserves cross-breakpoint navigation continuity so desktop mode always restores a valid content view after leaving mobile-only states.
    * Opens welcome channel when transitioning from mobile without content
    * @private
    * @returns {void}
@@ -241,6 +248,7 @@ export class DashboardComponent {
 
   /**
    * Setup route parameter listener
+   * @description Keeps route-param reactivity in one shell-level effect so navigation-driven view changes are handled uniformly.
    * Creates an effect that watches route parameter changes and handles routing
    * @private
    * @returns {void}
@@ -254,6 +262,7 @@ export class DashboardComponent {
 
   /**
    * Handle route parameter changes
+   * @description Delegates route interpretation to a dedicated handler so page-shell responsibilities stay focused on wiring and state handoff.
    * Delegates route handling to route handler service
    * @private
    * @param {any} params - Route parameters from navigation service
@@ -272,6 +281,7 @@ export class DashboardComponent {
 
   /**
    * Show new message view - Closes thread and displays new message composition
+   * @description Switches shell state to compose mode and ensures thread/mobile content context is normalized before rendering.
    * @returns {void}
    */
   showNewMessage = (): void => {
@@ -280,35 +290,57 @@ export class DashboardComponent {
     this.dashboardState.showNewMessage();
   };
 
-  /** Show welcome view @returns {void} */
+  /**
+   * Show welcome view.
+   * @description Routes to the welcome surface through dashboard state so initial workspace context always resets to a neutral landing view.
+   * @returns {void}
+   */
   showWelcome = (): void => {
     if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showWelcome();
   };
 
-  /** Show mailbox view @returns {void} */
+  /**
+   * Show mailbox view.
+   * @description Activates mailbox mode through the shared state service so mention and notification workflows reuse one navigation path.
+   * @returns {void}
+   */
   showMailbox = (): void => {
     if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showMailbox();
   };
 
-  /** Show legal view @returns {void} */
+  /**
+   * Show legal view.
+   * @description Switches content context to legal information while preserving shell-level mobile view behavior.
+   * @returns {void}
+   */
   showLegal = (): void => {
     if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showLegal();
   };
 
-  /** Show settings view @returns {void} */
+  /**
+   * Show settings view.
+   * @description Navigates to settings through centralized dashboard state so preference screens follow the same shell transition rules.
+   * @returns {void}
+   */
   showSettings = (): void => {
     if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showSettings();
   };
 
-  /** Open channel by ID - Delegates to showChannel @param {string} channelId @returns {void} */
+  /**
+   * Open a channel by ID.
+   * @description Keeps channel-open calls funneled through showChannel so sidebar shortcuts and route handlers share identical transition behavior.
+   * @param {string} channelId - Channel ID to open
+   * @returns {void}
+   */
   openChannelById = (channelId: string): void => this.showChannel(channelId);
 
   /**
    * Show channel - Displays channel and deselects active DM
+   * @description Opens the selected channel and clears DM selection to avoid mixed conversation context in the shell.
    * @param {string} channelId - Unique identifier of the channel
    * @returns {void}
    */
@@ -321,6 +353,7 @@ export class DashboardComponent {
 
   /**
    * Show direct message conversation
+   * @description Opens DM context in dashboard state while preserving mobile content focus behavior.
    * @param {string} conversationId - Unique identifier of the DM conversation
    * @param {[string, string]} [participants] - Optional tuple of participant user IDs
    * @returns {void}
@@ -332,6 +365,7 @@ export class DashboardComponent {
 
   /**
    * Start direct message with user - Creates or opens existing DM
+   * @description Starts or reuses a DM via sidebar orchestration and navigates to the resolved conversation route.
    * @param {string} userId - Unique identifier of the user to message
    * @returns {Promise<void>}
    */
@@ -344,6 +378,7 @@ export class DashboardComponent {
 
   /**
    * Open thread - Delegates to thread coordinator
+   * @description Forwards thread-open events to the coordinator so state and URL synchronization stay centralized.
    * @param {Object} event - Thread request event with messageId, parentMessage, conversationId, isDirectMessage
    * @returns {void}
    */
@@ -358,6 +393,7 @@ export class DashboardComponent {
 
   /**
    * Close thread - On mobile, return to content view
+   * @description Closes active thread context and restores mobile content panel visibility when needed.
    * @returns {void}
    */
   closeThread = (): void => {
@@ -367,6 +403,7 @@ export class DashboardComponent {
 
   /**
    * Navigate back to sidebar on mobile - Closes thread/channel and shows sidebar
+   * @description Resets conversation selection and shell state to sidebar-first mobile navigation baseline.
    * @returns {void}
    */
   backToSidebar = (): void => {
@@ -383,6 +420,7 @@ export class DashboardComponent {
 
   /**
    * Handle channel left event - Navigates to welcome channel
+   * @description Redirects to the welcome channel after leave operations so the dashboard never stays on an invalid channel.
    * @returns {void}
    */
   onChannelLeft = (): void => {

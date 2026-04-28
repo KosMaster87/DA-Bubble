@@ -1,20 +1,20 @@
 /**
  * @fileoverview Channel Conversation State Service
- * @description Manages computed state for channel conversation component
+ * @description Centralizes channel-conversation derived signals for messages, members, and access gating to keep component code focused on orchestration.
  * @module core/services/channel-conversation-state
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
-import { AuthStore } from '@stores/auth';
-import { ChannelStore, ChannelMessageStore } from '@stores/index';
-import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
-import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import { ChannelConversationUIService } from '@core/services/channel-conversation-ui/channel-conversation-ui.service';
 import type { ChannelInfo } from '@core/services/channel-data/channel-data.service';
-import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
-import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import { MessageGroupingService } from '@core/services/message-grouping/message-grouping.service';
+import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import type { MessageGroup } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import type { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
+import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
+import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
+import { AuthStore } from '@stores/auth';
+import { ChannelMessageStore, ChannelStore } from '@stores/index';
 
 @Injectable({ providedIn: 'root' })
 export class ChannelConversationStateService {
@@ -27,6 +27,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get current channel data from store
+   * @description Derives the live channel object from the store so the component always renders the latest Firestore snapshot.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal} Computed channel data from store
    */
@@ -39,6 +40,7 @@ export class ChannelConversationStateService {
 
   /**
    * Check if current user is channel owner
+   * @description Used to gate owner-only actions (edit/delete channel) without exposing raw store access to the component.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<boolean>} True if current user owns channel
    */
@@ -52,6 +54,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get selected user channel owner status
+   * @description Determines whether the currently selected member sidebar profile belongs to the channel owner.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<boolean>} True if selected user owns channel
    */
@@ -65,6 +68,7 @@ export class ChannelConversationStateService {
 
   /**
    * Check if viewing own profile
+   * @description Distinguishes between viewing another user’s profile and the current user’s own profile to toggle edit vs. view mode.
    * @returns {Signal<boolean>} True if viewing own profile
    */
   getIsOwnProfile = () => {
@@ -75,30 +79,33 @@ export class ChannelConversationStateService {
 
   /**
    * Get edit profile user
+   * @description Resolves the selected member’s editable profile shape for the profile-edit overlay.
    * @returns {Signal<EditProfileUser | null>} Edit profile user or null
    */
   getEditProfileUser = (): Signal<EditProfileUser | null> => {
     return computed(() => {
       return this.userTransformation.toEditProfileUser(
-        this.channelConversationUI.getSelectedMemberId()()
+        this.channelConversationUI.getSelectedMemberId()(),
       );
     });
   };
 
   /**
    * Get selected member as ProfileUser
+   * @description Resolves the selected member’s display profile for the profile-view overlay without requiring the component to touch the user store.
    * @returns {Signal<ProfileUser | null>} Profile user or null
    */
   getSelectedMember = (): Signal<ProfileUser | null> => {
     return computed(() => {
       return this.userTransformation.toProfileUser(
-        this.channelConversationUI.getSelectedMemberId()()
+        this.channelConversationUI.getSelectedMemberId()(),
       );
     });
   };
 
   /**
    * Get channel messages transformed for view
+   * @description Converts raw Firestore message documents to view-ready Message objects with author names and timestamps.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal} Transformed channel messages
    */
@@ -112,6 +119,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get messages grouped by date
+   * @description Groups messages into date buckets so the template can render date-divider headers between conversation sections.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<MessageGroup[]>} Messages grouped by date
    */
@@ -126,6 +134,7 @@ export class ChannelConversationStateService {
 
   /**
    * Check if has more messages
+   * @description Reads the pagination flag from the message store to show or hide the “load older messages” button.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<boolean>} True if more messages available
    */
@@ -138,6 +147,7 @@ export class ChannelConversationStateService {
 
   /**
    * Check if loading older messages
+   * @description Exposes the loading spinner state for the pagination area so the component doesn’t need to reach into the message store directly.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<boolean>} True if loading older messages
    */
@@ -150,6 +160,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get searchable messages for MessageBox
+   * @description Transforms channel messages into MessageSearchItem shapes, sorted newest-first, for use in the inline search overlay.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @returns {Signal<MessageSearchItem[]>} Searchable message items
    */
@@ -164,6 +175,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get transformed channel messages
+   * @description Extracts and transforms raw messages from the store; extracted as a helper to keep getSearchableMessages readable.
    * @private
    * @param {string} channelId - Channel identifier
    * @returns {any[]} Transformed messages
@@ -175,6 +187,7 @@ export class ChannelConversationStateService {
 
   /**
    * Map and sort messages for search
+   * @description Orchestrates the two-step search-item pipeline: mapping to MessageSearchItem then sorting by timestamp.
    * @private
    * @param {any[]} messages - Messages to map
    * @param {string} channelId - Channel identifier
@@ -184,7 +197,7 @@ export class ChannelConversationStateService {
   private mapAndSortMessages = (
     messages: any[],
     channelId: string,
-    channelName: string
+    channelName: string,
   ): MessageSearchItem[] => {
     const searchItems = this.mapMessagesToSearchItems(messages, channelId, channelName);
     return this.sortMessagesByTimestamp(searchItems, messages);
@@ -192,6 +205,7 @@ export class ChannelConversationStateService {
 
   /**
    * Map messages to search items
+   * @description Creates MessageSearchItem objects with a composite ID (channelId_messageId) so they can be traced back to their source.
    * @private
    * @param {any[]} messages - Messages to map
    * @param {string} channelId - Channel identifier
@@ -201,7 +215,7 @@ export class ChannelConversationStateService {
   private mapMessagesToSearchItems = (
     messages: any[],
     channelId: string,
-    channelName: string
+    channelName: string,
   ): MessageSearchItem[] => {
     return messages.map((msg) => ({
       id: `${channelId}_${msg.id}`,
@@ -213,6 +227,7 @@ export class ChannelConversationStateService {
 
   /**
    * Truncate message content
+   * @description Clips content to 60 characters with ellipsis for compact search result previews.
    * @private
    * @param {string} content - Message content
    * @returns {string} Truncated content
@@ -223,6 +238,7 @@ export class ChannelConversationStateService {
 
   /**
    * Sort messages by timestamp
+   * @description Orders search items newest-first so users see the most recent matches at the top of the search overlay.
    * @private
    * @param {MessageSearchItem[]} items - Search items to sort
    * @param {any[]} messages - Original messages for timestamp
@@ -230,7 +246,7 @@ export class ChannelConversationStateService {
    */
   private sortMessagesByTimestamp = (
     items: MessageSearchItem[],
-    messages: any[]
+    messages: any[],
   ): MessageSearchItem[] => {
     return items.sort((a, b) => {
       const msgA = messages.find((m) => m.id === a.id.split('_')[1]);
@@ -242,6 +258,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get member list items for message-box
+   * @description Passes the channel members through unchanged; exists as a computed wrapper so the message-box component can receive a reactive signal.
    * @param {Signal} members - Channel members signal
    * @returns {Signal} Members in UserListItem format
    */
@@ -251,6 +268,7 @@ export class ChannelConversationStateService {
 
   /**
    * Get channel list items for channel mentions
+   * @description Provides all public channels except the current one for the # channel-mention picker inside the conversation.
    * @param {Signal<ChannelInfo>} channel - Current channel info
    * @returns {Signal} Public channels excluding current channel
    */
@@ -265,26 +283,27 @@ export class ChannelConversationStateService {
 
   /**
    * Check if add member button should be shown
+   * @description Shows the add-member button only for public, non-system channels to prevent structural changes to welcome/onboarding channels.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
    * @param {Signal} currentChannelData - Current channel data from store
    * @returns {Signal<boolean>} True if button should be visible
    */
   getShouldShowAddMemberButton = (
     channel: Signal<ChannelInfo>,
-    currentChannelData: Signal<any>
+    currentChannelData: Signal<any>,
   ) => {
     return computed(() => {
       const channelData = currentChannelData() || channel();
       const isPublic = !channelData.isPrivate;
       const channelName = channelData.name;
-      const isSpecialChannel =
-        channelName === 'DABubble-welcome' || channelName === "Let's Bubble";
+      const isSpecialChannel = channelName === 'DABubble-welcome' || channelName === "Let's Bubble";
       return isPublic && !isSpecialChannel;
     });
   };
 
   /**
    * Check if access screen should be shown
+   * @description Returns true when a non-owner, non-member visits a private channel, triggering the join/request-access flow.
    * @param {Signal<boolean>} isChannelOwner - Is current user owner
    * @param {Signal<boolean>} isMember - Is current user member
    * @param {Signal<boolean>} isJoiningChannel - Is user currently joining
@@ -293,7 +312,7 @@ export class ChannelConversationStateService {
   getShowAccessScreen = (
     isChannelOwner: Signal<boolean>,
     isMember: Signal<boolean>,
-    isJoiningChannel: Signal<boolean>
+    isJoiningChannel: Signal<boolean>,
   ) => {
     return computed(() => {
       if (isChannelOwner()) return false;

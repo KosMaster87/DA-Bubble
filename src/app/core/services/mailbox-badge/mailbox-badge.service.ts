@@ -1,14 +1,14 @@
 /**
  * @fileoverview Mailbox Badge Service
- * @description Manages mailbox badge state (unread messages + pending invitations)
+ * @description Aggregates mailbox unread counts and pending invitations into reactive badge signals for header and sidebar surfaces.
  * @module core/services/mailbox-badge
  */
 
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { type Invitation } from '@core/models/invitation.model';
+import { InvitationService } from '@core/services/invitation/invitation.service';
 import { AuthStore } from '@stores/auth';
 import { MailboxStore } from '@stores/index';
-import { InvitationService } from '@core/services/invitation/invitation.service';
-import { type Invitation } from '@core/models/invitation.model';
 
 @Injectable({
   providedIn: 'root',
@@ -23,11 +23,13 @@ export class MailboxBadgeService {
 
   /**
    * Pending invitations for the current user
+   * @description Readonly signal exposing the live list of pending invitations so templates can react without write access.
    */
   readonly pendingInvitations = this._pendingInvitations.asReadonly();
 
   /**
    * Check if mailbox has unread messages or pending invitations
+   * @description Combined unread flag used to show the mailbox badge dot — true whenever there are unread messages or at least one pending invitation.
    */
   readonly hasUnread = computed(() => {
     const unreadMessagesCount = this.mailboxStore.unreadCount();
@@ -37,6 +39,7 @@ export class MailboxBadgeService {
 
   /**
    * Total count of unread items (messages + invitations)
+   * @description Sums mailbox unread messages and pending invitations into a single number for the badge counter.
    */
   readonly unreadCount = computed(() => {
     const unreadMessagesCount = this.mailboxStore.unreadCount();
@@ -58,7 +61,7 @@ export class MailboxBadgeService {
           currentUser.uid,
           (invitations) => {
             this._pendingInvitations.set(invitations);
-          }
+          },
         );
       } else {
         // Clear invitations when user logs out
@@ -70,6 +73,7 @@ export class MailboxBadgeService {
 
   /**
    * Cleanup subscription
+   * @description Cancels the Firestore invitation listener to prevent memory leaks and stale callbacks after logout.
    */
   private cleanup(): void {
     if (this.invitationUnsubscribe) {

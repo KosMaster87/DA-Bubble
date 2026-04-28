@@ -22,6 +22,7 @@ import { DirectMessage } from '@core/models/direct-message.model';
 
 /**
  * Setup Firestore listener for conversations
+ * @description Replaces any existing conversations listener before registering a new one to prevent duplicate snapshot streams.
  */
 export const setupConversationsFirestoreListener = (
   firestore: Firestore,
@@ -96,12 +97,14 @@ export const filterMessagesWithThreads = (messages: DirectMessage[]): DirectMess
 
 /**
  * Check if error is permission denied
+ * @description Normalizes permission error detection across Firebase error shapes so retry logic can branch consistently.
  */
 export const isPermissionError = (error: any): boolean =>
   error.code === 'permission-denied' || error.message?.includes('permissions');
 
 /**
  * Load older messages for pagination
+ * @description Fetches the next message page using startAfter(lastMessage) and reverses result order to keep chronological rendering.
  */
 export const loadOlderDMMessages = async (
   firestore: Firestore,

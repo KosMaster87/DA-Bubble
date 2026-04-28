@@ -1,6 +1,6 @@
 /**
  * @fileoverview Workspace Data Loader Service
- * @description Handles loading of workspace data from stores
+ * @description Coordinates initial workspace data hydration from stores so dashboard bootstrapping follows one predictable sequence.
  * @module core/services/workspace-initialization
  */
 
@@ -19,6 +19,7 @@ export class WorkspaceDataLoaderService {
 
   /**
    * Load all workspace data (channels and users)
+   * @description Single entry point for bootstrapping store data so initialization orchestrators don't need to know which stores to trigger.
    */
   loadWorkspaceData(): void {
     this.channelStore.loadChannels();
@@ -27,6 +28,7 @@ export class WorkspaceDataLoaderService {
 
   /**
    * Load only channels
+   * @description Granular loader used when only channel data needs refreshing without re-fetching users.
    */
   loadChannels(): void {
     this.channelStore.loadChannels();
@@ -34,6 +36,7 @@ export class WorkspaceDataLoaderService {
 
   /**
    * Load only users
+   * @description Granular loader used when only user data needs refreshing without re-fetching channels.
    */
   loadUsers(): void {
     this.userStore.loadUsers();

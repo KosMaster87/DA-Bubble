@@ -35,6 +35,7 @@ export class PasswordForgotComponent {
 
   /**
    * Create forgot password form
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    * @function createForm
    * @returns {FormGroup} Form group
    */
@@ -46,6 +47,7 @@ export class PasswordForgotComponent {
 
   /**
    * Handle form submission
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onSubmit
    * @returns {Promise<void>}
@@ -61,6 +63,7 @@ export class PasswordForgotComponent {
 
   /**
    * Send password reset email
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function sendPasswordReset
    * @returns {Promise<void>}
@@ -82,6 +85,7 @@ export class PasswordForgotComponent {
 
   /**
    * Navigate back to signin
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function goBack
    * @returns {void}
    */

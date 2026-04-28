@@ -5,9 +5,8 @@
  * @module core/services/theme
  */
 
-import { Injectable, Renderer2, RendererFactory2, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { inject } from '@angular/core';
+import { inject, Injectable, Renderer2, RendererFactory2, signal } from '@angular/core';
 
 export type Theme = 'device' | 'light' | 'dark';
 export type ResolvedTheme = 'light' | 'dark';
@@ -50,6 +49,7 @@ export class ThemeService {
 
   /**
    * Initialize theme service - call this in app initialization
+   * @description Reads the persisted theme preference and applies it before the first render so there is no flash of wrong theme on load.
    */
   async initTheme(): Promise<void> {
     try {
@@ -63,6 +63,7 @@ export class ThemeService {
 
   /**
    * Get theme from localStorage
+   * @description Falls back to 'device' for unknown or missing values so the service is always in a valid state.
    */
   private getStoredTheme(): Theme {
     if (typeof window === 'undefined') return 'device';
@@ -72,6 +73,7 @@ export class ThemeService {
 
   /**
    * Store theme in localStorage
+   * @description Persists the user's choice so the correct theme is reapplied on the next page load without an additional fetch.
    */
   private storeTheme(theme: Theme): void {
     if (typeof window === 'undefined') return;
@@ -80,6 +82,7 @@ export class ThemeService {
 
   /**
    * Get system color scheme preference
+   * @description Guards against SSR by returning 'light' when window is unavailable.
    */
   private getSystemTheme(): ResolvedTheme {
     if (typeof window === 'undefined') return 'light';
@@ -88,6 +91,7 @@ export class ThemeService {
 
   /**
    * Resolve theme to light or dark
+   * @description Translates the abstract 'device' option to a concrete resolved value so downstream DOM operations only need to handle two states.
    */
   private resolveTheme(theme: Theme): ResolvedTheme {
     return theme === 'device' ? this.getSystemTheme() : theme;
@@ -95,6 +99,7 @@ export class ThemeService {
 
   /**
    * Get next theme in rotation cycle
+   * @description Provides a deterministic 3-way cycle (device → light → dark → device) so the toggle button always advances in a predictable order.
    */
   getNextTheme(current: Theme): Theme {
     const idx = this.THEMES.indexOf(current);
@@ -103,6 +108,7 @@ export class ThemeService {
 
   /**
    * Apply theme to document
+   * @description Central orchestrator for all theme side-effects: DOM attribute, manifest, favicon, meta tag, system listener, and service worker sync.
    */
   async applyTheme(theme: Theme): Promise<void> {
     try {
@@ -141,6 +147,7 @@ export class ThemeService {
 
   /**
    * Toggle to next theme
+   * @description Convenience method for the header toggle button so templates don't need to read and pass the current theme value.
    */
   async toggleTheme(): Promise<void> {
     const current = this.currentTheme();
@@ -150,6 +157,7 @@ export class ThemeService {
 
   /**
    * Set specific theme
+   * @description Public entry point for settings screens that need to apply a specific named theme rather than cycling.
    */
   async setTheme(theme: Theme): Promise<void> {
     await this.applyTheme(theme);
@@ -157,6 +165,7 @@ export class ThemeService {
 
   /**
    * Update manifest link element
+   * @description Adds a cache-buster version parameter to force the browser to re-fetch the manifest after a theme change, preventing stale PWA metadata.
    */
   private updateManifestAndFavicon(resolvedTheme: ResolvedTheme): void {
     // Remove old manifest and favicon links
@@ -184,6 +193,7 @@ export class ThemeService {
 
   /**
    * Remove existing manifest and favicon links
+   * @description Cleans up old link elements before inserting new ones to prevent duplicate manifest/favicon tags in the document head.
    */
   private removeManifestAndFaviconLinks(): void {
     const links = this.document.querySelectorAll('link[rel="manifest"], link[rel*="icon"]');
@@ -192,6 +202,7 @@ export class ThemeService {
 
   /**
    * Update theme-color meta tag for browser UI
+   * @description Keeps the browser chrome (address bar, task switcher) in sync with the app theme for a native-feeling PWA experience.
    */
   private updateThemeColorMeta(resolvedTheme: ResolvedTheme): void {
     let metaThemeColor = this.document.querySelector('meta[name="theme-color"]');
@@ -209,6 +220,7 @@ export class ThemeService {
 
   /**
    * Get theme color from CSS variables
+   * @description Reads the theme color from the CSS custom property so the meta tag always matches the actual rendered background without hardcoding values.
    */
   private getThemeColorFromCSS(): string {
     const styles = window.getComputedStyle(this.document.documentElement);
@@ -218,6 +230,7 @@ export class ThemeService {
 
   /**
    * Setup system theme change listener
+   * @description Only attaches the media query listener for 'device' mode; removes it for explicit themes to avoid unintended overrides.
    */
   private setupSystemThemeListener(theme: Theme): void {
     this.removeSystemThemeListener();
@@ -244,6 +257,7 @@ export class ThemeService {
 
   /**
    * Remove system theme change listener
+   * @description Cleans up the media query listener reference to prevent memory leaks when switching away from device mode.
    */
   private removeSystemThemeListener(): void {
     if (this.systemThemeListener) {
@@ -256,6 +270,7 @@ export class ThemeService {
 
   /**
    * Sync theme settings with service worker
+   * @description Posts the current theme to the service worker so it can serve the correct manifest and assets from cache without a network round-trip.
    */
   private syncWithServiceWorker(): void {
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -273,6 +288,7 @@ export class ThemeService {
 
   /**
    * Clean up listeners on service destroy
+   * @description Ensures the system theme media query listener is removed when the service is torn down to prevent event handler leaks.
    */
   ngOnDestroy(): void {
     this.removeSystemThemeListener();

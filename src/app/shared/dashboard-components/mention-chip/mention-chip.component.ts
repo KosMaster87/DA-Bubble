@@ -26,6 +26,7 @@ export class MentionChipComponent {
 
   /**
    * Handle remove button click
+   * @description Consolidates teardown cleanup in one method so subscriptions and transient UI state are reliably cleared.
    * Stops event propagation and emits removal event
    * @param {Event} event - DOM click event
    * @returns {void}

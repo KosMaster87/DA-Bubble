@@ -4,8 +4,8 @@
  * @module shared/dashboard-components/user-options-menu
  */
 
-import { Component, output, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-user-options-menu',
@@ -22,6 +22,7 @@ export class UserOptionsMenuComponent {
 
   /**
    * Handle close click (overlay)
+   * @description Emits close intent when overlay dismissal is triggered.
    */
   onClose(): void {
     this.closeClicked.emit();
@@ -29,6 +30,7 @@ export class UserOptionsMenuComponent {
 
   /**
    * Handle profile click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onProfileClick(): void {
     this.profileClicked.emit();
@@ -36,6 +38,7 @@ export class UserOptionsMenuComponent {
 
   /**
    * Handle mailbox click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onMailboxClick(): void {
     this.mailboxClicked.emit();
@@ -43,6 +46,7 @@ export class UserOptionsMenuComponent {
 
   /**
    * Handle logout click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onLogoutClick(): void {
     this.logoutClicked.emit();

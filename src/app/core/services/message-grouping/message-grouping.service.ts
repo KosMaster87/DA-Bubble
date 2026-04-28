@@ -5,7 +5,10 @@
  */
 
 import { Injectable } from '@angular/core';
-import type { Message, MessageGroup } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import type {
+  Message,
+  MessageGroup,
+} from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +16,7 @@ import type { Message, MessageGroup } from '@shared/dashboard-components/convers
 export class MessageGroupingService {
   /**
    * Group messages by date
+   * @description Buckets messages by calendar date key and maps each bucket to a MessageGroup with a human-readable label, preserving message order within groups.
    * @param messages - Messages to group
    * @returns Messages grouped by date with labels
    */
@@ -36,6 +40,7 @@ export class MessageGroupingService {
 
   /**
    * Get date key for grouping (YYYY-MM-DD)
+   * @description Produces a zero-padded ISO date string used as a stable Map key; falls back to today’s date for invalid timestamps.
    * @param date - Date to convert
    * @returns Date key string
    */
@@ -45,12 +50,13 @@ export class MessageGroupingService {
       return new Date().toISOString().split('T')[0];
     }
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-      d.getDate()
+      d.getDate(),
     ).padStart(2, '0')}`;
-  };
+  }
 
   /**
    * Get date label ("Starting today" or formatted date)
+   * @description Returns “Starting today” for today’s date; for older dates returns a long-form weekday + month format using the browser’s Intl API.
    * @param date - Date to format
    * @returns Formatted date label
    */
@@ -71,10 +77,11 @@ export class MessageGroupingService {
       day: 'numeric',
       month: 'long',
     }).format(messageDate);
-  };
+  }
 
   /**
    * Check if two dates are the same day
+   * @description Compares year, month, and date components only so time differences don’t affect the same-day check.
    * @param date1 - First date
    * @param date2 - Second date
    * @returns True if same day

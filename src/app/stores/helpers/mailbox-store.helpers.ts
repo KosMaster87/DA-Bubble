@@ -5,14 +5,15 @@
  */
 
 import { DocumentData, QueryDocumentSnapshot, Timestamp } from '@angular/fire/firestore';
-import { MailboxMessage, MailboxMessageType } from '../mailbox/mailbox.store';
 import { ErrorLike } from '../core/store.types';
+import { MailboxMessage, MailboxMessageType } from '../mailbox/mailbox.store';
 import { isMissingIndexError, isPermissionError } from './shared-error.helpers';
 
 export { isMissingIndexError, isPermissionError as isPermissionDeniedError };
 
 /**
  * Convert Timestamp to Date
+ * @description Safely converts both Firestore Timestamp and native Date values so callers never need to type-check before date arithmetic.
  */
 export const toDate = (timestamp: Timestamp | Date | null | undefined): Date => {
   if (!timestamp) return new Date();
@@ -21,6 +22,7 @@ export const toDate = (timestamp: Timestamp | Date | null | undefined): Date => 
 
 /**
  * Build base MailboxMessage fields from Firestore document data.
+ * @description Centralizes field extraction shared by mapper functions so mailbox document-to-model conversion stays consistent.
  */
 const buildMailboxMessageBase = (id: string, data: DocumentData) => ({
   id,
@@ -34,6 +36,7 @@ const buildMailboxMessageBase = (id: string, data: DocumentData) => ({
 
 /**
  * Convert Firestore document to MailboxMessage
+ * @description Maps raw DocumentData to a fully-typed MailboxMessage, providing defaults for optional fields to prevent undefined bindings in templates.
  */
 export const mapMailboxMessage = (doc: QueryDocumentSnapshot<DocumentData>): MailboxMessage => {
   const data = doc.data();
@@ -48,6 +51,7 @@ export const mapMailboxMessage = (doc: QueryDocumentSnapshot<DocumentData>): Mai
 
 /**
  * Log missing index error with instructions
+ * @description Logs a Firestore missing-index error with a clickable index-creation link so developers can fix it with a single click.
  */
 export const logMissingIndexError = (error: unknown): void => {
   const e = error as ErrorLike;

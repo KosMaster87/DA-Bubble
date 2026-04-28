@@ -21,6 +21,7 @@ export class UserSelectionComponent {
 
   /**
    * Filtered users based on search
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Filters user list by name matching search value
    * @returns {UserListItem[]} Filtered array of users
    */
@@ -32,6 +33,7 @@ export class UserSelectionComponent {
 
   /**
    * Handle user selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Finds user by ID and emits selection event
    * @param {string} userId - ID of selected user
    * @returns {void}
@@ -45,6 +47,7 @@ export class UserSelectionComponent {
 
   /**
    * Handle overlay click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Closes the selection popup
    * @returns {void}
    */

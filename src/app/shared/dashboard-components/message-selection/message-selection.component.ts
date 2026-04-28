@@ -23,6 +23,7 @@ export class MessageSelectionComponent {
 
   /**
    * Handle message selection
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Finds message by ID and emits selection event
    * @param {string} messageId - ID of the selected message
    * @returns {void}
@@ -36,6 +37,7 @@ export class MessageSelectionComponent {
 
   /**
    * Handle overlay click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * Closes the selection popup
    * @returns {void}
    */

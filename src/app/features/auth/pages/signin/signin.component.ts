@@ -47,6 +47,7 @@ export class SigninComponent {
 
   /**
    * Create signin form with validation
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    * @function createForm
    * @returns {FormGroup} Form group with validators
    */
@@ -59,6 +60,7 @@ export class SigninComponent {
 
   /**
    * Handle form submission with email/password
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onSubmit
    * @returns {Promise<void>}
@@ -75,6 +77,7 @@ export class SigninComponent {
 
   /**
    * Perform email/password login
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function performEmailLogin
    * @returns {Promise<void>}
@@ -95,6 +98,7 @@ export class SigninComponent {
 
   /**
    * Handle Google login
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onGoogleLogin
    * @returns {Promise<void>}
@@ -114,6 +118,7 @@ export class SigninComponent {
 
   /**
    * Handle guest login (anonymous)
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function onGuestLogin
    * @returns {Promise<void>}
@@ -133,6 +138,7 @@ export class SigninComponent {
 
   /**
    * Handle login errors
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function handleLoginError
    * @param {any} error - Error object
    * @returns {void}
@@ -147,6 +153,7 @@ export class SigninComponent {
 
   /**
    * Show a success toast and delay redirect slightly so feedback is visible.
+   * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
    */
   private async notifySuccessAndNavigate(message: string): Promise<void> {
     this.notificationService.success(message);
@@ -158,6 +165,7 @@ export class SigninComponent {
 
   /**
    * Navigate to home/dashboard page
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function navigateToHome
    * @returns {Promise<void>}
@@ -168,6 +176,7 @@ export class SigninComponent {
 
   /**
    * Navigate to password forgot page
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function navigateToPasswordForgot
    * @returns {void}
    */
@@ -177,6 +186,7 @@ export class SigninComponent {
 
   /**
    * Toggle password visibility
+   * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
    * @function togglePasswordVisibility
    * @returns {void}
    */
@@ -186,6 +196,7 @@ export class SigninComponent {
 
   /**
    * Shows a post-logout confirmation message exactly once on the sign-in page.
+   * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
    *
    * Purpose:
    * - Confirm to the user that logout really happened and the session is closed.

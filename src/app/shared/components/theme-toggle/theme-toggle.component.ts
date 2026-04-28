@@ -4,8 +4,8 @@
  * @module shared/components/theme-toggle
  */
 
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { ThemeService, type Theme } from '@core/services/theme';
 
 interface ThemeOption {
@@ -47,6 +47,7 @@ export class ThemeToggleComponent {
 
   /**
    * Toggle to next theme
+   * @description Advances to the next configured theme via the theme service.
    */
   async toggleTheme(): Promise<void> {
     await this.themeService.toggleTheme();
@@ -54,6 +55,7 @@ export class ThemeToggleComponent {
 
   /**
    * Get current theme icon path
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   getCurrentThemeIcon(): string {
     const option = this.themeOptions.find((opt) => opt.value === this.currentTheme());
@@ -62,6 +64,7 @@ export class ThemeToggleComponent {
 
   /**
    * Get current theme label
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   getCurrentThemeLabel(): string {
     const option = this.themeOptions.find((opt) => opt.value === this.currentTheme());
@@ -70,6 +73,7 @@ export class ThemeToggleComponent {
 
   /**
    * Get next theme label for accessibility
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   getNextThemeLabel(): string {
     const nextTheme = this.themeService.getNextTheme(this.currentTheme());

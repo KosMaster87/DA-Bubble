@@ -5,7 +5,7 @@
  */
 
 import { Component, input, output } from '@angular/core';
-import { UserListItemComponent, UserListItem } from '../user-list-item/user-list-item.component';
+import { UserListItem, UserListItemComponent } from '../user-list-item/user-list-item.component';
 
 @Component({
   selector: 'app-members-options-menu',
@@ -23,6 +23,7 @@ export class MembersOptionsMenuComponent {
 
   /**
    * Handle close button click
+   * @description Emits close intent to dismiss the members options menu.
    */
   onClose(): void {
     this.closeClicked.emit();
@@ -30,6 +31,7 @@ export class MembersOptionsMenuComponent {
 
   /**
    * Handle add member click
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    */
   onAddMember(): void {
     this.addMemberClicked.emit();
@@ -37,6 +39,7 @@ export class MembersOptionsMenuComponent {
 
   /**
    * Handle member item click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onMemberClick(memberId: string): void {
     this.memberSelected.emit(memberId);

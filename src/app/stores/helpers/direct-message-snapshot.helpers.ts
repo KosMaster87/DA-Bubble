@@ -20,6 +20,7 @@ import { isFirestoreInternalError, isPermissionError, logError } from './shared-
  * @param {any} snapshot - Firestore snapshot
  * @param {(conversations: DirectMessageConversation[]) => void} updateStore - Callback to update store
  * @returns {void}
+ * @description Extracted from the store to keep snapshot processing logic testable independent of NgRx store injection.
  */
 export const handleConversationsSnapshot = (
   snapshot: any,
@@ -40,6 +41,7 @@ export const handleConversationsSnapshot = (
  * @param {number} retryCount - Current retry count
  * @param {number} maxRetries - Maximum retries
  * @returns {void}
+ * @description Dispatches between permission, internal Firestore, and generic errors so each gets the appropriate recovery path.
  */
 export const handleConversationsError = (
   error: any,
@@ -71,6 +73,7 @@ export const handleConversationsError = (
  * @param {number} retryCount - Current retry count
  * @param {number} maxRetries - Maximum retries
  * @returns {void}
+ * @description Uses linear backoff (500 ms × attempt number) to avoid hammering Firestore after transient internal errors.
  */
 export const retryConversationsLoad = (
   userConversationIds: string[],
@@ -94,6 +97,7 @@ export const retryConversationsLoad = (
  * @param {(snapshot: any) => void} onSnapshot - Snapshot handler
  * @param {(error: any) => void} onError - Error handler
  * @returns {Unsubscribe}
+ * @description Thin wrapper around setupConversationsFirestoreListener to keep the public API of this module stable even if the underlying helper changes.
  */
 export const setupConversationsListener = (
   firestore: Firestore,
@@ -168,6 +172,7 @@ export const loadThreadsForMessages = (
  * @param {number} retryCount - Current retry count
  * @param {number} maxRetries - Maximum retries
  * @returns {void}
+ * @description Mirrors handleConversationsError for the per-message listener, separating conversation-level and message-level error flows.
  */
 export const handleMessagesError = (
   conversationId: string,
@@ -198,6 +203,7 @@ export const handleMessagesError = (
  * @param {number} retryCount - Current retry count
  * @param {number} maxRetries - Maximum retries
  * @returns {void}
+ * @description Implements linear backoff for message listener retries matching the same strategy used for conversation listener retries.
  */
 export const retryMessagesLoad = (
   conversationId: string,

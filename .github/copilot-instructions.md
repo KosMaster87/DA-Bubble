@@ -33,7 +33,7 @@ Angular 21.2 chat workspace for DA-Bubble.
 - Follow the existing standalone-component approach. Do not reintroduce NgModules.
 - Prefer `inject()` over constructor injection when adding new dependencies, unless the local file already follows a different established pattern.
 - Prefer explicit return types on exported functions and public methods.
-- Add concise JSDoc to public methods and non-obvious exported helpers.
+- Add concise JSDoc to public methods and non-obvious exported helpers. Include `@description` on every function to document _why_ it exists and what its role is — not just what it does.
 - Avoid `any`. If a temporary escape hatch is unavoidable, keep it local and document why.
 - Keep changes minimal and consistent with the current folder conventions and naming.
 

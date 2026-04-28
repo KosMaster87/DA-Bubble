@@ -20,6 +20,11 @@ export class GuestButtonComponent {
 
   clicked = output<void>();
 
+  /**
+   * Handle guest-button click action.
+   * @description Emits click intent only when interaction is allowed so authentication flows cannot be triggered while disabled or loading.
+   * @returns {void}
+   */
   handleClick(): void {
     if (!this.disabled() && !this.loading()) {
       this.clicked.emit();

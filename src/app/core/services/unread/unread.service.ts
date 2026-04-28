@@ -25,11 +25,9 @@ export class UnreadService {
 
   /**
    * Mark a channel or conversation as read
+   * @description Facade that forwards to UnreadMarkerService; passing the DM flag ensures DM unread counters in conversation metadata are also reset.
    * @param conversationId Channel ID or Conversation ID
    * @param isDirectMessage Whether the conversation is a direct message
-   * @description
-   * This facade forwards the DM flag explicitly so downstream persistence can keep
-   * DM unread counters and lastRead markers in sync.
    */
   async markAsRead(conversationId: string, isDirectMessage: boolean = false): Promise<void> {
     await this.marker.markAsRead(conversationId, isDirectMessage);
@@ -37,11 +35,10 @@ export class UnreadService {
 
   /**
    * Check if conversation has unread messages
+   * @description Facade exposing tracker state to components without coupling them to UnreadTrackerService internals.
    * @param conversationId Channel ID or Conversation ID
    * @param lastMessageAt Last message timestamp in conversation
    * @returns true if unread
-   * @description
-   * Exposing this on the facade keeps components decoupled from tracker internals.
    */
   hasUnread(conversationId: string, lastMessageAt?: Date): boolean {
     return this.tracker.hasUnread(conversationId, lastMessageAt);
@@ -50,6 +47,7 @@ export class UnreadService {
   /**
    * Check if a specific thread has unread messages
    * Uses per-thread tracking: conversationId_thread_messageId
+   * @description Delegates thread-level unread state checks to the tracker so thread badges can be computed without duplicating tracking logic.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID of the thread
    * @param lastThreadTimestamp Last thread activity timestamp
@@ -61,12 +59,10 @@ export class UnreadService {
 
   /**
    * Check whether conversation metadata suggests possible unread thread activity after a reload.
+   * @description Conservative pre-check to decide whether to load thread messages on reload; avoids always-on per-thread listeners by using conversation-level metadata as a signal.
    * @param conversationId Channel ID or Conversation ID
    * @param lastMessageAt Latest conversation activity timestamp
    * @returns true if the conversation should be preloaded to verify thread unread state
-   * @description
-   * This method exists to preserve thread-only unread cases on reload without introducing
-   * global always-on listeners.
    */
   hasPotentialThreadUnreadActivity(conversationId: string, lastMessageAt?: Date): boolean {
     return this.tracker.hasPotentialThreadUnreadActivity(conversationId, lastMessageAt);
@@ -74,6 +70,7 @@ export class UnreadService {
 
   /**
    * Mark a specific thread as read
+   * @description Delegates to the marker service to persist the thread-level lastRead timestamp without touching the parent conversation’s read marker.
    * @param conversationId Channel ID or Conversation ID
    * @param messageId Parent message ID of the thread
    * @param isDirectMessage Whether the conversation is a direct message
@@ -89,6 +86,7 @@ export class UnreadService {
   /**
    * Mark both thread and parent message/conversation as read
    * Convenience method to prevent own messages from showing as unread
+   * @description Batches all three lastRead writes (thread, parent, conversation) in one call to prevent own sent/replied messages from showing as unread.
    * @param conversationId Channel ID or Conversation ID
    * @param parentMessageId Parent message ID of the thread
    * @param isDirectMessage Whether the conversation is a direct message

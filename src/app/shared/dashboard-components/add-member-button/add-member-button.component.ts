@@ -17,6 +17,7 @@ export class AddMemberButtonComponent {
 
   /**
    * Handle button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onClick(): void {
     this.addMemberClicked.emit();

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Dashboard Initialization Service
- * @description Handles dashboard initialization effects like message loading
+ * @description Orchestrates startup hydration effects for dashboard data so initial rendering and first navigation use preloaded conversation context.
  * @module shared/services/dashboard-initialization
  */
 
@@ -15,6 +15,7 @@ import { DirectMessageStore } from '@stores/direct-messages/direct-message.store
 
 /**
  * Warmup tuning knobs for reload-time unread recovery.
+ * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
  *
  * Why this exists:
  * Reload-time warmup should restore the most relevant unread/thread indicators quickly,
@@ -27,6 +28,7 @@ export interface DashboardWarmupConfig {
 
 /**
  * Conservative defaults for portfolio-friendly read behavior.
+ * @description Provides bounded warmup defaults so initial unread recovery remains fast without excessive Firestore reads.
  *
  * Why these values:
  * A small top-N keeps first-load cost predictable while still covering the freshest contexts
@@ -39,6 +41,7 @@ const DEFAULT_DASHBOARD_WARMUP_CONFIG: DashboardWarmupConfig = {
 
 /**
  * Injection token so warmup limits can be tuned without touching orchestration logic.
+ * @description Exposes warmup limits as DI configuration so environments can tune startup read budgets independently of service code.
  *
  * Why token-based config:
  * It keeps runtime behavior centrally configurable across environments while preserving
@@ -54,6 +57,7 @@ export const DASHBOARD_WARMUP_CONFIG = new InjectionToken<DashboardWarmupConfig>
 
 /**
  * Service for managing dashboard initialization and message loading effects
+ * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
  */
 @Injectable({
   providedIn: 'root',
@@ -80,6 +84,7 @@ export class DashboardInitializationService {
 
   /**
    * Initialize dashboard effects and one-time warmup orchestration.
+   * @description Defines a single hydration path so startup and reload behavior remain predictable across navigation scenarios.
    *
    * Why effects are registered only once:
    * Re-registering effects on every component recreation would duplicate subscriptions and
@@ -204,6 +209,7 @@ export class DashboardInitializationService {
 
   /**
    * Determine whether a channel is a warmup candidate.
+   * @description Filters channel warmup to membership-bound channels with unread relevance so preload work stays targeted.
    *
    * Why this guard exists:
    * Warmup should prioritize channels where unread state can visibly affect sidebar badges,
@@ -219,6 +225,7 @@ export class DashboardInitializationService {
 
   /**
    * Determine whether a DM conversation is a warmup candidate.
+   * @description Filters DM warmup candidates to conversations where unread or thread-only unread indicators may surface.
    *
    * Why the fallback check is included:
    * Some DM cases carry unread thread activity without normal conversation unread;
@@ -243,6 +250,7 @@ export class DashboardInitializationService {
 
   /**
    * Normalize optional timestamps for stable warmup prioritization.
+   * @description Converts optional activity timestamps into sortable numeric values for deterministic candidate ranking.
    *
    * Why `undefined` maps to 0:
    * Entries with missing activity timestamps should never outrank fresh activity,
@@ -254,6 +262,7 @@ export class DashboardInitializationService {
 
   /**
    * Guard warmup candidate configuration from invalid values.
+   * @description Sanitizes configured limits so invalid values cannot disable warmup or create unpredictable candidate counts.
    *
    * Why this defensive clamp is needed:
    * Misconfigured zero/negative/NaN values could silently disable warmup and regress
@@ -265,6 +274,7 @@ export class DashboardInitializationService {
 
   /**
    * Resolve maximum number of channel warmup candidates.
+   * @description Returns validated channel warmup limits through one helper to keep call sites free of config-guard duplication.
    *
    * Why this indirection exists:
    * It centralizes config sanitization and avoids repeating guard logic at call sites.
@@ -275,6 +285,7 @@ export class DashboardInitializationService {
 
   /**
    * Resolve maximum number of direct-message warmup candidates.
+   * @description Returns validated DM warmup limits through one helper to align limit handling with channel warmup behavior.
    *
    * Why this indirection exists:
    * Same reasoning as channels: one source for validated limits keeps warmup behavior

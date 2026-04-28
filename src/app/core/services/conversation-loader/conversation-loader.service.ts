@@ -28,6 +28,7 @@ export class ConversationLoaderService {
 
   /**
    * Load channel conversation and mark as read (with debounce)
+   * @description Triggers the channel message load and schedules a debounced read-mark to avoid race conditions on rapid navigation.
    * @param channelId - Channel ID to load
    */
   loadChannelConversation(channelId: string): void {
@@ -40,6 +41,7 @@ export class ConversationLoaderService {
 
   /**
    * Load direct message conversation and mark as read (with debounce)
+   * @description Triggers the DM message load and schedules a debounced read-mark so switching conversations quickly doesn’t prematurely mark unread messages.
    * @param conversationId - Conversation ID to load
    */
   loadDirectMessageConversation(conversationId: string): void {
@@ -52,6 +54,7 @@ export class ConversationLoaderService {
 
   /**
    * Load thread messages and mark as read
+   * @description Loads thread replies and immediately marks the thread as read — no debounce needed since threads are only opened explicitly.
    * @param channelId - Channel or DM ID
    * @param messageId - Parent message ID
    * @param isDirectMessage - Whether this is a DM thread
@@ -67,6 +70,7 @@ export class ConversationLoaderService {
   /**
    * Mark conversation as read immediately (no debounce)
    * Use this when user actively sends a message
+   * @description Bypasses the debounce and marks immediately — used after a user sends a message to ensure their own messages are never counted as unread.
    * @param conversationId - Channel or DM ID
    */
   markAsReadImmediate(conversationId: string, isDirectMessage: boolean = false): void {
@@ -79,6 +83,7 @@ export class ConversationLoaderService {
 
   /**
    * Mark thread as read immediately
+   * @description Marks the thread as read without debouncing since thread-view is explicitly opened by the user.
    * @param channelId - Channel or DM ID
    * @param messageId - Parent message ID
    */
@@ -92,6 +97,7 @@ export class ConversationLoaderService {
 
   /**
    * Debounced mark as read - prevents race conditions on rapid navigation
+   * @description Clears any existing timer and sets a fresh one so only the final navigation in a burst triggers the actual read-mark.
    * @param conversationId - Conversation ID to mark as read
    */
   private debouncedMarkAsRead(conversationId: string, isDirectMessage: boolean = false): void {
@@ -109,6 +115,7 @@ export class ConversationLoaderService {
 
   /**
    * Clear pending markAsRead timer for a conversation
+   * @description Cancels the debounce timer when navigating away so a deferred read-mark for the previous conversation doesn’t fire unexpectedly.
    * @param conversationId - Conversation ID
    */
   private clearMarkAsReadTimer(conversationId: string): void {
@@ -121,6 +128,7 @@ export class ConversationLoaderService {
 
   /**
    * Clean up all timers (call on service destroy if needed)
+   * @description Clears all pending read-mark timers to prevent memory leaks or stale callbacks after the service is destroyed.
    */
   cleanup(): void {
     this.markAsReadTimers.forEach((timer) => clearTimeout(timer));

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Message Scroll Service
- * @description Handles scrolling to messages with highlight effects
+ * @description Centralizes message jump-and-highlight behavior so search and deep-link navigation use one consistent visual flow.
  * @module core/services/message-scroll
  */
 
@@ -14,7 +14,7 @@ export class MessageScrollService {
    * Scroll to a specific message
    * @param {string} messageId - Message ID in format 'channelId_messageId' or just 'messageId'
    * @returns {void}
-   * @description Scrolls to message and applies highlight effect for 2 seconds
+    * @description Performs smooth scroll and a temporary highlight so users can immediately orient to the target message.
    */
   scrollToMessage = (messageId: string): void => {
     const actualMessageId = this.extractMessageId(messageId);
@@ -30,6 +30,7 @@ export class MessageScrollService {
 
   /**
    * Extract message ID from composite ID
+   * @description Strips the channel-prefix segment from composite IDs (format channelId_messageId) so the DOM lookup uses only the message part.
    * @private
    * @param {string} messageId - Message ID (possibly with channel prefix)
    * @returns {string} Extracted message ID
@@ -40,6 +41,7 @@ export class MessageScrollService {
 
   /**
    * Find message element in DOM
+   * @description Uses a data-attribute selector instead of an ID so the component can render the attribute without needing to know Angular’s change-detection cycle.
    * @private
    * @param {string} messageId - Message identifier
    * @returns {Element | null} Message element or null
@@ -50,6 +52,7 @@ export class MessageScrollService {
 
   /**
    * Scroll to element
+   * @description Scrolls with smooth behavior so the jump to the target message is visually guided rather than instant.
    * @private
    * @param {Element} element - DOM element
    * @returns {void}
@@ -60,10 +63,10 @@ export class MessageScrollService {
 
   /**
    * Apply highlight effect
+   * @description Adds a CSS class for 2 seconds to flash the message, giving the user a clear visual anchor after the scroll.
    * @private
    * @param {Element} element - DOM element
    * @returns {void}
-   * @description Adds highlight class for 2 seconds
    */
   private applyHighlight = (element: Element): void => {
     element.classList.add('highlight');

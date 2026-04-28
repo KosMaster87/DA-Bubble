@@ -57,12 +57,22 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
   private displayModeHandler?: (e: MediaQueryListEvent) => void;
   private beforeInstallPromptHandler?: (e: Event) => void;
 
+  /**
+   * Initialize browser-only landscape warning lifecycle.
+   * @description Starts warning setup only in browser contexts so server-side rendering stays side-effect free.
+   * @returns {void}
+   */
   ngOnInit(): void {
     if (!this.isBrowser) return;
 
     this.initLandscapeWarning();
   }
 
+  /**
+   * Tear down browser listeners on component destroy.
+   * @description Ensures all landscape warning subscriptions and handlers are cleaned up to prevent leaks after navigation.
+   * @returns {void}
+   */
   ngOnDestroy(): void {
     if (!this.isBrowser) return;
 
@@ -71,6 +81,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Initialize landscape warning functionality
+    * @description Gates landscape handling behind mobile-device detection so desktop users never receive irrelevant orientation overlays.
    */
   private initLandscapeWarning(): void {
     if (!this.isMobileDevice()) return;
@@ -82,6 +93,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Setup all event listeners
+    * @description Registers orientation, resize, install-prompt, and display-mode listeners together so visibility recalculation always uses the same trigger set.
    */
   private setupEventListeners(): void {
     // Before install prompt
@@ -115,6 +127,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Clean up event listeners
+    * @description Removes every registered browser handler and restores body scroll state to avoid persistent UI side effects after component teardown.
    */
   private cleanup(): void {
     if (this.resizeHandler) {
@@ -137,6 +150,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Update warning visibility based on orientation and PWA status
+    * @description Computes overlay visibility from a single predicate so scroll-lock and hidden-state transitions stay synchronized.
    */
   private updateVisibility(): void {
     const shouldShow = !this.isPWA() && this.isLandscape();
@@ -152,6 +166,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Check if running as PWA
+    * @description Detects standalone launch modes so installed-app usage bypasses browser-orientation warning UX.
    */
   private isPWA(): boolean {
     return (
@@ -163,6 +178,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Check if device is in landscape mode
+    * @description Uses viewport ratio and width cap so the warning targets handheld landscape layouts instead of wide desktop screens.
    */
   private isLandscape(): boolean {
     return window.innerWidth > window.innerHeight && window.innerWidth <= 1080;
@@ -170,6 +186,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Check if device is mobile
+    * @description Limits warning feature activation to smaller viewports where orientation restrictions affect usability most.
    */
   private isMobileDevice(): boolean {
     return window.innerWidth <= 1080;
@@ -177,6 +194,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Lock body scroll
+    * @description Freezes page scroll while the warning is visible so background content cannot move beneath the blocking overlay.
    */
   private lockBodyScroll(): void {
     document.body.style.overflow = 'hidden';
@@ -187,6 +205,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Unlock body scroll
+    * @description Restores normal body styles and previous scroll position so dismissal returns users to their exact reading context.
    */
   private unlockBodyScroll(): void {
     const scrollY = document.body.style.top;
@@ -201,6 +220,7 @@ export class LandscapeWarningComponent implements OnInit, OnDestroy {
 
   /**
    * Install PWA
+    * @description Uses deferred install prompt flow so installation can be triggered contextually from the warning without forcing immediate browser prompts.
    */
   protected async installPWA(): Promise<void> {
     try {

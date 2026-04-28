@@ -4,9 +4,9 @@
  * @module core/services/channel-access
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
-import { ChannelStore } from '@stores/index';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import { AuthStore } from '@stores/auth';
+import { ChannelStore } from '@stores/index';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +17,7 @@ export class ChannelAccessService {
 
   /**
    * Check if user is member of channel
+   * @description Guards channel content access — used to conditionally show channel views and prevent unauthorized reads.
    * @param channelId Channel ID
    * @returns True if user is member
    */
@@ -34,6 +35,7 @@ export class ChannelAccessService {
 
   /**
    * Check if current user is channel owner
+   * @description Determines whether to show owner-only UI actions like edit, delete, or manage-members controls.
    * @param channelId Channel ID
    * @returns True if current user is owner
    */
@@ -47,6 +49,7 @@ export class ChannelAccessService {
 
   /**
    * Get channel data by ID
+   * @description Thin wrapper around the store selector so consumers don't need to inject ChannelStore directly.
    * @param channelId Channel ID
    * @returns Channel data signal
    */

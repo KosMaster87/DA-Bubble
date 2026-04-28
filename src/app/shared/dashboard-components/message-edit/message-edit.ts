@@ -1,6 +1,6 @@
-import { Component, input, output, signal, effect } from '@angular/core';
-import { BtnCancelComponent } from '../btn-cancel/btn-cancel.component';
+import { Component, effect, input, output, signal } from '@angular/core';
 import { BtnActionComponent } from '../btn-action/btn-action.component';
+import { BtnCancelComponent } from '../btn-cancel/btn-cancel.component';
 
 @Component({
   selector: 'app-message-edit',
@@ -24,6 +24,7 @@ export class MessageEdit {
 
   /**
    * Handle cancel
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onCancel(): void {
     this.cancelClicked.emit();
@@ -31,6 +32,7 @@ export class MessageEdit {
 
   /**
    * Handle save
+   * @description Emits trimmed edited content only when non-empty.
    */
   onSave(): void {
     const content = this.editedContent().trim();
@@ -41,6 +43,7 @@ export class MessageEdit {
 
   /**
    * Handle textarea input
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   onInput(event: Event): void {
     const target = event.target as HTMLTextAreaElement;

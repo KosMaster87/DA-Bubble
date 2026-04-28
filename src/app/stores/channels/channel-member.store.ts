@@ -14,6 +14,8 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 
 /**
  * State interface for channel member management
+ * @description Keeps member-management state separate from the main channel state
+ * so member operations can be in flight without affecting channel list rendering.
  * @interface ChannelMemberState
  */
 export interface ChannelMemberState {
@@ -24,6 +26,8 @@ export interface ChannelMemberState {
 
 /**
  * Initial channel member state
+ * @description Defines the zero-state baseline used on store initialization and
+ * after cleanup resets to guarantee a predictable starting point.
  * @constant {ChannelMemberState}
  */
 const initialState: ChannelMemberState = {
@@ -35,6 +39,8 @@ const initialState: ChannelMemberState = {
 /**
  * Channel member management store with Firestore integration
  * Provides methods for member and admin operations
+ * @description Dedicated store for membership mutations so member-write operations
+ * do not mix with read/subscription logic that lives in the main ChannelStore.
  * @constant {SignalStore}
  */
 export const ChannelMemberStore = signalStore(
@@ -43,12 +49,16 @@ export const ChannelMemberStore = signalStore(
   withComputed((store) => ({
     /**
      * Computed property to check if currently loading
+     * @description Exposes loading state under a friendlier alias so templates
+     * bind to `loading` instead of the raw `isLoading` signal.
      * @returns {Signal<boolean>} Loading status
      */
     loading: computed(() => store.isLoading()),
 
     /**
      * Computed property to get active channel ID
+     * @description Provides a named signal for the active channel context so member
+     * operations can target the correct channel without additional params.
      * @returns {Signal<string | null>} Active channel ID or null
      */
     activeChannel: computed(() => store.activeChannelId()),
@@ -60,6 +70,8 @@ export const ChannelMemberStore = signalStore(
     return {
       /**
        * Add member to channel
+       * @description Reads the current member list before appending so the write is
+       * idempotent-safe without requiring a Firestore arrayUnion call.
        * @async
        * @function addMember
        * @param {string} channelId - Channel ID
@@ -75,6 +87,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Remove member from channel
+       * @description Filters the existing member array client-side before writing so
+       * removal is consistent and avoids a Firestore arrayRemove race condition.
        * @async
        * @function removeMember
        * @param {string} channelId - Channel ID
@@ -93,6 +107,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Add admin to channel
+       * @description Mirrors the member-add pattern for admin promotion so both
+       * operations use identical Firestore write mechanics.
        * @async
        * @function addAdmin
        * @param {string} channelId - Channel ID
@@ -108,6 +124,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Remove admin from channel
+       * @description Demotes a user by filtering the admin array and persisting the
+       * result, keeping admin management symmetric with member management.
        * @async
        * @function removeAdmin
        * @param {string} channelId - Channel ID
@@ -126,6 +144,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Check if user is member of channel
+       * @description Reads fresh Firestore data for the check so membership status
+       * is authoritative even if local state has not been updated yet.
        * @async
        * @function isUserMember
        * @param {string} channelId - Channel ID
@@ -144,6 +164,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Check if user is admin of channel
+       * @description Provides an authoritative admin check from Firestore to guard
+       * admin-only UI actions without relying on potentially stale local state.
        * @async
        * @function isUserAdmin
        * @param {string} channelId - Channel ID
@@ -164,6 +186,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Get channel by ID from Firestore
+       * @description Fetches the latest channel document directly from Firestore so
+       * member operations always act on current data rather than a cached snapshot.
        * @async
        * @function getChannelById
        * @param {string} channelId - Channel ID
@@ -181,6 +205,8 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Update channel members in Firestore
+       * @description Centralized write helper so all member-array mutations go through
+       * one function with a consistent `updatedAt` timestamp.
        * @async
        * @function updateChannelMembers
        * @param {string} channelId - Channel ID
@@ -194,10 +220,14 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Update channel admins in Firestore
+       * @description Mirrors `updateChannelMembers` for the admins array so both
+       * lists are written with identical patterns and timestamp semantics.
        * @async
        * @function updateChannelAdmins
        * @param {string} channelId - Channel ID
        * @param {string[]} admins - Updated admins array
+       * @returns {Promise<void>}
+       */
        * @returns {Promise<void>}
        */
       async updateChannelAdmins(channelId: string, admins: string[]): Promise<void> {
@@ -207,12 +237,15 @@ export const ChannelMemberStore = signalStore(
 
       /**
        * Handle errors and update state
+        * @description Normalizes unknown errors into user-facing text and clears loading state so member operations fail gracefully.
        * @function handleError
        * @param {unknown} error - Error object
        * @param {string} defaultMessage - Default error message
        */
       /**
        * Execute shared channel-member operation flow.
+       * @description Wraps loading state management and error handling so individual
+       * member operations only express their specific Firestore mutation logic.
        */
       async executeChannelMemberOperation(
         operation: () => Promise<void>,

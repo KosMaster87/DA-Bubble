@@ -28,6 +28,8 @@ import { User } from '@core/models/user.model';
 
 /**
  * Create and store Firestore user document after signup
+ * @description Extracts this write into a dedicated helper so the signup method stays
+ * within the project's function-size limit while remaining readable.
  * @async
  */
 export async function createSignupFirestoreUser(
@@ -58,6 +60,8 @@ export async function createSignupFirestoreUser(
 
 /**
  * Update Firebase Auth profile during signup with displayName
+ * @description Applied separately from Firestore writes so a partial Auth update
+ * does not block or fail the Firestore document creation.
  * @async
  */
 export async function updateSignupProfile(
@@ -70,6 +74,8 @@ export async function updateSignupProfile(
 
 /**
  * Update Firebase Auth profile for existing user
+ * @description Reuses Firebase's `updateProfile` API for profile edits to avoid
+ * divergence between Auth and Firestore representations of the same user.
  * @async
  */
 export async function updateExistingUserProfile(
@@ -82,6 +88,8 @@ export async function updateExistingUserProfile(
 
 /**
  * Add user to default channels during signup
+ * @description Ensures every new user is discoverable in the public welcome channels
+ * immediately after registration, without requiring manual channel enrollment.
  * @async
  */
 export async function addSignupUserToDefaultChannels(
@@ -139,6 +147,8 @@ export async function addSignupUserToDefaultChannels(
 
 /**
  * Send email verification to user
+ * @description Wraps the Firebase verification call in its own helper so verification
+ * failures do not abort the rest of the signup sequence.
  * @async
  */
 export async function sendSignupVerificationEmail(credential: UserCredential): Promise<void> {
@@ -156,6 +166,8 @@ export async function sendSignupVerificationEmail(credential: UserCredential): P
 
 /**
  * Create new Firestore user document on first login
+ * @description Handles both anonymous (guest) and OAuth first-time logins in one place
+ * so login-provider differences stay isolated from the broader auth flow.
  * @async
  */
 export async function createLoginFirestoreUser(
@@ -194,6 +206,8 @@ export async function createLoginFirestoreUser(
 
 /**
  * Create Notes DM (self-conversation) for user
+ * @description Bootstraps the self-notes feature at first login so users always
+ * have a personal conversation available without manual creation.
  * @async
  */
 export async function createLoginNotesDM(userId: string, firestore: Firestore): Promise<void> {
@@ -220,6 +234,8 @@ export async function createLoginNotesDM(userId: string, firestore: Firestore): 
 
 /**
  * Add user to default channels on login
+ * @description Handles both OAuth and anonymous users so all login paths produce
+ * the same default channel memberships regardless of provider.
  * @async
  */
 export async function addLoginUserToDefaultChannels(
@@ -282,6 +298,8 @@ export async function addLoginUserToDefaultChannels(
 
 /**
  * Update existing user's online status on login
+ * @description Updates presence without overwriting other user fields by using
+ * `merge: true`, preventing accidental data loss on returning logins.
  * @async
  */
 export async function updateLoginUserStatus(userId: string, firestore: Firestore): Promise<void> {
@@ -306,6 +324,8 @@ export async function updateLoginUserStatus(userId: string, firestore: Firestore
 
 /**
  * Update user offline status before logout
+ * @description Marks the user as offline synchronously before Firebase signOut so
+ * other clients see the correct presence state during the logout window.
  * @async
  */
 export async function updateLogoutUserStatus(userId: string, firestore: Firestore): Promise<void> {
@@ -326,6 +346,8 @@ export async function updateLogoutUserStatus(userId: string, firestore: Firestor
 
 /**
  * Delete guest user and all associated data
+ * @description Guest accounts are fully purged on logout to enforce the ephemeral
+ * session contract and avoid accumulating stale anonymous data in Firestore.
  * @async
  */
 export async function deleteGuestUserAccount(
@@ -389,6 +411,8 @@ export async function deleteGuestUserAccount(
 
 /**
  * Determine if user is a guest
+ * @description Reads the `isGuest` flag from Firestore rather than relying solely on
+ * Firebase's `isAnonymous` property so the check remains accurate for migrated accounts.
  * @async
  */
 export async function isGuestUser(userId: string, firestore: Firestore): Promise<boolean> {

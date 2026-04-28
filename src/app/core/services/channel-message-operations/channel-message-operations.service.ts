@@ -1,27 +1,27 @@
 /**
  * @fileoverview Channel Message Operations Service
- * @description Handles all Firestore CRUD operations for channel messages
+ * @description Encapsulates channel-message persistence primitives so create/update/delete and pagination reads share one Firestore boundary.
  * @module core/services/channel-message-operations
  */
 
 import { Injectable, inject } from '@angular/core';
 import {
+  CollectionReference,
+  DocumentData,
   Firestore,
-  collection,
+  QueryDocumentSnapshot,
+  Timestamp,
   addDoc,
-  updateDoc,
+  collection,
   deleteDoc,
   doc,
   getDocs,
-  query,
-  orderBy,
   limit,
-  startAfter,
+  orderBy,
+  query,
   serverTimestamp,
-  CollectionReference,
-  DocumentData,
-  Timestamp,
-  QueryDocumentSnapshot,
+  startAfter,
+  updateDoc,
 } from '@angular/fire/firestore';
 import { Message, MessageType } from '@core/models/message.model';
 import { MentionParserService } from '../mention-parser/mention-parser.service';
@@ -35,6 +35,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Get messages collection reference for channel
+   * @description Central Firestore path factory so all read/write operations use a consistent collection reference.
    * @param channelId - Channel ID
    * @returns Collection reference
    */
@@ -44,6 +45,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Get message document reference
+   * @description Constructs the exact Firestore document path for a single message to enable targeted reads and writes.
    * @param channelId - Channel ID
    * @param messageId - Message ID
    * @returns Document reference path
@@ -54,6 +56,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Map Firestore document to Message object
+   * @description Normalises Firestore Timestamps to Date objects and fills in optional fields with safe defaults.
    * @param docId - Document ID
    * @param data - Document data
    * @returns Mapped message object
@@ -73,6 +76,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Convert Firestore Timestamp to Date
+   * @description Safely converts optional Firestore timestamps to Date so callers can use one helper for both required and optional fields.
    * @param timestamp - Firestore timestamp or undefined
    * @returns Date object or undefined
    */
@@ -82,6 +86,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Send new message to channel
+   * @description Extracts mentioned user IDs from the content and writes the full message document to Firestore in one atomic addDoc call.
    * @param channelId - Channel ID
    * @param content - Message content
    * @param authorId - Author user ID
@@ -106,6 +111,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Update existing message content
+   * @description Marks the message as edited and sets editedAt/updatedAt timestamps to preserve the edit audit trail.
    * @param channelId - Channel ID
    * @param messageId - Message ID
    * @param content - New content
@@ -122,6 +128,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Delete message from channel
+   * @description Removes the message document and all its thread replies in parallel to avoid orphaned subcollections.
    * @param channelId - Channel ID
    * @param messageId - Message ID
    */
@@ -132,6 +139,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Delete message document
+   * @description Removes only the parent message document; thread cleanup is handled separately.
    * @param channelId - Channel ID
    * @param messageId - Message ID
    */
@@ -142,13 +150,14 @@ export class ChannelMessageOperationsService {
 
   /**
    * Delete all thread messages for parent
+   * @description Fetches and deletes all thread reply documents to prevent orphaned subcollection data in Firestore.
    * @param channelId - Channel ID
    * @param messageId - Parent message ID
    */
   private deleteThreadMessages = async (channelId: string, messageId: string): Promise<void> => {
     const threadsRef = collection(
       this.firestore,
-      `channels/${channelId}/messages/${messageId}/threads`
+      `channels/${channelId}/messages/${messageId}/threads`,
     );
     const threadsSnapshot = await getDocs(threadsRef);
     const deletePromises = threadsSnapshot.docs.map((threadDoc) => deleteDoc(threadDoc.ref));
@@ -157,6 +166,7 @@ export class ChannelMessageOperationsService {
 
   /**
    * Load older messages for pagination
+   * @description Queries messages in descending order from a cursor then reverses the result so the UI receives chronological order.
    * @param channelId - Channel ID
    * @param lastMessage - Last message snapshot to paginate from
    * @param limitCount - Number of messages to load (default 100)
@@ -165,14 +175,14 @@ export class ChannelMessageOperationsService {
   async loadOlderMessages(
     channelId: string,
     lastMessage: QueryDocumentSnapshot<DocumentData>,
-    limitCount: number = 100
+    limitCount: number = 100,
   ): Promise<Message[]> {
     const messagesRef = this.getMessagesCollectionRef(channelId);
     const q = query(
       messagesRef,
       orderBy('createdAt', 'desc'),
       startAfter(lastMessage),
-      limit(limitCount)
+      limit(limitCount),
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => this.mapMessageDocument(doc.id, doc.data())).reverse();

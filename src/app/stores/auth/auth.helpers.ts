@@ -5,15 +5,15 @@
  */
 
 import { User as FirebaseUser } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
+import { doc, Firestore, getDoc, onSnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
-import { patchState } from '@ngrx/signals';
-import { inject } from '@angular/core';
 import { StoreCleanupService } from '@core/services/store-cleanup.service';
-import type { AuthState } from './auth.types';
+import { patchState } from '@ngrx/signals';
 
 /**
  * Normalize Google profile photo URL to a shorter, stable format
+ * @description Google photo URLs include variable size parameters that can cause
+ * cache mismatches; normalizing to `=s96-c` gives a consistent avatar size.
  * @param photoURL - The original photo URL from Google
  * @returns Normalized photo URL or undefined
  */
@@ -33,6 +33,8 @@ const normalizeGooglePhotoURL = (photoURL: string | null | undefined): string | 
 
 /**
  * Convert Firebase user to app User model
+ * @description Provides a default-rich mapping from the sparse Firebase Auth object
+ * to the richer app User model so all downstream code works with a consistent shape.
  * @function mapFirebaseUserToUser
  * @param {FirebaseUser} firebaseUser - Firebase user object
  * @returns {User} App user object
@@ -52,6 +54,8 @@ export const mapFirebaseUserToUser = (firebaseUser: FirebaseUser): User => ({
 
 /**
  * Convert Firestore timestamps to Date objects
+ * @description Isolates Firestore Timestamp handling to prevent raw timestamp objects
+ * from leaking into application state, where they would break equality checks.
  * @function convertTimestampsToDate
  * @param {Record<string, any>} obj - Object with Firestore timestamps
  * @returns {Record<string, Date>} Object with Date objects
@@ -68,18 +72,26 @@ const convertTimestampsToDate = (obj: Record<string, any>): Record<string, Date>
 
 /**
  * Handle user authenticated state
+ * @description Factory that encapsulates auth-state callback logic as a closure over
+ * the store and Firestore references, keeping the store definition free of implementation details.
  * @function createAuthStateHandlers
  * @param {any} store - NgRx Signal Store instance
  * @param {Firestore} firestore - Firestore instance
  * @returns {object} Handler functions
  */
-export const createAuthStateHandlers = (store: any, firestore: Firestore, storeCleanup: StoreCleanupService) => {
+export const createAuthStateHandlers = (
+  store: any,
+  firestore: Firestore,
+  storeCleanup: StoreCleanupService,
+) => {
   let userDocListener: Unsubscribe | null = null;
 
   return {
     /**
      * Handle user authenticated state
      * Loads user data from Firestore to get displayName and other fields
+     * @description Prefers Firestore data over the Firebase Auth object so the richer
+     * user profile (channels, DMs, photoURL) is available immediately after login.
      * @param {FirebaseUser} firebaseUser - Firebase user object
      */
     handleUserAuthenticated: async (firebaseUser: FirebaseUser): Promise<void> => {
@@ -163,6 +175,8 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore, storeC
     /**
      * Handle user logged out state
      * Cleanup user document listener to prevent permission errors
+     * @description Cleans up all store subscriptions before clearing state so no
+     * in-flight Firestore listeners trigger permission errors after the session ends.
      */
     handleUserLoggedOut: (): void => {
       console.log('🔓 User logging out - cleaning up auth subscriptions...');
@@ -183,6 +197,8 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore, storeC
     /**
      * Handle successful authentication response
      * Loads user data from Firestore to ensure we have the latest photoURL and other data
+     * @description Re-fetches from Firestore after auth operations so store state reflects
+     * profile changes that were written during signup or Google login.
      * @param {FirebaseUser} firebaseUser - Firebase user object
      */
     handleSuccessfulAuth: async (firebaseUser: FirebaseUser): Promise<void> => {
@@ -239,6 +255,8 @@ export const createAuthStateHandlers = (store: any, firestore: Firestore, storeC
 
     /**
      * Handle authentication errors
+     * @description Normalizes any thrown value to a human-readable string before patching
+     * the store so error-display components always receive a consistent type.
      * @param {unknown} error - Error object
      * @param {string} defaultMessage - Default error message
      */

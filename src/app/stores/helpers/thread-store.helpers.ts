@@ -20,6 +20,7 @@ export interface ThreadRetryController {
 
 /**
  * Build Firestore path segments for a thread message document.
+ * @description Returns path segments as an array so ReactionService.getMessageRef can spread them, avoiding string concatenation at each call site.
  */
 export const buildThreadDocumentPath = (
   channelId: string,
@@ -36,6 +37,7 @@ export const buildThreadDocumentPath = (
 
 /**
  * Merge updated message threads into thread state record.
+ * @description Immutably merges a single message's thread array into the record so only that message's computed signals re-evaluate.
  */
 export const mergeMessageThreads = (
   currentThreads: Record<string, ThreadMessage[]>,
@@ -48,6 +50,7 @@ export const mergeMessageThreads = (
 
 /**
  * Retry listener registration for transient permission errors.
+ * @description Centralises the permission-error retry decision so both channel and DM thread listeners use the same backoff strategy.
  */
 export const retryThreadListenerOnPermissionError = (
   retryController: ThreadRetryController,

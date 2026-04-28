@@ -8,6 +8,7 @@ import { Component, input, output } from '@angular/core';
 
 /**
  * Circular icon-only back button component
+ * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
  * @component BackButtonComponent
  */
 @Component({
@@ -23,6 +24,7 @@ export class BackButtonComponent {
 
   /**
    * Handle button click
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @function handleClick
    * @returns {void}
    */

@@ -44,6 +44,7 @@ export function getVisibleUnreadThreadCount(unreadThreadCount: number, isActive:
 
 /**
  * Determine if an item should render its unread badges.
+ * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
  *
  * Badges render only if either message count or thread count is > 0
  * after applying visibility rules.

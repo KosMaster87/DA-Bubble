@@ -64,6 +64,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Preload unread thread snapshots while the popup is open.
+   * @description Keeps realtime subscription flow centralized so lifecycle, cleanup, and error handling stay consistent across call sites.
    *
    * Why this eager preload exists:
    * The popup should show precise unread reply counts immediately, not only after the
@@ -92,6 +93,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Calculate and set popup position relative to parent wrapper
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private calculatePopupPosition = (): void => {
     const popupElement = this.elementRef.nativeElement as HTMLElement;
@@ -108,6 +110,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Get all unread threads for this conversation where user has participated
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected unreadThreads = computed(() => {
     const convId = this.conversationId();
@@ -212,6 +215,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Check if user participated in thread
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private didUserParticipate = (
     msg: ThreadParentMessage,
@@ -225,6 +229,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Normalize timestamp to Date object
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private normalizeTimestamp = (timestamp: Date | string | number): Date => {
     return timestamp instanceof Date ? timestamp : new Date(timestamp);
@@ -232,6 +237,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Create UnreadThreadInfo object
+   * @description Keeps creation and onboarding flow centralized so follow-up side effects stay consistent and easy to evolve.
    */
   private createThreadInfo = (
     msg: ThreadParentMessage,
@@ -281,6 +287,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Sort threads by most recent first
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private sortThreadsByMostRecent = (threads: UnreadThreadInfo[]): UnreadThreadInfo[] => {
     return threads.sort(
@@ -290,6 +297,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Truncate long message content
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private truncateContent = (content: string, maxLength: number): string => {
     if (content.length <= maxLength) return content;
@@ -321,6 +329,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Get parent message from store
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private getParentMessage = (
     convId: string,
@@ -335,6 +344,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Emit thread clicked event with message data
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private emitThreadClickEvent = (
     messageId: string,
@@ -352,6 +362,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Format timestamp for display
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   protected formatTime = (timestamp: Date): string => {
     const diff = new Date().getTime() - timestamp.getTime();
@@ -364,6 +375,7 @@ export class ThreadUnreadPopupComponent {
 
   /**
    * Get appropriate time label based on time differences
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    */
   private getTimeLabel = (
     minutes: number,

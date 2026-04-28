@@ -1,21 +1,21 @@
 /**
  * @fileoverview Channel Operations Service
- * @description Handles all Firestore CRUD operations for channels
+ * @description Encapsulates channel document persistence operations so channel lifecycle writes remain consistent across features.
  * @module core/services/channel-operations
  */
 
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  arrayRemove,
   CollectionReference,
   DocumentData,
+  Firestore,
   Timestamp,
+  addDoc,
+  arrayRemove,
+  collection,
+  deleteDoc,
+  doc,
+  updateDoc,
 } from '@angular/fire/firestore';
 import { Channel, CreateChannelRequest } from '@core/models/channel.model';
 
@@ -27,6 +27,7 @@ export class ChannelOperationsService {
 
   /**
    * Get channels collection reference
+   * @description Central Firestore path factory so all read/write operations use a consistent collection reference.
    * @returns Collection reference
    */
   getChannelsCollectionRef = (): CollectionReference<DocumentData> => {
@@ -35,6 +36,7 @@ export class ChannelOperationsService {
 
   /**
    * Get channel document reference
+   * @description Constructs the exact Firestore document path for a single channel to enable targeted reads and writes.
    * @param channelId - Channel ID
    * @returns Document reference
    */
@@ -44,6 +46,7 @@ export class ChannelOperationsService {
 
   /**
    * Map Firestore document to Channel object
+   * @description Normalises Firestore Timestamps to Date objects and merges document ID with the rest of the data.
    * @param docId - Document ID
    * @param data - Document data
    * @returns Mapped channel object
@@ -60,6 +63,7 @@ export class ChannelOperationsService {
 
   /**
    * Convert Firestore Timestamp to Date
+   * @description Converts optional timestamp values defensively so caller code can avoid repetitive undefined guards.
    * @param timestamp - Firestore timestamp or undefined
    * @returns Date object or undefined
    */
@@ -69,13 +73,14 @@ export class ChannelOperationsService {
 
   /**
    * Build complete channel data with defaults
+   * @description Merges the request payload with system-generated defaults (timestamps, admins, unique member list) before writing to Firestore.
    * @param channelData - Basic channel data
    * @param createdBy - User ID of creator
    * @returns Complete channel data
    */
   buildChannelData = (
     channelData: CreateChannelRequest,
-    createdBy: string
+    createdBy: string,
   ): Omit<Channel, 'id'> => {
     const now = new Date();
     const uniqueMembers = this.ensureCreatorInMembers(channelData.members, createdBy);
@@ -93,6 +98,7 @@ export class ChannelOperationsService {
 
   /**
    * Ensure creator is in members array
+   * @description Prevents the creator from being excluded if the caller passes a members list that omits them.
    * @param members - Existing members array
    * @param createdBy - Creator user ID
    * @returns Members array with creator
@@ -103,6 +109,7 @@ export class ChannelOperationsService {
 
   /**
    * Create new channel in Firestore
+   * @description Builds the full channel document with defaults and persists it; returns the generated ID for downstream use.
    * @param channelData - Channel data
    * @param createdBy - Creator user ID
    * @returns Created channel ID
@@ -115,6 +122,7 @@ export class ChannelOperationsService {
 
   /**
    * Update channel in Firestore
+   * @description Merges the provided partial update with an auto-generated updatedAt timestamp.
    * @param channelId - Channel ID
    * @param updates - Updates to apply
    */
@@ -125,6 +133,7 @@ export class ChannelOperationsService {
 
   /**
    * Delete channel from Firestore
+   * @description Removes the channel document; subcollection cleanup (messages, threads) is handled by a Cloud Function.
    * @param channelId - Channel ID
    */
   async deleteChannel(channelId: string): Promise<void> {
@@ -134,6 +143,7 @@ export class ChannelOperationsService {
 
   /**
    * Remove user from channel members
+   * @description Uses Firestore arrayRemove for an atomic member removal without reading the full document first.
    * @param channelId - Channel ID
    * @param userId - User ID to remove
    */

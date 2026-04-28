@@ -4,13 +4,13 @@
  * @module core/services/channel-transformation
  */
 
-import { Injectable, inject, computed, Signal } from '@angular/core';
+import { computed, inject, Injectable, Signal } from '@angular/core';
+import type { ChannelInfoData } from '@shared/dashboard-components/channel-info/channel-info.component';
 import { ChannelStore, UserStore } from '@stores/index';
 import {
-  UserTransformationService,
   UserListItem,
+  UserTransformationService,
 } from '../user-transformation/user-transformation.service';
-import type { ChannelInfoData } from '@shared/dashboard-components/channel-info/channel-info.component';
 
 /**
  * Channel access information for access screen
@@ -44,6 +44,7 @@ export class ChannelTransformationService {
 
   /**
    * Get channel access info for access screen
+   * @description Assembles the shape required by the channel-access screen (name, privacy, description, rules) from store data.
    * @param channelInfo Basic channel info
    * @returns Channel access information
    */
@@ -64,6 +65,7 @@ export class ChannelTransformationService {
 
   /**
    * Get channel info data for channel-info component
+   * @description Transforms live store data into the ChannelInfoData shape; falls back to a default object if the channel isn’t loaded yet.
    * @param channelInfo Basic channel info
    * @returns Channel info data
    */
@@ -79,6 +81,7 @@ export class ChannelTransformationService {
 
   /**
    * Get channel members as user list items
+   * @description Maps raw member UIDs to display-ready UserListItem shapes so components don’t need to access the user store directly.
    * @param channelId Channel ID
    * @returns Members list
    */
@@ -92,6 +95,7 @@ export class ChannelTransformationService {
 
   /**
    * Get available users (not yet members)
+   * @description Excludes current members from the full user list so the add-members picker only shows users who can still be added.
    * @param channelId Channel ID
    * @returns Available users list
    */
@@ -113,6 +117,7 @@ export class ChannelTransformationService {
 
   /**
    * Build channel info from channel data
+   * @description Resolves the creator’s display name and admin list from the user store, then assembles the full ChannelInfoData object.
    * @param channelData Channel data from store
    * @returns Channel info data
    */
@@ -133,6 +138,7 @@ export class ChannelTransformationService {
 
   /**
    * Build default channel info when no data available
+   * @description Returns a safe fallback object so components render without crashing during the initial store hydration delay.
    * @param ch Basic channel info
    * @returns Default channel info data
    */

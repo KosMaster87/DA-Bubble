@@ -1,32 +1,32 @@
 /**
  * @fileoverview Invitation Service for DABubble Application
- * @description Service for managing channel and DM invitations
+ * @description Encapsulates invitation persistence and realtime query flows so channel and DM invites share one consistent Firestore boundary.
  * @module core/services/invitation
  */
 
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  Timestamp,
-  getDocs,
-  QueryDocumentSnapshot,
   DocumentData,
+  Firestore,
+  QueryDocumentSnapshot,
+  Timestamp,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  orderBy,
+  query,
+  updateDoc,
+  where,
   writeBatch,
 } from '@angular/fire/firestore';
 import {
-  Invitation,
-  InvitationStatus,
   CreateInvitationRequest,
+  Invitation,
   InvitationResponse,
+  InvitationStatus,
 } from '../../models/invitation.model';
 
 @Injectable({
@@ -38,6 +38,7 @@ export class InvitationService {
 
   /**
    * Convert Firestore document to Invitation
+   * @description Centralises the data mapping so all Firestore date conversions and field access happen in one place.
    * @private
    * @param {QueryDocumentSnapshot<DocumentData>} doc - Firestore document
    * @returns {Invitation} Converted invitation object
@@ -62,6 +63,7 @@ export class InvitationService {
 
   /**
    * Build invitation data object
+    * @description Assembles a normalized invitation payload once so create flows do not duplicate timestamp and status initialization rules.
    * @private
    * @param {CreateInvitationRequest} request - Request data
    * @returns {any} Invitation data for Firestore
@@ -83,6 +85,7 @@ export class InvitationService {
 
   /**
    * Calculate expiration date
+   * @description Computes an absolute expiry Date from a relative days offset to be stored as a Firestore Timestamp.
    * @private
    * @param {number} expiresInDays - Days until expiration
    * @returns {Date} Expiration date
@@ -95,6 +98,7 @@ export class InvitationService {
 
   /**
    * Add optional fields to invitation data
+    * @description Injects channel-specific fields only when present so DM invitations remain minimal and schema-safe.
    * @private
    * @param {any} data - Base invitation data
    * @param {CreateInvitationRequest} request - Request with optional fields
@@ -109,6 +113,7 @@ export class InvitationService {
 
   /**
    * Create new invitation
+    * @description Persists invitation creation through one write path so upstream callers can rely on a stable ID for follow-up notifications and navigation.
    * @param {CreateInvitationRequest} request - Invitation request data
    * @returns {Promise<string>} Created invitation ID
    */
@@ -124,6 +129,7 @@ export class InvitationService {
 
   /**
    * Accept invitation
+    * @description Commits acceptance status together with response timestamp so invitation lifecycle state remains auditable.
    * @param {string} invitationId - Invitation ID
    * @returns {Promise<InvitationResponse>} Response with timestamp
    */
@@ -144,6 +150,7 @@ export class InvitationService {
 
   /**
    * Decline invitation
+    * @description Commits decline status with response timestamp so sender-side workflows can react to a completed decision state.
    * @param {string} invitationId - Invitation ID
    * @returns {Promise<InvitationResponse>} Response with timestamp
    */
@@ -164,6 +171,7 @@ export class InvitationService {
 
   /**
    * Delete invitation
+   * @description Permanently removes the invitation document; used for cleanup after processing or user-initiated deletion.
    * @param {string} invitationId - Invitation ID
    * @returns {Promise<void>}
    */
@@ -178,6 +186,7 @@ export class InvitationService {
 
   /**
    * Get invitations for user as recipient
+   * @description One-time fetch of all invitations for the user, sorted newest-first; used for initial load when a realtime listener isn’t needed.
    * @param {string} userId - User ID
    * @returns {Promise<Invitation[]>} User invitations
    */
@@ -186,7 +195,7 @@ export class InvitationService {
       const q = query(
         collection(this.firestore, this.COLLECTION_NAME),
         where('recipientId', '==', userId),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => this.convertToInvitation(doc));
@@ -197,6 +206,7 @@ export class InvitationService {
 
   /**
    * Get pending invitations for user
+   * @description One-time fetch filtered to pending status only; avoids surfacing already-acted-upon invitations in the mailbox.
    * @param {string} userId - User ID
    * @returns {Promise<Invitation[]>} Pending invitations
    */
@@ -206,7 +216,7 @@ export class InvitationService {
         collection(this.firestore, this.COLLECTION_NAME),
         where('recipientId', '==', userId),
         where('status', '==', 'pending'),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((doc) => this.convertToInvitation(doc));
@@ -217,6 +227,7 @@ export class InvitationService {
 
   /**
    * Handle subscription error
+   * @description Silently ignores permission-denied errors (expected for logged-out users) and logs actionable index-creation links for failed-precondition errors.
    * @private
    * @param {any} error - Error object
    * @param {string} type - Subscription type
@@ -230,18 +241,19 @@ export class InvitationService {
 
   /**
    * Subscribe to invitations for user
+    * @description Establishes a single realtime stream for recipient-targeted invitations so mailbox and notification UIs stay synchronized.
    * @param {string} userId - User ID
    * @param {Function} callback - Callback with invitations
    * @returns {Function} Unsubscribe function
    */
   subscribeToInvitations = (
     userId: string,
-    callback: (invitations: Invitation[]) => void
+    callback: (invitations: Invitation[]) => void,
   ): (() => void) => {
     const q = query(
       collection(this.firestore, this.COLLECTION_NAME),
       where('recipientId', '==', userId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     return onSnapshot(
       q,
@@ -249,25 +261,26 @@ export class InvitationService {
         const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
         callback(invitations);
       },
-      (error: any) => this.handleSubscriptionError(error, 'invitations')
+      (error: any) => this.handleSubscriptionError(error, 'invitations'),
     );
   };
 
   /**
    * Subscribe to pending invitations only
+    * @description Narrows realtime updates to pending invitations so badge-driven surfaces avoid noise from already resolved invite states.
    * @param {string} userId - User ID
    * @param {Function} callback - Callback with pending invitations
    * @returns {Function} Unsubscribe function
    */
   subscribeToPendingInvitations = (
     userId: string,
-    callback: (invitations: Invitation[]) => void
+    callback: (invitations: Invitation[]) => void,
   ): (() => void) => {
     const q = query(
       collection(this.firestore, this.COLLECTION_NAME),
       where('recipientId', '==', userId),
       where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     return onSnapshot(
       q,
@@ -275,12 +288,13 @@ export class InvitationService {
         const invitations = snapshot.docs.map((doc) => this.convertToInvitation(doc));
         callback(invitations);
       },
-      (error: any) => this.handleSubscriptionError(error, 'pending invitations')
+      (error: any) => this.handleSubscriptionError(error, 'pending invitations'),
     );
   };
 
   /**
    * Mark expired invitations as expired
+    * @description Performs bulk expiry normalization so stale pending invitations do not accumulate in user inbox flows.
    * @returns {Promise<number>} Number of expired invitations
    */
   expireOldInvitations = async (): Promise<number> => {
@@ -289,7 +303,7 @@ export class InvitationService {
       const q = query(
         collection(this.firestore, this.COLLECTION_NAME),
         where('status', '==', 'pending'),
-        where('expiresAt', '<=', now)
+        where('expiresAt', '<=', now),
       );
       const snapshot = await getDocs(q);
       const batch = writeBatch(this.firestore);
@@ -305,6 +319,7 @@ export class InvitationService {
 
   /**
    * Check if user has pending channel invitation
+   * @description Guards against sending duplicate invitations by checking for an existing pending one before creating a new channel invite.
    * @param {string} userId - User ID
    * @param {string} channelId - Channel ID
    * @returns {Promise<boolean>} True if pending invitation exists
@@ -315,7 +330,7 @@ export class InvitationService {
         collection(this.firestore, this.COLLECTION_NAME),
         where('recipientId', '==', userId),
         where('channelId', '==', channelId),
-        where('status', '==', 'pending')
+        where('status', '==', 'pending'),
       );
       const snapshot = await getDocs(q);
       return !snapshot.empty;

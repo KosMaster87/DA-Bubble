@@ -1,6 +1,6 @@
 /**
  * @fileoverview Message Box State Service
- * @description Manages popup visibility state for message box component
+ * @description Maintains popup visibility signals for composer overlays so emoji, user, channel, and search panels can be orchestrated centrally.
  * @module shared/services/message-box-state
  */
 
@@ -15,30 +15,35 @@ export class MessageBoxStateService {
 
   /**
    * Get emoji picker open state
+   * @description Exposes emoji-picker visibility as readonly state so templates can react without mutating service internals.
    * @returns {boolean} True if emoji picker is open
    */
   getEmojiPickerOpen = () => this.isEmojiPickerOpen.asReadonly();
 
   /**
    * Get user selection open state
+   * @description Exposes user-selector visibility as readonly state for conditional rendering in the composer UI.
    * @returns {boolean} True if user selection is open
    */
   getUserSelectionOpen = () => this.isUserSelectionOpen.asReadonly();
 
   /**
    * Get channel selection open state
+   * @description Exposes channel-selector visibility as readonly state so components can subscribe without write access.
    * @returns {boolean} True if channel selection is open
    */
   getChannelSelectionOpen = () => this.isChannelSelectionOpen.asReadonly();
 
   /**
    * Get message search open state
+   * @description Exposes message-search popup visibility to keep open/close rendering fully signal-driven.
    * @returns {boolean} True if message search is open
    */
   getMessageSearchOpen = () => this.isMessageSearchOpen.asReadonly();
 
   /**
    * Close all search and selection popups
+   * @description Resets all composer overlays at once to guarantee a clean baseline before opening another popup.
    * @returns {void}
    */
   closeAll = (): void => {
@@ -50,6 +55,7 @@ export class MessageBoxStateService {
 
   /**
    * Toggle emoji picker and close others
+   * @description Enforces mutual exclusivity by closing other overlays before toggling the emoji picker.
    * @returns {void}
    */
   toggleEmojiPicker = (): void => {
@@ -60,6 +66,7 @@ export class MessageBoxStateService {
 
   /**
    * Toggle user selection and close others
+   * @description Enforces mutual exclusivity by closing other overlays before toggling the user selector.
    * @returns {void}
    */
   toggleUserSelection = (): void => {
@@ -70,6 +77,7 @@ export class MessageBoxStateService {
 
   /**
    * Open message search popup
+   * @description Activates message-search mode and closes competing overlays so keyboard navigation targets one popup.
    * @returns {void}
    */
   openMessageSearch = (): void => {
@@ -81,6 +89,7 @@ export class MessageBoxStateService {
 
   /**
    * Close message search popup
+   * @description Dismisses message-search mode without affecting the rest of the composer state.
    * @returns {void}
    */
   closeMessageSearch = (): void => {
@@ -89,6 +98,7 @@ export class MessageBoxStateService {
 
   /**
    * Open user selection popup
+   * @description Opens user mention selection while closing other overlays to prevent stacked popup states.
    * @returns {void}
    */
   openUserSelection = (): void => {
@@ -100,6 +110,7 @@ export class MessageBoxStateService {
 
   /**
    * Close user selection popup
+   * @description Closes the user selector when mention insertion is canceled or completed.
    * @returns {void}
    */
   closeUserSelection = (): void => {
@@ -108,6 +119,7 @@ export class MessageBoxStateService {
 
   /**
    * Open channel selection popup
+   * @description Opens channel mention selection while suppressing other popups to keep interaction focus singular.
    * @returns {void}
    */
   openChannelSelection = (): void => {
@@ -119,6 +131,7 @@ export class MessageBoxStateService {
 
   /**
    * Close channel selection popup
+   * @description Closes the channel selector after selection or cancellation to restore normal composer interaction.
    * @returns {void}
    */
   closeChannelSelection = (): void => {

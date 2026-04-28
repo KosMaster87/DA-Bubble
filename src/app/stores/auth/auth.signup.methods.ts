@@ -18,6 +18,9 @@ import {
 
 /**
  * Create signup methods for auth store
+ * @description Factory function that keeps signup logic separate from login and password
+ * concerns, allowing each auth domain to evolve independently without growing the
+ * store's method surface.
  * @function createSignupMethods
  * @param {Auth} auth - Firebase Auth instance
  * @param {Firestore} firestore - Firestore instance
@@ -36,6 +39,8 @@ export const createSignupMethods = (
   /**
    * Signup new user with email and password
    * Orchestrates profile creation, Firestore sync, channel assignment, and email verification
+   * @description Centralizes the full onboarding sequence so no individual component
+   * needs to know the correct order of Firestore writes and Firebase Auth calls.
    * @async
    * @param {string} email - User email address
    * @param {string} password - User password
@@ -64,6 +69,8 @@ export const createSignupMethods = (
 
   /**
    * Verify email with code
+   * @description Exposes Firebase's `applyActionCode` through the store so components
+   * can trigger verification without importing Firebase Auth directly.
    * @async
    * @param {string} code - Verification code from email
    */
@@ -73,6 +80,8 @@ export const createSignupMethods = (
 
   /**
    * Update user profile and sync with store
+   * @description Keeps Firebase Auth and Firestore in sync after profile edits so the
+   * store always reflects the canonical user data rather than the stale Auth object.
    * @async
    * @param {Object} profile - Profile data to update
    */

@@ -8,6 +8,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 
 /**
  * Slide down animation for elements entering/leaving
+ * @description Explains the design intent of this unit so related logic stays centralized and reusable.
  * Usage: Add @slideDown to any element in template
  * @constant slideDownAnimation
  */
@@ -23,6 +24,7 @@ export const slideDownAnimation = trigger('slideDown', [
 
 /**
  * Fade in/out animation
+ * @description Explains the design intent of this unit so related logic stays centralized and reusable.
  * Usage: Add @fadeInOut to any element in template
  * @constant fadeInOutAnimation
  */
@@ -33,6 +35,7 @@ export const fadeInOutAnimation = trigger('fadeInOut', [
 
 /**
  * Slide in from right animation
+ * @description Explains the design intent of this unit so related logic stays centralized and reusable.
  * Usage: Add @slideInRight to any element in template
  * @constant slideInRightAnimation
  */

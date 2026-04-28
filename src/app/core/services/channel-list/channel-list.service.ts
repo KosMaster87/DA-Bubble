@@ -1,6 +1,6 @@
 /**
  * @fileoverview Channel List Service
- * @description Handles channel list sorting, filtering, and unread badge calculations
+ * @description Produces sidebar-ready channel list models with membership filtering, ordering, and unread/thread badge semantics.
  * @module core/services/channel-list
  */
 
@@ -32,8 +32,8 @@ export class ChannelListService {
 
   /**
    * Get visible channels for current user
-   * @returns {Signal<ChannelListItem[]>} Computed signal of visible channels with unread status
    * @description Returns public channels and channels where user is member
+   * @returns {Signal<ChannelListItem[]>} Computed signal of visible channels with unread status
    */
   getVisibleChannels = (): Signal<ChannelListItem[]> => {
     return computed(() => {
@@ -48,6 +48,7 @@ export class ChannelListService {
 
   /**
    * Filter channels visible to user
+   * @description Excludes the mailbox pseudo-channel and any private channels the user isn’t a member of.
    * @private
    * @param {any[]} channels - All channels
    * @param {string} userId - Current user ID
@@ -64,6 +65,7 @@ export class ChannelListService {
 
   /**
    * Map channel to list item
+   * @description Assembles the unread-badge data alongside the channel’s basic identity for rendering in the sidebar.
    * @private
    * @param {any} channel - Channel data
    * @returns {ChannelListItem} Channel with unread badges
@@ -87,6 +89,7 @@ export class ChannelListService {
 
   /**
    * Build list item with badges
+   * @description Computes both normal and thread unread counts and combines them with the channel identity into a ChannelListItem.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -108,6 +111,7 @@ export class ChannelListService {
 
   /**
    * Calculate unread normal message count
+   * @description Counts non-own messages that arrived after the last-read timestamp; falls back to a binary flag when exact counting isn’t available.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -136,6 +140,7 @@ export class ChannelListService {
 
   /**
    * Calculate normal message unread status
+   * @description Returns a boolean unread flag considering both direct mentions and the latest-message timestamp against the last-read cursor.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -154,6 +159,7 @@ export class ChannelListService {
 
   /**
    * Check if user has unread mentions
+   * @description Prioritises @mention detection so mentions are always surfaced as unread even if the channel-level cursor is up to date.
    * @private
    * @param {any[]} messages - Channel messages
    * @param {string} userId - Current user ID
@@ -169,6 +175,7 @@ export class ChannelListService {
 
   /**
    * Get latest normal message timestamp
+   * @description Scans all messages to find the most recent one so it can be compared against the last-read cursor.
    * @private
    * @param {any[]} messages - Channel messages
    * @returns {Date | undefined} Latest message timestamp
@@ -182,6 +189,7 @@ export class ChannelListService {
 
   /**
    * Get fallback timestamp from channel
+   * @description Uses the channel’s lastMessageAt when no individual message timestamp is available, but discards it if it matches a thread-only update to avoid false unread indicators.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -201,6 +209,7 @@ export class ChannelListService {
 
   /**
    * Get latest thread timestamp
+   * @description Finds the most recent thread activity timestamp to distinguish thread updates from channel-level message updates.
    * @private
    * @param {any[]} messages - Channel messages
    * @returns {Date | undefined} Latest thread timestamp
@@ -218,6 +227,7 @@ export class ChannelListService {
 
   /**
    * Calculate thread unread status
+   * @description Returns true if any message in the channel has unseen thread replies that the current user participated in.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -233,6 +243,7 @@ export class ChannelListService {
 
   /**
    * Calculate unread thread count
+   * @description Counts parent messages with unseen thread replies the current user participated in; falls back to a binary 1/0 when the count isn’t directly measurable.
    * @private
    * @param {any} channel - Channel data
    * @param {any[]} messages - Channel messages
@@ -259,6 +270,7 @@ export class ChannelListService {
 
   /**
    * Check if message has unread thread
+   * @description Verifies thread participation before checking the unread cursor so we only badge threads that are relevant to the current user.
    * @private
    * @param {any} message - Message data
    * @param {string} channelId - Channel identifier
@@ -279,6 +291,7 @@ export class ChannelListService {
 
   /**
    * Check if user participated in thread
+   * @description Determines participation by checking whether the user wrote the parent message or any reply, so lurkers don’t receive thread badges.
    * @private
    * @param {any} message - Parent message
    * @param {any[]} threadMessages - Thread messages

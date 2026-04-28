@@ -50,6 +50,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle search input
+   * @description Reserves a stable integration point for header search wiring so future search-state coupling does not change template contracts.
    * @param {Event} event - Input event
    * @returns {void}
    */
@@ -59,6 +60,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Toggle profile options menu
+   * @description Toggles visibility of the profile/options menu in the workspace header.
    * @returns {void}
    */
   toggleOptions = (): void => {
@@ -67,6 +69,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle profile click - opens profile view
+   * @description Closes menu and opens profile in one transition to avoid overlapping overlays in desktop and mobile headers.
    * @returns {void}
    */
   onProfileClick = (): void => {
@@ -76,6 +79,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle mailbox click
+   * @description Emits mailbox intent after closing user menu so navigation state changes never leave the menu visually stuck.
    * @returns {void}
    */
   onMailboxClick = (): void => {
@@ -85,6 +89,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Close profile view
+   * @description Keeps profile modal dismissal explicit so header overlay state remains predictable after external close actions.
    * @returns {void}
    */
   onProfileViewClose = (): void => {
@@ -93,6 +98,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle profile edit
+   * @description Switches from profile view to edit flow through a single path so header modal transitions stay consistent.
    * @returns {void}
    */
   onProfileEdit = (): void => {
@@ -102,6 +108,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Close edit profile
+   * @description Isolates edit-modal teardown so cancellation behavior is identical regardless of close trigger.
    * @returns {void}
    */
   onEditProfileClose = (): void => {
@@ -110,6 +117,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle profile save
+   * @description Applies profile updates via AuthStore from the header flow so user-display changes propagate through global auth state.
    * @param {Object} data - Profile data
    * @param {string} data.displayName - New display name
    * @param {boolean} data.isAdmin - Admin status
@@ -122,6 +130,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle message click from profile
+   * @description Closes profile modal before downstream messaging navigation to keep overlay layering deterministic.
    * @returns {void}
    */
   onProfileMessage = (): void => {
@@ -130,6 +139,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Logout user
+   * @description Sequences menu close, logout, and route redirect so sign-out consistently lands on the entry screen with signed-out state.
    * @returns {Promise<void>}
    */
   logout = async (): Promise<void> => {
@@ -140,6 +150,7 @@ export class WorkspaceHeaderComponent {
 
   /**
    * Handle image load error - fallback to placeholder
+   * @description Enforces a safe avatar fallback so broken image URLs cannot degrade header layout or user affordances.
    * @param {Event} event - Image error event
    * @returns {void}
    */

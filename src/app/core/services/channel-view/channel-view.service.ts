@@ -1,16 +1,16 @@
 /**
  * @fileoverview Channel View Service
- * @description Manages channel preview modal state and actions
+ * @description Owns channel-preview modal state and transition actions so preview UX remains consistent across entry points.
  * @module core/services/channel-view
  */
 
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { ChannelStore } from '@stores/index';
 import { ChannelMembershipService } from '../channel-membership/channel-membership.service';
 
 /**
  * Service for managing channel preview modal
- * @description Handles opening, closing, joining, and navigating to channels from preview
+ * @description Provides a single interaction boundary for preview open/close/join/navigate flows.
  */
 @Injectable({
   providedIn: 'root',
@@ -24,12 +24,14 @@ export class ChannelViewService {
 
   /**
    * Get modal open state
+   * @description Readonly computed so templates can react to modal visibility without write access to the internal signal.
    * @returns {Signal<boolean>} Whether modal is open
    */
   readonly isChannelViewOpen = computed(() => this.isOpen());
 
   /**
    * Get selected channel ID
+   * @description Readonly computed exposing the currently previewed channel ID to templates and other consumers.
    * @returns {Signal<string | null>} Channel ID or null
    */
   readonly channelId = computed(() => this.selectedChannelId());

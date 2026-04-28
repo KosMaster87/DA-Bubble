@@ -5,8 +5,8 @@
  */
 
 import { Injectable, inject } from '@angular/core';
-import { WorkspaceDataLoaderService } from './workspace-data-loader.service';
 import { WelcomeChannelSelectorService } from './welcome-channel-selector.service';
+import { WorkspaceDataLoaderService } from './workspace-data-loader.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,6 +20,7 @@ export class WorkspaceInitializationService {
   /**
    * Initialize workspace: load stores and setup auto-selection
    * Should be called once on workspace/dashboard initialization
+   * @description Guards against double-initialisation with a flag so the dashboard component can safely call this on every navigation without re-loading stores.
    * @param onChannelSelected Optional callback when channel is auto-selected
    */
   initialize(onChannelSelected?: (channelId: string) => void): void {
@@ -39,6 +40,7 @@ export class WorkspaceInitializationService {
   /**
    * Select DABubble-welcome channel explicitly
    * Used when navigating back to /dashboard
+   * @description Allows the dashboard route to restore the default channel view without triggering the one-shot auto-selection guard.
    */
   selectWelcomeChannel(): void {
     this.welcomeSelector.selectWelcomeChannel();
@@ -46,6 +48,7 @@ export class WorkspaceInitializationService {
 
   /**
    * Reset auto-select suppression (allow user to navigate normally after back-to-sidebar)
+   * @description Clears the suppression flag so the next entry to the sidebar can auto-navigate to the welcome channel if nothing is selected.
    */
   resetAutoSelectSuppression(): void {
     this.welcomeSelector.resetSuppression();
@@ -53,6 +56,7 @@ export class WorkspaceInitializationService {
 
   /**
    * Reset initialization flag (for testing/hot reload)
+   * @description Resets all stateful flags so the workspace can be fully re-initialised in tests or after hot module replacement.
    */
   reset(): void {
     this.hasInitialized = false;

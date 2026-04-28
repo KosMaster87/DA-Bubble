@@ -19,6 +19,8 @@ import { ChannelMessageStateHelper } from '../helpers/channel-message-state.help
 
 /**
  * State interface for channel message management
+ * @description Models paginated channel messages as a per-channel map so multiple
+ * channels can have their message state loaded simultaneously without interference.
  * @interface ChannelMessageState
  */
 export interface ChannelMessageState {
@@ -33,6 +35,8 @@ export interface ChannelMessageState {
 
 /**
  * Initial channel message state
+ * @description Provides the deterministic zero-state baseline shared by initialization
+ * and cleanup so the store always starts from a known empty condition.
  * @constant {ChannelMessageState}
  */
 const initialState: ChannelMessageState = {
@@ -47,12 +51,16 @@ const initialState: ChannelMessageState = {
 
 /**
  * Store snapshots for pagination outside of reactive state
+ * @description Kept outside NgRx signal state because snapshot objects are mutable
+ * Firestore cursors — storing them in reactive state would cause spurious re-renders.
  */
 const channelSnapshots = new Map<string, QuerySnapshot<DocumentData>>();
 
 /**
  * Channel message management store with Firestore integration
  * Provides methods for channel message operations and state management
+ * @description Owns channel-scoped message state and wires Firestore listeners to
+ * reactive state, keeping messaging concerns separate from channel metadata.
  * @constant {SignalStore}
  */
 export const ChannelMessageStore = signalStore(
@@ -61,6 +69,8 @@ export const ChannelMessageStore = signalStore(
   withComputed((store) => ({
     /**
      * Computed function to get messages by channel ID
+     * @description Returns a stable function reference so templates can look up
+     * messages per channel without breaking signal dependency tracking.
      * @returns {Signal<Function>} Function that takes channelId and returns messages array
      */
     getMessagesByChannel: computed(
@@ -69,6 +79,8 @@ export const ChannelMessageStore = signalStore(
 
     /**
      * Computed property for active channel messages
+     * @description Derives the visible message list from `activeChannelId` so the
+     * component layer does not need to perform its own channel-id lookup.
      * @returns {Signal<Message[]>} Messages for currently active channel
      */
     activeChannelMessages: computed(() => {
@@ -78,6 +90,8 @@ export const ChannelMessageStore = signalStore(
 
     /**
      * Computed property for channel message count
+     * @description Aggregates message counts across all loaded channels for
+     * diagnostic or badge purposes without exposing the internal channel map.
      * @returns {Signal<number>} Total number of channel messages
      */
     channelMessageCount: computed(() => {
@@ -95,6 +109,7 @@ export const ChannelMessageStore = signalStore(
 
     /**
      * Trigger thread loading only for parent messages that can carry thread activity.
+     * @description Restricts thread warmup fan-out to candidates with thread metadata so background reads stay bounded for large channels.
      *
      * Why this selective fan-out exists:
      * It keeps thread hydration aligned with unread/thread indicators without opening
@@ -194,6 +209,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Send message to channel
+       * @description Delegates to the operations service so the store method stays
+       * within size limits while sharing the same error-handling wrapper.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} content - Message content
@@ -209,6 +226,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Update message content
+       * @description Routes through `executeChannelMessageOperation` so update errors
+       * are handled uniformly and the caller does not need try/catch boilerplate.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Message ID
@@ -224,6 +243,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Delete message from channel
+       * @description Delegates to the operations service which performs a soft delete,
+       * keeping the deletion strategy encapsulated away from the store.
        * @async
        * @param {string} channelId - Channel ID
        * @param {string} messageId - Message ID
@@ -242,6 +263,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Add message to channel state
+       * @description Allows optimistic local insertion without waiting for a Firestore
+       * snapshot, keeping the UI responsive after a send operation.
        * @param {string} channelId - Channel ID
        * @param {Message} message - Message to add
        * @returns {void}
@@ -288,6 +311,7 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Load older messages for pagination
+       * @description Uses the last cached query snapshot cursor to paginate older channel messages without resetting the active listener.
        * @async
        * @param {string} channelId - Channel ID
        * @returns {Promise<void>}
@@ -316,6 +340,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Handle errors
+       * @description Normalizes errors and clears loading state atomically so the
+       * store never remains stuck in a loading condition after a failure.
        * @param error - Error object
        * @param defaultMessage - Default message
        */
@@ -326,6 +352,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Execute shared channel message operation flow.
+       * @description Provides uniform error propagation for message mutations so each
+       * operation only contains its specific Firestore call.
        */
       async executeChannelMessageOperation(
         operation: () => Promise<void>,
@@ -341,6 +369,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Toggle reaction on message
+       * @description Delegates to `ReactionService` so reaction logic is shared across
+       * channel and DM message types without duplication.
        * @param channelId - Channel ID
        * @param messageId - Message ID
        * @param emojiId - Emoji ID
@@ -363,6 +393,8 @@ export const ChannelMessageStore = signalStore(
 
       /**
        * Cleanup all listeners
+       * @description Ensures Firestore listeners are detached when the component is
+       * destroyed, preventing memory leaks and permission errors after logout.
        */
       destroy(): void {
         listener.clearAllListeners();

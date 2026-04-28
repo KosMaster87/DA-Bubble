@@ -1,6 +1,6 @@
 /**
  * @fileoverview Channel Model Definitions for DABubble
- * @description TypeScript interfaces for Channel data structures
+ * @description Defines canonical channel domain contracts used for persistence, membership, and update workflows.
  * @module ChannelModel
  */
 

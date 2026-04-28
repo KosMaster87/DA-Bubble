@@ -22,10 +22,21 @@ export class InputFieldChannelComponent {
 
   protected inputValue = signal<string>('');
 
+  /**
+   * Initialize local input signal from bound initial value.
+   * @description Mirrors incoming value input once on init so component-internal signal state starts aligned with parent bindings.
+   * @returns {void}
+   */
   ngOnInit() {
     this.inputValue.set(this.value());
   }
 
+  /**
+   * Handle native input changes for channel field.
+   * @description Mirrors DOM input into local signal and emits value changes so reactive parent forms stay synchronized.
+   * @param {Event} event - Input event from text field
+   * @returns {void}
+   */
   onInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.inputValue.set(value);

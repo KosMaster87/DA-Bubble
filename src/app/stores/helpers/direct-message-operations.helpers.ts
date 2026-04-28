@@ -34,6 +34,7 @@ export interface DirectMessageFirestoreOps {
 
 /**
  * Default Firestore operation adapters.
+ * @description Exposes AngularFire primitives behind an adapter object so tests can inject mocked operations without monkey-patching imports.
  *
  * Why this object exists:
  * Consumers can inject/mimic Firestore operations in tests while production keeps

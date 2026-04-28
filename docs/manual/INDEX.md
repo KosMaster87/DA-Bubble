@@ -21,7 +21,7 @@ This is the entry point for the current unread and thread logic in the dashboard
 
 ## Relevant Code Entry Points
 
-- [src/app/shared/services/dashboard-initialization.service.ts](../../src/app/shared/services/dashboard-initialization.service.ts)
-- [src/app/core/services/unread/unread.service.ts](../../src/app/core/services/unread/unread.service.ts)
-- [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts](../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts)
-- [src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts](../../src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts)
+- [src/app/shared/services/dashboard-initialization.service.ts](../../../src/app/shared/services/dashboard-initialization.service.ts)
+- [src/app/core/services/unread/unread.service.ts](../../../src/app/core/services/unread/unread.service.ts)
+- [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts](../../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts)
+- [src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts](../../../src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts)

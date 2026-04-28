@@ -23,10 +23,21 @@ export class InputFieldBasicComponent {
 
   protected inputValue = signal<string>('');
 
+  /**
+   * Initialize local input signal from bound initial value.
+   * @description Seeds component-local state from input binding so first render reflects parent-provided form data.
+   * @returns {void}
+   */
   ngOnInit() {
     this.inputValue.set(this.value());
   }
 
+  /**
+   * Handle native input changes for basic field.
+   * @description Updates local signal and emits value changes so consuming forms can react without reading DOM state directly.
+   * @param {Event} event - Input event from text field
+   * @returns {void}
+   */
   onInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.inputValue.set(value);

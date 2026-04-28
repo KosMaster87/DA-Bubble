@@ -1,6 +1,6 @@
 /**
  * @fileoverview User Model Definitions for DABubble
- * @description TypeScript interfaces for User data structures
+ * @description Defines user identity, presence, and per-conversation read/scroll state contracts.
  * @module UserModel
  */
 

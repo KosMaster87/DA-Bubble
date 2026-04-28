@@ -1,6 +1,6 @@
 /**
  * @fileoverview Mailbox Interaction Service
- * @description Handles mailbox message interactions
+ * @description Encapsulates mailbox message actions so read, bulk-read, and delete flows share one interaction boundary.
  * @module core/services/mailbox-interaction
  */
 
@@ -18,6 +18,7 @@ export class MailboxInteractionService {
 
   /**
    * Handle message click and mark as read
+   * @description Marks the message as read in the store when clicked; the TODO note tracks the pending navigation to the originating chat.
    * @param messageId Message ID to mark as read
    */
   handleMessageClick = async (messageId: string): Promise<void> => {
@@ -28,6 +29,7 @@ export class MailboxInteractionService {
 
   /**
    * Mark all messages as read
+   * @description Bulk-clears all unread mailbox messages so the badge count resets to zero without opening each message individually.
    */
   markAllAsRead = async (): Promise<void> => {
     await this.mailboxStore.markAllAsRead();
@@ -35,6 +37,7 @@ export class MailboxInteractionService {
 
   /**
    * Delete a message
+   * @description Removes the mailbox message from the store and Firestore; does not affect the original channel message.
    * @param messageId Message ID to delete
    */
   deleteMessage = async (messageId: string): Promise<void> => {

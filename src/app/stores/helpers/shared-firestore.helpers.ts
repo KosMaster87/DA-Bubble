@@ -8,6 +8,7 @@ import { Timestamp, serverTimestamp } from '@angular/fire/firestore';
 
 /**
  * Convert Firestore Timestamp to JavaScript Date
+ * @description Handles all possible timestamp shapes (Firestore Timestamp, Date, or null) that arrive from Firestore snapshots so callers don't need defensive checks.
  */
 export const timestampToDate = (timestamp: any): Date => {
   if (!timestamp) return new Date();
@@ -18,11 +19,13 @@ export const timestampToDate = (timestamp: any): Date => {
 
 /**
  * Get current server timestamp
+ * @description Wraps serverTimestamp() behind a named export so the call site reads semantically and the wrapper can be swapped in tests.
  */
 export const getServerTimestamp = () => serverTimestamp();
 
 /**
  * Create timestamps for new document
+ * @description Builds both createdAt and updatedAt in one call to ensure new documents are created with consistent timestamp fields.
  */
 export const createTimestamps = () => {
   const now = serverTimestamp();
@@ -34,6 +37,7 @@ export const createTimestamps = () => {
 
 /**
  * Create update timestamp
+ * @description Supplies only updatedAt to avoid accidentally overwriting createdAt when patching existing documents.
  */
 export const createUpdateTimestamp = () => ({
   updatedAt: serverTimestamp(),
@@ -41,6 +45,7 @@ export const createUpdateTimestamp = () => ({
 
 /**
  * Build base message data with timestamps
+ * @description Defines the canonical shape for new messages so every creation path uses the same field set and no fields are accidentally omitted.
  */
 export const buildBaseMessageData = (authorId: string, content: string) => ({
   authorId,
@@ -54,6 +59,7 @@ export const buildBaseMessageData = (authorId: string, content: string) => ({
 
 /**
  * Build message update data
+ * @description Constructs the minimal update payload for content edits, always setting isEdited and editedAt to maintain edit history.
  */
 export const buildMessageUpdate = (content: string) => ({
   content,
@@ -64,6 +70,7 @@ export const buildMessageUpdate = (content: string) => ({
 
 /**
  * Build soft delete data
+ * @description Soft-deletes a message by replacing content with a placeholder rather than removing the document, preserving thread counts.
  */
 export const buildSoftDeleteData = () => ({
   content: '[Message deleted]',
@@ -73,6 +80,7 @@ export const buildSoftDeleteData = () => ({
 
 /**
  * Build read status update
+ * @description Isolates the read-status mutation to a dedicated builder so it is not accidentally mixed with content update builders.
  */
 export const buildReadStatusUpdate = (isRead: boolean) => ({
   isRead,

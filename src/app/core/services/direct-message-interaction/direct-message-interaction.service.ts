@@ -1,6 +1,6 @@
 /**
  * @fileoverview Direct Message Interaction Service
- * @description Handles direct message interactions (reactions, edit, delete)
+ * @description Encapsulates DM message mutations so UI components use one consistent interaction boundary.
  * @module core/services/direct-message-interaction
  */
 
@@ -18,6 +18,7 @@ export class DirectMessageInteractionService {
 
   /**
    * Toggle reaction on direct message
+    * @description Routes reaction toggles through one mutation path so optimistic UI and error handling remain consistent across DM views.
    * @param conversationId Conversation ID
    * @param messageId Message ID
    * @param emoji Emoji to toggle
@@ -27,7 +28,7 @@ export class DirectMessageInteractionService {
     conversationId: string,
     messageId: string,
     emoji: string,
-    userId: string
+    userId: string,
   ): Promise<void> {
     try {
       await this.directMessageStore.toggleReaction(conversationId, messageId, emoji, userId);
@@ -40,6 +41,7 @@ export class DirectMessageInteractionService {
 
   /**
    * Edit direct message
+    * @description Centralizes edit writes so permission handling and downstream realtime propagation stay aligned.
    * @param conversationId Conversation ID
    * @param messageId Message ID to edit
    * @param newContent New message content
@@ -50,6 +52,7 @@ export class DirectMessageInteractionService {
 
   /**
    * Delete direct message
+    * @description Funnels deletion through a single service boundary so failure handling and side effects are uniform for all DM clients.
    * @param conversationId Conversation ID
    * @param messageId Message ID to delete
    */

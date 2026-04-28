@@ -5,7 +5,7 @@
  */
 
 import { inject, Injectable } from '@angular/core';
-import { Firestore, doc, getDoc, updateDoc, DocumentReference } from '@angular/fire/firestore';
+import { doc, DocumentReference, Firestore, getDoc, updateDoc } from '@angular/fire/firestore';
 import { MessageReaction } from '@core/models/message.model';
 
 @Injectable({
@@ -16,6 +16,7 @@ export class ReactionService {
 
   /**
    * Toggle a reaction on any message document
+   * @description Reads the current reactions array, then adds or removes the user atomically: removes the emoji entry entirely when the last user un-reacts.
    * @param messageRef - Firestore document reference to the message
    * @param emojiId - Emoji ID
    * @param userId - User ID who reacted
@@ -24,7 +25,7 @@ export class ReactionService {
   async toggleReaction(
     messageRef: DocumentReference,
     emojiId: string,
-    userId: string
+    userId: string,
   ): Promise<void> {
     try {
       const messageSnap = await getDoc(messageRef);
@@ -53,7 +54,7 @@ export class ReactionService {
             const updatedReactions = reactions.map((r) =>
               r.emoji === emojiId
                 ? { emoji: emojiId, users: updatedUsers, count: updatedUsers.length }
-                : r
+                : r,
             );
             await updateDoc(messageRef, { reactions: updatedReactions });
           }
@@ -63,7 +64,7 @@ export class ReactionService {
           const updatedReactions = reactions.map((r) =>
             r.emoji === emojiId
               ? { emoji: emojiId, users: updatedUsers, count: updatedUsers.length }
-              : r
+              : r,
           );
           await updateDoc(messageRef, { reactions: updatedReactions });
         }
@@ -84,6 +85,7 @@ export class ReactionService {
 
   /**
    * Helper to create a document reference
+   * @description Wraps doc() so callers can pass variable-length path segments without building the path string themselves.
    * @param pathSegments - Path segments to the document
    * @returns Firestore document reference
    */

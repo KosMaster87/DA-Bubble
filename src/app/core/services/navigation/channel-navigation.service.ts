@@ -1,14 +1,14 @@
 /**
  * @fileoverview Channel Navigation Service
- * @description Handles channel navigation and routing
+ * @description Encapsulates channel-specific routing transitions and unread side effects behind a single navigation API.
  * @module core/services/navigation
  */
 
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ChannelStore } from '@stores/channels/channel.store';
 import { UnreadService } from '@core/services/unread/unread.service';
 import { ThreadManagementService } from '@shared/services/thread-management.service';
+import { ChannelStore } from '@stores/channels/channel.store';
 import { NavigationStateService } from './navigation-state.service';
 
 /**
@@ -27,6 +27,7 @@ export class ChannelNavigationService {
   /**
    * Select channel and handle navigation
    * Handles both real channels and virtual views (mailbox, legal)
+   * @description Entry point for channel-select actions; routes virtual view IDs (mailbox, legal) to their own handler to avoid Firestore lookups for non-existent channel documents.
    */
   selectChannel(channelId: string): void {
     const virtualViews = ['mailbox', 'legal'];
@@ -41,6 +42,7 @@ export class ChannelNavigationService {
 
   /**
    * Select virtual view (mailbox, legal)
+   * @description Sets the channel ID to the view name so sidebar active-state indicators work without a separate view-type flag.
    */
   private selectVirtualView(viewId: string): void {
     this.navigationState.setSelectedChannelId(viewId);
@@ -50,6 +52,7 @@ export class ChannelNavigationService {
 
   /**
    * Select real channel from Firestore
+   * @description Marks the channel as read, updates state, and preserves any open thread in the URL to prevent the thread panel from closing on channel re-navigation.
    */
   private selectRealChannel(channelId: string): void {
     const channel = this.channelStore.channels().find((ch) => ch.id === channelId);
@@ -83,6 +86,7 @@ export class ChannelNavigationService {
   /**
    * Select channel by ID (programmatic, no routing)
    * Used to sync state with URL changes to avoid navigation loops
+   * @description State-only update used by route watchers that have already navigated and just need to sync signals.
    */
   selectChannelById(channelId: string): void {
     this.navigationState.setSelectedChannelId(channelId);
@@ -92,6 +96,7 @@ export class ChannelNavigationService {
   /**
    * Navigate to channel (explicit routing)
    * Wrapper around selectChannel() for backwards compatibility
+   * @description Preserved for backwards compatibility; prefer selectChannel() for new call sites.
    */
   navigateToChannel(channelId: string): void {
     this.selectChannel(channelId);
@@ -100,6 +105,7 @@ export class ChannelNavigationService {
 
   /**
    * Auto-select DABubble-welcome channel if nothing selected
+   * @description Safety net for cases where the app loads without any URL selection; ensures the user always sees content rather than a blank workspace.
    */
   autoSelectWelcomeChannel(): void {
     const state = this.navigationState.getState();

@@ -1,13 +1,13 @@
 /**
  * @fileoverview Channel State Service
- * @description Manages channel message loading and read state effects
+ * @description Coordinates channel message hydration and auto-read side effects so channel views stay synchronized with unread state.
  * @module core/services/channel-state
  */
 
-import { Injectable, inject, effect, untracked, Signal } from '@angular/core';
-import { ChannelMessageStore } from '@stores/channels/channel-message.store';
-import { AuthStore } from '@stores/auth';
+import { Injectable, Signal, effect, inject, untracked } from '@angular/core';
 import { UnreadService } from '@core/services/unread/unread.service';
+import { AuthStore } from '@stores/auth';
+import { ChannelMessageStore } from '@stores/channels/channel-message.store';
 
 /**
  * Service for managing channel state and effects
@@ -22,6 +22,7 @@ export class ChannelStateService {
 
   /**
    * Setup message loading effect for channel
+   * @description Reacts to channel ID changes and triggers a fresh message load each time the user navigates to a different channel.
    * @param channelIdSignal Signal containing current channel ID
    */
   setupLoadMessagesEffect = (channelIdSignal: Signal<string>): void => {
@@ -35,6 +36,7 @@ export class ChannelStateService {
 
   /**
    * Load messages and mark channel as read
+   * @description Loads channel messages and marks the channel as read after a short delay to allow the snapshot to settle.
    * @param channelId Channel ID to load
    */
   private loadMessagesForChannel = (channelId: string): void => {
@@ -44,6 +46,7 @@ export class ChannelStateService {
 
   /**
    * Setup auto-mark-as-read effect when new messages arrive
+   * @description Watches the message count and automatically marks the channel as read whenever new messages appear while the user is viewing it.
    * @param channelIdSignal Signal containing current channel ID
    */
   setupAutoMarkAsReadEffect = (channelIdSignal: Signal<string>): void => {
@@ -65,6 +68,7 @@ export class ChannelStateService {
 
   /**
    * Get message count for channel
+   * @description Reads the message count from the store for use in change-detection comparisons; does not trigger additional Firestore reads.
    * @param channelId Channel ID
    * @returns Number of messages in channel
    */
@@ -75,6 +79,7 @@ export class ChannelStateService {
 
   /**
    * Check if channel should be marked as read
+   * @description Returns true only when count has grown, so re-renders of an unchanged list don’t trigger redundant read-marks.
    * @param currentCount Current message count
    * @param previousCount Previous message count
    * @returns True if should mark as read
@@ -85,6 +90,7 @@ export class ChannelStateService {
 
   /**
    * Mark channel as read
+   * @description Wraps the read-mark call in untracked() to prevent the effect from re-triggering itself when the unread state changes.
    * @param channelId Channel ID to mark
    */
   private markChannelAsRead = (channelId: string): void => {

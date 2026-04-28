@@ -1,6 +1,6 @@
 /**
  * @fileoverview Message Model Definitions for DABubble
- * @description TypeScript interfaces for Message data structures
+ * @description Defines normalized message contracts shared by channel, DM, reaction, and attachment workflows.
  * @module MessageModel
  */
 

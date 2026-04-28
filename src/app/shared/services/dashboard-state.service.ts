@@ -1,17 +1,17 @@
 /**
  * @fileoverview Dashboard State Service
- * @description Manages dashboard view state and transitions
+ * @description Coordinates dashboard-level view selection so channel, DM, mailbox, and static views transition through one consistent state surface.
  * @module shared/services/dashboard-state
  */
 
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { NavigationService } from '@core/services/navigation/navigation.service';
+import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
+import { AuthStore } from '@stores/auth';
 import { ChannelStore } from '@stores/channels/channel.store';
 import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { UserStore } from '@stores/users/user.store';
-import { AuthStore } from '@stores/auth';
-import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ThreadManagementService } from './thread-management.service';
-import { WelcomeChannelSelectorService } from '@core/services/workspace-initialization/welcome-channel-selector.service';
 
 export type DashboardView =
   | 'none' // No content view (sidebar only, for mobile)
@@ -40,6 +40,7 @@ export interface DMInfo {
 
 /**
  * Service for managing dashboard view state
+ * @description Acts as the single source of truth for active dashboard view selection across route-driven and click-driven navigation.
  */
 @Injectable({
   providedIn: 'root',
@@ -65,6 +66,7 @@ export class DashboardStateService {
 
   /**
    * Clear all views and selections (for mobile back to sidebar)
+   * @description Resets dashboard content state for sidebar-first mobile navigation, preventing stale channel/DM context from persisting.
    */
   clearAllViews(): void {
     this._currentView.set('none'); // No content view
@@ -74,6 +76,7 @@ export class DashboardStateService {
 
   /**
    * Show welcome view
+   * @description Routes explicit welcome transitions through one method so onboarding-entry behavior stays consistent.
    */
   showWelcome(): void {
     this._currentView.set('welcome');
@@ -81,6 +84,7 @@ export class DashboardStateService {
 
   /**
    * Show new message view
+   * @description Activates compose mode without mutating channel or DM selection, preserving previous context for return navigation.
    */
   showNewMessage(): void {
     this._currentView.set('chat-new-msg');
@@ -88,6 +92,7 @@ export class DashboardStateService {
 
   /**
    * Show mailbox view
+   * @description Switches to mailbox while keeping dashboard-level selection handling in one place.
    */
   showMailbox(): void {
     this._currentView.set('mailbox');
@@ -95,6 +100,7 @@ export class DashboardStateService {
 
   /**
    * Show legal overview view
+   * @description Exposes legal navigation as a state transition so shell rendering remains signal-driven.
    */
   showLegal(): void {
     this._currentView.set('legal');
@@ -102,6 +108,7 @@ export class DashboardStateService {
 
   /**
    * Show settings view
+   * @description Keeps settings activation in the same state machine as conversation views to avoid divergent rendering paths.
    */
   showSettings(): void {
     this._currentView.set('settings');
@@ -109,6 +116,7 @@ export class DashboardStateService {
 
   /**
    * Show channel by ID
+   * @description Resolves all channel-entry variants in one branch, including special pseudo-channels and welcome handling.
    * @param channelId Channel ID to display
    * @param deselectDM Callback to deselect DM in sidebar
    * @returns true if channel was shown, false if not found
@@ -128,6 +136,7 @@ export class DashboardStateService {
 
   /**
    * Handle special non-channel views
+   * @description Converts reserved channel IDs into non-channel dashboard views before store lookups occur.
    */
   private handleSpecialChannels = (channelId: string): boolean => {
     if (channelId === 'mailbox') {
@@ -147,6 +156,7 @@ export class DashboardStateService {
 
   /**
    * Get channel from store by ID
+   * @description Isolates channel retrieval so missing-channel handling stays consistent for all channel-entry paths.
    */
   private getChannelFromStore = (channelId: string): any | null => {
     const channelGetter = this.channelStore.getChannelById();
@@ -155,6 +165,7 @@ export class DashboardStateService {
 
   /**
    * Check if channel is welcome channel
+   * @description Encapsulates welcome-channel detection so naming-rule changes stay local to one helper.
    */
   private isWelcomeChannel = (channel: any): boolean => {
     return channel.name === 'DABubble-welcome';
@@ -162,6 +173,7 @@ export class DashboardStateService {
 
   /**
    * Show welcome channel view
+   * @description Applies welcome-view state and optional DM deselection as one atomic transition.
    */
   private showWelcomeChannel = (deselectDM?: () => void): boolean => {
     this._currentView.set('welcome');
@@ -171,6 +183,7 @@ export class DashboardStateService {
 
   /**
    * Show regular channel view
+   * @description Materializes channel info into dashboard view state so templates do not depend on raw channel-store entities.
    */
   private showRegularChannel = (channel: any, deselectDM?: () => void): boolean => {
     this._selectedChannel.set({
@@ -188,6 +201,7 @@ export class DashboardStateService {
 
   /**
    * Show direct message by conversation ID
+   * @description Resolves peer identity and hydrates DM view state so sidebar and content panes stay synchronized.
    * @param conversationId Conversation ID
    * @param participants Optional participants array (for newly created conversations)
    * @returns true if DM was shown, false if not found
@@ -208,6 +222,7 @@ export class DashboardStateService {
 
   /**
    * Determine other user ID from conversation
+   * @description Unifies participant resolution for persisted and newly created conversations, including self-DM fallback.
    */
   private determineOtherUser = (
     conversationId: string,
@@ -229,6 +244,7 @@ export class DashboardStateService {
 
   /**
    * Get conversation from store
+   * @description Keeps conversation lookup semantics in one helper for easier debugging of navigation mismatch cases.
    */
   private getConversation = (conversationId: string): any | undefined => {
     return this.directMessageStore.sortedConversations().find((c) => c.id === conversationId);
@@ -236,6 +252,7 @@ export class DashboardStateService {
 
   /**
    * Get other user from conversation participants
+   * @description Extracts the peer participant from stored conversation data while supporting self-DM edge cases.
    */
   private getOtherUserFromConversation = (conversation: any, currentUserId: string): string => {
     const otherUserId = conversation.participants.find((id: string) => id !== currentUserId);
@@ -244,6 +261,7 @@ export class DashboardStateService {
 
   /**
    * Get other user from participants array
+   * @description Resolves the peer user directly from raw participant tuples so new conversations work even before conversation entities are fully materialized in store state.
    */
   private getOtherUserFromParticipants = (
     participants: [string, string] | undefined,
@@ -257,6 +275,7 @@ export class DashboardStateService {
 
   /**
    * Get user data from store
+   * @description Guards DM view activation against missing user entities so the dashboard never renders incomplete peer info.
    */
   private getUserData = (userId: string): any | null => {
     const user = this.userStore.getUserById()(userId);
@@ -268,6 +287,7 @@ export class DashboardStateService {
 
   /**
    * Set direct message view with user data
+   * @description Commits the final DM view payload in one place so all successful resolution paths produce identical state shape.
    */
   private setDirectMessageView = (
     conversationId: string,
@@ -282,6 +302,7 @@ export class DashboardStateService {
 
   /**
    * Create DM info object
+   * @description Normalizes DM header payload creation so all DM entry paths render the same participant metadata.
    */
   private createDMInfo = (
     conversationId: string,
@@ -302,6 +323,7 @@ export class DashboardStateService {
 
   /**
    * Navigate to DABubble-welcome channel
+   * @description Centralizes welcome-channel fallback navigation so desktop shell recovery always follows the same path.
    * @returns Welcome channel ID if found, null otherwise
    */
   navigateToWelcome(): string | null {

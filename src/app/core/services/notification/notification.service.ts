@@ -24,6 +24,7 @@ export class NotificationService {
   /**
    * Create and enqueue a new toast notification.
    * Prevents duplicate messages of the same type from being added.
+   * @description Deduplication guards against rapid repeated calls (e.g. from error retries) showing the same message multiple times.
    */
   show(input: CreateNotificationInput): string {
     // Check for existing duplicate (same type and message)
@@ -49,6 +50,7 @@ export class NotificationService {
 
   /**
    * Add a success toast.
+   * @description Convenience wrapper setting the 'success' type so callers don't need to pass a type literal.
    */
   success(message: string, duration?: number): string {
     return this.show({ type: 'success', message, duration });
@@ -56,6 +58,7 @@ export class NotificationService {
 
   /**
    * Add an error toast.
+   * @description Convenience wrapper setting the 'error' type with a longer default duration to ensure users have time to read error messages.
    */
   error(message: string, duration?: number): string {
     return this.show({ type: 'error', message, duration });
@@ -63,6 +66,7 @@ export class NotificationService {
 
   /**
    * Add an informational toast.
+   * @description Convenience wrapper setting the 'info' type for general informational feedback.
    */
   info(message: string, duration?: number): string {
     return this.show({ type: 'info', message, duration });
@@ -70,6 +74,7 @@ export class NotificationService {
 
   /**
    * Add a warning toast.
+   * @description Convenience wrapper setting the 'warning' type with the longest default duration so actionable warnings remain visible.
    */
   warning(message: string, duration?: number): string {
     return this.show({ type: 'warning', message, duration });
@@ -77,6 +82,7 @@ export class NotificationService {
 
   /**
    * Remove one toast by id.
+   * @description Cancels the dismiss timer before removing to prevent the timer callback from trying to remove an already-deleted toast.
    */
   remove(toastId: string): void {
     this.clearDismissTimer(toastId);
@@ -85,6 +91,7 @@ export class NotificationService {
 
   /**
    * Remove all toasts and timers.
+   * @description Clears both the signal and the timer map so no orphaned timeouts fire after the list is emptied.
    */
   clear(): void {
     for (const timer of this.timerByToastId.values()) {
@@ -96,11 +103,18 @@ export class NotificationService {
 
   /**
    * Return currently visible toasts with a maximum limit.
+   * @description Caps the visible count so the notification area doesn't overflow when many errors fire in quick succession.
    */
   getVisible(limit = 3): NotificationToast[] {
     return this._toasts().slice(0, limit);
   }
 
+  /**
+   * Start auto-dismiss timer for a toast.
+   * @description Registers timed removal only for finite-duration toasts so persistent notifications remain user-controlled.
+   * @param {NotificationToast} toast - Toast to schedule for dismissal
+   * @returns {void}
+   */
   private startDismissTimer(toast: NotificationToast): void {
     if (toast.duration <= 0) {
       return;
@@ -113,6 +127,12 @@ export class NotificationService {
     this.timerByToastId.set(toast.id, timer);
   }
 
+  /**
+   * Clear existing auto-dismiss timer for a toast.
+   * @description Cancels and removes timer entries to prevent stale callbacks after manual toast removal.
+   * @param {string} toastId - Toast identifier
+   * @returns {void}
+   */
   private clearDismissTimer(toastId: string): void {
     const timer = this.timerByToastId.get(toastId);
     if (!timer) {
@@ -123,6 +143,11 @@ export class NotificationService {
     this.timerByToastId.delete(toastId);
   }
 
+  /**
+   * Create a unique toast identifier.
+   * @description Combines timestamp and random suffix to reduce collision risk when multiple toasts are created in the same millisecond.
+   * @returns {string} Unique toast ID
+   */
   private createToastId(): string {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }

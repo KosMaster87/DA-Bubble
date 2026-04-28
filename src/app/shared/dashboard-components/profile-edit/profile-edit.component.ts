@@ -38,6 +38,7 @@ export class ProfileEditComponent {
 
   /**
    * Handle close button click
+   * @description Emits close intent so parent workflow can dismiss the modal without mutating profile data.
    */
   onClose(): void {
     this.closeClicked.emit();
@@ -45,6 +46,7 @@ export class ProfileEditComponent {
 
   /**
    * Handle display name input change
+   * @description Synchronizes local display-name signal from the input event for immediate form-state feedback.
    */
   onDisplayNameChange(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -53,6 +55,7 @@ export class ProfileEditComponent {
 
   /**
    * Handle cancel button click
+   * @description Restores original user values and closes edit mode without persisting modifications.
    */
   onCancel(): void {
     this.displayName.set(this.user().displayName);
@@ -62,6 +65,7 @@ export class ProfileEditComponent {
 
   /**
    * Handle save button click
+   * @description Emits the currently staged profile fields as the single save payload for parent-level persistence.
    */
   onSave(): void {
     this.saveClicked.emit({
@@ -72,6 +76,7 @@ export class ProfileEditComponent {
 
   /**
    * Check if save button should be disabled
+   * @description Prevents submissions when display name is blank after trimming.
    */
   isSaveDisabled(): boolean {
     return !this.displayName() || this.displayName().trim() === '';

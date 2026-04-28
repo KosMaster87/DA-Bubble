@@ -21,6 +21,7 @@ export class ImprintComponent {
 
   /**
    * Navigate back based on authentication status
+   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
    * @async
    * @function goBack
    * @returns {Promise<void>}

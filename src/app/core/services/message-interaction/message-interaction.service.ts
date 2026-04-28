@@ -28,6 +28,7 @@ export class MessageInteractionService {
 
   /**
    * Send message to channel
+   * @description Validates authentication, trims content, delegates to the channel message store, then immediately marks the channel as read so the sender’s own message isn’t counted as unread.
    * @param {string} channelId - Channel ID
    * @param {string} content - Message content
    * @returns {Promise<void>} Promise that resolves when message is sent
@@ -44,6 +45,7 @@ export class MessageInteractionService {
 
   /**
    * Edit channel message
+   * @description Delegates content update to the channel message store; the Firestore listener propagates the change to all open views.
    * @param {string} channelId - Channel ID
    * @param {string} messageId - Message ID
    * @param {string} newContent - New message content
@@ -59,6 +61,7 @@ export class MessageInteractionService {
 
   /**
    * Delete channel message
+   * @description Delegates to the channel message store; the deletion also cascades to thread messages inside the store.
    * @param {string} channelId - Channel ID
    * @param {string} messageId - Message ID
    * @returns {Promise<void>} Promise that resolves when message is deleted
@@ -69,6 +72,7 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on channel message
+   * @description Requires authentication and delegates the reaction toggle to the channel message store, which handles add/remove logic atomically.
    * @param {string} channelId - Channel ID
    * @param {string} messageId - Message ID
    * @param {string} emojiId - Emoji ID
@@ -93,6 +97,7 @@ export class MessageInteractionService {
 
   /**
    * Send direct message
+   * @description Validates authentication, trims content, delegates to the DM store, then marks the conversation as read so sent messages aren’t counted as unread.
    * @param {string} conversationId - Conversation ID
    * @param {string} content - Message content
    * @returns {Promise<void>} Promise that resolves when message is sent
@@ -109,6 +114,7 @@ export class MessageInteractionService {
 
   /**
    * Edit direct message
+   * @description Delegates content update to the DM store; the realtime listener propagates the change to all participants.
    * @param {string} conversationId - Conversation ID
    * @param {string} messageId - Message ID
    * @param {string} newContent - New message content
@@ -124,6 +130,7 @@ export class MessageInteractionService {
 
   /**
    * Delete direct message
+   * @description Delegates to the DM store for deletion; does not affect thread messages.
    * @param {string} conversationId - Conversation ID
    * @param {string} messageId - Message ID
    * @returns {Promise<void>} Promise that resolves when message is deleted
@@ -134,6 +141,7 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on direct message
+   * @description Requires authentication and delegates the toggle to the DM store, which handles add/remove logic atomically in Firestore.
    * @param {string} conversationId - Conversation ID
    * @param {string} messageId - Message ID
    * @param {string} emojiId - Emoji ID
@@ -163,6 +171,7 @@ export class MessageInteractionService {
 
   /**
    * Send thread reply
+   * @description Validates authentication, trims content, writes the reply to the thread store, then marks the thread as read so the sender’s own reply isn’t counted as unread.
    * @param {string} channelId - Channel or DM ID
    * @param {string} messageId - Parent message ID
    * @param {string} content - Reply content
@@ -192,6 +201,7 @@ export class MessageInteractionService {
 
   /**
    * Edit thread reply
+   * @description Delegates the thread reply update to the thread store with the DM flag so the correct Firestore path is used.
    * @param {string} channelId - Channel or DM ID
    * @param {string} messageId - Parent message ID
    * @param {string} threadId - Thread message ID
@@ -217,6 +227,7 @@ export class MessageInteractionService {
 
   /**
    * Delete thread reply
+   * @description Delegates thread reply deletion to the thread store; the parent message’s reply count is updated atomically in the store.
    * @param {string} channelId - Channel or DM ID
    * @param {string} messageId - Parent message ID
    * @param {string} threadId - Thread message ID
@@ -234,6 +245,7 @@ export class MessageInteractionService {
 
   /**
    * Toggle reaction on thread reply
+   * @description Requires authentication and delegates the toggle to the thread store, which resolves the correct Firestore path based on the DM flag.
    * @param {string} channelId - Channel or DM ID
    * @param {string} messageId - Parent message ID
    * @param {string} threadId - Thread message ID
