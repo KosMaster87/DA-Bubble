@@ -1,8 +1,8 @@
-# Docs: Unread, Reload, Warmup, Thread Notifications
+# Docs Manual Index
 
-This is the entry point for the current unread and thread logic in the dashboard.
+This is the project-local entry point for DA-Bubble manual documentation.
 
-## Documents
+## Dashboard Logic Documents
 
 1. Warmup Stage 1.1 (Top-N + Config)
    [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
@@ -13,11 +13,24 @@ This is the entry point for the current unread and thread logic in the dashboard
 3. Thread Notifications Explained
    [thread-notifications-logic.md](thread-notifications-logic.md)
 
+## Governance And Refactoring
+
+1. Governance Index
+   [governance/INDEX.md](governance/INDEX.md)
+
+2. Naming Schema
+   [governance/naming-schema.md](governance/naming-schema.md)
+
+3. Refactoring Workflow
+   [governance/refactoring-workflow.md](governance/refactoring-workflow.md)
+
 ## Recommended Reading Order
 
-1. [unread-reload-logic.md](unread-reload-logic.md)
-2. [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
-3. [thread-notifications-logic.md](thread-notifications-logic.md)
+1. [governance/INDEX.md](governance/INDEX.md)
+2. [governance/refactoring-workflow.md](governance/refactoring-workflow.md)
+3. [unread-reload-logic.md](unread-reload-logic.md)
+4. [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
+5. [thread-notifications-logic.md](thread-notifications-logic.md)
 
 ## Relevant Code Entry Points
 

@@ -111,7 +111,7 @@ export const createLoginMethods = (
         const isGuest = await isGuestUser(currentUser.uid, firestore);
 
         if (isGuest) {
-          await deleteGuestUserAccount(currentUser.uid, auth, firestore);
+          await deleteGuestUserAccount(currentUser.uid, firestore, auth);
         } else {
           await updateLogoutUserStatus(currentUser.uid, firestore);
           await auth.signOut();
@@ -154,9 +154,15 @@ async function performLogin(
 
     if (!userSnapshot.exists()) {
       // Create new user and assign to channels
-      await createLoginFirestoreUser(firebaseUser, firestore);
+      await createLoginFirestoreUser(
+        firebaseUser.uid,
+        firebaseUser.email || '',
+        firebaseUser.displayName,
+        firebaseUser.photoURL,
+        firestore,
+      );
       await createLoginNotesDM(firebaseUser.uid, firestore);
-      await addLoginUserToDefaultChannels(firebaseUser.uid, firestore, firebaseUser.isAnonymous);
+      await addLoginUserToDefaultChannels(firebaseUser.uid, firestore);
     } else {
       // Update existing user status
       await updateLoginUserStatus(firebaseUser.uid, firestore);
