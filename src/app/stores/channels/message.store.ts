@@ -4,7 +4,7 @@
  * message selection, and core message functionality.
  * @description This store handles core message operations including sending,
  * editing, deleting messages, and basic message state management.
- * @module MessageStore
+ * @module message-store
  */
 
 import { computed, inject } from '@angular/core';
@@ -12,11 +12,11 @@ import { addDoc, collection, doc, Firestore, updateDoc } from '@angular/fire/fir
 import { CreateMessageRequest, Message } from '@core/models/message.model';
 import { ReactionService } from '@core/services/reaction/reaction.service';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { buildMessageData, buildStoredMessage } from '../helpers/message-store.helpers';
 import { getErrorMessage, logError } from '../helpers/shared-error.helpers';
 import { buildMessageUpdate, buildSoftDeleteData } from '../helpers/shared-firestore.helpers';
 import { prependItem, updateItemInArray } from '../helpers/shared-state.helpers';
 
-// Export types for use in other modules
 export type { CreateMessageRequest };
 
 /**
@@ -26,13 +26,9 @@ export type { CreateMessageRequest };
  * @interface MessageState
  */
 export interface MessageState {
-  /** Array of all messages */
   messages: Message[];
-  /** Currently selected message */
   selectedMessage: Message | null;
-  /** Loading state indicator */
   isLoading: boolean;
-  /** Error message if any */
   error: string | null;
 }
 
@@ -156,11 +152,11 @@ export const MessageStore = signalStore(
        * @returns {Promise<void>}
        */
       async performSendMessage(messageData: CreateMessageRequest, authorId: string): Promise<void> {
-        const newMessage = this.buildMessageData(messageData, authorId);
+        const newMessage = buildMessageData(messageData, authorId);
         await this.executeMessageOperation(
           async () => {
             const docRef = await addDoc(messagesCollection, newMessage);
-            return this.buildStoredMessage(newMessage, docRef.id);
+            return buildStoredMessage(newMessage, docRef.id);
           },
           'Failed to send message',
           true,
@@ -213,36 +209,6 @@ export const MessageStore = signalStore(
       },
 
       // === HELPER FUNCTIONS ===
-
-      /**
-       * Build complete message data with timestamps
-       * @description Centralizes message construction so timestamp and reaction
-       * initialization are consistent across all send paths.
-       * @function buildMessageData
-       * @param {CreateMessageRequest} messageData - Basic message data
-       * @param {string} authorId - ID of the message author
-       * @returns {Omit<Message, 'id'>} Complete message data without ID
-       */
-      buildMessageData(messageData: CreateMessageRequest, authorId: string): Omit<Message, 'id'> {
-        return {
-          ...messageData,
-          authorId,
-          attachments: messageData.attachments || [],
-          reactions: [],
-          isEdited: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-      },
-
-      /**
-       * Build stored message with generated document ID.
-       * @description Combines the pre-write message shape with the Firestore-generated
-       * ID so the full message object is available for local state updates immediately.
-       */
-      buildStoredMessage(message: Omit<Message, 'id'>, id: string): Message {
-        return { ...message, id };
-      },
 
       /**
        * Add new message to state
