@@ -12,7 +12,7 @@ Use this schema for project-local documentation and refactoring artifacts that b
 
 ### Folder Index Files
 
-Pattern: `INDEX.md`
+Pattern: `_INDEX.md`
 
 Use when:
 
@@ -22,12 +22,12 @@ Use when:
 
 Examples:
 
-- `docs/manual/INDEX.md`
-- `docs/manual/governance/INDEX.md`
+- `docs/manual/_INDEX.md`
+- `docs/manual/governance/_INDEX.md`
 
 Rules:
 
-- Use uppercase `INDEX.md` for documentation overviews.
+- Use `_INDEX.md` for documentation overviews.
 - Keep the index focused on navigation, reading order, and purpose.
 - Link only to documents that belong to the same local manual structure.
 

@@ -23,5 +23,5 @@ This folder contains project-local governance and refactoring guidance for DA-Bu
 
 - Use this folder for DA-Bubble-specific documentation that should live with the project.
 - Keep reusable Copilot customizations in `.github/`.
-- Keep project manual overviews in `docs/manual/**/INDEX.md`.
+- Keep project manual overviews in `docs/manual/**/_INDEX.md`.
 - Keep code barrel files as `index.ts` next to the exported code, not as Markdown files.

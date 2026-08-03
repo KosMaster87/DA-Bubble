@@ -16,7 +16,7 @@ This is the project-local entry point for DA-Bubble manual documentation.
 ## Governance And Refactoring
 
 1. Governance Index
-   [governance/INDEX.md](governance/INDEX.md)
+   [governance/\_INDEX.md](governance/_INDEX.md)
 
 2. Naming Schema
    [governance/naming-schema.md](governance/naming-schema.md)
@@ -26,7 +26,7 @@ This is the project-local entry point for DA-Bubble manual documentation.
 
 ## Recommended Reading Order
 
-1. [governance/INDEX.md](governance/INDEX.md)
+1. [governance/\_INDEX.md](governance/_INDEX.md)
 2. [governance/refactoring-workflow.md](governance/refactoring-workflow.md)
 3. [unread-reload-logic.md](unread-reload-logic.md)
 4. [dashboard-warmup-stage-1-1.md](dashboard-warmup-stage-1-1.md)
@@ -34,7 +34,7 @@ This is the project-local entry point for DA-Bubble manual documentation.
 
 ## Relevant Code Entry Points
 
-- [src/app/shared/services/dashboard-initialization.service.ts](../../../src/app/shared/services/dashboard-initialization.service.ts)
-- [src/app/core/services/unread/unread.service.ts](../../../src/app/core/services/unread/unread.service.ts)
-- [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts](../../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts)
-- [src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts](../../../src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts)
+- [src/app/shared/services/dashboard-initialization.service.ts](../../src/app/shared/services/dashboard-initialization.service.ts)
+- [src/app/core/services/unread/unread.service.ts](../../src/app/core/services/unread/unread.service.ts)
+- [src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts](../../src/app/shared/dashboard-components/thread-unread-popup/thread-unread-popup.component.ts)
+- [src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts](../../src/app/features/dashboard/components/workspace-sidebar/workspace-sidebar.component.ts)

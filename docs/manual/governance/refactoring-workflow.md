@@ -34,7 +34,7 @@ Use this workflow for larger DA-Bubble refactorings that extract functions, reor
 
 5. Add a barrel file only when it creates a real public boundary.
    - Use `index.ts` for code exports.
-   - Use `INDEX.md` for folder documentation.
+   - Use `_INDEX.md` for folder documentation.
    - Do not introduce a barrel just because a folder exists.
 
 6. Re-run narrow validation after each slice.
@@ -61,7 +61,7 @@ Do not create `index.ts` when one of these is true:
 
 - Project-local structure and workflow docs belong in `docs/manual/`.
 - Shared Copilot customization rules belong in `.github/`.
-- If a refactor changes how a domain is structured, update the nearest relevant `INDEX.md` in `docs/manual/`.
+- If a refactor changes how a domain is structured, update the nearest relevant `_INDEX.md` in `docs/manual/`.
 
 ## Refactoring Checklist
 
@@ -70,6 +70,6 @@ Do not create `index.ts` when one of these is true:
 - Store ownership preserved
 - Imports simplified, not obscured
 - `index.ts` added only where it defines a public boundary
-- `INDEX.md` updated where readers need navigation help
+- `_INDEX.md` updated where readers need navigation help
 - Tests updated for moved behavior
 - No commit or push before the slice is validated
