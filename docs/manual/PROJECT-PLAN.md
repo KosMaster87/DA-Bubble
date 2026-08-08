@@ -58,7 +58,8 @@ DA-Bubble is a modern Discord-like chat application with the following core feat
 
 **Tech Debt Tracking:**
 
-See [TECH-DEBT.md](../TECH-DEBT.md) and [tech-dept.md](../tech-dept.md)
+No separate tech-debt document exists yet. Until a canonical `TECH-DEBT.md` is introduced,
+open items remain tracked in this project plan.
 
 ---
 
