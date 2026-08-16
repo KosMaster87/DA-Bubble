@@ -1,4 +1,4 @@
-# Project Plan — DA-Bubble Chat Application
+# Project Plan - DA-Bubble Chat Application
 
 **Status:** Active Development
 **Stack:** Angular 21 + Firebase + Signals
@@ -20,7 +20,7 @@ DA-Bubble is a modern Discord-like chat application with the following core feat
 
 ---
 
-## Phase 1 — Core Features (Current)
+## Phase 1 - Core Features (Current)
 
 **In Progress:**
 
@@ -40,13 +40,13 @@ DA-Bubble is a modern Discord-like chat application with the following core feat
 
 **Related Files:**
 
-- `.github/copilot-instructions.md` — project rules
-- `.github/instructions/` — scoped coding standards
-- `da-bubble/README.md` — feature overview
+- `.github/copilot-instructions.md` - project rules
+- `.github/instructions/` - scoped coding standards
+- `da-bubble/README.md` - feature overview
 
 ---
 
-## Phase A — Stabilization & Documentation (Q2 2026)
+## Phase A - Stabilization & Documentation (Q2 2026)
 
 **Scope:**
 
@@ -63,7 +63,7 @@ open items remain tracked in this project plan.
 
 ---
 
-## Phase B — Extended Features (Q3 2026)
+## Phase B - Extended Features (Q3 2026)
 
 **Scope:**
 
@@ -75,7 +75,7 @@ open items remain tracked in this project plan.
 
 ---
 
-## Phase C — Performance & Hosting (Q4 2026)
+## Phase C - Performance & Hosting (Q4 2026)
 
 **Scope:**
 
@@ -106,7 +106,7 @@ main (production)
 
 **PR Standard:**
 
-- Title: `type(scope): description` — max. 72 chars
+- Title: `type(scope): description` - max. 72 chars
 - Description: context, testing, risks, affected paths
 - At least 1 approval before merge
 - Vitest must pass with `--watch=false`

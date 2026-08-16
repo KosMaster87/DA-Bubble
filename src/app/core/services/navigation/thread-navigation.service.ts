@@ -31,7 +31,7 @@ export class ThreadNavigationService {
    * CRITICAL: When opening threads via thread-unread popup, ALWAYS pass threadId parameter
    * to prevent race condition where thread gets closed by route handler
    *
-   * @description Includes the threadId in the URL when provided to prevent the route change from closing the thread that was just opened — a known race condition in the Angular router lifecycle.
+   * @description Includes the threadId in the URL when provided to prevent the route change from closing the thread that was just opened - a known race condition in the Angular router lifecycle.
    * @param conversationId Channel ID or DM conversation ID
    * @param isDirectMessage true for DM, false for channel
    * @param threadId Optional message ID to include in URL as /thread/:threadId
@@ -74,7 +74,7 @@ export class ThreadNavigationService {
    * Handle thread click from popup hover
    * Processes thread navigation and message transformation
    *
-   * @description Clears the hover state, triggers navigation with the thread ID in the URL, and transforms the message to ViewMessage format — all in one call to keep popup click handlers simple.
+   * @description Clears the hover state, triggers navigation with the thread ID in the URL, and transforms the message to ViewMessage format - all in one call to keep popup click handlers simple.
    * @param event Object containing conversationId, messageId, and message
    * @param isDirectMessage true if thread is in DM, false if in channel
    * @returns Object with conversationId and transformed viewMessage

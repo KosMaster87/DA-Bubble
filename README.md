@@ -1,4 +1,4 @@
-# DABubble – Discord Clone Chat App
+# DABubble - Discord Clone Chat App
 
 [![Angular](https://img.shields.io/badge/Angular-21.0-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -32,40 +32,40 @@ A modern, real-time chat application inspired by Discord, built with Angular 21,
 
 ### User Account & Administration
 
-- ✅ **User Registration** – Email/password with avatar selection
-- ✅ **User Login** – Secure authentication with Firebase
-- ✅ **Google OAuth** – Login with Google (Popup strategy)
-- ✅ **Password Recovery** – Reset password via email
-- ✅ **Profile Editing** – Update name and avatar
-- ✅ **Auth Guards** – Route protection (auth, no-auth, avatar-selection)
-- 🔜 **Online Status** – Real-time user presence (planned)
+- ✅ **User Registration** - Email/password with avatar selection
+- ✅ **User Login** - Secure authentication with Firebase
+- ✅ **Google OAuth** - Login with Google (Popup strategy)
+- ✅ **Password Recovery** - Reset password via email
+- ✅ **Profile Editing** - Update name and avatar
+- ✅ **Auth Guards** - Route protection (auth, no-auth, avatar-selection)
+- 🔜 **Online Status** - Real-time user presence (planned)
 
 ### Channels & Direct Messages
 
-- ✅ **Channels** – Group discussions with multiple members
-- ✅ **Channel Management** – Create, edit, manage channels
-- ✅ **Direct Messages** – Private 1:1 conversations
-- ✅ **Message Display** – Grouped by date with avatars
-- ✅ **Emoticon Reactions** – React to messages with emojis
-- ✅ **Threads** – Reply to specific messages in separate threads
+- ✅ **Channels** - Group discussions with multiple members
+- ✅ **Channel Management** - Create, edit, manage channels
+- ✅ **Direct Messages** - Private 1:1 conversations
+- ✅ **Message Display** - Grouped by date with avatars
+- ✅ **Emoticon Reactions** - React to messages with emojis
+- ✅ **Threads** - Reply to specific messages in separate threads
   - Thread count display on parent messages
   - Last reply timestamp
   - Parent message shown in thread
   - Reactive loading with signals
-- ✅ **Mention Users** – Tag members with `@username` (planned)
-- ✅ **Mention Channels** – Reference channels with `#channel` (planned)
-- ✅ **Search Messages** – Find messages across channels and DMs (planned)
-- ✅ **Emoticons in Messages** – Emoji picker integration (planned)
+- ✅ **Mention Users** - Tag members with `@username` (planned)
+- ✅ **Mention Channels** - Reference channels with `#channel` (planned)
+- ✅ **Search Messages** - Find messages across channels and DMs (planned)
+- ✅ **Emoticons in Messages** - Emoji picker integration (planned)
 
 ### Channel Management
 
-- ✅ **Create Channels** – Set name, description
-- ✅ **Channel List** – Sidebar navigation with mailbox
-- ✅ **Workspace UI** – Header with search, sidebar with channels/DMs
-- ✅ **Add Members** – Invite users to existing channels (planned)
-- ✅ **Leave Channels** – Exit channels you don't need (planned)
-- ✅ **Edit Channels** – Modify name and description (planned)
-- 🔜 **Duplicate Prevention** – No duplicate channel names (planned)
+- ✅ **Create Channels** - Set name, description
+- ✅ **Channel List** - Sidebar navigation with mailbox
+- ✅ **Workspace UI** - Header with search, sidebar with channels/DMs
+- ✅ **Add Members** - Invite users to existing channels (planned)
+- ✅ **Leave Channels** - Exit channels you don't need (planned)
+- ✅ **Edit Channels** - Modify name and description (planned)
+- 🔜 **Duplicate Prevention** - No duplicate channel names (planned)
 
 ---
 
@@ -364,9 +364,9 @@ Thread panel slides in from right
 
 **Components:**
 
-- **ThreadComponent** – Thread display with parent + replies
-- **ConversationMessagesComponent** – Reusable message list
-- **Dashboard** – Orchestrates thread opening/closing
+- **ThreadComponent** - Thread display with parent + replies
+- **ConversationMessagesComponent** - Reusable message list
+- **Dashboard** - Orchestrates thread opening/closing
 
 ---
 

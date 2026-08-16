@@ -37,7 +37,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Validate channel and user data for adding members
-   * @description Guards the invitation flow — ensures channel and current user are resolved before async operations begin.
+   * @description Guards the invitation flow - ensures channel and current user are resolved before async operations begin.
    * @param channel - Channel data
    * @param currentUser - Current user
    * @returns True if valid
@@ -74,7 +74,7 @@ export class ChannelConversationHandlersService {
 
   /**
    * Handle channel accepted
-   * @description Coordinates the full join lifecycle — fires loading feedback, performs the guarded join with sync wait, then restores UI.
+   * @description Coordinates the full join lifecycle - fires loading feedback, performs the guarded join with sync wait, then restores UI.
    * @param channelId - Channel ID
    * @param onJoiningStart - Callback when joining starts
    * @param onJoiningEnd - Callback when joining ends

@@ -17,7 +17,7 @@ export class ChannelAccessService {
 
   /**
    * Check if user is member of channel
-   * @description Guards channel content access — used to conditionally show channel views and prevent unauthorized reads.
+   * @description Guards channel content access - used to conditionally show channel views and prevent unauthorized reads.
    * @param channelId Channel ID
    * @returns True if user is member
    */

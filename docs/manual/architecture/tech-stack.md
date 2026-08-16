@@ -1,4 +1,4 @@
-# Tech Stack — DA-Bubble Chat Application
+# Tech Stack - DA-Bubble Chat Application
 
 ## Confirmed Stack Decisions
 

@@ -54,7 +54,7 @@ export class ConversationLoaderService {
 
   /**
    * Load thread messages and mark as read
-   * @description Loads thread replies and immediately marks the thread as read — no debounce needed since threads are only opened explicitly.
+   * @description Loads thread replies and immediately marks the thread as read - no debounce needed since threads are only opened explicitly.
    * @param channelId - Channel or DM ID
    * @param messageId - Parent message ID
    * @param isDirectMessage - Whether this is a DM thread
@@ -70,7 +70,7 @@ export class ConversationLoaderService {
   /**
    * Mark conversation as read immediately (no debounce)
    * Use this when user actively sends a message
-   * @description Bypasses the debounce and marks immediately — used after a user sends a message to ensure their own messages are never counted as unread.
+   * @description Bypasses the debounce and marks immediately - used after a user sends a message to ensure their own messages are never counted as unread.
    * @param conversationId - Channel or DM ID
    */
   markAsReadImmediate(conversationId: string, isDirectMessage: boolean = false): void {

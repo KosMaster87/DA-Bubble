@@ -163,7 +163,7 @@ export class ChannelListenerService {
 
   /**
    * Clear all active listeners
-   * @description Cancels the debounce timer and the active Firestore listener — call on service destroy or user logout.
+   * @description Cancels the debounce timer and the active Firestore listener - call on service destroy or user logout.
    */
   clearAllListeners = (): void => {
     if (this.debounceTimer) {

@@ -1,4 +1,4 @@
-# Naming Schema — DA-Bubble Manual
+# Naming Schema - DA-Bubble Manual
 
 Use this schema for project-local documentation and refactoring artifacts that belong to DA-Bubble itself.
 

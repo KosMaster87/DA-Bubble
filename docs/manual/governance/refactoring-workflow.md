@@ -1,4 +1,4 @@
-# Refactoring Workflow — Structure, Helpers, Services, Barrels
+# Refactoring Workflow - Structure, Helpers, Services, Barrels
 
 Use this workflow for larger DA-Bubble refactorings that extract functions, reorganize folders, or introduce barrel files.
 

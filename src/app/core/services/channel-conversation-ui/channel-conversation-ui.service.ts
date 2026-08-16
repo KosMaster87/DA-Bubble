@@ -55,7 +55,7 @@ export class ChannelConversationUIService {
 
   /**
    * Open members menu
-   * @description Shows the members list panel. Other panels remain unaffected — callers must close them separately.
+   * @description Shows the members list panel. Other panels remain unaffected - callers must close them separately.
    */
   openMembersMenu = (): void => {
     this.isMembersMenuOpen.set(true);
@@ -142,7 +142,7 @@ export class ChannelConversationUIService {
 
   /**
    * Reset all UI states
-   * @description Collapses all open overlays and clears the selected member — used on navigation away or component teardown.
+   * @description Collapses all open overlays and clears the selected member - used on navigation away or component teardown.
    */
   resetAll = (): void => {
     this.isMembersMenuOpen.set(false);

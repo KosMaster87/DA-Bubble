@@ -33,7 +33,7 @@ export class ChannelDataService {
 
   /**
    * Check if user is member of channel
-   * @description Facade delegation — keeps consumers decoupled from ChannelAccessService while the refactoring is in progress.
+   * @description Facade delegation - keeps consumers decoupled from ChannelAccessService while the refactoring is in progress.
    * @param channelId Channel ID
    * @returns True if user is member
    */
@@ -57,7 +57,7 @@ export class ChannelDataService {
 
   /**
    * Get channel access info for access screen
-   * @description Facade delegation — assembles the access-screen data shape (name, member count, privacy) from the transformation service.
+   * @description Facade delegation - assembles the access-screen data shape (name, member count, privacy) from the transformation service.
    * @param channelInfo Basic channel info
    * @returns Channel access information
    */
@@ -67,7 +67,7 @@ export class ChannelDataService {
 
   /**
    * Get channel info data for channel-info component
-   * @description Facade delegation — transforms channel store data into the shape required by the channel-info component.
+   * @description Facade delegation - transforms channel store data into the shape required by the channel-info component.
    * @param channelInfo Basic channel info
    * @returns Channel info data
    */
@@ -77,7 +77,7 @@ export class ChannelDataService {
 
   /**
    * Get channel members as user list items
-   * @description Facade delegation — converts raw member IDs into display-ready UserListItem shapes for the member list UI.
+   * @description Facade delegation - converts raw member IDs into display-ready UserListItem shapes for the member list UI.
    * @param channelId Channel ID
    * @returns Members list
    */
@@ -87,7 +87,7 @@ export class ChannelDataService {
 
   /**
    * Get available users (not yet members)
-   * @description Facade delegation — returns users not yet in the channel, used to populate the add-members picker.
+   * @description Facade delegation - returns users not yet in the channel, used to populate the add-members picker.
    * @param channelId Channel ID
    * @returns Available users list
    */
