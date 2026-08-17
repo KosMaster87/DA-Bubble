@@ -202,7 +202,7 @@ included in the thread view itself.
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 24+ and pnpm
 - Angular CLI 21+
 - Firebase account
 
@@ -211,7 +211,7 @@ included in the thread view itself.
 ```bash
 git clone https://github.com/KosMaster87/DA-Bubble.git
 cd DA-Bubble/da-bubble
-npm install
+pnpm install
 ```
 
 Copy the example environment files and fill in your Firebase credentials:
@@ -222,7 +222,7 @@ cp src/config/environments/env.prod.example.ts src/config/environments/env.prod.
 ```
 
 ```bash
-npm start
+pnpm start
 # → http://localhost:4200/
 ```
 
@@ -231,11 +231,11 @@ npm start
 ## Development
 
 ```bash
-npm start          # dev server (port 4200)
-npm run build      # production build
-npm run watch      # build with watch mode
-npm test           # unit tests
-ng generate        # generate components/services/etc.
+pnpm start          # dev server (port 4200)
+pnpm run build      # production build
+pnpm run watch      # build with watch mode
+pnpm test           # unit tests
+ng generate         # generate components/services/etc.
 ```
 
 ### Code Standards

@@ -11,9 +11,9 @@
 
 | Befehl               | Ergebnis                      |
 | -------------------- | ----------------------------- |
-| `npm run docs:dev`   | Docusaurus Dev-Server starten |
-| `npm run docs:site`  | Docusaurus-Site bauen         |
-| `npm run docs:serve` | Fertigen Build lokal anzeigen |
+| `pnpm run docs:dev`   | Docusaurus Dev-Server starten |
+| `pnpm run docs:site`  | Docusaurus-Site bauen         |
+| `pnpm run docs:serve` | Fertigen Build lokal anzeigen |
 
 > **Wichtig:** Niemals manuell in `generated/` schreiben.
 > Änderungen dort werden beim nächsten Build überschrieben.
