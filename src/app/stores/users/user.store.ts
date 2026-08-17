@@ -120,7 +120,7 @@ export const UserStore = signalStore(
       /**
        * Fetch user by ID from Firestore
        * @description Performs a one-shot read for cases where the real-time listener
-       * has not yet populated the user — e.g. profile page initial load.
+       * has not yet populated the user - e.g. profile page initial load.
        */
       async fetchUserById(uid: string): Promise<User | null> {
         try {

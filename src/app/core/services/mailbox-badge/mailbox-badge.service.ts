@@ -29,7 +29,7 @@ export class MailboxBadgeService {
 
   /**
    * Check if mailbox has unread messages or pending invitations
-   * @description Combined unread flag used to show the mailbox badge dot — true whenever there are unread messages or at least one pending invitation.
+   * @description Combined unread flag used to show the mailbox badge dot - true whenever there are unread messages or at least one pending invitation.
    */
   readonly hasUnread = computed(() => {
     const unreadMessagesCount = this.mailboxStore.unreadCount();

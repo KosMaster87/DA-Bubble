@@ -23,7 +23,7 @@ import { patchState, signalStore, withComputed, withMethods, withState } from '@
 /**
  * State interface for user presence management
  * @interface UserPresenceState
- * @description Keeps the presence surface intentionally minimal — only online UIDs are stored, not full user objects, to avoid duplication with UserStore.
+ * @description Keeps the presence surface intentionally minimal - only online UIDs are stored, not full user objects, to avoid duplication with UserStore.
  */
 export interface UserPresenceState {
   /** Array of UIDs for users currently online */

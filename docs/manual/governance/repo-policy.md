@@ -1,4 +1,4 @@
-# Repository Policy — DA-Bubble
+# Repository Policy - DA-Bubble
 
 ## Positioning
 
@@ -81,9 +81,9 @@ Commercial use, forks, and contributions are welcome.
 
 ## Governance Files
 
-- **LICENSE** — MIT (full text)
-- **CONTRIBUTING.md** — PR process, coding standards
-- **.github/SECURITY.md** — security policy, vulnerability reporting
-- **.github/copilot-instructions.md** — project rules for Copilot
-- **docs/governance/** — architecture decisions, mission
-- **CHANGELOG.md** — version history & breaking changes
+- **LICENSE** - MIT (full text)
+- **CONTRIBUTING.md** - PR process, coding standards
+- **.github/SECURITY.md** - security policy, vulnerability reporting
+- **.github/copilot-instructions.md** - project rules for Copilot
+- **docs/governance/** - architecture decisions, mission
+- **CHANGELOG.md** - version history & breaking changes

@@ -52,7 +52,7 @@ const initialState: ChannelMessageState = {
 /**
  * Store snapshots for pagination outside of reactive state
  * @description Kept outside NgRx signal state because snapshot objects are mutable
- * Firestore cursors — storing them in reactive state would cause spurious re-renders.
+ * Firestore cursors - storing them in reactive state would cause spurious re-renders.
  */
 const channelSnapshots = new Map<string, QuerySnapshot<DocumentData>>();
 

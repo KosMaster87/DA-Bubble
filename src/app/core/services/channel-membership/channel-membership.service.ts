@@ -57,7 +57,7 @@ export class ChannelMembershipService {
 
   /**
    * Add user to members list (no duplicates)
-   * @description Uses a Set spread to guarantee idempotency — re-adding an existing member leaves the list unchanged.
+   * @description Uses a Set spread to guarantee idempotency - re-adding an existing member leaves the list unchanged.
    * @param members Current members array
    * @param userId User ID to add
    * @returns Updated members array
@@ -231,7 +231,7 @@ export class ChannelMembershipService {
 
   /**
    * Validate user is channel owner
-   * @description Gate for delete/owner-only operations — reads from the signal store to avoid an extra Firestore fetch.
+   * @description Gate for delete/owner-only operations - reads from the signal store to avoid an extra Firestore fetch.
    * @param channelId Channel ID
    * @param userId User ID
    * @returns True if user is owner

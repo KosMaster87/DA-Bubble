@@ -349,7 +349,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Log retry attempt
-   * @description No-op stub kept for debugging — can be re-enabled to surface retry traces in development without touching callers.
+   * @description No-op stub kept for debugging - can be re-enabled to surface retry traces in development without touching callers.
    * @private
    * @param {string} channelId - Channel ID
    * @param {number} retryCount - Current retry count
@@ -395,7 +395,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Handle permission-denied errors
-   * @description Clears the listener and schedules a later retry rather than showing an error — permission may resolve after login propagation.
+   * @description Clears the listener and schedules a later retry rather than showing an error - permission may resolve after login propagation.
    * @param channelId - Channel ID
    */
   private handlePermissionError = (channelId: string): void => {
@@ -417,7 +417,7 @@ export class ChannelMessageListenerService {
 
   /**
    * Clear all active listeners
-   * @description Unsubscribes every active channel listener and clears retry state — call on user logout or app teardown.
+   * @description Unsubscribes every active channel listener and clears retry state - call on user logout or app teardown.
    */
   clearAllListeners = (): void => {
     this.messageListeners.forEach((unsubscribe) => unsubscribe());

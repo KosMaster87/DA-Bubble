@@ -19,10 +19,10 @@
 
 **Rationale:**
 
-1. **Maximum usage freedom** — forks, commercial derivatives, everything allowed
-2. **Community-friendly** — lowest barrier to entry for contributors
-3. **Widely adopted** — many Angular/TS projects use MIT (Angular itself, RxJS, etc.)
-4. **Short & understandable** — less legal uncertainty, even for learners
+1. **Maximum usage freedom** - forks, commercial derivatives, everything allowed
+2. **Community-friendly** - lowest barrier to entry for contributors
+3. **Widely adopted** - many Angular/TS projects use MIT (Angular itself, RxJS, etc.)
+4. **Short & understandable** - less legal uncertainty, even for learners
 
 **Alternative: Apache-2.0**
 
