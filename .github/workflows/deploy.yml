@@ -40,7 +40,7 @@ jobs:
           sed 's/production: false/production: true/' src/config/environments/env.dev.ts \
             > src/config/environments/env.prod.ts
 
-      - run: pnpm test -- --run
+      - run: pnpm test
       - run: pnpm run build
 
       - name: Upload build artifact
