@@ -9,7 +9,10 @@ import { MessageGroupingService } from '@core/services/message-grouping/message-
 import { UserTransformationService } from '@core/services/user-transformation/user-transformation.service';
 import type { ThreadInfo } from '@features/dashboard/components/thread/thread.component';
 import type { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
-import type { Message, MessageGroup } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
+import type {
+  Message,
+  MessageGroup,
+} from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import type { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
 import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';
 import type { ProfileUser } from '@shared/dashboard-components/profile-view/profile-view.component';
@@ -165,11 +168,11 @@ export class ThreadStateService {
     const displayName = info.isDirectMessage ? `@${info.channelName}` : `#${info.channelName}`;
     const containerId = info.isDirectMessage ? info.parentMessageId : info.channelId;
 
-    return replies.map(msg => ({
+    return replies.map((msg) => ({
       id: `${containerId}_${msg.id}`,
       displayName,
       description: this.truncateContent(msg.content),
-      type: info.isDirectMessage ? 'dm' as const : 'channel' as const
+      type: info.isDirectMessage ? ('dm' as const) : ('channel' as const),
     }));
   };
 
@@ -194,11 +197,11 @@ export class ThreadStateService {
    */
   private sortSearchItemsByTimestamp = (
     items: MessageSearchItem[],
-    replies: Message[]
+    replies: Message[],
   ): MessageSearchItem[] => {
     return items.sort((a, b) => {
-      const msgA = replies.find(m => m.id === a.id.split('_')[1]);
-      const msgB = replies.find(m => m.id === b.id.split('_')[1]);
+      const msgA = replies.find((m) => m.id === a.id.split('_')[1]);
+      const msgB = replies.find((m) => m.id === b.id.split('_')[1]);
       if (!msgA || !msgB) return 0;
       return msgB.timestamp.getTime() - msgA.timestamp.getTime();
     });
@@ -215,14 +218,16 @@ export class ThreadStateService {
     if (replies.length === 0) return [];
 
     const currentUserId = this.authStore.user()?.uid;
-    const otherUser = replies.find(r => r.senderId !== currentUserId);
+    const otherUser = replies.find((r) => r.senderId !== currentUserId);
     if (!otherUser) return [];
 
-    return [{
-      id: otherUser.senderId,
-      name: otherUser.senderName,
-      avatar: otherUser.senderAvatar,
-    }];
+    return [
+      {
+        id: otherUser.senderId,
+        name: otherUser.senderName,
+        avatar: otherUser.senderAvatar,
+      },
+    ];
   };
 
   /**
@@ -233,13 +238,13 @@ export class ThreadStateService {
    * @returns {UserListItem[]} Channel members
    */
   private getChannelMembers = (channelId: string): UserListItem[] => {
-    const channel = this.channelStore.channels().find(c => c.id === channelId);
+    const channel = this.channelStore.channels().find((c) => c.id === channelId);
     if (!channel?.members) return [];
 
     const allUsers = this.userStore.users();
     return channel.members
       .map((memberId: string) => {
-        const user = allUsers.find(u => u.uid === memberId);
+        const user = allUsers.find((u) => u.uid === memberId);
         if (!user) return null;
         return {
           id: user.uid,
@@ -271,7 +276,7 @@ export class ThreadStateService {
   hasThreadInfoChanged = (
     info: ThreadInfo,
     lastChannelId: string | null,
-    lastMessageId: string | null
+    lastMessageId: string | null,
   ): boolean => {
     return info.channelId !== lastChannelId || info.parentMessageId !== lastMessageId;
   };

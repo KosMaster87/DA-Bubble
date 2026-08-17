@@ -1,50 +1,52 @@
 @if (isOpen()) {
-<div class="members-options-menu" [attr.data-open]="isOpen()">
-  <div class="members-options-menu__overlay" (click)="onClose()"></div>
-  <div class="members-options-menu__content">
-    <!-- Header -->
-    <div class="members-options-menu__header">
-      <h2 class="members-options-menu__title">Members</h2>
-      <button
-        class="members-options-menu__close-btn"
-        (click)="onClose()"
-        [attr.aria-label]="'Close members menu'"
-      >
-        <img
-          src="/img/icon/window/close-default.svg"
-          alt=""
-          class="members-options-menu__close-icon"
-        />
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div class="members-options-menu__body">
-      <!-- Debug: {{ members().length }} members in menu -->
-      @if (members().length > 0) { @for (member of members(); track member.id) {
-      <app-user-list-item [user]="member" (itemClicked)="onMemberClick($event)" />
-      } } @else {
-      <div class="members-options-menu__empty">
-        <p>Keine Mitglieder verfügbar ({{ members().length }})</p>
-      </div>
-      }
-    </div>
-
-    <!-- Footer -->
-    <div class="members-options-menu__footer">
-      @if (showAddMember()) {
-      <button class="members-options-menu__add-wrapper" (click)="onAddMember()">
-        <span class="members-options-menu__add-content">
+  <div class="members-options-menu" [attr.data-open]="isOpen()">
+    <div class="members-options-menu__overlay" (click)="onClose()"></div>
+    <div class="members-options-menu__content">
+      <!-- Header -->
+      <div class="members-options-menu__header">
+        <h2 class="members-options-menu__title">Members</h2>
+        <button
+          class="members-options-menu__close-btn"
+          (click)="onClose()"
+          [attr.aria-label]="'Close members menu'"
+        >
           <img
-            src="/img/icon/chat/add-member-default.svg"
+            src="/img/icon/window/close-default.svg"
             alt=""
-            class="members-options-menu__add-icon"
+            class="members-options-menu__close-icon"
           />
-          <span class="members-options-menu__add-text">Add member</span>
-        </span>
-      </button>
-      }
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="members-options-menu__body">
+        <!-- Debug: {{ members().length }} members in menu -->
+        @if (members().length > 0) {
+          @for (member of members(); track member.id) {
+            <app-user-list-item [user]="member" (itemClicked)="onMemberClick($event)" />
+          }
+        } @else {
+          <div class="members-options-menu__empty">
+            <p>Keine Mitglieder verfügbar ({{ members().length }})</p>
+          </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="members-options-menu__footer">
+        @if (showAddMember()) {
+          <button class="members-options-menu__add-wrapper" (click)="onAddMember()">
+            <span class="members-options-menu__add-content">
+              <img
+                src="/img/icon/chat/add-member-default.svg"
+                alt=""
+                class="members-options-menu__add-icon"
+              />
+              <span class="members-options-menu__add-text">Add member</span>
+            </span>
+          </button>
+        }
+      </div>
     </div>
   </div>
-</div>
 }

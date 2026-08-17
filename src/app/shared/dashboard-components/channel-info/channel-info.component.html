@@ -1,168 +1,175 @@
 @if (isVisible()) {
-<div class="channel-info">
-  <div class="channel-info__overlay" (click)="onClose()"></div>
-  <div class="channel-info__content">
-    <!-- Header -->
-    <div class="channel-info__header">
-      <div class="channel-info__title-group">
-        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="channel-info__title-icon" />
-        <h2 class="channel-info__title">{{ channel().name }}</h2>
-      </div>
-      <button
-        class="channel-info__close-btn"
-        (click)="onClose()"
-        [attr.aria-label]="'Close channel info'"
-      >
-        <img src="/img/icon/window/close-default.svg" alt="" class="channel-info__close-icon" />
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div class="channel-info__body">
-      <!-- Channel Name Section -->
-      <div class="channel-info__section" [class.channel-info__section--editing]="isEditingName()">
-        <div class="channel-info__content-wrapper">
-          <div class="channel-info__section-header">
-            <label class="channel-info__label">Channel-name</label>
-            @if (currentUserId() && channel().createdBy === currentUserId()) {
-            <div class="channel-info__button-wrapper">
-              @if (!isEditingName()) {
-              <button class="channel-info__edit-btn" (click)="onEditName()">Edit</button>
-              } @else {
-              <button class="channel-info__save-btn" (click)="onSaveName()">Save</button>
-              }
-            </div>
-            }
-          </div>
-
-          <!-- Display Mode -->
-          <div class="channel-info__channel-display">
-            <img
-              src="/img/icon/channel-bar/tag-default.svg"
-              alt=""
-              class="channel-info__hash-icon"
-            />
-            <span class="channel-info__channel-name">{{ channel().name }}</span>
-          </div>
-
-          <!-- Edit Mode Input -->
-          <div class="channel-info__input-wrapper">
-            <img
-              src="/img/icon/channel-bar/tag-default.svg"
-              alt=""
-              class="channel-info__input-icon"
-            />
-            <textarea
-              class="channel-info__input"
-              [(ngModel)]="editedName"
-              [placeholder]="channel().name"
-              rows="1"
-              (keydown.enter)="$event.preventDefault(); onSaveName()"
-              (keydown.escape)="isEditingName.set(false)"
-            ></textarea>
-          </div>
+  <div class="channel-info">
+    <div class="channel-info__overlay" (click)="onClose()"></div>
+    <div class="channel-info__content">
+      <!-- Header -->
+      <div class="channel-info__header">
+        <div class="channel-info__title-group">
+          <img
+            src="/img/icon/channel-bar/tag-default.svg"
+            alt=""
+            class="channel-info__title-icon"
+          />
+          <h2 class="channel-info__title">{{ channel().name }}</h2>
         </div>
+        <button
+          class="channel-info__close-btn"
+          (click)="onClose()"
+          [attr.aria-label]="'Close channel info'"
+        >
+          <img src="/img/icon/window/close-default.svg" alt="" class="channel-info__close-icon" />
+        </button>
       </div>
 
-      <!-- Description Section -->
-      <div
-        class="channel-info__section"
-        [class.channel-info__section--editing]="isEditingDescription()"
-      >
-        <div class="channel-info__content-wrapper">
-          <div class="channel-info__section-header">
-            <label class="channel-info__label">Description</label>
-            @if (currentUserId() && channel().createdBy === currentUserId()) {
-            <div class="channel-info__button-wrapper">
-              @if (!isEditingDescription()) {
-              <button class="channel-info__edit-btn" (click)="onEditDescription()">Edit</button>
-              } @else {
-              <button class="channel-info__save-btn" (click)="onSaveDescription()">Save</button>
-              }
-            </div>
-            }
-          </div>
-
-          <!-- Display Mode -->
-          <p class="channel-info__description">{{ channel().description }}</p>
-
-          <!-- Edit Mode -->
-          <textarea
-            class="channel-info__textarea"
-            [(ngModel)]="editedDescription"
-            [placeholder]="channel().description"
-            rows="4"
-            (keydown.escape)="isEditingDescription.set(false)"
-          ></textarea>
-
-          <div class="channel-info__meta-wrapper">
-            <div class="channel-info__divider"></div>
-
-            <!-- Roles Section -->
-            <div class="channel-info__roles-wrapper">
-              <div class="channel-info__meta">
-                <label class="channel-info__meta-label">Created by</label>
-                <button class="channel-info__author-link" (click)="onCreatedByClick()">
-                  {{ channel().createdByName }}
-                </button>
-              </div>
-
-              <!-- Admins List -->
-              @if (channel().admins.length > 0) {
-              <div class="channel-info__meta">
-                <label class="channel-info__meta-label">Admins</label>
-                <div class="channel-info__admins-list">
-                  @for (admin of channel().admins; track admin.uid) {
-                  <button class="channel-info__author-link" (click)="onAdminClick(admin.uid)">
-                    {{ admin.name }}
-                  </button>
+      <!-- Body -->
+      <div class="channel-info__body">
+        <!-- Channel Name Section -->
+        <div class="channel-info__section" [class.channel-info__section--editing]="isEditingName()">
+          <div class="channel-info__content-wrapper">
+            <div class="channel-info__section-header">
+              <label class="channel-info__label">Channel-name</label>
+              @if (currentUserId() && channel().createdBy === currentUserId()) {
+                <div class="channel-info__button-wrapper">
+                  @if (!isEditingName()) {
+                    <button class="channel-info__edit-btn" (click)="onEditName()">Edit</button>
+                  } @else {
+                    <button class="channel-info__save-btn" (click)="onSaveName()">Save</button>
                   }
                 </div>
-              </div>
               }
             </div>
 
-            <!-- Private Channel Checkbox (only editable by owner) -->
-            <div class="channel-info__meta">
-              <app-checkbox-private-channel
-                [checked]="channel().isPrivate"
-                [disabled]="!currentUserId() || channel().createdBy !== currentUserId()"
-                (checkedChange)="onPrivateChange($event)"
+            <!-- Display Mode -->
+            <div class="channel-info__channel-display">
+              <img
+                src="/img/icon/channel-bar/tag-default.svg"
+                alt=""
+                class="channel-info__hash-icon"
               />
+              <span class="channel-info__channel-name">{{ channel().name }}</span>
+            </div>
+
+            <!-- Edit Mode Input -->
+            <div class="channel-info__input-wrapper">
+              <img
+                src="/img/icon/channel-bar/tag-default.svg"
+                alt=""
+                class="channel-info__input-icon"
+              />
+              <textarea
+                class="channel-info__input"
+                [(ngModel)]="editedName"
+                [placeholder]="channel().name"
+                rows="1"
+                (keydown.enter)="$event.preventDefault(); onSaveName()"
+                (keydown.escape)="isEditingName.set(false)"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Section -->
+        <div
+          class="channel-info__section"
+          [class.channel-info__section--editing]="isEditingDescription()"
+        >
+          <div class="channel-info__content-wrapper">
+            <div class="channel-info__section-header">
+              <label class="channel-info__label">Description</label>
+              @if (currentUserId() && channel().createdBy === currentUserId()) {
+                <div class="channel-info__button-wrapper">
+                  @if (!isEditingDescription()) {
+                    <button class="channel-info__edit-btn" (click)="onEditDescription()">
+                      Edit
+                    </button>
+                  } @else {
+                    <button class="channel-info__save-btn" (click)="onSaveDescription()">
+                      Save
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Display Mode -->
+            <p class="channel-info__description">{{ channel().description }}</p>
+
+            <!-- Edit Mode -->
+            <textarea
+              class="channel-info__textarea"
+              [(ngModel)]="editedDescription"
+              [placeholder]="channel().description"
+              rows="4"
+              (keydown.escape)="isEditingDescription.set(false)"
+            ></textarea>
+
+            <div class="channel-info__meta-wrapper">
+              <div class="channel-info__divider"></div>
+
+              <!-- Roles Section -->
+              <div class="channel-info__roles-wrapper">
+                <div class="channel-info__meta">
+                  <label class="channel-info__meta-label">Created by</label>
+                  <button class="channel-info__author-link" (click)="onCreatedByClick()">
+                    {{ channel().createdByName }}
+                  </button>
+                </div>
+
+                <!-- Admins List -->
+                @if (channel().admins.length > 0) {
+                  <div class="channel-info__meta">
+                    <label class="channel-info__meta-label">Admins</label>
+                    <div class="channel-info__admins-list">
+                      @for (admin of channel().admins; track admin.uid) {
+                        <button class="channel-info__author-link" (click)="onAdminClick(admin.uid)">
+                          {{ admin.name }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Private Channel Checkbox (only editable by owner) -->
+              <div class="channel-info__meta">
+                <app-checkbox-private-channel
+                  [checked]="channel().isPrivate"
+                  [disabled]="!currentUserId() || channel().createdBy !== currentUserId()"
+                  (checkedChange)="onPrivateChange($event)"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Members Section (Mobile Only) -->
+        <div class="channel-info__section channel-info__section--members">
+          <div class="channel-info__content-wrapper">
+            <div class="channel-info__section-header">
+              <label class="channel-info__label">Members ({{ members().length }})</label>
+            </div>
+
+            <div class="channel-info__members-list">
+              @for (member of members(); track member.id) {
+                <app-user-list-item [user]="member" (itemClicked)="onMemberClick($event)" />
+              }
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Members Section (Mobile Only) -->
-      <div class="channel-info__section channel-info__section--members">
-        <div class="channel-info__content-wrapper">
-          <div class="channel-info__section-header">
-            <label class="channel-info__label">Members ({{ members().length }})</label>
-          </div>
-
-          <div class="channel-info__members-list">
-            @for (member of members(); track member.id) {
-            <app-user-list-item
-              [user]="member"
-              (itemClicked)="onMemberClick($event)"
-            />
-            }
-          </div>
-        </div>
+      <!-- Footer -->
+      <div class="channel-info__footer">
+        @if (currentUserId()) {
+          @if (channel().createdBy === currentUserId()) {
+            <!-- Owner: Show Delete Button -->
+            <app-btn-delete label="Delete channel" (clicked)="onDeleteChannel()" />
+          } @else {
+            <!-- Non-Owner: Show Leave Button -->
+            <app-btn-action label="Leave channel" (clicked)="onLeaveChannel()" />
+          }
+        }
       </div>
     </div>
-
-    <!-- Footer -->
-    <div class="channel-info__footer">
-      @if (currentUserId()) { @if (channel().createdBy === currentUserId()) {
-      <!-- Owner: Show Delete Button -->
-      <app-btn-delete label="Delete channel" (clicked)="onDeleteChannel()" />
-      } @else {
-      <!-- Non-Owner: Show Leave Button -->
-      <app-btn-action label="Leave channel" (clicked)="onLeaveChannel()" />
-      } }
-    </div>
   </div>
-</div>
 }

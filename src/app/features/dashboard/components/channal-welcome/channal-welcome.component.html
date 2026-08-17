@@ -31,28 +31,28 @@
 
       <!-- Profile View -->
       @if (selectedMember()) {
-      <app-profile-view
-        [user]="selectedMember()!"
-        [isVisible]="isProfileViewOpen()"
-        [isOwnProfile]="isOwnProfile()"
-        [isChannelOwner]="false"
-        [isCurrentUserAdmin]="isCurrentUserAdmin()"
-        [isSelectedUserOwner]="false"
-        (closeClicked)="onProfileViewClose()"
-        (editClicked)="onProfileEdit()"
-        (messageClicked)="onProfileMessage()"
-        (removeMemberClicked)="onRemoveMember()"
-      />
+        <app-profile-view
+          [user]="selectedMember()!"
+          [isVisible]="isProfileViewOpen()"
+          [isOwnProfile]="isOwnProfile()"
+          [isChannelOwner]="false"
+          [isCurrentUserAdmin]="isCurrentUserAdmin()"
+          [isSelectedUserOwner]="false"
+          (closeClicked)="onProfileViewClose()"
+          (editClicked)="onProfileEdit()"
+          (messageClicked)="onProfileMessage()"
+          (removeMemberClicked)="onRemoveMember()"
+        />
       }
 
       <!-- Edit Profile -->
       @if (editProfileUser()) {
-      <app-profile-edit
-        [user]="editProfileUser()!"
-        [isVisible]="isEditProfileOpen()"
-        (closeClicked)="onEditProfileClose()"
-        (saveClicked)="onEditProfileSave($event)"
-      />
+        <app-profile-edit
+          [user]="editProfileUser()!"
+          [isVisible]="isEditProfileOpen()"
+          (closeClicked)="onEditProfileClose()"
+          (saveClicked)="onEditProfileSave($event)"
+        />
       }
     </div>
   </div>
@@ -105,36 +105,36 @@
 
       <!-- Team Announcement -->
       @if (channelOwner()) {
-      <div class="channal-welcome__announcement">
-        <div class="channal-welcome__announcement-header">
-          <button class="channal-welcome__owner-btn" (click)="onViewOwnerProfile()">
-            <span class="channal-welcome__owner-content">
-              <span class="channal-welcome__owner-avatar-wrapper">
-                <img
-                  [src]="channelOwner()!.avatar"
-                  [alt]="channelOwner()!.name"
-                  class="channal-welcome__owner-avatar"
-                />
-                <img
-                  [src]="
-                    channelOwner()!.isOnline
-                      ? '/img/icon/profile/status-online.svg'
-                      : '/img/icon/profile/status-away.svg'
-                  "
-                  alt=""
-                  class="channal-welcome__owner-status-badge"
-                />
+        <div class="channal-welcome__announcement">
+          <div class="channal-welcome__announcement-header">
+            <button class="channal-welcome__owner-btn" (click)="onViewOwnerProfile()">
+              <span class="channal-welcome__owner-content">
+                <span class="channal-welcome__owner-avatar-wrapper">
+                  <img
+                    [src]="channelOwner()!.avatar"
+                    [alt]="channelOwner()!.name"
+                    class="channal-welcome__owner-avatar"
+                  />
+                  <img
+                    [src]="
+                      channelOwner()!.isOnline
+                        ? '/img/icon/profile/status-online.svg'
+                        : '/img/icon/profile/status-away.svg'
+                    "
+                    alt=""
+                    class="channal-welcome__owner-status-badge"
+                  />
+                </span>
+                <span class="channal-welcome__owner-name">{{ channelOwner()!.name }}</span>
               </span>
-              <span class="channal-welcome__owner-name">{{ channelOwner()!.name }}</span>
-            </span>
-          </button>
-          <span class="channal-welcome__announcement-badge">Channel Owner</span>
+            </button>
+            <span class="channal-welcome__announcement-badge">Channel Owner</span>
+          </div>
+          <p class="channal-welcome__announcement-text">
+            🎉 Welcome to the team! We're glad to have you. If you have any questions, I and the
+            entire team are always here to help.
+          </p>
         </div>
-        <p class="channal-welcome__announcement-text">
-          🎉 Welcome to the team! We're glad to have you. If you have any questions, I and the
-          entire team are always here to help.
-        </p>
-      </div>
       }
 
       <!-- Team Stats -->

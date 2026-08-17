@@ -29,7 +29,7 @@ export class DashboardRouteHandlerService {
       showSettings: () => void;
       showChannel: (id: string) => void;
       showDirectMessage: (id: string) => void;
-    }
+    },
   ): void => {
     const { path, id, threadId } = params;
 

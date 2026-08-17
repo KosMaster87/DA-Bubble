@@ -25,7 +25,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Accept invitation and trigger appropriate handler
-    * @description Provides the single acceptance pipeline so validation, duplicate prevention, status updates, and type-specific handling stay synchronized.
+   * @description Provides the single acceptance pipeline so validation, duplicate prevention, status updates, and type-specific handling stay synchronized.
    * @param invitation Invitation to accept
    * @param currentUserId Current user's ID
    * @param onChannelInvitation Callback for channel invitation handling
@@ -86,7 +86,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Handle direct message invitation acceptance
-    * @description Acknowledges DM invitation acceptance now while preserving a dedicated extension point for future auto-open DM routing.
+   * @description Acknowledges DM invitation acceptance now while preserving a dedicated extension point for future auto-open DM routing.
    * @param invitation DM invitation
    */
   handleDirectMessageInvitation = async (invitation: Invitation): Promise<void> => {
@@ -96,7 +96,7 @@ export class InvitationAcceptanceService {
 
   /**
    * Decline invitation
-    * @description Applies decline status through the invitation service and captures outcome logs so failure diagnosis remains straightforward.
+   * @description Applies decline status through the invitation service and captures outcome logs so failure diagnosis remains straightforward.
    * @param invitationId Invitation ID to decline
    */
   declineInvitation = async (invitationId: string): Promise<void> => {

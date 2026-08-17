@@ -6,14 +6,14 @@
 
 import { inject, Injectable } from '@angular/core';
 import {
-    DocumentData,
-    Firestore,
-    limit,
-    onSnapshot,
-    orderBy,
-    query,
-    QuerySnapshot,
-    Unsubscribe,
+  DocumentData,
+  Firestore,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  QuerySnapshot,
+  Unsubscribe,
 } from '@angular/fire/firestore';
 import { Message } from '@core/models/message.model';
 import { ChannelMessageOperationsService } from '../channel-message-operations/channel-message-operations.service';

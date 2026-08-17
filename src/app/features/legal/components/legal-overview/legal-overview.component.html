@@ -8,26 +8,26 @@
 
   <div class="legal-overview__grid">
     @for (link of legalLinks; track link.title) {
-    <button class="legal-card" (click)="navigateTo(link)">
-      <div class="legal-card__icon-wrapper">
-        <img [src]="link.icon" [alt]="link.title + ' icon'" class="legal-card__icon" />
-      </div>
-      <div class="legal-card__content">
-        <h2 class="legal-card__title">{{ link.title }}</h2>
-        <p class="legal-card__description">{{ link.description }}</p>
-      </div>
-      <div class="legal-card__arrow">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M9 18L15 12L9 6"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </div>
-    </button>
+      <button class="legal-card" (click)="navigateTo(link)">
+        <div class="legal-card__icon-wrapper">
+          <img [src]="link.icon" [alt]="link.title + ' icon'" class="legal-card__icon" />
+        </div>
+        <div class="legal-card__content">
+          <h2 class="legal-card__title">{{ link.title }}</h2>
+          <p class="legal-card__description">{{ link.description }}</p>
+        </div>
+        <div class="legal-card__arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 18L15 12L9 6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </button>
     }
   </div>
 

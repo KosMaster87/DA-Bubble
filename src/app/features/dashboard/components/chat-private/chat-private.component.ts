@@ -13,8 +13,8 @@ import { ProfileManagementService } from '@core/services/profile-management/prof
 import { UnreadService } from '@core/services/unread/unread.service';
 import { ChannelViewComponent } from '@shared/dashboard-components/channel-view/channel-view.component';
 import {
-    ConversationMessagesComponent,
-    type Message,
+  ConversationMessagesComponent,
+  type Message,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import { MessageBoxComponent } from '@shared/dashboard-components/message-box/message-box.component';
 import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/profile-edit.component';

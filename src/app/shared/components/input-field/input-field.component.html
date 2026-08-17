@@ -3,7 +3,7 @@
 
   <div class="input-field__wrapper">
     @if (icon()) {
-    <img [src]="icon()" [alt]="label()" class="input-field__icon" />
+      <img [src]="icon()" [alt]="label()" class="input-field__icon" />
     }
 
     <input
@@ -16,6 +16,6 @@
   </div>
 
   @if (control().touched && control().invalid) {
-  <small class="input-field__error" @slideDown>{{ getErrorMessage() }}</small>
+    <small class="input-field__error" @slideDown>{{ getErrorMessage() }}</small>
   }
 </div>

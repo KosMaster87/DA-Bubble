@@ -10,8 +10,8 @@ import { UserTransformationService } from '@core/services/user-transformation/us
 import type { DMInfo } from '@features/dashboard/components/chat-private/chat-private.component';
 import type { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 import type {
-    Message,
-    MessageGroup,
+  Message,
+  MessageGroup,
 } from '@shared/dashboard-components/conversation-messages/conversation-messages.component';
 import type { MessageSearchItem } from '@shared/dashboard-components/message-search-item/message-search-item.component';
 import type { EditProfileUser } from '@shared/dashboard-components/profile-edit/profile-edit.component';

@@ -9,13 +9,7 @@ import { ReactionEmoji } from '@core/models/reaction-emoji.model';
 import { ReactionEmojiService } from '@core/services/reaction-emoji/reaction-emoji.service';
 
 export type ReactionType =
-  | 'thumbs-up'
-  | 'checked'
-  | 'rocket'
-  | 'nerd-face'
-  | 'add-reaction'
-  | 'comment'
-  | string;
+  'thumbs-up' | 'checked' | 'rocket' | 'nerd-face' | 'add-reaction' | 'comment' | string;
 
 @Component({
   selector: 'app-reaction-bar',

@@ -24,7 +24,7 @@ export class InvitationNavigationService {
   /**
    * Navigate to channel after delay
    * Cancellable to prevent race conditions with manual navigation
-    * @description Runs channel redirects through a guarded delayed path so invitation clicks are deduplicated and still cancellable during user-driven route changes.
+   * @description Runs channel redirects through a guarded delayed path so invitation clicks are deduplicated and still cancellable during user-driven route changes.
    * @param channelId Channel ID to navigate to
    */
   navigateToChannel = async (channelId: string): Promise<void> => {

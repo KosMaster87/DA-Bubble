@@ -19,31 +19,31 @@
   <div class="thread__messages">
     <!-- Parent Message -->
     @if (threadInfo().parentMessage) {
-    <div class="thread__parent">
-      <div class="thread__parent-label">Originalnachricht</div>
-      <div class="thread__parent-message">
-        <img
-          [src]="threadInfo().parentMessage!.senderAvatar"
-          [alt]="threadInfo().parentMessage!.senderName"
-          class="thread__parent-avatar"
-        />
-        <div class="thread__parent-content">
-          <div class="thread__parent-header">
-            <button
-              class="thread__parent-name"
-              (click)="onSenderClick(threadInfo().parentMessage!.senderId)"
-            >
-              {{ threadInfo().parentMessage!.senderName }}
-            </button>
-            <span class="thread__parent-time">{{
-              threadInfo().parentMessage!.timestamp | date : 'short'
-            }}</span>
+      <div class="thread__parent">
+        <div class="thread__parent-label">Originalnachricht</div>
+        <div class="thread__parent-message">
+          <img
+            [src]="threadInfo().parentMessage!.senderAvatar"
+            [alt]="threadInfo().parentMessage!.senderName"
+            class="thread__parent-avatar"
+          />
+          <div class="thread__parent-content">
+            <div class="thread__parent-header">
+              <button
+                class="thread__parent-name"
+                (click)="onSenderClick(threadInfo().parentMessage!.senderId)"
+              >
+                {{ threadInfo().parentMessage!.senderName }}
+              </button>
+              <span class="thread__parent-time">{{
+                threadInfo().parentMessage!.timestamp | date: 'short'
+              }}</span>
+            </div>
+            <p class="thread__parent-text">{{ threadInfo().parentMessage!.content }}</p>
           </div>
-          <p class="thread__parent-text">{{ threadInfo().parentMessage!.content }}</p>
         </div>
+        <div class="thread__divider"></div>
       </div>
-      <div class="thread__divider"></div>
-    </div>
     }
 
     <!-- Thread Replies -->
@@ -75,24 +75,24 @@
 
   <!-- Profile View -->
   @if (selectedUserProfile()) {
-  <app-profile-view
-    [user]="selectedUserProfile()!"
-    [isVisible]="isProfileViewOpen()"
-    [isOwnProfile]="isOwnProfile()"
-    (closeClicked)="onProfileViewClose()"
-    (editClicked)="onProfileEdit()"
-    (messageClicked)="onProfileMessage()"
-  />
+    <app-profile-view
+      [user]="selectedUserProfile()!"
+      [isVisible]="isProfileViewOpen()"
+      [isOwnProfile]="isOwnProfile()"
+      (closeClicked)="onProfileViewClose()"
+      (editClicked)="onProfileEdit()"
+      (messageClicked)="onProfileMessage()"
+    />
   }
 
   <!-- Edit Profile -->
   @if (editProfileUser()) {
-  <app-profile-edit
-    [user]="editProfileUser()!"
-    [isVisible]="isEditProfileOpen()"
-    (closeClicked)="onEditProfileClose()"
-    (saveClicked)="onEditProfileSave($event)"
-  />
+    <app-profile-edit
+      [user]="editProfileUser()!"
+      [isVisible]="isEditProfileOpen()"
+      (closeClicked)="onEditProfileClose()"
+      (saveClicked)="onEditProfileSave($event)"
+    />
   }
 
   <!-- Channel View -->

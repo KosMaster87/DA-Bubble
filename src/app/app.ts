@@ -42,7 +42,7 @@ export class App implements OnDestroy {
 
   /**
    * Initialize user presence listener based on auth state
-    * @description Couples auth-state changes to presence-listener lifecycle so online status tracking starts and stops exactly with login state.
+   * @description Couples auth-state changes to presence-listener lifecycle so online status tracking starts and stops exactly with login state.
    */
   private initializePresenceListener(): void {
     effect(() => {

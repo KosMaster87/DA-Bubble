@@ -24,13 +24,13 @@
 
       <div class="avatar-selection__grid">
         @for (avatar of avatars; track avatar.id) {
-        <div
-          class="avatar-selection__item"
-          [class.avatar-selection__item--selected]="avatar.id === selectedAvatar()"
-          (click)="selectAvatar(avatar.id)"
-        >
-          <img [src]="avatar.src" [alt]="avatar.alt" class="avatar-selection__item-img" />
-        </div>
+          <div
+            class="avatar-selection__item"
+            [class.avatar-selection__item--selected]="avatar.id === selectedAvatar()"
+            (click)="selectAvatar(avatar.id)"
+          >
+            <img [src]="avatar.src" [alt]="avatar.alt" class="avatar-selection__item-img" />
+          </div>
         }
       </div>
     </section>

@@ -25,7 +25,7 @@ export class InvitationManagementService {
 
   /**
    * Accept invitation and handle channel/DM logic
-    * @description Orchestrates the acceptance flow through delegated handlers so channel and DM invitation paths share one guarded execution contract.
+   * @description Orchestrates the acceptance flow through delegated handlers so channel and DM invitation paths share one guarded execution contract.
    * @param invitation Invitation to accept
    * @param currentUserId Current user's ID
    */
@@ -50,7 +50,7 @@ export class InvitationManagementService {
 
   /**
    * Decline invitation
-    * @description Routes decline through the acceptance service so status transitions use the same state-management boundary as acceptance.
+   * @description Routes decline through the acceptance service so status transitions use the same state-management boundary as acceptance.
    * @param invitationId Invitation ID to decline
    */
   declineInvitation = async (invitationId: string): Promise<void> => {

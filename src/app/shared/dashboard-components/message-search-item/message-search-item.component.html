@@ -6,7 +6,11 @@
 >
   <div class="message-search-item__icon">
     <img
-      [src]="item().type === 'channel' ? '/img/icon/channel-bar/tag-default.svg' : '/img/icon/channel-bar/account_circle.svg'"
+      [src]="
+        item().type === 'channel'
+          ? '/img/icon/channel-bar/tag-default.svg'
+          : '/img/icon/channel-bar/account_circle.svg'
+      "
       alt="icon"
     />
   </div>

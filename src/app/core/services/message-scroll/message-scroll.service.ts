@@ -14,7 +14,7 @@ export class MessageScrollService {
    * Scroll to a specific message
    * @param {string} messageId - Message ID in format 'channelId_messageId' or just 'messageId'
    * @returns {void}
-    * @description Performs smooth scroll and a temporary highlight so users can immediately orient to the target message.
+   * @description Performs smooth scroll and a temporary highlight so users can immediately orient to the target message.
    */
   scrollToMessage = (messageId: string): void => {
     const actualMessageId = this.extractMessageId(messageId);

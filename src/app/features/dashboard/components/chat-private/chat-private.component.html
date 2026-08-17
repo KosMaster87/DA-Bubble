@@ -5,26 +5,26 @@
 
     <!-- Profile View -->
     @if (selectedUserProfile()) {
-    <app-profile-view
-      [user]="selectedUserProfile()!"
-      [isVisible]="isProfileViewOpen()"
-      [isOwnProfile]="isOwnProfile()"
-      [isDirectMessage]="true"
-      (closeClicked)="onProfileViewClose()"
-      (editClicked)="onProfileEdit()"
-      (messageClicked)="onProfileMessage()"
-      (leaveConversationClicked)="onLeaveConversation()"
-    />
+      <app-profile-view
+        [user]="selectedUserProfile()!"
+        [isVisible]="isProfileViewOpen()"
+        [isOwnProfile]="isOwnProfile()"
+        [isDirectMessage]="true"
+        (closeClicked)="onProfileViewClose()"
+        (editClicked)="onProfileEdit()"
+        (messageClicked)="onProfileMessage()"
+        (leaveConversationClicked)="onLeaveConversation()"
+      />
     }
 
     <!-- Edit Profile -->
     @if (editProfileUser()) {
-    <app-profile-edit
-      [user]="editProfileUser()!"
-      [isVisible]="isEditProfileOpen()"
-      (closeClicked)="onEditProfileClose()"
-      (saveClicked)="onEditProfileSave($event)"
-    />
+      <app-profile-edit
+        [user]="editProfileUser()!"
+        [isVisible]="isEditProfileOpen()"
+        (closeClicked)="onEditProfileClose()"
+        (saveClicked)="onEditProfileSave($event)"
+      />
     }
 
     <!-- Channel View -->
@@ -42,13 +42,13 @@
   <!-- Messages Area -->
   <div class="chat-private__messages">
     @if (hasMoreMessages()) {
-    <button
-      class="chat-private__load-more"
-      (click)="loadOlderMessages()"
-      [disabled]="loadingOlderMessages()"
-    >
-      {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
-    </button>
+      <button
+        class="chat-private__load-more"
+        (click)="loadOlderMessages()"
+        [disabled]="loadingOlderMessages()"
+      >
+        {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
+      </button>
     }
     <app-conversation-messages
       [conversationId]="'dm-' + dmInfo().conversationId"

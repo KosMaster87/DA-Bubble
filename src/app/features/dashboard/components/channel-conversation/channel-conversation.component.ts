@@ -295,7 +295,11 @@ export class ChannelConversationComponent {
    * @param {boolean} [data.isPrivate] - Updated privacy state
    * @returns {Promise<void>}
    */
-  protected onChannelUpdated = async (data: { name?: string; description?: string; isPrivate?: boolean }): Promise<void> => {
+  protected onChannelUpdated = async (data: {
+    name?: string;
+    description?: string;
+    isPrivate?: boolean;
+  }): Promise<void> => {
     await this.handlers.handleChannelUpdated(this.channel().id, data);
   };
 
@@ -320,7 +324,11 @@ export class ChannelConversationComponent {
     const currentUserId = this.authStore.user()?.uid;
     const channelData = this.channel();
     if (!currentUserId || !channelData) return;
-    const deleted = await this.handlers.handleDeleteChannel(channelData.id, currentUserId, channelData.name);
+    const deleted = await this.handlers.handleDeleteChannel(
+      channelData.id,
+      currentUserId,
+      channelData.name,
+    );
     if (deleted) this.channelLeft.emit();
   };
 
@@ -333,8 +341,15 @@ export class ChannelConversationComponent {
    * @param {string} data.newContent - Updated message content
    * @returns {Promise<void>}
    */
-  protected onMessageEdited = async (data: { messageId: string; newContent: string }): Promise<void> => {
-    await this.channelMessageInteraction.editMessage(this.channel().id, data.messageId, data.newContent);
+  protected onMessageEdited = async (data: {
+    messageId: string;
+    newContent: string;
+  }): Promise<void> => {
+    await this.channelMessageInteraction.editMessage(
+      this.channel().id,
+      data.messageId,
+      data.newContent,
+    );
   };
 
   /**

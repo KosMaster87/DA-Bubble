@@ -18,12 +18,7 @@ import { UserStore } from '@stores/users/user.store';
 
 @Component({
   selector: 'app-chat-new-msg',
-  imports: [
-    FormsModule,
-    MessageBoxComponent,
-    UserSelectionComponent,
-    ChannelSelectionComponent,
-  ],
+  imports: [FormsModule, MessageBoxComponent, UserSelectionComponent, ChannelSelectionComponent],
   templateUrl: './chat-new-msg.component.html',
   styleUrl: './chat-new-msg.component.scss',
 })
@@ -39,7 +34,7 @@ export class ChatNewMsgComponent {
 
   /**
    * Get search prefix from query
-    * @description Isolates prefix parsing so routing between user and channel autocomplete modes is deterministic and reusable.
+   * @description Isolates prefix parsing so routing between user and channel autocomplete modes is deterministic and reusable.
    * @returns {Signal<string>} Search prefix (# or @ or empty)
    */
   protected searchPrefix = computed(() => {
@@ -51,25 +46,29 @@ export class ChatNewMsgComponent {
 
   /**
    * Check if user selection popup should show
-    * @description Gates user suggestions on intent and result presence so dropdown UI only appears for actionable user queries.
+   * @description Gates user suggestions on intent and result presence so dropdown UI only appears for actionable user queries.
    * @returns {Signal<boolean>} True if user dropdown visible
    */
-  protected showUserSelection = computed(() => this.isDropdownOpen() && this.searchPrefix() === '@' && this.userResults().length > 0);
+  protected showUserSelection = computed(
+    () => this.isDropdownOpen() && this.searchPrefix() === '@' && this.userResults().length > 0,
+  );
 
   /**
    * Check if channel selection popup should show
-    * @description Mirrors user-dropdown gating for channels to keep autocomplete behavior symmetric across mention types.
+   * @description Mirrors user-dropdown gating for channels to keep autocomplete behavior symmetric across mention types.
    * @returns {Signal<boolean>} True if channel dropdown visible
    */
-  protected showChannelSelection = computed(() => this.isDropdownOpen() && this.searchPrefix() === '#' && this.channelResults().length > 0);
+  protected showChannelSelection = computed(
+    () => this.isDropdownOpen() && this.searchPrefix() === '#' && this.channelResults().length > 0,
+  );
 
   /**
    * All workspace users for message-box mentions
-    * @description Projects store users into mention-ready UI items so templates do not depend on raw user-entity shape.
+   * @description Projects store users into mention-ready UI items so templates do not depend on raw user-entity shape.
    * @returns {Signal<UserListItem[]>} User list items
    */
   protected allUsers = computed<UserListItem[]>(() => {
-    return this.userStore.users().map(user => ({
+    return this.userStore.users().map((user) => ({
       id: user.uid,
       name: user.displayName,
       avatar: user.photoURL || '',
@@ -78,7 +77,7 @@ export class ChatNewMsgComponent {
 
   /**
    * All public channels for message-box mentions
-    * @description Limits mention targets to public channels so compose suggestions respect channel visibility rules.
+   * @description Limits mention targets to public channels so compose suggestions respect channel visibility rules.
    * @returns {Signal<ChannelListItem[]>} Channel list items
    */
   protected channelListItems = computed<ChannelListItem[]>(() => {
@@ -90,20 +89,20 @@ export class ChatNewMsgComponent {
 
   /**
    * Search results from autocomplete service
-    * @description Consumes shared autocomplete state so this component stays aligned with global search matching logic.
+   * @description Consumes shared autocomplete state so this component stays aligned with global search matching logic.
    * @returns {Signal} Autocomplete search results
    */
   protected searchResults = this.searchService.searchResults;
 
   /**
    * Filtered user results from search
-    * @description Normalizes service results into user row models used by the selection dropdown component.
+   * @description Normalizes service results into user row models used by the selection dropdown component.
    * @returns {Signal<UserListItem[]>} User search results
    */
   protected userResults = computed<UserListItem[]>(() => {
     return this.searchResults()
-      .filter(r => r.type === 'user')
-      .map(r => ({
+      .filter((r) => r.type === 'user')
+      .map((r) => ({
         id: r.id,
         name: r.displayName.replace('@', ''),
         avatar: r.avatar || '',
@@ -112,13 +111,13 @@ export class ChatNewMsgComponent {
 
   /**
    * Filtered channel results from search
-    * @description Normalizes service results into channel row models so dropdown rendering remains type-safe and consistent.
+   * @description Normalizes service results into channel row models so dropdown rendering remains type-safe and consistent.
    * @returns {Signal<ChannelListItem[]>} Channel search results
    */
   protected channelResults = computed<ChannelListItem[]>(() => {
     return this.searchResults()
-      .filter(r => r.type === 'channel')
-      .map(r => ({
+      .filter((r) => r.type === 'channel')
+      .map((r) => ({
         id: r.id,
         name: r.displayName.replace('#', ''),
       }));
@@ -126,14 +125,14 @@ export class ChatNewMsgComponent {
 
   /**
    * Check if search has any results
-    * @description Provides a single empty-state predicate for template branches to avoid repeated length checks in markup.
+   * @description Provides a single empty-state predicate for template branches to avoid repeated length checks in markup.
    * @returns {Signal<boolean>} True if results exist
    */
   protected hasResults = computed(() => this.searchResults().length > 0);
 
   /**
    * Handle search input
-    * @description Syncs query text into autocomplete service and dropdown visibility so input and suggestion UI never diverge.
+   * @description Syncs query text into autocomplete service and dropdown visibility so input and suggestion UI never diverge.
    * @returns {void}
    */
   onSearch = (): void => {
@@ -144,7 +143,7 @@ export class ChatNewMsgComponent {
 
   /**
    * Close dropdown popup
-    * @description Central close handler keeps dropdown teardown behavior identical for outside-click and selection completion flows.
+   * @description Central close handler keeps dropdown teardown behavior identical for outside-click and selection completion flows.
    * @returns {void}
    */
   onDropdownClose = (): void => {
@@ -153,7 +152,7 @@ export class ChatNewMsgComponent {
 
   /**
    * Handle user selection from dropdown
-    * @description Clears transient autocomplete state before navigation so next compose session starts from a clean search context.
+   * @description Clears transient autocomplete state before navigation so next compose session starts from a clean search context.
    * @param {UserListItem} user - Selected user
    * @returns {void}
    */
@@ -165,7 +164,7 @@ export class ChatNewMsgComponent {
 
   /**
    * Handle channel selection from dropdown
-    * @description Reuses the same cleanup-before-navigation pattern as user selection to keep compose-to-destination transitions consistent.
+   * @description Reuses the same cleanup-before-navigation pattern as user selection to keep compose-to-destination transitions consistent.
    * @param {ChannelListItem} channel - Selected channel
    * @returns {void}
    */

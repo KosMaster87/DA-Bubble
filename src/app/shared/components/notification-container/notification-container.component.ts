@@ -49,7 +49,7 @@ export class NotificationContainerComponent {
 
   /**
    * Dismiss the last visible toast when Escape key is pressed.
-    * @description Provides a keyboard-only dismissal path so stacked notifications remain manageable without pointer interaction.
+   * @description Provides a keyboard-only dismissal path so stacked notifications remain manageable without pointer interaction.
    */
   @HostListener('document:keydown', ['$event'])
   onEscapeKey(event: KeyboardEvent): void {

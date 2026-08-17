@@ -31,7 +31,7 @@ export class ChannelSelectionComponent {
     const excludedChannels = ['dabubble-welcome', "let's bubble channels"];
 
     let filtered = this.channels().filter(
-      (channel) => !excludedChannels.includes(channel.name.toLowerCase())
+      (channel) => !excludedChannels.includes(channel.name.toLowerCase()),
     );
 
     if (search) {

@@ -37,7 +37,9 @@
       }
 
       <!-- Empty state -->
-      @if (channelResults().length === 0 && userResults().length === 0 && messageResults().length === 0) {
+      @if (
+        channelResults().length === 0 && userResults().length === 0 && messageResults().length === 0
+      ) {
         <p class="search-results-dropdown__empty">No results found</p>
       }
     </div>

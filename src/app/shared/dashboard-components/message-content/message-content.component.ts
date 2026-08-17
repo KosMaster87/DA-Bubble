@@ -39,7 +39,7 @@ export class MessageContentComponent {
     return this.parsingService.parse(
       this.content(),
       this.userStore.users(),
-      this.channelStore.channels()
+      this.channelStore.channels(),
     );
   });
 

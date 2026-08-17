@@ -7,10 +7,12 @@
     <!-- Body -->
     <div class="message-selection__body">
       @if (messages().length === 0) {
-      <p class="message-selection__empty">No messages found</p>
-      } @else { @for (message of messages(); track message.id) {
-      <app-message-search-item [item]="message" (itemClicked)="onMessageClick($event)" />
-      } }
+        <p class="message-selection__empty">No messages found</p>
+      } @else {
+        @for (message of messages(); track message.id) {
+          <app-message-search-item [item]="message" (itemClicked)="onMessageClick($event)" />
+        }
+      }
     </div>
   </div>
 </div>

@@ -30,9 +30,9 @@
       />
 
       @if (emailSent()) {
-      <p class="verify-email__success">✓ Verification email sent!</p>
+        <p class="verify-email__success">✓ Verification email sent!</p>
       } @else {
-      <app-guest-button label="Resend verification email" (clicked)="resendVerificationEmail()" />
+        <app-guest-button label="Resend verification email" (clicked)="resendVerificationEmail()" />
       }
 
       <app-secondary-button label="Back to Sign In" (clicked)="goToSignin()" />

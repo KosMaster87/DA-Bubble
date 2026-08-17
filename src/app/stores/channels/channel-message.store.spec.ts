@@ -10,8 +10,7 @@ import { ChannelMessageStore } from './channel-message.store';
 
 describe('ChannelMessageStore', () => {
   let handleMessagesLoaded:
-    | ((messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void)
-    | null = null;
+    ((messages: Message[], snapshot: QuerySnapshot<DocumentData>) => void) | null = null;
 
   const loadThreadsMock = vi.fn();
 

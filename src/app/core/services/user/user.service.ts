@@ -6,17 +6,17 @@
 
 import { Injectable, inject } from '@angular/core';
 import {
-    Firestore,
-    Unsubscribe,
-    collection,
-    deleteDoc,
-    doc,
-    getDoc,
-    limit,
-    onSnapshot,
-    orderBy,
-    query,
-    updateDoc,
+  Firestore,
+  Unsubscribe,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  updateDoc,
 } from '@angular/fire/firestore';
 import { User } from '@core/models/user.model';
 

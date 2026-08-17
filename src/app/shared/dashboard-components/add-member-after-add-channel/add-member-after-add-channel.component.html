@@ -60,50 +60,52 @@
 
       <!-- Selected Channels Display (always visible if channels selected) -->
       @if (selectedChannels().length > 0) {
-      <div class="add-member-after-channel__selected-channels-container">
-        <div class="add-member-after-channel__selected-channels">
-          @for (channel of selectedChannels(); track channel.id) {
-          <div class="add-member-after-channel__channel-chip-wrapper">
-            <div class="add-member-after-channel__channel-chip">
-              <span class="add-member-after-channel__channel-chip-name">#{{ channel.name }}</span>
-              <button
-                class="add-member-after-channel__channel-chip-remove"
-                (click)="removeSelectedChannel(channel.id)"
-                aria-label="Remove"
-              >
-                <img
-                  src="/img/icon/window/close-default.svg"
-                  alt=""
-                  class="add-member-after-channel__channel-chip-remove-icon"
-                />
-              </button>
-            </div>
+        <div class="add-member-after-channel__selected-channels-container">
+          <div class="add-member-after-channel__selected-channels">
+            @for (channel of selectedChannels(); track channel.id) {
+              <div class="add-member-after-channel__channel-chip-wrapper">
+                <div class="add-member-after-channel__channel-chip">
+                  <span class="add-member-after-channel__channel-chip-name"
+                    >#{{ channel.name }}</span
+                  >
+                  <button
+                    class="add-member-after-channel__channel-chip-remove"
+                    (click)="removeSelectedChannel(channel.id)"
+                    aria-label="Remove"
+                  >
+                    <img
+                      src="/img/icon/window/close-default.svg"
+                      alt=""
+                      class="add-member-after-channel__channel-chip-remove-icon"
+                    />
+                  </button>
+                </div>
+              </div>
+            }
           </div>
-          }
         </div>
-      </div>
       }
 
       <!-- Conditional Channel Selection Input (only when "all" is selected) -->
       @if (selectedOption() === 'all') {
-      <div class="add-member-after-channel__input-wrapper">
-        <app-input-field-basic
-          placeholder="Search channel"
-          [value]="channelSearchValue()"
-          (valueChange)="onChannelSearchValueChange($event)"
-          (focused)="openChannelSelection()"
-        />
+        <div class="add-member-after-channel__input-wrapper">
+          <app-input-field-basic
+            placeholder="Search channel"
+            [value]="channelSearchValue()"
+            (valueChange)="onChannelSearchValueChange($event)"
+            (focused)="openChannelSelection()"
+          />
 
-        <!-- Channel Selection Dropdown -->
-        @if (isChannelSelectionOpen()) {
-        <app-channel-selection
-          [channels]="availableChannels()"
-          [searchValue]="channelSearchValue()"
-          (closed)="onChannelSelectionClose()"
-          (channelSelected)="onChannelSelected($event)"
-        />
-        }
-      </div>
+          <!-- Channel Selection Dropdown -->
+          @if (isChannelSelectionOpen()) {
+            <app-channel-selection
+              [channels]="availableChannels()"
+              [searchValue]="channelSearchValue()"
+              (closed)="onChannelSelectionClose()"
+              (channelSelected)="onChannelSelected($event)"
+            />
+          }
+        </div>
       }
 
       <!-- Radio Option 2: Add specific people -->
@@ -128,55 +130,55 @@
 
       <!-- Selected Users Display (always visible if users selected) -->
       @if (selectedUsers().length > 0) {
-      <div class="add-member-after-channel__selected-users-container">
-        <div class="add-member-after-channel__selected-users">
-          @for (user of selectedUsers(); track user.id) {
-          <div class="add-member-after-channel__user-chip-wrapper">
-            <div class="add-member-after-channel__user-chip">
-              <img
-                [src]="user.avatar"
-                [alt]="user.name"
-                class="add-member-after-channel__user-chip-avatar"
-              />
-              <span class="add-member-after-channel__user-chip-name">{{ user.name }}</span>
-              <button
-                class="add-member-after-channel__user-chip-remove"
-                (click)="removeSelectedUser(user.id)"
-                aria-label="Remove"
-              >
-                <img
-                  src="/img/icon/window/close-default.svg"
-                  alt=""
-                  class="add-member-after-channel__user-chip-remove-icon"
-                />
-              </button>
-            </div>
+        <div class="add-member-after-channel__selected-users-container">
+          <div class="add-member-after-channel__selected-users">
+            @for (user of selectedUsers(); track user.id) {
+              <div class="add-member-after-channel__user-chip-wrapper">
+                <div class="add-member-after-channel__user-chip">
+                  <img
+                    [src]="user.avatar"
+                    [alt]="user.name"
+                    class="add-member-after-channel__user-chip-avatar"
+                  />
+                  <span class="add-member-after-channel__user-chip-name">{{ user.name }}</span>
+                  <button
+                    class="add-member-after-channel__user-chip-remove"
+                    (click)="removeSelectedUser(user.id)"
+                    aria-label="Remove"
+                  >
+                    <img
+                      src="/img/icon/window/close-default.svg"
+                      alt=""
+                      class="add-member-after-channel__user-chip-remove-icon"
+                    />
+                  </button>
+                </div>
+              </div>
+            }
           </div>
-          }
         </div>
-      </div>
       }
 
       <!-- Conditional Input Field (only when "specific" is selected) -->
       @if (selectedOption() === 'specific') {
-      <div class="add-member-after-channel__input-wrapper">
-        <app-input-field-basic
-          placeholder="Enter name"
-          [value]="searchValue()"
-          (valueChange)="onSearchValueChange($event)"
-          (focused)="openUserSelection()"
-        />
+        <div class="add-member-after-channel__input-wrapper">
+          <app-input-field-basic
+            placeholder="Enter name"
+            [value]="searchValue()"
+            (valueChange)="onSearchValueChange($event)"
+            (focused)="openUserSelection()"
+          />
 
-        <!-- User Selection Dropdown -->
-        @if (showUserDropdown()) {
-        <app-user-selection
-          [users]="availableUsers()"
-          [searchValue]="searchValue()"
-          (userSelected)="onUserSelected($event)"
-          (closed)="isUserSelectionOpen.set(false)"
-        />
-        }
-      </div>
+          <!-- User Selection Dropdown -->
+          @if (showUserDropdown()) {
+            <app-user-selection
+              [users]="availableUsers()"
+              [searchValue]="searchValue()"
+              (userSelected)="onUserSelected($event)"
+              (closed)="isUserSelectionOpen.set(false)"
+            />
+          }
+        </div>
       }
     </div>
 

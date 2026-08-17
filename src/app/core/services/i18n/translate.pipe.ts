@@ -17,7 +17,7 @@ export class TranslatePipe implements PipeTransform {
 
   /**
    * Transform a translation key to translated text
-    * @description Keeps templates free of imperative i18n calls while always resolving keys against the currently active language.
+   * @description Keeps templates free of imperative i18n calls while always resolving keys against the currently active language.
    * @param key Translation key (e.g., 'AUTH.LOGIN')
    * @returns Translated string
    *

@@ -63,7 +63,7 @@ export class InvitationService {
 
   /**
    * Build invitation data object
-    * @description Assembles a normalized invitation payload once so create flows do not duplicate timestamp and status initialization rules.
+   * @description Assembles a normalized invitation payload once so create flows do not duplicate timestamp and status initialization rules.
    * @private
    * @param {CreateInvitationRequest} request - Request data
    * @returns {any} Invitation data for Firestore
@@ -98,7 +98,7 @@ export class InvitationService {
 
   /**
    * Add optional fields to invitation data
-    * @description Injects channel-specific fields only when present so DM invitations remain minimal and schema-safe.
+   * @description Injects channel-specific fields only when present so DM invitations remain minimal and schema-safe.
    * @private
    * @param {any} data - Base invitation data
    * @param {CreateInvitationRequest} request - Request with optional fields
@@ -113,7 +113,7 @@ export class InvitationService {
 
   /**
    * Create new invitation
-    * @description Persists invitation creation through one write path so upstream callers can rely on a stable ID for follow-up notifications and navigation.
+   * @description Persists invitation creation through one write path so upstream callers can rely on a stable ID for follow-up notifications and navigation.
    * @param {CreateInvitationRequest} request - Invitation request data
    * @returns {Promise<string>} Created invitation ID
    */
@@ -129,7 +129,7 @@ export class InvitationService {
 
   /**
    * Accept invitation
-    * @description Commits acceptance status together with response timestamp so invitation lifecycle state remains auditable.
+   * @description Commits acceptance status together with response timestamp so invitation lifecycle state remains auditable.
    * @param {string} invitationId - Invitation ID
    * @returns {Promise<InvitationResponse>} Response with timestamp
    */
@@ -150,7 +150,7 @@ export class InvitationService {
 
   /**
    * Decline invitation
-    * @description Commits decline status with response timestamp so sender-side workflows can react to a completed decision state.
+   * @description Commits decline status with response timestamp so sender-side workflows can react to a completed decision state.
    * @param {string} invitationId - Invitation ID
    * @returns {Promise<InvitationResponse>} Response with timestamp
    */
@@ -241,7 +241,7 @@ export class InvitationService {
 
   /**
    * Subscribe to invitations for user
-    * @description Establishes a single realtime stream for recipient-targeted invitations so mailbox and notification UIs stay synchronized.
+   * @description Establishes a single realtime stream for recipient-targeted invitations so mailbox and notification UIs stay synchronized.
    * @param {string} userId - User ID
    * @param {Function} callback - Callback with invitations
    * @returns {Function} Unsubscribe function
@@ -267,7 +267,7 @@ export class InvitationService {
 
   /**
    * Subscribe to pending invitations only
-    * @description Narrows realtime updates to pending invitations so badge-driven surfaces avoid noise from already resolved invite states.
+   * @description Narrows realtime updates to pending invitations so badge-driven surfaces avoid noise from already resolved invite states.
    * @param {string} userId - User ID
    * @param {Function} callback - Callback with pending invitations
    * @returns {Function} Unsubscribe function
@@ -294,7 +294,7 @@ export class InvitationService {
 
   /**
    * Mark expired invitations as expired
-    * @description Performs bulk expiry normalization so stale pending invitations do not accumulate in user inbox flows.
+   * @description Performs bulk expiry normalization so stale pending invitations do not accumulate in user inbox flows.
    * @returns {Promise<number>} Number of expired invitations
    */
   expireOldInvitations = async (): Promise<number> => {

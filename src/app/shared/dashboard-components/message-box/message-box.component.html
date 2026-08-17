@@ -3,10 +3,7 @@
   @if (mentionChips().length > 0) {
     <div class="message-box__chips">
       @for (chip of mentionChips(); track chip.id) {
-        <app-mention-chip
-          [data]="chip"
-          (removed)="onChipRemoved(chip)"
-        />
+        <app-mention-chip [data]="chip" (removed)="onChipRemoved(chip)" />
       }
     </div>
   }

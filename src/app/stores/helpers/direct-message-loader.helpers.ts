@@ -7,12 +7,12 @@
 import { DocumentData, Firestore, QuerySnapshot, Unsubscribe } from '@angular/fire/firestore';
 import { DirectMessage, DirectMessageConversation } from '@core/models/direct-message.model';
 import {
-    handleConversationsError,
-    handleConversationsSnapshot,
-    handleMessagesError,
-    handleMessagesSnapshot,
-    setupConversationsListener as setupConvListener,
-    setupMessagesListener as setupMsgListener,
+  handleConversationsError,
+  handleConversationsSnapshot,
+  handleMessagesError,
+  handleMessagesSnapshot,
+  setupConversationsListener as setupConvListener,
+  setupMessagesListener as setupMsgListener,
 } from './direct-message-snapshot.helpers';
 import { logError } from './shared-error.helpers';
 

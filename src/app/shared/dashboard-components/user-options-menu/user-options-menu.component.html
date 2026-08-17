@@ -1,28 +1,28 @@
 @if (isVisible()) {
-<div class="user-options-menu">
-  <div class="user-options-menu__overlay" (click)="onClose()"></div>
-  <div class="user-options-menu__content">
-    <button class="user-options-menu__item" (click)="onProfileClick()">
-      <img
-        src="/img/icon/profile/account-circle-default.svg"
-        alt=""
-        class="user-options-menu__icon"
-      />
-      <span>Profil</span>
-    </button>
+  <div class="user-options-menu">
+    <div class="user-options-menu__overlay" (click)="onClose()"></div>
+    <div class="user-options-menu__content">
+      <button class="user-options-menu__item" (click)="onProfileClick()">
+        <img
+          src="/img/icon/profile/account-circle-default.svg"
+          alt=""
+          class="user-options-menu__icon"
+        />
+        <span>Profil</span>
+      </button>
 
-    <button class="user-options-menu__item" (click)="onMailboxClick()">
-      <img src="/img/icon/profile/mail-default.svg" alt="" class="user-options-menu__icon" />
-      <span>Mailbox</span>
-    </button>
+      <button class="user-options-menu__item" (click)="onMailboxClick()">
+        <img src="/img/icon/profile/mail-default.svg" alt="" class="user-options-menu__icon" />
+        <span>Mailbox</span>
+      </button>
 
-    <button
-      class="user-options-menu__item user-options-menu__item--danger"
-      (click)="onLogoutClick()"
-    >
-      <img src="/img/icon/profile/logout-default.svg" alt="" class="user-options-menu__icon" />
-      <span>Log-out</span>
-    </button>
+      <button
+        class="user-options-menu__item user-options-menu__item--danger"
+        (click)="onLogoutClick()"
+      >
+        <img src="/img/icon/profile/logout-default.svg" alt="" class="user-options-menu__icon" />
+        <span>Log-out</span>
+      </button>
+    </div>
   </div>
-</div>
 }

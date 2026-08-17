@@ -1,79 +1,91 @@
 @if (isVisible()) {
-<div class="add-members">
-  <div class="add-members__overlay" (click)="onClose()"></div>
-  <div class="add-members__content" [class.add-members__content--expanded]="isExpanded()">
-    <!-- Header -->
-    <div class="add-members__header">
-      <h2 class="add-members__title">Add members</h2>
-      <button
-        class="add-members__close-btn"
-        (click)="onClose()"
-        [attr.aria-label]="'Close add members'"
-      >
-        <img src="/img/icon/window/close-default.svg" alt="" class="add-members__close-icon" />
-      </button>
-    </div>
-
-    <!-- Body -->
-    <div class="add-members__body">
-      <!-- Channel Name -->
-      <div class="add-members__channel-row">
-        <img src="/img/icon/channel-bar/tag-default.svg" alt="" class="add-members__channel-icon" />
-        <span class="add-members__channel-name">{{ channelName() }}</span>
+  <div class="add-members">
+    <div class="add-members__overlay" (click)="onClose()"></div>
+    <div class="add-members__content" [class.add-members__content--expanded]="isExpanded()">
+      <!-- Header -->
+      <div class="add-members__header">
+        <h2 class="add-members__title">Add members</h2>
+        <button
+          class="add-members__close-btn"
+          (click)="onClose()"
+          [attr.aria-label]="'Close add members'"
+        >
+          <img src="/img/icon/window/close-default.svg" alt="" class="add-members__close-icon" />
+        </button>
       </div>
 
-      <!-- Selected Users Display -->
-      @if (selectedUsers().length > 0) {
-      <div class="add-members__selected-users-container">
-        <div class="add-members__selected-users">
-          @for (user of selectedUsers(); track user.id) {
-          <div class="add-members__user-chip-wrapper">
-            <div class="add-members__user-chip">
-              <img [src]="user.avatar" [alt]="user.name" class="add-members__user-chip-avatar" />
-              <span class="add-members__user-chip-name">{{ user.name }}</span>
-              <button
-                class="add-members__user-chip-remove"
-                (click)="removeSelectedUser(user.id)"
-                aria-label="Remove"
-              >
-                <img
-                  src="/img/icon/window/close-default.svg"
-                  alt=""
-                  class="add-members__user-chip-remove-icon"
-                />
-              </button>
+      <!-- Body -->
+      <div class="add-members__body">
+        <!-- Channel Name -->
+        <div class="add-members__channel-row">
+          <img
+            src="/img/icon/channel-bar/tag-default.svg"
+            alt=""
+            class="add-members__channel-icon"
+          />
+          <span class="add-members__channel-name">{{ channelName() }}</span>
+        </div>
+
+        <!-- Selected Users Display -->
+        @if (selectedUsers().length > 0) {
+          <div class="add-members__selected-users-container">
+            <div class="add-members__selected-users">
+              @for (user of selectedUsers(); track user.id) {
+                <div class="add-members__user-chip-wrapper">
+                  <div class="add-members__user-chip">
+                    <img
+                      [src]="user.avatar"
+                      [alt]="user.name"
+                      class="add-members__user-chip-avatar"
+                    />
+                    <span class="add-members__user-chip-name">{{ user.name }}</span>
+                    <button
+                      class="add-members__user-chip-remove"
+                      (click)="removeSelectedUser(user.id)"
+                      aria-label="Remove"
+                    >
+                      <img
+                        src="/img/icon/window/close-default.svg"
+                        alt=""
+                        class="add-members__user-chip-remove-icon"
+                      />
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
+        }
+
+        <!-- Search Input -->
+        <div class="add-members__input-wrapper">
+          <app-input-field-basic
+            placeholder="Enter name"
+            [value]="searchValue()"
+            (valueChange)="onSearchChange($event)"
+            (focused)="onInputFocused()"
+          />
+
+          <!-- User Selection Dropdown -->
+          @if (showUserDropdown()) {
+            <app-user-selection
+              [users]="availableUsers()"
+              [searchValue]="searchValue()"
+              (closed)="onUserSelectionClose()"
+              (userSelected)="onUserSelected($event)"
+            />
           }
         </div>
       </div>
-      }
 
-      <!-- Search Input -->
-      <div class="add-members__input-wrapper">
-        <app-input-field-basic
-          placeholder="Enter name"
-          [value]="searchValue()"
-          (valueChange)="onSearchChange($event)"
-          (focused)="onInputFocused()"
+      <!-- Footer -->
+      <div class="add-members__footer">
+        <app-btn-action
+          label="Add members"
+          [disabled]="isAddDisabled()"
+          (clicked)="onAddMember()"
         />
-
-        <!-- User Selection Dropdown -->
-        @if (showUserDropdown()) {
-        <app-user-selection
-          [users]="availableUsers()"
-          [searchValue]="searchValue()"
-          (closed)="onUserSelectionClose()"
-          (userSelected)="onUserSelected($event)"
-        />
-        }
       </div>
     </div>
-
-    <!-- Footer -->
-    <div class="add-members__footer">
-      <app-btn-action label="Add members" [disabled]="isAddDisabled()" (clicked)="onAddMember()" />
-    </div>
   </div>
-</div>
 }

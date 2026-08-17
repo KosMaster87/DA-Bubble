@@ -7,10 +7,12 @@
     <!-- Body -->
     <div class="channel-selection__body">
       @if (filteredChannels().length === 0) {
-      <p class="channel-selection__empty">No channels found</p>
-      } @else { @for (channel of filteredChannels(); track channel.id) {
-      <app-channel-list-item [channel]="channel" (itemClicked)="onChannelClick($event)" />
-      } }
+        <p class="channel-selection__empty">No channels found</p>
+      } @else {
+        @for (channel of filteredChannels(); track channel.id) {
+          <app-channel-list-item [channel]="channel" (itemClicked)="onChannelClick($event)" />
+        }
+      }
     </div>
   </div>
 </div>
