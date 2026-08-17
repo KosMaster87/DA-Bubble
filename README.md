@@ -13,9 +13,10 @@ TypeScript. Channels, direct messages, threads, reactions, and user management.
 
 ## Live
 
-| Environment | URL                                                              |
-| ----------- | ---------------------------------------------------------------- |
-| **App**     | [dabubble.dev2ksoftware.com](https://dabubble.dev2ksoftware.com) |
+| Environment | URL                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| **Prod**    | [dabubble.dev2ksoftware.com](https://dabubble.dev2ksoftware.com)                     |
+| **Staging** | [dabubble-staging.dev2ksoftware.com](https://dabubble-staging.dev2ksoftware.com)     |
 
 ---
 
