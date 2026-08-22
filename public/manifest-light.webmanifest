@@ -8,7 +8,11 @@
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "categories": ["productivity", "communication", "messaging"],
+  "categories": [
+    "productivity",
+    "communication",
+    "messaging"
+  ],
   "lang": "en",
   "dir": "ltr",
   "icons": [
@@ -72,7 +76,7 @@
       "name": "New Message",
       "short_name": "Message",
       "description": "Write a new message",
-      "url": "/chat",
+      "url": "/dashboard/new-message",
       "icons": [
         {
           "src": "/theme-light/icon-192.png",
@@ -84,8 +88,8 @@
     {
       "name": "Channels",
       "short_name": "Channels",
-      "description": "View team channels",
-      "url": "/channels",
+      "description": "Kanäle im Dashboard ansehen",
+      "url": "/dashboard",
       "icons": [
         {
           "src": "/theme-light/icon-192.png",
@@ -97,8 +101,8 @@
     {
       "name": "Profile",
       "short_name": "Profile",
-      "description": "Edit my profile",
-      "url": "/profile",
+      "description": "Profil und Einstellungen bearbeiten",
+      "url": "/dashboard/settings",
       "icons": [
         {
           "src": "/theme-light/icon-192.png",
