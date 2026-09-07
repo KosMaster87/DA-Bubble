@@ -37,6 +37,17 @@ import { getErrorMessage, logError } from '../helpers/shared-error.helpers';
 export type MailboxMessageType = 'user' | 'admin' | 'system';
 
 /**
+ * Link target for a mailbox message
+ * @description Carries navigation context so clicking a mailbox message can route
+to the originating channel, DM, or thread.
+ */
+export interface MailboxMessageLink {
+  type: 'channel' | 'dm' | 'thread';
+  targetId: string; // channelId, conversationId, or messageId
+  threadId?: string; // optional for thread links
+}
+
+/**
  * Mailbox message interface
  * @description Represents a full mailbox message as it exists in Firestore,
  * including read state and reaction data needed for the inbox view.
@@ -49,6 +60,7 @@ export interface MailboxMessage {
   content: string;
   isRead: boolean;
   type: MailboxMessageType;
+  link?: MailboxMessageLink;
   createdAt: Date;
   updatedAt: Date;
   reactions: MessageReaction[];
@@ -66,6 +78,7 @@ export interface CreateMailboxMessageRequest {
   subject: string;
   content: string;
   type: MailboxMessageType;
+  link?: MailboxMessageLink;
 }
 
 /**

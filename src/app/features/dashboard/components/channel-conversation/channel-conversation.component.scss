@@ -215,8 +215,8 @@
       }
 
       .channel-conversation__message-text {
-        background-color: #535af1;
-        color: #fff;
+        background-color: var(--conversation-message-bg-own);
+        color: var(--conversation-message-bg-own-color);
       }
     }
   }
@@ -261,7 +261,7 @@
   &__message-text {
     font-size: 0.9375rem;
     color: var(--text-primary);
-    background-color: #f5f5f5;
+    background-color: var(--conversation-message-bg-other);
     padding: var(--space-3);
     border-radius: 1rem;
     margin: 0;
@@ -278,15 +278,16 @@
     @include mix.flex(row, center, center);
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
-    background-color: #f0f0ff;
-    border: 1px solid #535af1;
+    background-color: var(--mention-chip-bg);
+    border: 1.5px solid var(--mention-chip-border);
     border-radius: 1rem;
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
-      background-color: #e8e8ff;
+      background-color: var(--mention-chip-bg-hover);
+      border-color: var(--mention-chip-border-hover);
     }
   }
 
@@ -295,7 +296,7 @@
   }
 
   &__reaction-count {
-    color: #535af1;
+    color: var(--primary-color);
     font-weight: 600;
   }
 
@@ -309,7 +310,7 @@
     @include mix.flex(row, space-between, center);
     gap: var(--space-3);
     padding: var(--space-3);
-    background-color: #f5f5f5;
+    background-color: var(--input-bg);
     border-radius: 1.5rem;
   }
 
@@ -331,17 +332,17 @@
     width: 40px;
     height: 40px;
     border: none;
-    background-color: #535af1;
+    background-color: var(--primary-color);
     border-radius: 50%;
     cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover:not(:disabled) {
-      background-color: #4248d6;
+      background-color: var(--secondary-color);
     }
 
     &:disabled {
-      background-color: #ccc;
+      background-color: var(--button-bg-disabled);
       cursor: not-allowed;
     }
   }

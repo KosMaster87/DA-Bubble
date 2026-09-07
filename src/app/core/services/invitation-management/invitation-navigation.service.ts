@@ -115,6 +115,15 @@ export class InvitationNavigationService {
   }
 
   /**
+   * Navigate to DM after invitation acceptance
+   * @description Routes to the DM conversation page after a DM invitation is accepted.
+   * @param conversationId DM conversation ID to navigate to
+   */
+  navigateToDM = async (conversationId: string): Promise<void> => {
+    await this.router.navigate(['/dashboard', 'dm', conversationId]);
+  };
+
+  /**
    * Cancel any pending invitation-triggered navigation
    * Call this when user manually navigates to prevent override
    * @description Clears the scheduled timeout and nullifies the pending navigation so no automatic redirect fires after manual navigation.

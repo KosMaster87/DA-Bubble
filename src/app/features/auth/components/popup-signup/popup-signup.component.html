@@ -3,7 +3,7 @@
     <app-theme-toggle />
   </div>
   <div class="popup-signup__signup">
-    <span class="popup-signup__text">Don't have an account?</span>
-    <app-link-button label="Create account" [routerLink]="'/signup'" />
+    <span class="popup-signup__text">{{ 'AUTH.POPUP_NO_ACCOUNT' | t }}</span>
+    <app-link-button [label]="'AUTH.POPUP_CREATE_ACCOUNT' | t" [routerLink]="'/signup'" />
   </div>
 </div>

@@ -29,6 +29,17 @@ service cloud.firestore {
     }
 
     /**
+     * Check if the authenticated user has 'admin' or 'owner' (owner implies admin).
+     * Role can only ever be set directly in Firestore (see users/{userId} update rule,
+     * which forbids changing it through the client) — see functions/scripts/set-admin-role.js
+     * and the setUserRole callable (admin promote/demote, owner-only).
+     */
+    function isAdmin() {
+      return isAuthenticated()
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
+    }
+
+    /**
      * Check if user is a member of the channel
      */
     function isChannelMember(channelId) {
@@ -90,6 +101,10 @@ service cloud.firestore {
                     && hasRequiredUserFields()
                     && isValidStringLength(request.resource.data.displayName, 1, 50)
                     && request.resource.data.uid == userId
+                    // Nobody can self-elevate at signup; 'admin' is only ever set directly
+                    // in Firestore (see functions/scripts/set-admin-role.js)
+                    && (!request.resource.data.keys().hasAny(['role'])
+                        || request.resource.data.role == 'member')
                     && (
                       // Regular users must have matching email
                       (request.auth.token.firebase.sign_in_provider != 'anonymous'
@@ -108,6 +123,15 @@ service cloud.firestore {
                        // Cannot change uid or email
                        && request.resource.data.uid == resource.data.uid
                        && request.resource.data.email == resource.data.email
+                       // Cannot change role — not even an admin, through the client (no
+                       // Admin UI/audit trail yet; see functions/scripts/set-admin-role.js)
+                       && request.resource.data.get('role', null) == resource.data.get('role', null)
+                       // Allow updating presence fields (heartbeat) — only these fields may change
+                       && (
+                         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastHeartbeat', 'isOnline'])
+                         ||
+                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastHeartbeat', 'isOnline'])
+                       )
                        // Only validate displayName if it's being changed
                        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName'])
                            || isValidStringLength(request.resource.data.displayName, 1, 50))
@@ -392,8 +416,8 @@ service cloud.firestore {
                       (request.resource.data.type == 'user'
                        && request.resource.data.authorId == request.auth.uid)
                       ||
-                      // Admin or system message (TODO: add admin role check)
-                      request.resource.data.type in ['admin', 'system']
+                      // Admin or system message: only a platform admin may create these
+                      (request.resource.data.type in ['admin', 'system'] && isAdmin())
                     );
 
       // Allow update only for recipient (mark as read/unread)
@@ -467,6 +491,17 @@ service cloud.firestore {
 
       // DELETE: Only sender can delete pending invitations
       allow delete: if isSender() && resource.data.status == 'pending';
+    }
+
+    // ========================================
+    // AUDIT LOG COLLECTION
+    // ========================================
+
+    match /auditLog/{entryId} {
+      // Only admins/owner can read; only the setUserRole callable (Admin SDK, bypasses
+      // rules entirely) ever writes here — clients can never create/update/delete entries.
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // ========================================

@@ -7,10 +7,11 @@
 import { Component } from '@angular/core';
 import { LinkButtonComponent } from '@shared/components';
 import { ThemeToggleComponent } from '@shared/components/theme-toggle';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-popup-signup',
-  imports: [LinkButtonComponent, ThemeToggleComponent],
+  imports: [LinkButtonComponent, ThemeToggleComponent, TranslatePipe],
   templateUrl: './popup-signup.component.html',
   styleUrl: './popup-signup.component.scss',
 })

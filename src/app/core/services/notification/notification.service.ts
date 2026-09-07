@@ -1,8 +1,10 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { I18nService } from '@core/services/i18n/i18n.service';
 import { CreateNotificationInput, NotificationToast } from './notification.types';
 
 /**
  * Global session feedback service for toast notifications.
+ * Supports both raw strings (backward compatible) and i18n translation keys.
  */
 @Injectable({
   providedIn: 'root',
@@ -17,19 +19,30 @@ export class NotificationService {
 
   private readonly _toasts = signal<NotificationToast[]>([]);
   private readonly timerByToastId = new Map<string, ReturnType<typeof setTimeout>>();
+  private i18nService = inject(I18nService);
 
   readonly toasts = this._toasts.asReadonly();
   readonly hasToasts = computed(() => this._toasts().length > 0);
 
   /**
+   * Resolve a string — if it looks like a translation key (contains '.'), translate it;
+   * otherwise return it as-is.
+   */
+  private resolveMessage(message: string): string {
+    return message.includes('.') ? this.i18nService.t(message) : message;
+  }
+
+  /**
    * Create and enqueue a new toast notification.
+   * Accepts raw strings or translation keys (dot-notation).
    * Prevents duplicate messages of the same type from being added.
-   * @description Deduplication guards against rapid repeated calls (e.g. from error retries) showing the same message multiple times.
    */
   show(input: CreateNotificationInput): string {
-    // Check for existing duplicate (same type and message)
+    const resolvedMessage = this.resolveMessage(input.message);
+
+    // Check for existing duplicate (same type and resolved message)
     const existing = this._toasts().find(
-      (t) => t.type === input.type && t.message === input.message,
+      (t) => t.type === input.type && t.message === resolvedMessage,
     );
     if (existing) {
       return existing.id;
@@ -38,7 +51,7 @@ export class NotificationService {
     const toast: NotificationToast = {
       id: this.createToastId(),
       type: input.type,
-      message: input.message,
+      message: resolvedMessage,
       duration: input.duration ?? NotificationService.DEFAULT_DURATION_BY_TYPE_MS[input.type],
       createdAt: Date.now(),
     };
@@ -49,32 +62,38 @@ export class NotificationService {
   }
 
   /**
-   * Add a success toast.
-   * @description Convenience wrapper setting the 'success' type so callers don't need to pass a type literal.
+   * Notify with a translation key or raw string by type.
+   * @param message Translation key (e.g. 'NOTIFICATIONS.SIGNIN_SUCCESS_EMAIL') or raw string
+   * @param type Toast severity
+   * @param duration Optional override duration in ms
+   */
+  notify(message: string, type: NotificationToast['type'], duration?: number): string {
+    return this.show({ type, message, duration });
+  }
+
+  /**
+   * Add a success toast by key or raw string.
    */
   success(message: string, duration?: number): string {
     return this.show({ type: 'success', message, duration });
   }
 
   /**
-   * Add an error toast.
-   * @description Convenience wrapper setting the 'error' type with a longer default duration to ensure users have time to read error messages.
+   * Add an error toast by key or raw string.
    */
   error(message: string, duration?: number): string {
     return this.show({ type: 'error', message, duration });
   }
 
   /**
-   * Add an informational toast.
-   * @description Convenience wrapper setting the 'info' type for general informational feedback.
+   * Add an informational toast by key or raw string.
    */
   info(message: string, duration?: number): string {
     return this.show({ type: 'info', message, duration });
   }
 
   /**
-   * Add a warning toast.
-   * @description Convenience wrapper setting the 'warning' type with the longest default duration so actionable warnings remain visible.
+   * Add a warning toast by key or raw string.
    */
   warning(message: string, duration?: number): string {
     return this.show({ type: 'warning', message, duration });
@@ -82,7 +101,6 @@ export class NotificationService {
 
   /**
    * Remove one toast by id.
-   * @description Cancels the dismiss timer before removing to prevent the timer callback from trying to remove an already-deleted toast.
    */
   remove(toastId: string): void {
     this.clearDismissTimer(toastId);
@@ -91,7 +109,6 @@ export class NotificationService {
 
   /**
    * Remove all toasts and timers.
-   * @description Clears both the signal and the timer map so no orphaned timeouts fire after the list is emptied.
    */
   clear(): void {
     for (const timer of this.timerByToastId.values()) {
@@ -103,7 +120,6 @@ export class NotificationService {
 
   /**
    * Return currently visible toasts with a maximum limit.
-   * @description Caps the visible count so the notification area doesn't overflow when many errors fire in quick succession.
    */
   getVisible(limit = 3): NotificationToast[] {
     return this._toasts().slice(0, limit);
@@ -111,9 +127,6 @@ export class NotificationService {
 
   /**
    * Start auto-dismiss timer for a toast.
-   * @description Registers timed removal only for finite-duration toasts so persistent notifications remain user-controlled.
-   * @param {NotificationToast} toast - Toast to schedule for dismissal
-   * @returns {void}
    */
   private startDismissTimer(toast: NotificationToast): void {
     if (toast.duration <= 0) {
@@ -129,9 +142,6 @@ export class NotificationService {
 
   /**
    * Clear existing auto-dismiss timer for a toast.
-   * @description Cancels and removes timer entries to prevent stale callbacks after manual toast removal.
-   * @param {string} toastId - Toast identifier
-   * @returns {void}
    */
   private clearDismissTimer(toastId: string): void {
     const timer = this.timerByToastId.get(toastId);
@@ -145,8 +155,6 @@ export class NotificationService {
 
   /**
    * Create a unique toast identifier.
-   * @description Combines timestamp and random suffix to reduce collision risk when multiple toasts are created in the same millisecond.
-   * @returns {string} Unique toast ID
    */
   private createToastId(): string {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;

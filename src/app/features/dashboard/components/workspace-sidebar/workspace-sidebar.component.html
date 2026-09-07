@@ -9,13 +9,13 @@
         alt="Workspace Logo"
         class="workspace-sidebar__logo"
       />
-      <span class="workspace-sidebar__workspace-name">My workspace</span>
+      <span class="workspace-sidebar__workspace-name">{{ 'WORKSPACE.MY_WORKSPACE' | t }}</span>
     </div>
     <button
       class="workspace-sidebar__multi-edit-btn"
       [class.workspace-sidebar__multi-edit-btn--active]="isNewMessageActive()"
       (click)="openNewMessage()"
-      [attr.aria-label]="'Open new message'"
+      [attr.aria-label]="'WORKSPACE.ARIA_OPEN_NEW_MESSAGE' | t"
     >
       <img
         src="/img/icon/channel-bar/multi-edit-default.svg"
@@ -33,7 +33,9 @@
           class="workspace-sidebar__section-toggle"
           (click)="toggleChannels()"
           [attr.aria-label]="
-            workspaceSidebarService.isChannelsOpen() ? 'Collapse channels' : 'Expand channels'
+            workspaceSidebarService.isChannelsOpen()
+              ? ('WORKSPACE.ARIA_COLLAPSE_CHANNELS' | t)
+              : ('WORKSPACE.ARIA_EXPAND_CHANNELS' | t)
           "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
@@ -54,7 +56,7 @@
               class="workspace-sidebar__workspace-icon"
             />
           </span>
-          <span class="workspace-sidebar__section-title">Channels</span>
+          <span class="workspace-sidebar__section-title">{{ 'WORKSPACE.CHANNELS' | t }}</span>
         </button>
 
         <button
@@ -63,7 +65,7 @@
             workspaceSidebarService.isAddChannelActive()
           "
           (click)="$event.stopPropagation(); addChannel()"
-          [attr.aria-label]="'Add channel'"
+          [attr.aria-label]="'WORKSPACE.ARIA_ADD_CHANNEL' | t"
         >
           <img
             src="/img/icon/channel-bar/add-channel-default.svg"
@@ -193,7 +195,9 @@
                 class="workspace-sidebar__add-channel-icon"
               />
             </span>
-            <span class="workspace-sidebar__add-channel-text">Channel hinzufügen</span>
+            <span class="workspace-sidebar__add-channel-text">{{
+              'WORKSPACE.ADD_CHANNEL' | t
+            }}</span>
           </span>
         </button>
       }
@@ -207,8 +211,8 @@
           (click)="toggleDirectMessages()"
           [attr.aria-label]="
             workspaceSidebarService.isDirectMessagesOpen()
-              ? 'Collapse direct messages'
-              : 'Expand direct messages'
+              ? ('WORKSPACE.ARIA_COLLAPSE_DM' | t)
+              : ('WORKSPACE.ARIA_EXPAND_DM' | t)
           "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
@@ -229,7 +233,9 @@
               class="workspace-sidebar__workspace-icon"
             />
           </span>
-          <span class="workspace-sidebar__section-title">Direct messages</span>
+          <span class="workspace-sidebar__section-title">{{
+            'WORKSPACE.DIRECT_MESSAGES' | t
+          }}</span>
         </button>
       </div>
 
@@ -281,7 +287,9 @@
                         <span class="workspace-sidebar__item-name-text">{{
                           dm.name.replace(' (Notes)', '')
                         }}</span>
-                        <span class="workspace-sidebar__item-name-suffix">(Notes)</span>
+                        <span class="workspace-sidebar__item-name-suffix"
+                          >({{ 'WORKSPACE.NOTES_SUFFIX' | t }})</span
+                        >
                       } @else {
                         {{ dm.name }}
                       }
@@ -326,7 +334,7 @@
             }
           } @else {
             <div class="workspace-sidebar__empty">
-              <p>Keine Direktnachrichten verfügbar</p>
+              <p>{{ 'WORKSPACE.NO_DIRECT_MESSAGES' | t }}</p>
             </div>
           }
         </div>
@@ -341,8 +349,8 @@
           (click)="toggleSystemControl()"
           [attr.aria-label]="
             workspaceSidebarService.isSystemControlOpen()
-              ? 'Collapse system control'
-              : 'Expand system control'
+              ? ('WORKSPACE.ARIA_COLLAPSE_SYSTEM' | t)
+              : ('WORKSPACE.ARIA_EXPAND_SYSTEM' | t)
           "
         >
           <span class="workspace-sidebar__dropdown-icon-wrapper">
@@ -363,7 +371,7 @@
               class="workspace-sidebar__workspace-icon"
             />
           </span>
-          <span class="workspace-sidebar__section-title">System Control</span>
+          <span class="workspace-sidebar__section-title">{{ 'WORKSPACE.SYSTEM_CONTROL' | t }}</span>
         </button>
       </div>
 
@@ -386,7 +394,7 @@
                   class="workspace-sidebar__item-icon"
                 />
               </span>
-              <span class="workspace-sidebar__item-name">Mailbox</span>
+              <span class="workspace-sidebar__item-name">{{ 'WORKSPACE.MAILBOX' | t }}</span>
 
               @if (mailboxUnreadCount() > 0) {
                 <span class="workspace-sidebar__item-badges" aria-hidden="true">
@@ -414,7 +422,7 @@
                   class="workspace-sidebar__item-icon"
                 />
               </span>
-              <span class="workspace-sidebar__item-name">Legal</span>
+              <span class="workspace-sidebar__item-name">{{ 'WORKSPACE.LEGAL' | t }}</span>
             </span>
           </button>
 
@@ -432,7 +440,7 @@
                   class="workspace-sidebar__item-icon"
                 />
               </span>
-              <span class="workspace-sidebar__item-name">Settings</span>
+              <span class="workspace-sidebar__item-name">{{ 'WORKSPACE.SETTINGS' | t }}</span>
             </span>
           </button>
 
@@ -450,7 +458,9 @@
                   class="workspace-sidebar__item-icon"
                 />
               </span>
-              <span class="workspace-sidebar__item-name">Upcoming features</span>
+              <span class="workspace-sidebar__item-name">{{
+                'WORKSPACE.UPCOMING_FEATURES' | t
+              }}</span>
             </span>
           </button>
         </div>
@@ -467,7 +477,7 @@
       class="workspace-sidebar__floating-btn"
       [class.workspace-sidebar__floating-btn--active]="isNewMessageActive()"
       (click)="openNewMessage()"
-      [attr.aria-label]="'Open new message'"
+      [attr.aria-label]="'WORKSPACE.ARIA_OPEN_NEW_MESSAGE' | t"
     >
       <img
         src="/img/icon/channel-bar/multi-edit-default.svg"

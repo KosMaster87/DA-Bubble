@@ -35,13 +35,14 @@
           [user]="selectedMember()!"
           [isVisible]="isProfileViewOpen()"
           [isOwnProfile]="isOwnProfile()"
-          [isChannelOwner]="false"
+          [isChannelOwner]="isChannelOwner()"
           [isCurrentUserAdmin]="isCurrentUserAdmin()"
-          [isSelectedUserOwner]="false"
+          [isSelectedUserOwner]="isSelectedMemberOwner()"
           (closeClicked)="onProfileViewClose()"
           (editClicked)="onProfileEdit()"
           (messageClicked)="onProfileMessage()"
           (removeMemberClicked)="onRemoveMember()"
+          (toggleChannelAdminClicked)="onToggleChannelAdmin()"
         />
       }
 
@@ -61,29 +62,28 @@
     <div class="channal-welcome__messages">
       <!-- Welcome Message -->
       <div class="channal-welcome__welcome-card">
-        <h2 class="channal-welcome__welcome-title">Welcome to DABubble!</h2>
-        <p class="channal-welcome__welcome-text">
-          This is the beginning of the <strong>#dabubble-welcome</strong> channel. DABubble is your
-          central communication platform for efficient teamwork. Organize projects in channels,
-          communicate in real-time, share files, and stay connected with your team wherever you are.
-        </p>
+        <h2 class="channal-welcome__welcome-title">{{ 'CHANNEL_WELCOME.WELCOME_TITLE' | t }}</h2>
+        <p
+          class="channal-welcome__welcome-text"
+          [innerHTML]="'CHANNEL_WELCOME.WELCOME_TEXT' | t"
+        ></p>
 
         <div class="channal-welcome__welcome-features">
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">💬</span>
-            <span>Send and receive messages</span>
+            <span>{{ 'CHANNEL_WELCOME.FEATURE_MESSAGES' | t }}</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">📎</span>
-            <span>Share files - featured</span>
+            <span>{{ 'CHANNEL_WELCOME.FEATURE_FILES' | t }}</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">🔔</span>
-            <span>Get notifications</span>
+            <span>{{ 'CHANNEL_WELCOME.FEATURE_NOTIFICATIONS' | t }}</span>
           </div>
           <div class="channal-welcome__feature">
             <span class="channal-welcome__feature-icon">💡</span>
-            <span>We are already working on the next feature.</span>
+            <span>{{ 'CHANNEL_WELCOME.FEATURE_NEXT_FEATURE' | t }}</span>
           </div>
         </div>
       </div>
@@ -92,14 +92,14 @@
       <div class="channal-welcome__info-card">
         <div class="channal-welcome__info-header">
           <span class="channal-welcome__info-icon">🚀</span>
-          <h3 class="channal-welcome__info-title">Quick Start</h3>
+          <h3 class="channal-welcome__info-title">{{ 'CHANNEL_WELCOME.QUICK_START_TITLE' | t }}</h3>
         </div>
         <ul class="channal-welcome__info-list">
-          <li>Create new channels for different topics or teams</li>
-          <li>Organize conversations with threads</li>
-          <li>Start direct messages with colleagues</li>
-          <li>Use @mentions to find specific people</li>
-          <li>Use #mentions to find specific channels</li>
+          <li>{{ 'CHANNEL_WELCOME.QUICK_START_ITEM_1' | t }}</li>
+          <li>{{ 'CHANNEL_WELCOME.QUICK_START_ITEM_2' | t }}</li>
+          <li>{{ 'CHANNEL_WELCOME.QUICK_START_ITEM_3' | t }}</li>
+          <li>{{ 'CHANNEL_WELCOME.QUICK_START_ITEM_4' | t }}</li>
+          <li>{{ 'CHANNEL_WELCOME.QUICK_START_ITEM_5' | t }}</li>
         </ul>
       </div>
 
@@ -130,52 +130,53 @@
             </button>
             <span class="channal-welcome__announcement-badge">Channel Owner</span>
           </div>
-          <p class="channal-welcome__announcement-text">
-            🎉 Welcome to the team! We're glad to have you. If you have any questions, I and the
-            entire team are always here to help.
-          </p>
+          <p
+            class="channal-welcome__announcement-text"
+            [innerHTML]="'CHANNEL_WELCOME.ANNOUNCEMENT_TEXT' | t"
+          ></p>
         </div>
       }
 
       <!-- Team Stats -->
       <div class="channal-welcome__stats-card">
-        <h3 class="channal-welcome__stats-title">Team Overview</h3>
+        <h3 class="channal-welcome__stats-title">{{ 'CHANNEL_WELCOME.STATS_TITLE' | t }}</h3>
         <div class="channal-welcome__stats-grid">
           <div class="channal-welcome__stat">
             <div class="channal-welcome__stat-value">{{ totalMemberCount() }}</div>
-            <div class="channal-welcome__stat-label">Team Members</div>
+            <div class="channal-welcome__stat-label">
+              {{ 'CHANNEL_WELCOME.STATS_TEAM_MEMBERS' | t }}
+            </div>
           </div>
           <div class="channal-welcome__stat">
             <div class="channal-welcome__stat-value">{{ publicChannelCount() }}</div>
-            <div class="channal-welcome__stat-label">Active Channels</div>
+            <div class="channal-welcome__stat-label">
+              {{ 'CHANNEL_WELCOME.STATS_ACTIVE_CHANNELS' | t }}
+            </div>
           </div>
           <div class="channal-welcome__stat">
             <div class="channal-welcome__stat-value">24/7</div>
-            <div class="channal-welcome__stat-label">Availability</div>
+            <div class="channal-welcome__stat-label">
+              {{ 'CHANNEL_WELCOME.STATS_AVAILABILITY' | t }}
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Helpful Tips -->
       <div class="channal-welcome__tips-card">
-        <h3 class="channal-welcome__tips-title">💡 Tips & Tricks</h3>
-        <div class="channal-welcome__tip">
-          <strong>Keyboard Shortcuts:</strong> Press <kbd>Ctrl</kbd> + <kbd>K</kbd> for quick search
-        </div>
-        <div class="channal-welcome__tip">
-          <strong>Status Messages:</strong> Set your status so others know if you're available
-        </div>
-        <div class="channal-welcome__tip">
-          <strong>Notifications:</strong> Customize your notification settings in preferences
-        </div>
+        <h3 class="channal-welcome__tips-title">{{ 'CHANNEL_WELCOME.TIPS_TITLE' | t }}</h3>
+        <div
+          class="channal-welcome__tip"
+          [innerHTML]="'CHANNEL_WELCOME.TIP_KEYBOARD_SHORTCUTS' | t"
+        ></div>
+        <div class="channal-welcome__tip">{{ 'CHANNEL_WELCOME.TIP_STATUS_MESSAGES' | t }}</div>
+        <div class="channal-welcome__tip">{{ 'CHANNEL_WELCOME.TIP_NOTIFICATIONS' | t }}</div>
       </div>
 
       <!-- Call to Action -->
       <div class="channal-welcome__cta-card">
-        <h3 class="channal-welcome__cta-title">Ready to get started?</h3>
-        <p class="channal-welcome__cta-text">
-          Choose a channel from the left sidebar or start a direct message!
-        </p>
+        <h3 class="channal-welcome__cta-title">{{ 'CHANNEL_WELCOME.CTA_TITLE' | t }}</h3>
+        <p class="channal-welcome__cta-text">{{ 'CHANNEL_WELCOME.CTA_TEXT' | t }}</p>
       </div>
     </div>
   </div>

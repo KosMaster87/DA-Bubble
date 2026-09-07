@@ -8,10 +8,11 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthStore } from '@stores/auth';
 import { SecondaryButtonComponent } from '@shared/components';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-not-found',
-  imports: [SecondaryButtonComponent],
+  imports: [SecondaryButtonComponent, TranslatePipe],
   templateUrl: './not-found.component.html',
   styleUrl: './not-found.component.scss',
 })

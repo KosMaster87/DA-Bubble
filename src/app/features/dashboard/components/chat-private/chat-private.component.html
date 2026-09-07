@@ -47,7 +47,11 @@
         (click)="loadOlderMessages()"
         [disabled]="loadingOlderMessages()"
       >
-        {{ loadingOlderMessages() ? 'Loading...' : 'Load older messages' }}
+        {{
+          loadingOlderMessages()
+            ? ('CHANNEL_CONVERSATION.LOADING' | t)
+            : ('CHANNEL_CONVERSATION.LOAD_OLDER_MESSAGES' | t)
+        }}
       </button>
     }
     <app-conversation-messages

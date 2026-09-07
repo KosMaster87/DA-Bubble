@@ -179,11 +179,11 @@
     }
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--surface-hover);
     }
 
     &--active {
-      background-color: #eceefe;
+      background-color: var(--surface-hover);
     }
   }
 

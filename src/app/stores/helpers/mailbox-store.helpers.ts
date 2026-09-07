@@ -44,6 +44,7 @@ export const mapMailboxMessage = (doc: QueryDocumentSnapshot<DocumentData>): Mai
     ...buildMailboxMessageBase(doc.id, data),
     isRead: data['isRead'] || false,
     type: (data['type'] || 'user') as MailboxMessageType,
+    link: data['link'] || undefined,
     reactions: data['reactions'] || [],
     attachments: data['attachments'] || [],
   };

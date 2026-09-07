@@ -4,15 +4,25 @@
   [class.workspace-menu-toggle--hidden]="sidebarService.isHidden()"
   [attr.aria-label]="sidebarService.isVisible() ? 'Close workspace menu' : 'Open workspace menu'"
 >
-  <img
-    [src]="
-      sidebarService.isVisible()
-        ? '/img/icon/channel-bar/hide-navigation-default.svg'
-        : '/img/icon/channel-bar/show-navigation-default.svg'
-    "
-    alt=""
-    class="workspace-menu-toggle__icon"
-  />
+  <svg class="workspace-menu-toggle__icon" viewBox="0 0 18 18" aria-hidden="true">
+    <rect x="1" y="1" width="16" height="16" rx="1" stroke="currentColor" stroke-width="2" />
+    <path d="M6.71436 2V18" stroke="currentColor" stroke-width="2" />
+    @if (sidebarService.isVisible()) {
+      <path
+        d="M12.4283 11.2856L10.4961 9.35348C10.3009 9.15822 10.3009 8.84164 10.4961 8.64638L12.4283 6.71422"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    } @else {
+      <path
+        d="M10.143 11.2856L12.0752 9.35348C12.2704 9.15822 12.2704 8.84164 12.0752 8.64638L10.143 6.71422"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    }
+  </svg>
   <span class="workspace-menu-toggle__text">
     {{ sidebarService.isVisible() ? 'Close workspace menu' : 'Open workspace menu' }}
   </span>

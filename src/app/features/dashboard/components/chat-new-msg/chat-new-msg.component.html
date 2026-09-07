@@ -1,6 +1,6 @@
 <div class="chat-new-msg">
   <div class="chat-new-msg__header">
-    <h1 class="chat-new-msg__title">New message</h1>
+    <h1 class="chat-new-msg__title">{{ 'CHAT.NEW_MESSAGE' | t }}</h1>
   </div>
 
   <div class="chat-new-msg__search">
@@ -8,7 +8,7 @@
       <input
         type="text"
         class="chat-new-msg__search-input"
-        placeholder="#channel, @user"
+        [placeholder]="'CHAT.SEARCH_PLACEHOLDER' | t"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event); onSearch()"
       />
@@ -37,7 +37,7 @@
 
   <div class="chat-new-msg__content">
     <div class="chat-new-msg__empty">
-      <p>Search for users or channels to start a conversation</p>
+      <p>{{ 'CHAT.SEARCH_EMPTY' | t }}</p>
     </div>
   </div>
 

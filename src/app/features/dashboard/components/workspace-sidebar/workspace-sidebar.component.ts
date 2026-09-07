@@ -10,6 +10,8 @@ import { AddMemberAfterAddChannelComponent } from '@app/shared/dashboard-compone
 import { type Message as PopupMessage } from '@core/models/message.model';
 import { ChannelListService } from '@core/services/channel-list/channel-list.service';
 import { ChannelManagementService } from '@core/services/channel-management/channel-management.service';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { normalizeDirectMessageId } from '@core/services/direct-message-list/direct-message-id.helper';
 import {
   DirectMessageListService,
@@ -25,11 +27,6 @@ import { ThreadUnreadPopupComponent } from '@shared/dashboard-components/thread-
 import { WorkspaceSidebarService } from '@shared/services/workspace-sidebar.service';
 import { AuthStore } from '@stores/auth';
 import { UserPresenceStore } from '@stores/index';
-import {
-  buildChannelAriaLabel,
-  buildDirectMessageAriaLabel,
-  buildMailboxAriaLabel,
-} from './aria-label.helper';
 import {
   formatBadgeCount,
   getVisibleUnreadMessageCount,
@@ -49,6 +46,7 @@ interface VisibleDirectMessageListItem extends DirectMessageListItem {
     CreateChannelComponent,
     AddMemberAfterAddChannelComponent,
     ThreadUnreadPopupComponent,
+    TranslatePipe,
   ],
   templateUrl: './workspace-sidebar.component.html',
   styleUrl: './workspace-sidebar.component.scss',
@@ -64,6 +62,7 @@ export class WorkspaceSidebarComponent {
   protected workspaceSidebarService = inject(WorkspaceSidebarService);
   protected mailboxBadgeService = inject(MailboxBadgeService);
   protected workspaceInitializationService = inject(WorkspaceInitializationService);
+  private i18n: I18nService = inject(I18nService);
   private pendingDirectMessageId = signal<string | null>(null);
 
   // Inputs
@@ -176,6 +175,7 @@ export class WorkspaceSidebarComponent {
   protected allUsers = this.userTransformationService.getUserList();
 
   constructor() {
+    console.log('WorkspaceSidebarComponent constructed');
     // Initialize workspace (load stores and setup auto-selection)
     this.workspaceInitializationService.initialize((channelId) => {
       this.channelSelected.emit(channelId);
@@ -189,6 +189,12 @@ export class WorkspaceSidebarComponent {
       if (this.confirmedDirectMessageId() === pendingDirectMessageId) {
         this.pendingDirectMessageId.set(null);
       }
+    });
+
+    // Debug: log the translated strings
+    effect(() => {
+      console.log('WORKSPACE.MY_WORKSPACE:', (this.i18n as any).t('WORKSPACE.MY_WORKSPACE'));
+      console.log('WORKSPACE.CHANNELS:', (this.i18n as any).t('WORKSPACE.CHANNELS'));
     });
   }
 
@@ -486,7 +492,7 @@ export class WorkspaceSidebarComponent {
     channelName: string,
     unreadMessageCount: number,
     unreadThreadCount: number,
-  ): string => buildChannelAriaLabel(channelName, unreadMessageCount, unreadThreadCount);
+  ): string => `${channelName}${this.buildUnreadAriaSuffix(unreadMessageCount, unreadThreadCount)}`;
 
   /**
    * Build ARIA label for direct message item including unread counts.
@@ -499,14 +505,49 @@ export class WorkspaceSidebarComponent {
     unreadMessageCount: number,
     unreadThreadCount: number,
   ): string =>
-    buildDirectMessageAriaLabel(directMessageName, unreadMessageCount, unreadThreadCount);
+    `${directMessageName}${this.buildUnreadAriaSuffix(unreadMessageCount, unreadThreadCount)}`;
 
   /**
    * Build ARIA label for mailbox item including unread count.
    * @description
    * Mailbox ARIA output is derived from the same unread source as its badge to avoid drift.
    */
-  protected getMailboxAriaLabel = (): string => buildMailboxAriaLabel(this.mailboxUnreadCount());
+  protected getMailboxAriaLabel = (): string => {
+    const count = this.mailboxUnreadCount();
+    if (count <= 0) return (this.i18n as any).t('WORKSPACE.MAILBOX');
+    const key = count === 1 ? 'WORKSPACE.ARIA_UNREAD_ITEM_ONE' : 'WORKSPACE.ARIA_UNREAD_ITEM_OTHER';
+    const result = `${(this.i18n as any).t('WORKSPACE.MAILBOX')}, ${(this.i18n as any).t(key, { count: String(count) })}`;
+    console.log('getMailboxAriaLabel:', count, '->', result);
+    return result;
+  };
+
+  /**
+   * Build unread suffix for ARIA labels with proper pluralization.
+   * @description
+   * Uses i18n keys for singular and plural forms so screen-reader copy stays localized.
+   */
+  private buildUnreadAriaSuffix(unreadMessageCount: number, unreadThreadCount: number): string {
+    const parts: string[] = [];
+
+    if (unreadMessageCount > 0) {
+      const key =
+        unreadMessageCount === 1
+          ? 'WORKSPACE.ARIA_UNREAD_MESSAGE_ONE'
+          : 'WORKSPACE.ARIA_UNREAD_MESSAGE_OTHER';
+      parts.push((this.i18n as any).t(key, { count: String(unreadMessageCount) }));
+    }
+
+    if (unreadThreadCount > 0) {
+      const key =
+        unreadThreadCount === 1
+          ? 'WORKSPACE.ARIA_UNREAD_THREAD_ONE'
+          : 'WORKSPACE.ARIA_UNREAD_THREAD_OTHER';
+      parts.push((this.i18n as any).t(key, { count: String(unreadThreadCount) }));
+    }
+
+    if (parts.length === 0) return '';
+    return `, ${parts.join(', ')}`;
+  }
 
   /**
    * Hide normal unread badge for currently active channel.

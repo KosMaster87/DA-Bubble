@@ -58,6 +58,8 @@ export class WorkspaceHeaderStateService {
   /**
    * Transform User to ProfileUser
    * @description Derives online status and sets a safe photoURL fallback so the profile view never renders a broken image.
+   * The header has no current-channel context (it's global), so isAdmin here reflects
+   * the platform-wide role, not channel-admin status.
    * @private
    * @param {User} user - User model
    * @returns {ProfileUser} Profile user
@@ -69,7 +71,7 @@ export class WorkspaceHeaderStateService {
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
       status: user.isOnline ? 'online' : 'offline',
-      isAdmin: false,
+      isAdmin: this.authStore.isAdmin(),
     };
   };
 
@@ -86,7 +88,7 @@ export class WorkspaceHeaderStateService {
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      isAdmin: false,
+      isAdmin: this.authStore.isAdmin(),
     };
   };
 }

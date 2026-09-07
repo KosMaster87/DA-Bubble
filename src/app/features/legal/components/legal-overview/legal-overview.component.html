@@ -10,7 +10,12 @@
     @for (link of legalLinks; track link.title) {
       <button class="legal-card" (click)="navigateTo(link)">
         <div class="legal-card__icon-wrapper">
-          <img [src]="link.icon" [alt]="link.title + ' icon'" class="legal-card__icon" />
+          <img
+            [src]="link.icon"
+            [alt]="link.title + ' icon'"
+            class="legal-card__icon"
+            [class.legal-card__icon--dark]="link.iconTone === 'dark'"
+          />
         </div>
         <div class="legal-card__content">
           <h2 class="legal-card__title">{{ link.title }}</h2>

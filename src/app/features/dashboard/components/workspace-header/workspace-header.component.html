@@ -19,7 +19,7 @@
       <input
         type="text"
         class="workspace-header__search-input"
-        placeholder="Search DABubble..."
+        placeholder="{{ 'WORKSPACE.SEARCH_PLACEHOLDER' | t }}"
         (input)="onSearch($event)"
       />
       <img src="/img/icon/search-default.svg" alt="Search" class="workspace-header__search-icon" />
@@ -34,14 +34,14 @@
       >
         <span class="workspace-header__profile-content">
           <span class="workspace-header__profile-name">
-            {{ currentUser()?.displayName || 'User' }}
+            {{ currentUser()?.displayName || ('COMMON.USER' | t) }}
           </span>
 
           <div class="workspace-header__profile-avatar">
             @if (currentUser()?.photoURL) {
               <img
                 [src]="currentUser()?.photoURL"
-                [alt]="currentUser()?.displayName || 'User'"
+                [alt]="currentUser()?.displayName || ('COMMON.USER' | t)"
                 class="workspace-header__avatar-img"
                 (error)="onImageError($event)"
               />
@@ -56,14 +56,14 @@
               />
             } @else {
               <div class="workspace-header__avatar-placeholder">
-                {{ (currentUser()?.displayName || 'U').charAt(0).toUpperCase() }}
+                {{ (currentUser()?.displayName || ('COMMON.USER' | t)).charAt(0).toUpperCase() }}
               </div>
             }
           </div>
 
           <img
             src="/img/icon/arrow_default.svg"
-            alt="Options"
+            alt="{{ 'WORKSPACE.OPTIONS' | t }}"
             class="workspace-header__options-icon"
           />
         </span>

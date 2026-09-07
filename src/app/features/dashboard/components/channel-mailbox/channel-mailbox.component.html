@@ -16,7 +16,7 @@
     <!-- Loading State -->
     @if (loading()) {
       <div class="channel-mailbox__loading">
-        <p>Loading messages...</p>
+        <p>{{ 'MAILBOX.LOADING' | t }}</p>
       </div>
     }
 
@@ -25,7 +25,9 @@
       <!-- Invitations Section -->
       @if (pendingInvitations().length > 0) {
         <div class="channel-mailbox__section">
-          <h2 class="channel-mailbox__section-title">📬 Invitations ({{ pendingCount() }})</h2>
+          <h2 class="channel-mailbox__section-title">
+            {{ 'MAILBOX.INVITATIONS_TITLE' | t: { count: '' + pendingCount() } }}
+          </h2>
 
           <div class="channel-mailbox__invitations">
             @for (invitation of pendingInvitations(); track invitation.id) {
@@ -50,12 +52,20 @@
 
                   @if (invitation.type === 'channel') {
                     <h3 class="channel-mailbox__message-subject">
-                      📢 Invitation to Channel #{{ invitation.channelName }}
+                      {{
+                        'MAILBOX.CHANNEL_INVITATION_TITLE'
+                          | t: { channel: invitation.channelName ?? '' }
+                      }}
                     </h3>
                     <p class="channel-mailbox__message-preview">
-                      {{ getSenderName(invitation.senderId) }} invites you to the channel #{{
-                        invitation.channelName
-                      }}.
+                      {{
+                        'MAILBOX.CHANNEL_INVITATION_TEXT'
+                          | t
+                            : {
+                                sender: getSenderName(invitation.senderId),
+                                channel: invitation.channelName ?? '',
+                              }
+                      }}
                       @if (invitation.message) {
                         <br />
                         <em>"{{ invitation.message }}"</em>
@@ -63,9 +73,14 @@
                     </p>
                   }
                   @if (invitation.type === 'direct-message') {
-                    <h3 class="channel-mailbox__message-subject">💬 Direct Message Invitation</h3>
+                    <h3 class="channel-mailbox__message-subject">
+                      {{ 'MAILBOX.DM_INVITATION_TITLE' | t }}
+                    </h3>
                     <p class="channel-mailbox__message-preview">
-                      {{ getSenderName(invitation.senderId) }} wants to chat with you.
+                      {{
+                        'MAILBOX.DM_INVITATION_TEXT'
+                          | t: { sender: getSenderName(invitation.senderId) }
+                      }}
                       @if (invitation.message) {
                         <br />
                         <em>"{{ invitation.message }}"</em>
@@ -78,13 +93,13 @@
                       class="channel-mailbox__action-btn channel-mailbox__action-btn--accept"
                       (click)="acceptInvitation(invitation)"
                     >
-                      Accept
+                      {{ 'COMMON.ACCEPT' | t }}
                     </button>
                     <button
                       class="channel-mailbox__action-btn channel-mailbox__action-btn--decline"
                       (click)="declineInvitation(invitation.id)"
                     >
-                      Decline
+                      {{ 'COMMON.DECLINE' | t }}
                     </button>
                   </div>
                 </div>
@@ -98,6 +113,7 @@
       <!-- Error State -->
       @if (storeError()) {
         <div class="channel-mailbox__error" role="alert">
+          <span class="channel-mailbox__error-icon" aria-hidden="true">⚠️</span>
           <p>{{ storeError() }}</p>
         </div>
       }
@@ -129,7 +145,7 @@
         !loading() && !storeError() && messages().length === 0 && pendingInvitations().length === 0
       ) {
         <div class="channel-mailbox__empty">
-          <p>Keine Nachrichten vorhanden.</p>
+          <p>{{ 'MAILBOX.EMPTY' | t }}</p>
         </div>
       }
     </div>

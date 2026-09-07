@@ -17,7 +17,9 @@ import {
 } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { UserListItem } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 import { AuthStore } from '@stores/auth';
+import { ChannelMemberStore } from '@stores/channels/channel-member.store';
 import { ChannelStore, UserStore } from '@stores/index';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-channal-welcome',
@@ -26,6 +28,7 @@ import { ChannelStore, UserStore } from '@stores/index';
     MembersOptionsMenuComponent,
     ProfileViewComponent,
     ProfileEditComponent,
+    TranslatePipe,
   ],
   templateUrl: './channal-welcome.component.html',
   styleUrl: './channal-welcome.component.scss',
@@ -34,6 +37,7 @@ export class ChannalWelcomeComponent {
   protected userStore = inject(UserStore);
   protected channelStore = inject(ChannelStore);
   protected authStore = inject(AuthStore);
+  private channelMemberStore = inject(ChannelMemberStore);
 
   directMessageRequested = output<string>(); // Emits userId to start DM with
   backRequested = output<void>(); // For mobile back navigation
@@ -44,12 +48,41 @@ export class ChannalWelcomeComponent {
   protected selectedMemberId = signal<string | null>(null);
 
   /**
-   * Check if current user is admin
-   * @description Keeps an explicit capability signal in place so admin-only UI can be introduced without refactoring template contracts.
-   * TODO: Implement admin role in User model
+   * The welcome pseudo-channel from ChannelStore
+   * @description Single lookup shared by the admin/owner checks below so they stay
+   * consistent with each other and with the rest of this component.
+   */
+  private welcomeChannel = computed(() => {
+    return this.channelStore.channels().find((ch) => ch.name === 'DABubble-welcome');
+  });
+
+  /**
+   * Check if current user is admin (channel-level, not platform-wide)
+   * @description True for the channel creator or anyone in the channel's admins array,
+   * matching the same owner-implies-admin rule used for the platform role.
    */
   protected isCurrentUserAdmin = computed(() => {
-    return false;
+    const channel = this.welcomeChannel();
+    const uid = this.authStore.user()?.uid;
+    if (!channel || !uid) return false;
+    return channel.createdBy === uid || channel.admins.includes(uid);
+  });
+
+  /**
+   * Check if current user is the welcome channel's owner
+   * @description Gates channel-admin promote/demote controls, which only the owner
+   * (not regular channel-admins) may use — matching the platform-level pattern.
+   */
+  protected isChannelOwner = computed(() => {
+    return this.welcomeChannel()?.createdBy === this.authStore.user()?.uid;
+  });
+
+  /**
+   * Check if the selected member is the welcome channel's owner
+   * @description Prevents showing admin/remove controls on the owner's own row.
+   */
+  protected isSelectedMemberOwner = computed(() => {
+    return this.welcomeChannel()?.createdBy === this.selectedMemberId();
   });
 
   /**
@@ -76,7 +109,7 @@ export class ChannalWelcomeComponent {
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      isAdmin: false, // TODO: Implement admin flag
+      isAdmin: this.welcomeChannel()?.admins.includes(user.uid) ?? false,
     };
   });
 
@@ -189,7 +222,7 @@ export class ChannalWelcomeComponent {
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
       status: user.isOnline ? 'online' : 'offline',
-      isAdmin: false, // TODO: Implement admin flag
+      isAdmin: this.welcomeChannel()?.admins.includes(user.uid) ?? false,
     };
   });
 
@@ -261,6 +294,23 @@ export class ChannalWelcomeComponent {
     this.isProfileViewOpen.set(false);
     this.selectedMemberId.set(null);
     console.log('Removed member from channel:', memberId);
+  };
+
+  /**
+   * Handle make/remove channel admin toggle
+   * @description Owner-only; promotes a plain member to channel-admin or demotes an
+   * existing one, based on the selected member's current admins[] membership.
+   */
+  protected onToggleChannelAdmin = async (): Promise<void> => {
+    const memberId = this.selectedMemberId();
+    const channel = this.welcomeChannel();
+    if (!memberId || !channel) return;
+
+    if (channel.admins.includes(memberId)) {
+      await this.channelMemberStore.removeAdmin(channel.id, memberId);
+    } else {
+      await this.channelMemberStore.addAdmin(channel.id, memberId);
+    }
   };
 
   /**

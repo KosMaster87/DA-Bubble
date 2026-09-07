@@ -5,7 +5,18 @@
  */
 
 import { DatePipe } from '@angular/common';
-import { Component, effect, inject, input, output, signal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
 import { ThreadInteractionService } from '@core/services/thread-interaction/thread-interaction.service';
@@ -40,6 +51,7 @@ export interface ThreadInfo {
     ProfileViewComponent,
     ProfileEditComponent,
     ChannelViewComponent,
+    TranslatePipe,
   ],
   templateUrl: './thread.component.html',
   styleUrl: './thread.component.scss',
@@ -48,6 +60,7 @@ export class ThreadComponent {
   private threadStore = inject(ThreadStore);
   private channelStore = inject(ChannelStore);
   private authStore = inject(AuthStore);
+  private i18n = inject(I18nService);
   private channelMembership = inject(ChannelMembershipService);
   private unreadService = inject(UnreadService);
   private profileManagement = inject(ProfileManagementService);
@@ -77,6 +90,11 @@ export class ThreadComponent {
   protected channelListItems = this.threadState.getChannelListItems();
   protected repliesGroupedByDate = this.threadState.getRepliesGroupedByDate(this.replies);
   protected replyCount = this.threadState.getReplyCount(this.replies);
+  protected replyCountLabel = computed(() => {
+    const count = this.replyCount();
+    const key = count === 1 ? 'CHAT.REPLY_COUNT_ONE' : 'CHAT.REPLY_COUNT_OTHER';
+    return (this.i18n as any).t(key, { count: String(count) });
+  });
   protected selectedUserProfile = this.threadState.getSelectedUserProfile(this.selectedUserId);
   protected editProfileUser = this.threadState.getEditProfileUser(this.selectedUserId);
   protected isOwnProfile = this.threadState.getIsOwnProfile(this.selectedUserId);

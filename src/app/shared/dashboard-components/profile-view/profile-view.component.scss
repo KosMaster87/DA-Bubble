@@ -27,7 +27,7 @@
     width: 100vw;
     height: 100vh;
     height: 100dvh;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-backdrop);
     cursor: pointer;
 
     @media screen and (max-width: 768px) {
@@ -38,7 +38,7 @@
   &__content {
     position: relative;
     min-width: 400px;
-    background: var(--background-color);
+    background: var(--surface-raised);
     border-radius: 1.5rem 0 1.5rem 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     animation: slideDown 0.2s ease-out;
@@ -120,18 +120,18 @@
     }
 
     &:hover {
-      background-color: #eceefe;
+      background-color: var(--surface-hover);
     }
   }
 
   &__close-icon {
     width: 12px;
     height: 12px;
-    transition: filter 0.2s;
+    color: var(--text-primary);
+    transition: color 0.2s;
 
     .profile-view__close-btn:hover & {
-      filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%) hue-rotate(228deg)
-        brightness(98%) contrast(92%);
+      color: var(--primary-color);
     }
   }
 
@@ -179,8 +179,8 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color, #444df2) 0%, #797ef3 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-on-accent);
     font-weight: 700;
     font-size: 3rem;
 
@@ -306,7 +306,7 @@
     gap: var(--space-3);
     padding: 0.75rem 1rem;
     border: none;
-    background: #444df2;
+    background: var(--primary-color);
     border-radius: 1.5rem;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -322,7 +322,7 @@
     }
 
     &:hover {
-      background-color: #797ef3;
+      background-color: var(--secondary-color);
     }
   }
 

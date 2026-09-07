@@ -2,12 +2,12 @@
   <div class="not-found__container">
     <div class="not-found__content">
       <h1 class="not-found__title">404</h1>
-      <h2 class="not-found__subtitle">Page Not Found</h2>
-      <p class="not-found__text">The page you are looking for does not exist or has been moved.</p>
+      <h2 class="not-found__subtitle">{{ 'AUTH.NOT_FOUND_TITLE' | t }}</h2>
+      <p class="not-found__text">{{ 'AUTH.NOT_FOUND_TEXT' | t }}</p>
     </div>
 
     <div class="not-found__button">
-      <app-secondary-button label="Go Back" (clicked)="goBack()" />
+      <app-secondary-button [label]="'AUTH.GO_BACK' | t" (clicked)="goBack()" />
     </div>
   </div>
 </div>

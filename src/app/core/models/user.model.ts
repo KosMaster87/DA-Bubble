@@ -24,6 +24,10 @@ export interface User {
   isOnline: boolean;
   lastSeen: Date;
   lastHeartbeat?: Date; // Timestamp of last heartbeat for offline detection
+  /** Platform-wide role. There is exactly one 'owner'; only the owner can promote/demote
+   * between 'member' and 'admin' (via the setUserRole callable), and only the bootstrap
+   * script (functions/scripts/set-admin-role.js) can grant 'owner' itself. */
+  role?: 'member' | 'admin' | 'owner';
   channels: string[]; // Channel IDs where user is member
   directMessages: string[]; // User IDs for direct conversations
   createdAt: Date;

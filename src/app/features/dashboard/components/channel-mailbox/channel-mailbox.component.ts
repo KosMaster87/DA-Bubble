@@ -7,6 +7,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, output, signal } from '@angular/core';
 import { Invitation } from '@core/models/invitation.model';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { InvitationManagementService } from '@core/services/invitation-management/invitation-management.service';
 import { InvitationService } from '@core/services/invitation/invitation.service';
 import { MailboxInteractionService } from '@core/services/mailbox-interaction/mailbox-interaction.service';
@@ -16,7 +18,7 @@ import { ChannelStore, MailboxStore } from '@stores/index';
 
 @Component({
   selector: 'app-channel-mailbox',
-  imports: [DatePipe],
+  imports: [DatePipe, TranslatePipe],
   templateUrl: './channel-mailbox.component.html',
   styleUrl: './channel-mailbox.component.scss',
 })
@@ -28,6 +30,7 @@ export class ChannelMailboxComponent {
   private invitationManagement = inject(InvitationManagementService);
   private mailboxInteraction = inject(MailboxInteractionService);
   private userTransformation = inject(UserTransformationService);
+  private i18n = inject(I18nService);
 
   // Output for navigation after accepting invitation
   channelSelected = output<string>();
@@ -46,7 +49,10 @@ export class ChannelMailboxComponent {
    * @description Resolves invitation sender labels through shared user transformation so mailbox rendering stays consistent with the rest of the app.
    */
   protected getSenderName = (senderId: string): string => {
-    return this.userTransformation.getUserDisplayName(senderId, 'Unbekannter User');
+    return this.userTransformation.getUserDisplayName(
+      senderId,
+      (this.i18n as any).t('COMMON.UNKNOWN_USER'),
+    );
   };
 
   /**
@@ -76,7 +82,7 @@ export class ChannelMailboxComponent {
    */
   protected mailboxTitle = computed(() => {
     const channel = this.channelStore.getChannelById()('mailbox');
-    return channel?.name || 'Mailbox';
+    return channel?.name || (this.i18n as any).t('MAILBOX.TITLE');
   });
 
   /**
@@ -85,7 +91,7 @@ export class ChannelMailboxComponent {
    */
   protected mailboxDescription = computed(() => {
     const channel = this.channelStore.getChannelById()('mailbox');
-    return channel?.description || 'Messages from contacts, admins, and system notifications';
+    return channel?.description || (this.i18n as any).t('MAILBOX.DESCRIPTION');
   });
 
   /**

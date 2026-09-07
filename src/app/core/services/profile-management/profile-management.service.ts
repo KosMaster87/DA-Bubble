@@ -36,9 +36,13 @@ export class ProfileManagementService {
       await this.authStore.updateUserProfile({ displayName: data.displayName });
     } else {
       // Update UserStore for other users
+      // isAdmin is intentionally never written here: role changes go exclusively
+      // through the owner-gated setUserRole callable (see AdminPanelComponent) —
+      // firestore.rules rejects any client write that touches users/{uid}.role,
+      // so including it in this updateDoc would fail the whole write, not just
+      // silently drop the field.
       await this.userStore.updateUserData(userId, {
         displayName: data.displayName,
-        // TODO: isAdmin not in User model yet
       });
     }
   }

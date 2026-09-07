@@ -14,13 +14,13 @@ describe('notification-copy', () => {
     expect(notificationCopy.authFormInvalid.length).toBeGreaterThan(0);
   });
 
-  it('maps known auth codes to user-friendly copy', () => {
+  it('maps known auth codes to translation keys', () => {
     const message = getAuthErrorNotificationMessage(
       { code: 'auth/invalid-credential' },
       notificationCopy.signinFailed,
     );
 
-    expect(message).toBe('Invalid email or password. Please try again.');
+    expect(message).toBe('ERRORS.INVALID_CREDENTIAL');
   });
 
   it('falls back to provided default copy for unknown auth errors', () => {
@@ -32,9 +32,9 @@ describe('notification-copy', () => {
     expect(message).toBe(notificationCopy.signupFailed);
   });
 
-  it('builds invitation acceptance error copy from Error object', () => {
+  it('builds invitation acceptance error with its translation-key prefix', () => {
     const message = getInvitationAcceptErrorNotificationMessage(new Error('Permission denied'));
 
-    expect(message).toBe('Error accepting invitation: Permission denied');
+    expect(message).toBe('NOTIFICATIONS.INVITATION_ACCEPT_FAILED_PREFIX Permission denied');
   });
 });

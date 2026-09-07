@@ -23,6 +23,7 @@ import {
 } from '@shared/services';
 import { LegalOverviewComponent } from '../../../legal/components/legal-overview/legal-overview.component';
 import { SettingsComponent } from '../../../settings/pages/settings/settings.component';
+import { AdminPanelComponent } from '../../components/admin-panel/admin-panel.component';
 import { ChannalWelcomeComponent } from '../../components/channal-welcome/channal-welcome.component';
 import { ChannelConversationComponent } from '../../components/channel-conversation/channel-conversation.component';
 import { ChannelMailboxComponent } from '../../components/channel-mailbox/channel-mailbox.component';
@@ -46,6 +47,7 @@ import { WorkspaceSidebarComponent } from '../../components/workspace-sidebar/wo
     ThreadComponent,
     LegalOverviewComponent,
     SettingsComponent,
+    AdminPanelComponent,
     WorkspaceMenuToggleComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -274,6 +276,7 @@ export class DashboardComponent {
       showMailbox: this.showMailbox,
       showLegal: this.showLegal,
       showSettings: this.showSettings,
+      showAdmin: this.showAdmin,
       showChannel: this.showChannel,
       showDirectMessage: this.showDirectMessage,
     });
@@ -328,6 +331,17 @@ export class DashboardComponent {
   showSettings = (): void => {
     if (this.isMobileView()) this.mobileActiveView.set('content');
     this.dashboardState.showSettings();
+  };
+
+  /**
+   * Show admin panel view.
+   * @description Route-level adminGuard already restricts who can reach this; this
+   * only handles the shell-state transition.
+   * @returns {void}
+   */
+  showAdmin = (): void => {
+    if (this.isMobileView()) this.mobileActiveView.set('content');
+    this.dashboardState.showAdmin();
   };
 
   /**

@@ -42,7 +42,7 @@ DA-Bubble is a modern Discord-like chat application with the following core feat
 
 - `.github/copilot-instructions.md` - project rules
 - `.github/instructions/` - scoped coding standards
-- `da-bubble/README.md` - feature overview
+- `README.md` - feature overview
 
 ---
 

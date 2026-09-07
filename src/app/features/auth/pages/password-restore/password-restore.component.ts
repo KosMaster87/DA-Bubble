@@ -4,15 +4,17 @@
  * @module features/auth/pages/password-restore
  */
 
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { AuthStore } from '@stores/auth';
 import { InputFieldComponent, PrimaryButtonComponent } from '@shared/components';
 
 @Component({
   selector: 'app-password-restore',
-  imports: [ReactiveFormsModule, InputFieldComponent, PrimaryButtonComponent],
+  imports: [ReactiveFormsModule, InputFieldComponent, PrimaryButtonComponent, TranslatePipe],
   templateUrl: './password-restore.component.html',
   styleUrl: './password-restore.component.scss',
 })
@@ -21,12 +23,22 @@ export class PasswordRestoreComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private authStore = inject(AuthStore);
+  private i18n = inject(I18nService);
 
   protected restoreForm: FormGroup;
   protected isSubmitting = signal(false);
   protected hidePassword = signal(true);
   protected hideConfirmPassword = signal(true);
   protected oobCode = signal<string | null>(null);
+
+  protected passwordErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    minlength: (this.i18n as any).t('AUTH.ERROR_PASSWORD_MINLENGTH'),
+  }));
+
+  protected confirmPasswordErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+  }));
 
   protected passwordsMatch = computed(() => {
     const password = this.restoreForm.get('password')?.value;

@@ -27,24 +27,40 @@ export class I18nService {
   }
 
   /**
-   * Translate a key to current language
-   * @description Resolves a dot-notation key against the active translations map; logs a warning and returns the raw key if not found, so missing keys are visible during development.
+   * Translate a key to current language with optional parameter interpolation
+   * @description Resolves a dot-notation key against the active translations map; supports
+   *   `{{param}}` placeholder replacement via the optional `params` object.
    * @param key Translation key in dot notation (e.g., 'AUTH.LOGIN')
-   * @returns Translated string
+   * @param params Optional record of placeholder values (e.g., `{ email: 'a@b.com' }`)
+   * @returns Translated string with placeholders replaced
    */
-  t(key: string): string {
+  t(key: string, params?: Record<string, string>): string {
     const keys = key.split('.');
-    let value: any = this.translations();
+    let value: unknown = this.translations();
 
     for (const k of keys) {
-      value = value?.[k];
+      value = (value as Record<string, unknown> | undefined)?.[k];
       if (value === undefined) {
         console.warn(`Translation key not found: ${key}`);
         return key;
       }
     }
 
-    return value;
+    if (typeof value !== 'string') {
+      return key;
+    }
+
+    let translatedValue = value;
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        translatedValue = translatedValue.replace(
+          new RegExp(`\\{\\{\\s*${paramKey}\\s*\\}\\}`, 'g'),
+          paramValue,
+        );
+      });
+    }
+
+    return translatedValue;
   }
 
   /**
@@ -57,22 +73,25 @@ export class I18nService {
   }
 
   /**
-   * Toggle between German and English
-   * @description Cycles between the two supported languages without requiring the caller to know which is currently active.
+   * Toggle to the next supported language.
+   * @description Cycles through all supported languages without requiring callers to manage language order.
    */
   toggleLanguage(): void {
+    const languages: SupportedLanguage[] = ['de', 'en', 'es', 'ru'];
     const current = this.currentLangSignal();
-    this.currentLangSignal.set(current === 'de' ? 'en' : 'de');
+    const nextIndex = (languages.indexOf(current) + 1) % languages.length;
+    this.currentLangSignal.set(languages[nextIndex]);
   }
 
   /**
    * Load language preference from localStorage
-   * @description Reads the persisted language code on startup so the user’s choice survives page reloads; swallows storage errors to avoid blocking initialisation.
+   * @description Reads the persisted language code on startup so the user's choice survives page reloads; swallows storage errors to avoid blocking initialisation.
    */
   private loadLanguageFromStorage(): SupportedLanguage | null {
     try {
       const saved = localStorage.getItem('dabubble_language');
-      if (saved && (saved === 'de' || saved === 'en')) {
+      const validLanguages: SupportedLanguage[] = ['de', 'en', 'es', 'ru'];
+      if (saved && validLanguages.includes(saved as SupportedLanguage)) {
         return saved as SupportedLanguage;
       }
     } catch (error) {

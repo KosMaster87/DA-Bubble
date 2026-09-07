@@ -1,0 +1,60 @@
+<div class="admin-panel">
+  <div class="admin-panel__header">
+    <h1 class="admin-panel__title">{{ 'SETTINGS.ADMIN_PANEL' | t }}</h1>
+    <p class="admin-panel__subtitle">{{ 'ADMIN.DESCRIPTION' | t }}</p>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="admin-panel__error">{{ errorMessage() }}</p>
+  }
+
+  <ul class="admin-panel__list">
+    @for (user of users(); track user.uid) {
+      <li class="admin-panel__row">
+        <div class="admin-panel__user">
+          <span class="admin-panel__name">{{ user.displayName }}</span>
+          <span class="admin-panel__email">{{ user.email }}</span>
+        </div>
+        <span class="admin-panel__role admin-panel__role--{{ user.role || 'member' }}">
+          {{ user.role || ('ADMIN.ROLE_MEMBER' | t) }}
+        </span>
+        @if (canManage(user.uid, user.role)) {
+          <div class="admin-panel__actions">
+            @if (user.role === 'admin') {
+              <button
+                class="admin-panel__action-btn"
+                [disabled]="pendingUid() === user.uid"
+                (click)="demote(user.uid)"
+              >
+                {{ 'ADMIN.DEMOTE' | t }}
+              </button>
+            } @else {
+              <button
+                class="admin-panel__action-btn"
+                [disabled]="pendingUid() === user.uid"
+                (click)="promote(user.uid)"
+              >
+                {{ 'ADMIN.PROMOTE' | t }}
+              </button>
+            }
+          </div>
+        }
+      </li>
+    }
+  </ul>
+
+  <div class="admin-panel__footer">
+    <button class="admin-panel__back-btn" (click)="goBack()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M15 18L9 12L15 6"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      {{ 'SETTINGS.BACK_TO_DASHBOARD' | t }}
+    </button>
+  </div>
+</div>

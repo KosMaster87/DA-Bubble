@@ -4,9 +4,11 @@
  * @module features/auth/pages/password-forgot
  */
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { AuthStore } from '@stores/auth';
 import {
   InputFieldComponent,
@@ -16,7 +18,13 @@ import {
 
 @Component({
   selector: 'app-password-forgot',
-  imports: [ReactiveFormsModule, InputFieldComponent, PrimaryButtonComponent, BackButtonComponent],
+  imports: [
+    ReactiveFormsModule,
+    InputFieldComponent,
+    PrimaryButtonComponent,
+    BackButtonComponent,
+    TranslatePipe,
+  ],
   templateUrl: './password-forgot.component.html',
   styleUrl: './password-forgot.component.scss',
 })
@@ -24,10 +32,16 @@ export class PasswordForgotComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authStore = inject(AuthStore);
+  private i18n = inject(I18nService);
 
   protected forgotForm: FormGroup;
   protected isSubmitting = signal(false);
   protected emailSent = signal(false);
+
+  protected emailErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    email: (this.i18n as any).t('AUTH.ERROR_EMAIL_INVALID'),
+  }));
 
   constructor() {
     this.forgotForm = this.createForm();

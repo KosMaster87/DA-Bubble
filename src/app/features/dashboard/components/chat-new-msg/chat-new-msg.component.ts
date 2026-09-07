@@ -6,6 +6,7 @@
 
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { NavigationService } from '@core/services/navigation/navigation.service';
 import { ChannelListItem } from '@shared/dashboard-components/channel-list-item/channel-list-item.component';
 import { ChannelSelectionComponent } from '@shared/dashboard-components/channel-selection/channel-selection.component';
@@ -18,7 +19,13 @@ import { UserStore } from '@stores/users/user.store';
 
 @Component({
   selector: 'app-chat-new-msg',
-  imports: [FormsModule, MessageBoxComponent, UserSelectionComponent, ChannelSelectionComponent],
+  imports: [
+    FormsModule,
+    MessageBoxComponent,
+    UserSelectionComponent,
+    ChannelSelectionComponent,
+    TranslatePipe,
+  ],
   templateUrl: './chat-new-msg.component.html',
   styleUrl: './chat-new-msg.component.scss',
 })
