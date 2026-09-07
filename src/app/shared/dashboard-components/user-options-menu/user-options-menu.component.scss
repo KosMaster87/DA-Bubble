@@ -102,7 +102,9 @@
     }
   }
 
-  :host-context([data-theme='dark']) .user-options-menu__item:not(.user-options-menu__item--danger) .user-options-menu__icon {
+  :host-context([data-theme='dark'])
+    .user-options-menu__item:not(.user-options-menu__item--danger)
+    .user-options-menu__icon {
     filter: brightness(0) invert(1);
   }
 }

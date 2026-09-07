@@ -471,7 +471,9 @@
     }
   }
 
-  :host-context([data-theme='dark']) .workspace-sidebar__item:hover .workspace-sidebar__item-content {
+  :host-context([data-theme='dark'])
+    .workspace-sidebar__item:hover
+    .workspace-sidebar__item-content {
     box-shadow:
       inset 0 0 0 1px var(--border-strong),
       0 2px 8px rgba(244, 244, 248, 0.1);
@@ -717,7 +719,9 @@
     }
   }
 
-  :host-context([data-theme='dark']) .workspace-sidebar__add-channel-btn:hover .workspace-sidebar__add-channel-content {
+  :host-context([data-theme='dark'])
+    .workspace-sidebar__add-channel-btn:hover
+    .workspace-sidebar__add-channel-content {
     box-shadow:
       inset 0 0 0 1px var(--border-strong),
       0 2px 8px rgba(244, 244, 248, 0.1);
