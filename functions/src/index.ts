@@ -24,6 +24,11 @@ setGlobalOptions({
 });
 
 // ============================================
+// CALLABLE FUNCTIONS - ADMIN
+// ============================================
+export {setUserRole} from "./admin/set-user-role";
+
+// ============================================
 // SCHEDULED FUNCTIONS
 // ============================================
 export {detectOfflineUsers} from "./scheduled/detectOfflineUsers";

@@ -16,16 +16,17 @@ export class TranslatePipe implements PipeTransform {
   private i18n = inject(I18nService);
 
   /**
-   * Transform a translation key to translated text
+   * Transform a translation key to translated text with optional parameter interpolation
    * @description Keeps templates free of imperative i18n calls while always resolving keys against the currently active language.
    * @param key Translation key (e.g., 'AUTH.LOGIN')
+   * @param params Optional record of placeholder values for `{{param}}` interpolation
    * @returns Translated string
    *
    * @example
    * {{ 'AUTH.LOGIN' | t }}
-   * {{ 'COMMON.SAVE' | t }}
+   * {{ 'AUTH.VERIFY_EMAIL_SUBTITLE' | t: { email: userEmail() } }}
    */
-  transform(key: string): string {
-    return this.i18n.t(key);
+  transform(key: string, params?: Record<string, string>): string {
+    return this.i18n.t(key, params);
   }
 }

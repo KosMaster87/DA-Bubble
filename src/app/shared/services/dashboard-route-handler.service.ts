@@ -27,6 +27,7 @@ export class DashboardRouteHandlerService {
       showMailbox: () => void;
       showLegal: () => void;
       showSettings: () => void;
+      showAdmin: () => void;
       showChannel: (id: string) => void;
       showDirectMessage: (id: string) => void;
     },
@@ -55,6 +56,10 @@ export class DashboardRouteHandlerService {
 
     if (path === 'settings') {
       return this.handlers.handleSettingsRoute(callbacks.showSettings);
+    }
+
+    if (path === 'admin') {
+      return this.handlers.handleAdminRoute(callbacks.showAdmin);
     }
   };
 }

@@ -1,18 +1,15 @@
-<div class="language-switcher">
-  <button
-    class="language-switcher__button"
-    [class.language-switcher__button--active]="i18n.currentLang() === 'de'"
-    (click)="i18n.setLanguage('de')"
-    type="button"
-  >
-    🇩🇪 Deutsch
-  </button>
-  <button
-    class="language-switcher__button"
-    [class.language-switcher__button--active]="i18n.currentLang() === 'en'"
-    (click)="i18n.setLanguage('en')"
-    type="button"
-  >
-    🇬🇧 English
-  </button>
+<div class="language-switcher" role="group" aria-label="Language selection">
+  @for (lang of languages; track lang.code) {
+    <button
+      type="button"
+      class="language-switcher__btn"
+      [class.language-switcher__btn--active]="i18n.currentLang() === lang.code"
+      (click)="setLanguage(lang.code)"
+      [attr.aria-label]="'Switch to ' + lang.label"
+      [title]="lang.label"
+    >
+      <span class="language-switcher__flag">{{ lang.flag }}</span>
+      <span class="language-switcher__label">{{ lang.label }}</span>
+    </button>
+  }
 </div>

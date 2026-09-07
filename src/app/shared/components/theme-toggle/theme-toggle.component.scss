@@ -11,15 +11,15 @@
   border-radius: 50%;
   cursor: pointer;
   transition: background-color var(--transition-fast);
-  color: #fff;
+  color: var(--text-color-light);
 
   &:hover {
-    background-color: var(--settings-card-primary-btn-hover);
+    background: var(--settings-card-primary-btn-hover);
   }
 
   &--active {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color-light);
     border-color: var(--primary-color);
   }
 
@@ -32,6 +32,46 @@
     width: 1.5rem;
     height: 1.5rem;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+  }
+
+  /* Segmented button group (used in settings) */
+  &__segment {
+    display: inline-flex;
+    border: 2px solid var(--settings-card-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    background: var(--settings-card-secondary-btn);
+  }
+
+  &__segment-btn {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    border-right: 2px solid var(--settings-card-border);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &:hover {
+      background: var(--settings-card-secondary-btn-hover);
+      color: var(--primary-color);
+    }
+
+    &--active {
+      background: var(--settings-card-primary-btn);
+      color: var(--text-color-light);
+
+      &:hover {
+        background: var(--settings-card-primary-btn-hover);
+        color: var(--text-color-light);
+      }
+    }
   }
 }

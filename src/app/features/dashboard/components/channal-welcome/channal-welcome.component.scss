@@ -302,11 +302,21 @@
     gap: 0.75rem;
     padding: 0.5rem 1.5rem 0.5rem 0.75rem;
     border-radius: 2rem;
-    transition: background-color 0.2s;
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s;
 
     .channal-welcome__owner-btn:hover & {
-      background-color: #eceefe;
+      background-color: var(--surface-hover);
     }
+  }
+
+  :host-context([data-theme='dark'])
+    .channal-welcome__owner-btn:hover
+    .channal-welcome__owner-content {
+    box-shadow:
+      inset 0 0 0 1px var(--border-strong),
+      0 2px 8px rgba(244, 244, 248, 0.1);
   }
 
   &__owner-avatar-wrapper {

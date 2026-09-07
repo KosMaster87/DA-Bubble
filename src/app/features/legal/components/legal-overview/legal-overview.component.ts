@@ -12,6 +12,7 @@ interface LegalLink {
   title: string;
   description: string;
   icon: string;
+  iconTone: 'dark' | 'light';
   route: string;
   external?: boolean;
 }
@@ -34,24 +35,28 @@ export class LegalOverviewComponent {
       title: 'Imprint',
       description: 'Legal notice and company information',
       icon: '/img/icon/channel-bar/legal.svg',
+      iconTone: 'dark',
       route: '/imprint',
     },
     {
       title: 'Privacy Policy',
       description: 'How we handle and protect your data',
       icon: '/img/icon/profile/account-circle-default.svg',
+      iconTone: 'dark',
       route: '/privacy-policy',
     },
     {
       title: 'Sources',
       description: 'Image and resource attributions',
       icon: '/img/icon/profile/edit-default.svg',
+      iconTone: 'dark',
       route: '/dashboard/legal/sources',
     },
     {
       title: 'Contact',
       description: 'Get in touch with us',
       icon: '/img/icon/profile/msg-default.svg',
+      iconTone: 'light',
       route: 'mailto:support@dabubble.com',
       external: true,
     },

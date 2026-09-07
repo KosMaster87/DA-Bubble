@@ -20,6 +20,7 @@ export type DashboardView =
   | 'mailbox'
   | 'legal'
   | 'settings'
+  | 'admin'
   | 'channel'
   | 'direct-message';
 
@@ -115,6 +116,15 @@ export class DashboardStateService {
   }
 
   /**
+   * Show admin panel view
+   * @description Kept in the same state machine as settings; route-level adminGuard
+   * is what actually restricts who can reach this state.
+   */
+  showAdmin(): void {
+    this._currentView.set('admin');
+  }
+
+  /**
    * Show channel by ID
    * @description Resolves all channel-entry variants in one branch, including special pseudo-channels and welcome handling.
    * @param channelId Channel ID to display
@@ -149,6 +159,10 @@ export class DashboardStateService {
     }
     if (channelId === 'settings') {
       this.showSettings();
+      return true;
+    }
+    if (channelId === 'admin') {
+      this.showAdmin();
       return true;
     }
     return false;

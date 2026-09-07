@@ -17,10 +17,11 @@ import {
   PrimaryButtonComponent,
   SecondaryButtonComponent,
 } from '@shared/components';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-verify-email',
-  imports: [PrimaryButtonComponent, SecondaryButtonComponent, GuestButtonComponent],
+  imports: [PrimaryButtonComponent, SecondaryButtonComponent, GuestButtonComponent, TranslatePipe],
   templateUrl: './verify-email.component.html',
   styleUrl: './verify-email.component.scss',
 })

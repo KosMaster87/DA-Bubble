@@ -7,6 +7,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Invitation } from '@core/models/invitation.model';
 import { InvitationService } from '@core/services/invitation/invitation.service';
+import { DirectMessageStore } from '@stores/direct-messages/direct-message.store';
 import { InvitationNavigationService } from './invitation-navigation.service';
 
 /**
@@ -18,6 +19,7 @@ import { InvitationNavigationService } from './invitation-navigation.service';
 export class InvitationAcceptanceService {
   private invitationService = inject(InvitationService);
   private invitationNavigationService = inject(InvitationNavigationService);
+  private directMessageStore = inject(DirectMessageStore);
 
   // Track last accepted invitation to prevent duplicate acceptance
   private lastAcceptedInvitation: { id: string; timestamp: number } | null = null;
@@ -36,7 +38,7 @@ export class InvitationAcceptanceService {
     invitation: Invitation,
     currentUserId: string,
     onChannelInvitation: (invitation: Invitation, userId: string) => Promise<void>,
-    onDmInvitation: (invitation: Invitation) => Promise<void>,
+    onDmInvitation: (invitation: Invitation, userId: string) => Promise<void>,
     onError: (error: any, invitationId: string) => void,
   ): Promise<void> => {
     if (!currentUserId) {
@@ -62,7 +64,7 @@ export class InvitationAcceptanceService {
       if (invitation.type === 'channel') {
         await onChannelInvitation(invitation, currentUserId);
       } else if (invitation.type === 'direct-message') {
-        await onDmInvitation(invitation);
+        await onDmInvitation(invitation, currentUserId);
       }
     } catch (error: any) {
       onError(error, invitation.id);
@@ -86,12 +88,19 @@ export class InvitationAcceptanceService {
 
   /**
    * Handle direct message invitation acceptance
-   * @description Acknowledges DM invitation acceptance now while preserving a dedicated extension point for future auto-open DM routing.
+   * @description Creates or resumes a DM conversation with the sender and navigates to it.
    * @param invitation DM invitation
+   * @param currentUserId Current user's ID
    */
-  handleDirectMessageInvitation = async (invitation: Invitation): Promise<void> => {
-    console.log('✅ DM invitation accepted from:', invitation.senderId);
-    // TODO: Create/open DM conversation with sender
+  handleDirectMessageInvitation = async (
+    invitation: Invitation,
+    currentUserId: string,
+  ): Promise<void> => {
+    const { id: conversationId } = await this.directMessageStore.startConversation(
+      currentUserId,
+      invitation.senderId,
+    );
+    await this.invitationNavigationService.navigateToDM(conversationId);
   };
 
   /**

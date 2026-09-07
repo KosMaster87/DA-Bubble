@@ -4,9 +4,11 @@
  * @module pages/signup
  */
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import {
   getAuthErrorNotificationMessage,
   notificationCopy,
@@ -30,6 +32,7 @@ import { AuthStore } from '@stores/auth';
     CheckboxFieldComponent,
     PrimaryButtonComponent,
     BackButtonComponent,
+    TranslatePipe,
   ],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.scss',
@@ -40,9 +43,31 @@ export class SignupComponent {
   private authStore = inject(AuthStore);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private i18n = inject(I18nService);
 
   protected signupForm: FormGroup;
   protected isSubmitting = signal(false);
+
+  // Dynamic error messages reactively translated
+  protected nameErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    minlength: (this.i18n as any).t('AUTH.ERROR_NAME_MINLENGTH'),
+  }));
+
+  protected emailErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    email: (this.i18n as any).t('AUTH.ERROR_EMAIL_INVALID'),
+  }));
+
+  protected passwordErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    minlength: (this.i18n as any).t('AUTH.ERROR_PASSWORD_MINLENGTH'),
+  }));
+
+  protected privacyErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_PRIVACY_REQUIRED'),
+    requiredTrue: (this.i18n as any).t('AUTH.ERROR_PRIVACY_REQUIRED'),
+  }));
 
   constructor() {
     this.signupForm = this.createForm();

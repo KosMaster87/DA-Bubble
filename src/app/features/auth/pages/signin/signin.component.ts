@@ -4,9 +4,11 @@
  * @module features/auth/pages/signin
  */
 
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { I18nService } from '@core/services/i18n';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import {
   getAuthErrorNotificationMessage,
   notificationCopy,
@@ -22,7 +24,13 @@ import { AuthStore } from '@stores/auth';
 
 @Component({
   selector: 'app-signin',
-  imports: [ReactiveFormsModule, InputFieldComponent, PrimaryButtonComponent, GuestButtonComponent],
+  imports: [
+    ReactiveFormsModule,
+    InputFieldComponent,
+    PrimaryButtonComponent,
+    GuestButtonComponent,
+    TranslatePipe,
+  ],
   templateUrl: './signin.component.html',
   styleUrl: './signin.component.scss',
   animations: [slideDownAnimation],
@@ -35,10 +43,22 @@ export class SigninComponent {
   private authStore = inject(AuthStore);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private i18n = inject(I18nService);
 
   protected signinForm: FormGroup;
   protected isSubmitting = signal(false);
   protected hidePassword = signal(true);
+
+  // Dynamic error messages reactively translated
+  protected emailErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    email: (this.i18n as any).t('AUTH.ERROR_EMAIL_INVALID'),
+  }));
+
+  protected passwordErrors = computed(() => ({
+    required: (this.i18n as any).t('AUTH.ERROR_REQUIRED_FIELD'),
+    minlength: (this.i18n as any).t('AUTH.ERROR_PASSWORD_MINLENGTH'),
+  }));
 
   constructor() {
     this.signinForm = this.createForm();
@@ -197,16 +217,6 @@ export class SigninComponent {
   /**
    * Shows a post-logout confirmation message exactly once on the sign-in page.
    * @description Encapsulates UI transition rules so overlay and panel state changes stay predictable across triggers.
-   *
-   * Purpose:
-   * - Confirm to the user that logout really happened and the session is closed.
-   * - Provide a polite transition message after leaving the authenticated area.
-   * - Avoid duplicate toasts during refresh/back navigation by clearing the transient state.
-   *
-   * Why this exists:
-   * - Logout intentionally redirects immediately for security and responsiveness.
-   * - The sign-in page is therefore the right place to communicate "signed out" feedback.
-   * - Navigation state is used as a short-lived signal, not as persistent app state.
    */
   private showSignedOutToastIfNeeded(): void {
     const navigation = this.router.currentNavigation();

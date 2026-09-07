@@ -70,6 +70,18 @@ export class RouteHandlersService {
   };
 
   /**
+   * Handle admin panel route
+   * @description Switches route state to the admin panel; access itself is enforced
+   * by adminGuard on the route, not here.
+   * @param showAdmin - Callback to show admin panel view
+   */
+  handleAdminRoute = (showAdmin: () => void): void => {
+    this.threadCoordinator.closeThreadIfOpen();
+    this.navigationService.selectChannelById('admin');
+    showAdmin();
+  };
+
+  /**
    * Handle channel route
    * @description Coordinates channel navigation, thread-preservation rules, and optional URL-driven thread opening.
    * @param channelId - Unique identifier of the channel

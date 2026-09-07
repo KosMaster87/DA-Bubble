@@ -211,7 +211,7 @@ included in the thread view itself.
 
 ```bash
 git clone https://github.com/KosMaster87/DA-Bubble.git
-cd DA-Bubble/da-bubble
+cd DA-Bubble/da-bubble-app
 pnpm install
 ```
 

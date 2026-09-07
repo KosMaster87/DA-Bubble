@@ -1,13 +1,4 @@
 .notification-container {
-  --notification-bg: #ffffff;
-  --notification-text: #1f2937;
-  --notification-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
-  --notification-success-border: #22c55e;
-  --notification-error-border: #ef4444;
-  --notification-info-border: #3b82f6;
-  --notification-warning-border: #f59e0b;
-  --notification-close-hover-bg: rgba(0, 0, 0, 0.06);
-
   position: fixed;
   top: 1rem;
   right: 1rem;
@@ -66,19 +57,6 @@
     &:hover {
       background: var(--notification-close-hover-bg);
     }
-  }
-}
-
-:root[data-theme='dark'] {
-  .notification-container {
-    --notification-bg: rgba(39, 39, 42, 0.95);
-    --notification-text: #f4f4f5;
-    --notification-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
-    --notification-success-border: #4ade80;
-    --notification-error-border: #f87171;
-    --notification-info-border: #60a5fa;
-    --notification-warning-border: #fbbf24;
-    --notification-close-hover-bg: rgba(244, 244, 245, 0.12);
   }
 }
 

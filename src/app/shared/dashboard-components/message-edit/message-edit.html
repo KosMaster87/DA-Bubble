@@ -4,6 +4,7 @@
     <div class="message-edit__textarea-wrapper">
       <textarea
         class="message-edit__textarea"
+        #editTextarea
         [value]="editedContent()"
         (input)="onInput($event)"
         placeholder="Edit your message..."
@@ -14,13 +15,36 @@
     <!-- Actions Row -->
     <div class="message-edit__actions">
       <!-- Left: Add Reaction Button -->
-      <button class="message-edit__emoji-btn" type="button" aria-label="Add emoji">
-        <img
-          src="/img/icon/emojis/emoji-add-reaction-default.svg"
-          alt="Add emoji"
-          class="message-edit__emoji-icon"
-        />
-      </button>
+      <div class="message-edit__emoji-wrapper">
+        <button
+          class="message-edit__emoji-btn"
+          type="button"
+          aria-label="Add emoji"
+          [attr.aria-expanded]="isEmojiPickerOpen()"
+          (click)="toggleEmojiPicker()"
+        >
+          <img
+            src="/img/icon/emojis/emoji-add-reaction-default.svg"
+            alt=""
+            class="message-edit__emoji-icon"
+          />
+        </button>
+
+        @if (isEmojiPickerOpen()) {
+          <div class="message-edit__emoji-picker" role="group" aria-label="Choose an emoji">
+            @for (emoji of emojis; track emoji.value) {
+              <button
+                class="message-edit__emoji-option"
+                type="button"
+                [attr.aria-label]="emoji.label"
+                (click)="onEmojiSelect(emoji.value)"
+              >
+                {{ emoji.value }}
+              </button>
+            }
+          </div>
+        }
+      </div>
 
       <!-- Right: Cancel and Save Buttons -->
       <div class="message-edit__buttons">

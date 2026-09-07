@@ -1,48 +1,45 @@
 <div class="imprint">
   <div class="imprint__container">
     <header class="imprint__header">
-      <h1 class="imprint__title">Impressum</h1>
-      <p class="imprint__subtitle">Legal Notice</p>
+      <h1 class="imprint__title">{{ 'LEGAL.IMPRINT' | t }}</h1>
+      <p class="imprint__subtitle">{{ 'LEGAL.TITLE' | t }}</p>
     </header>
 
     <section class="imprint__content">
-      <h2>Responsible for content</h2>
+      <h2>{{ 'LEGAL.RESPONSIBLE' | t }}</h2>
       <p>
-        Developer2K Software<br />
-        Sole proprietor: Konstantin Aksenov<br />
-        Remote
+        {{ 'LEGAL.COMPANY_NAME' | t }}<br />
+        {{ 'LEGAL.SOLE_PROPRIETOR' | t }}: Konstantin Aksenov<br />
+        {{ 'LEGAL.LOCATION' | t }}
       </p>
 
-      <h2>Contact</h2>
+      <h2>{{ 'LEGAL.CONTACT' | t }}</h2>
       <p>
-        Email: <a href="mailto:konstantin@dev2ksoftware.com">konstantin@dev2ksoftware.com</a><br />
-        Website:
+        <span>{{ 'LEGAL.EMAIL' | t }}:</span>
+        <a href="mailto:konstantin@dev2ksoftware.com">konstantin@dev2ksoftware.com</a><br />
+        <span>{{ 'LEGAL.WEBSITE' | t }}:</span>
         <a href="https://dabubble.dev2ksoftware.com/">https://dabubble.dev2ksoftware.com/</a>
       </p>
 
-      <h2>Technical Information</h2>
+      <h2>{{ 'LEGAL.TECHNICAL_INFO' | t }}</h2>
       <p>
-        This website is built with Angular and Firebase. For technical inquiries, please contact us
-        via the email address above.
+        {{ 'LEGAL.TECHNICAL_DESC' | t }}
       </p>
 
-      <h2>Disclaimer</h2>
-      <h3>Liability for content</h3>
+      <h2>{{ 'LEGAL.DISCLAIMER' | t }}</h2>
+      <h3>{{ 'LEGAL.LIABILITY_CONTENT' | t }}</h3>
       <p>
-        The contents of our pages were created with great care. However, we cannot guarantee the
-        accuracy, completeness and timeliness of the content. As a service provider, we are
-        responsible for our own content on these pages according to § 7 Abs.1 TMG.
+        {{ 'LEGAL.LIABILITY_CONTENT_TEXT' | t }}
       </p>
 
-      <h3>Liability for links</h3>
+      <h3>{{ 'LEGAL.LIABILITY_LINKS' | t }}</h3>
       <p>
-        Our offer contains links to external websites of third parties, on whose contents we have no
-        influence. Therefore, we cannot assume any liability for these external contents.
+        {{ 'LEGAL.LIABILITY_LINKS_TEXT' | t }}
       </p>
     </section>
 
     <footer class="imprint__footer">
-      <app-secondary-button label="Back" (clicked)="goBack()" />
+      <app-secondary-button label="{{ 'COMMON.BACK' | t }}" (clicked)="goBack()" />
     </footer>
   </div>
 </div>

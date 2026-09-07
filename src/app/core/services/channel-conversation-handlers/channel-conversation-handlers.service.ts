@@ -9,6 +9,7 @@ import { ChannelConversationUIService } from '@core/services/channel-conversatio
 import { ChannelMembershipService } from '@core/services/channel-membership/channel-membership.service';
 import { ProfileManagementService } from '@core/services/profile-management/profile-management.service';
 import { AuthStore } from '@stores/auth';
+import { ChannelMemberStore } from '@stores/channels/channel-member.store';
 import { ChannelStore } from '@stores/index';
 
 @Injectable({ providedIn: 'root' })
@@ -16,6 +17,7 @@ export class ChannelConversationHandlersService {
   private authStore = inject(AuthStore);
   private channelStore = inject(ChannelStore);
   private channelMembership = inject(ChannelMembershipService);
+  private channelMemberStore = inject(ChannelMemberStore);
   private profileManagement = inject(ProfileManagementService);
   private channelConversationUI = inject(ChannelConversationUIService);
 
@@ -106,6 +108,24 @@ export class ChannelConversationHandlersService {
   handleRemoveMember = async (channelId: string, memberId: string): Promise<void> => {
     await this.channelMembership.removeMember(channelId, memberId);
     this.channelConversationUI.closeProfileView();
+  };
+
+  /**
+   * Handle make/remove channel admin toggle
+   * @description Owner-only; promotes or demotes based on the member's current
+   * admins[] membership, read fresh from the store rather than trusting stale UI state.
+   * @param channelId - Channel ID
+   * @param memberId - Member ID to promote/demote
+   */
+  handleToggleChannelAdmin = async (channelId: string, memberId: string): Promise<void> => {
+    const channel = this.channelStore.getChannelById()(channelId);
+    if (!channel) return;
+
+    if (channel.admins.includes(memberId)) {
+      await this.channelMemberStore.removeAdmin(channelId, memberId);
+    } else {
+      await this.channelMemberStore.addAdmin(channelId, memberId);
+    }
   };
 
   /**

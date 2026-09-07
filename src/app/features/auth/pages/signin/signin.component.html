@@ -1,52 +1,39 @@
 <div class="signin">
   <div class="signin__container">
-    <!-- Header -->
     <header class="signin__header">
-      <h1 class="signin__title">Welcome Back</h1>
-      <p class="signin__subtitle">
-        Sign in to your DABubble account to continue chatting with your team.
-      </p>
+      <h1 class="signin__title">{{ 'AUTH.WELCOME_BACK' | t }}</h1>
+      <p class="signin__subtitle">{{ 'AUTH.SIGNIN_SUBTITLE' | t }}</p>
     </header>
 
-    <!-- Signin Form -->
     <form [formGroup]="signinForm" (ngSubmit)="onSubmit()" class="signin__form">
-      <!-- Email Input -->
       <app-input-field
         [control]="$any(signinForm.controls['email'])"
         id="email"
         type="email"
-        placeholder="example@email.com"
+        [placeholder]="'AUTH.EMAIL_EXAMPLE_PLACEHOLDER' | t"
         icon="/img/formfield/mail-default.svg"
-        [errorMessages]="{
-          required: 'Email is required.',
-          email: 'Please enter a valid email address.',
-        }"
+        [errorMessages]="emailErrors()"
       />
 
-      <!-- Password Input -->
       <app-input-field
         [control]="$any(signinForm.controls['password'])"
         id="password"
         [type]="hidePassword() ? 'password' : 'text'"
-        placeholder="Your password"
+        [placeholder]="'AUTH.PASSWORD_PLACEHOLDER' | t"
         icon="/img/formfield/lock-default.svg"
-        [errorMessages]="{
-          required: 'Password is required.',
-          minlength: 'Password must be at least 6 characters.',
-        }"
+        [errorMessages]="passwordErrors()"
       />
 
-      <!-- Forgot Password Link -->
       <div class="signin__forgot">
-        <a (click)="navigateToPasswordForgot()" class="signin__link"> Forgot password? </a>
+        <a (click)="navigateToPasswordForgot()" class="signin__link">
+          {{ 'AUTH.FORGOT_PASSWORD' | t }}
+        </a>
       </div>
 
-      <!-- Divider -->
       <div class="signin__divider">
-        <span>or</span>
+        <span>{{ 'AUTH.OR' | t }}</span>
       </div>
 
-      <!-- Google Login Button -->
       <button
         type="button"
         class="signin__google-btn"
@@ -54,20 +41,20 @@
         [disabled]="isSubmitting()"
       >
         <img src="/img/logos/Google.svg" alt="Google" class="signin__google-icon" />
-        <span>Sign in with Google</span>
+        <span>{{ 'AUTH.SIGN_IN_GOOGLE' | t }}</span>
       </button>
 
       <div class="signin__button-wrapper">
         <app-primary-button
           type="submit"
-          label="Sign In"
+          [label]="'AUTH.LOGIN' | t"
           [disabled]="signinForm.invalid || isSubmitting()"
           [loading]="isSubmitting()"
         />
 
         <app-guest-button
           type="button"
-          label="Guest Login"
+          [label]="'AUTH.GUEST_LOGIN' | t"
           [disabled]="isSubmitting()"
           [loading]="false"
           (clicked)="onGuestLogin()"

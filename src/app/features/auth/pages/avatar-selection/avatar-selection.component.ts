@@ -8,10 +8,11 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BackButtonComponent, PrimaryButtonComponent } from '@shared/components';
 import { AuthStore } from '@stores/auth';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-avatar-selection',
-  imports: [PrimaryButtonComponent, BackButtonComponent],
+  imports: [PrimaryButtonComponent, BackButtonComponent, TranslatePipe],
   templateUrl: './avatar-selection.component.html',
   styleUrl: './avatar-selection.component.scss',
 })

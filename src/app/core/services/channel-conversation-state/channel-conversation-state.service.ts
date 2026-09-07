@@ -53,6 +53,22 @@ export class ChannelConversationStateService {
   };
 
   /**
+   * Check if current user is channel admin (or owner, which implies admin)
+   * @description Gates admin-only member actions (e.g. remove member); mirrors
+   * getIsChannelOwner's shape so both can be composed the same way in templates.
+   * @param {Signal<ChannelInfo>} channel - Channel info signal
+   * @returns {Signal<boolean>} True if current user is a channel admin or owner
+   */
+  getIsCurrentUserChannelAdmin = (channel: Signal<ChannelInfo>) => {
+    return computed(() => {
+      const currentUserId = this.authStore.user()?.uid;
+      const channelData = this.channelStore.getChannelById()(channel().id);
+      if (!currentUserId || !channelData) return false;
+      return currentUserId === channelData.createdBy || channelData.admins.includes(currentUserId);
+    });
+  };
+
+  /**
    * Get selected user channel owner status
    * @description Determines whether the currently selected member sidebar profile belongs to the channel owner.
    * @param {Signal<ChannelInfo>} channel - Channel info signal
@@ -80,12 +96,16 @@ export class ChannelConversationStateService {
   /**
    * Get edit profile user
    * @description Resolves the selected member’s editable profile shape for the profile-edit overlay.
+   * @param {Signal<ChannelInfo>} channel - Channel info signal, so isAdmin reflects
+   * this channel's admins[] rather than falling back to platform role.
    * @returns {Signal<EditProfileUser | null>} Edit profile user or null
    */
-  getEditProfileUser = (): Signal<EditProfileUser | null> => {
+  getEditProfileUser = (channel: Signal<ChannelInfo>): Signal<EditProfileUser | null> => {
     return computed(() => {
+      const channelData = this.channelStore.getChannelById()(channel().id);
       return this.userTransformation.toEditProfileUser(
         this.channelConversationUI.getSelectedMemberId()(),
+        channelData?.admins,
       );
     });
   };
@@ -93,12 +113,16 @@ export class ChannelConversationStateService {
   /**
    * Get selected member as ProfileUser
    * @description Resolves the selected member’s display profile for the profile-view overlay without requiring the component to touch the user store.
+   * @param {Signal<ChannelInfo>} channel - Channel info signal, so isAdmin reflects
+   * this channel's admins[] rather than falling back to platform role.
    * @returns {Signal<ProfileUser | null>} Profile user or null
    */
-  getSelectedMember = (): Signal<ProfileUser | null> => {
+  getSelectedMember = (channel: Signal<ChannelInfo>): Signal<ProfileUser | null> => {
     return computed(() => {
+      const channelData = this.channelStore.getChannelById()(channel().id);
       return this.userTransformation.toProfileUser(
         this.channelConversationUI.getSelectedMemberId()(),
+        channelData?.admins,
       );
     });
   };

@@ -1,41 +1,40 @@
 <div class="verify-email">
   <div class="verify-email__container">
-    <!-- Header -->
     <header class="verify-email__header">
-      <h1 class="verify-email__title">Verify Your Email</h1>
-      <p class="verify-email__subtitle">
-        We've sent a verification email to <strong>{{ userEmail() }}</strong>
-      </p>
+      <h1 class="verify-email__title">{{ 'AUTH.VERIFY_EMAIL' | t }}</h1>
+      <p
+        class="verify-email__subtitle"
+        [innerHTML]="'AUTH.VERIFY_EMAIL_SUBTITLE' | t: { email: userEmail() }"
+      ></p>
     </header>
 
-    <!-- Instructions -->
     <section class="verify-email__instructions">
       <div class="verify-email__icon">
-        <img src="/img/mail.svg" alt="Email Icon" />
+        <img src="/img/mail.svg" alt="Email" />
       </div>
-      <p class="verify-email__text">
-        Please check your inbox and click the verification link to continue.
-      </p>
+      <p class="verify-email__text">{{ 'AUTH.VERIFY_EMAIL_INSTRUCTIONS' | t }}</p>
       <p class="verify-email__text verify-email__text--small">
-        After verifying your email, click the button below to continue with avatar selection.
+        {{ 'AUTH.VERIFY_EMAIL_AFTER' | t }}
       </p>
     </section>
 
-    <!-- Actions -->
     <div class="verify-email__actions">
       <app-primary-button
-        label="I've Verified My Email"
+        [label]="'AUTH.I_VERIFIED' | t"
         [loading]="isChecking()"
         (clicked)="checkVerification()"
       />
 
       @if (emailSent()) {
-        <p class="verify-email__success">✓ Verification email sent!</p>
+        <p class="verify-email__success">✓ {{ 'NOTIFICATIONS.VERIFY_EMAIL_RESENT' | t }}</p>
       } @else {
-        <app-guest-button label="Resend verification email" (clicked)="resendVerificationEmail()" />
+        <app-guest-button
+          [label]="'AUTH.RESEND_VERIFICATION' | t"
+          (clicked)="resendVerificationEmail()"
+        />
       }
 
-      <app-secondary-button label="Back to Sign In" (clicked)="goToSignin()" />
+      <app-secondary-button [label]="'AUTH.BACK_TO_SIGNIN' | t" (clicked)="goToSignin()" />
     </div>
   </div>
 </div>

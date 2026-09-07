@@ -91,7 +91,7 @@ Shared mixins and variables via `styles/` partials.
 ## Project Structure
 
 ```
-da-bubble/
+da-bubble-app/
 ├── src/
 │   ├── app/
 │   │   ├── core/                 # Singleton Services, Guards, Models

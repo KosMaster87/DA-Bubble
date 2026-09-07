@@ -1,83 +1,57 @@
 /**
  * @fileoverview Theme Toggle Component
  * @description Standalone component for switching between device/light/dark themes
+ *   with a segmented button group UI.
  * @module shared/components/theme-toggle
  */
 
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { ThemeService, type Theme } from '@core/services/theme';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 interface ThemeOption {
   value: Theme;
-  label: string;
-  icon: string;
+  labelKey: string;
 }
 
 @Component({
   selector: 'app-theme-toggle',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './theme-toggle.component.html',
   styleUrl: './theme-toggle.component.scss',
 })
 export class ThemeToggleComponent {
   private themeService = inject(ThemeService);
 
-  // Reactive signal from theme service
+  /**
+   * Whether to show as a segmented button group instead of the single toggle icon.
+   * 'segment' is better for settings pages; 'icon' works for compact header placement.
+   */
+  @Input() mode: 'icon' | 'segment' = 'segment';
+
   currentTheme = this.themeService.currentTheme;
 
-  private readonly themeOptions: ThemeOption[] = [
-    {
-      value: 'device',
-      label: 'System',
-      icon: '/img/theme/device.svg',
-    },
-    {
-      value: 'light',
-      label: 'Bright',
-      icon: '/img/theme/light-mode.svg',
-    },
-    {
-      value: 'dark',
-      label: 'Dark',
-      icon: '/img/theme/dark-mode.svg',
-    },
+  themeOptions: ThemeOption[] = [
+    { value: 'device', labelKey: 'SETTINGS.AUTO' },
+    { value: 'light', labelKey: 'SETTINGS.LIGHT' },
+    { value: 'dark', labelKey: 'SETTINGS.DARK' },
   ];
 
   /**
-   * Toggle to next theme
-   * @description Advances to the next configured theme via the theme service.
+   * Set specific theme
+   * @description Applies the named theme via the service. Primarily used by segment mode.
+   */
+  async setTheme(theme: Theme): Promise<void> {
+    await this.themeService.setTheme(theme);
+  }
+
+  /**
+   * Toggle to next theme (icon mode only)
+   * @description Advances to the next configured theme via the service.
    */
   async toggleTheme(): Promise<void> {
     await this.themeService.toggleTheme();
-  }
-
-  /**
-   * Get current theme icon path
-   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
-   */
-  getCurrentThemeIcon(): string {
-    const option = this.themeOptions.find((opt) => opt.value === this.currentTheme());
-    return option?.icon || this.themeOptions[0].icon;
-  }
-
-  /**
-   * Get current theme label
-   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
-   */
-  getCurrentThemeLabel(): string {
-    const option = this.themeOptions.find((opt) => opt.value === this.currentTheme());
-    return option?.label || this.themeOptions[0].label;
-  }
-
-  /**
-   * Get next theme label for accessibility
-   * @description Keeps this component focused on UI orchestration while delegating domain logic to dedicated services and stores.
-   */
-  getNextThemeLabel(): string {
-    const nextTheme = this.themeService.getNextTheme(this.currentTheme());
-    const option = this.themeOptions.find((opt) => opt.value === nextTheme);
-    return option?.label || '';
   }
 }

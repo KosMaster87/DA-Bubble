@@ -6,7 +6,8 @@
 
 import { Injectable, inject } from '@angular/core';
 import { Invitation } from '@core/models/invitation.model';
-import { getInvitationAcceptErrorNotificationMessage } from '@core/services/notification/notification-copy';
+import { I18nService } from '@core/services/i18n/i18n.service';
+import { NOTIFICATION_COPY } from '@core/services/notification/notification-copy';
 import { NotificationService } from '@core/services/notification/notification.service';
 import { InvitationAcceptanceService } from './invitation-acceptance.service';
 import { InvitationNavigationService } from './invitation-navigation.service';
@@ -22,6 +23,7 @@ export class InvitationManagementService {
   private acceptanceService = inject(InvitationAcceptanceService);
   private navigationService = inject(InvitationNavigationService);
   private notificationService = inject(NotificationService);
+  private i18nService = inject(I18nService);
 
   /**
    * Accept invitation and handle channel/DM logic
@@ -63,12 +65,16 @@ export class InvitationManagementService {
    * @param error Error object containing error details, message, and code
    * @param invitationId Invitation ID that failed to be accepted
    */
-  private handleInvitationError = (error: any, invitationId: string): void => {
+  private handleInvitationError = (error: unknown, invitationId: string): void => {
+    const errorDetails = error as { code?: string; message?: string } | null;
     console.error('❌ Error accepting invitation:', {
-      error: error?.message || error,
-      code: error?.code,
+      error: errorDetails?.message || error,
+      code: errorDetails?.code,
       invitationId,
     });
-    this.notificationService.error(getInvitationAcceptErrorNotificationMessage(error));
+
+    const prefix = this.i18nService.t(NOTIFICATION_COPY.INVITATION.ACCEPT_FAILED_PREFIX);
+    const message = error instanceof Error ? error.message : errorDetails?.message;
+    this.notificationService.error(`${prefix} ${message || 'Unknown error'}`);
   };
 }

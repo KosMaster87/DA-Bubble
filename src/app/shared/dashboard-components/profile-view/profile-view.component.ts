@@ -6,6 +6,7 @@
 
 import { Component, inject, input, output } from '@angular/core';
 import { UserPresenceStore } from '../../../stores';
+import { BtnActionComponent } from '../btn-action/btn-action.component';
 import { BtnDeleteComponent } from '../btn-delete/btn-delete.component';
 
 export interface ProfileUser {
@@ -19,7 +20,7 @@ export interface ProfileUser {
 
 @Component({
   selector: 'app-profile-view',
-  imports: [BtnDeleteComponent],
+  imports: [BtnDeleteComponent, BtnActionComponent],
   templateUrl: './profile-view.component.html',
   styleUrl: './profile-view.component.scss',
 })
@@ -38,6 +39,7 @@ export class ProfileViewComponent {
   messageClicked = output<void>();
   removeMemberClicked = output<void>();
   leaveConversationClicked = output<void>();
+  toggleChannelAdminClicked = output<void>();
 
   /**
    * Handle close button click
@@ -69,6 +71,15 @@ export class ProfileViewComponent {
    */
   onRemoveMember(): void {
     this.removeMemberClicked.emit();
+  }
+
+  /**
+   * Handle make/remove channel admin button click
+   * @description Single toggle handler; the parent decides promote vs. demote from
+   * the current user().isAdmin value, keeping this component free of that branching.
+   */
+  onToggleChannelAdmin(): void {
+    this.toggleChannelAdminClicked.emit();
   }
 
   /**

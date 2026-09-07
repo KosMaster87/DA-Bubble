@@ -31,6 +31,12 @@ export const AuthStore = signalStore(
     userDisplayName: computed(() => store.user()?.displayName || 'Anonymous'),
     userEmail: computed(() => store.user()?.email || ''),
     hasError: computed(() => store.error() !== null),
+    userRole: computed(() => store.user()?.role),
+    isAdmin: computed(() => {
+      const role = store.user()?.role;
+      return role === 'admin' || role === 'owner';
+    }),
+    isOwner: computed(() => store.user()?.role === 'owner'),
   })),
   withMethods((store) => {
     const auth = inject(Auth);

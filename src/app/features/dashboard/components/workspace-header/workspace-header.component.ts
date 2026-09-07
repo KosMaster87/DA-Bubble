@@ -17,6 +17,7 @@ import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/
 import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { AuthStore } from '@stores/auth';
 import { UserPresenceStore } from '@stores/index';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 @Component({
   selector: 'app-workspace-header',
@@ -27,6 +28,7 @@ import { UserPresenceStore } from '@stores/index';
     UserOptionsMenuMobileComponent,
     ProfileViewComponent,
     ProfileEditComponent,
+    TranslatePipe,
   ],
   templateUrl: './workspace-header.component.html',
   styleUrl: './workspace-header.component.scss',

@@ -5,6 +5,7 @@
  */
 
 import { Component, computed, inject, input, output } from '@angular/core';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 import { AuthStore } from '@stores/auth';
 import { ChannelStore } from '@stores/channels/channel.store';
 
@@ -18,7 +19,7 @@ interface ChannelAccessInfo {
 
 @Component({
   selector: 'app-channel-access',
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './channel-access.component.html',
   styleUrl: './channel-access.component.scss',
 })

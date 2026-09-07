@@ -5,6 +5,7 @@
  */
 
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MailboxStore } from '@stores/mailbox/mailbox.store';
 
 /**
@@ -15,16 +16,47 @@ import { MailboxStore } from '@stores/mailbox/mailbox.store';
 })
 export class MailboxInteractionService {
   private mailboxStore = inject(MailboxStore);
+  private router = inject(Router);
 
   /**
    * Handle message click and mark as read
-   * @description Marks the message as read in the store when clicked; the TODO note tracks the pending navigation to the originating chat.
-   * @param messageId Message ID to mark as read
+   * @description Marks the message as read and navigates to the linked target if present.
+   * @param messageId Message ID to handle
    */
   handleMessageClick = async (messageId: string): Promise<void> => {
     await this.mailboxStore.markAsRead(messageId);
-    console.log('Message clicked:', messageId);
-    // TODO: Open chat window with this message
+
+    const message = this.mailboxStore.getMessageById(messageId);
+    if (!message?.link) {
+      return;
+    }
+
+    const { type, targetId, threadId } = message.link;
+
+    switch (type) {
+      case 'channel': {
+        if (threadId) {
+          await this.router.navigate(['/dashboard', 'channel', targetId, 'thread', threadId]);
+        } else {
+          await this.router.navigate(['/dashboard', 'channel', targetId]);
+        }
+        break;
+      }
+      case 'dm': {
+        if (threadId) {
+          await this.router.navigate(['/dashboard', 'dm', targetId, 'thread', threadId]);
+        } else {
+          await this.router.navigate(['/dashboard', 'dm', targetId]);
+        }
+        break;
+      }
+      case 'thread': {
+        await this.router.navigate(['/dashboard', 'channel', targetId, 'thread', threadId]);
+        break;
+      }
+      default:
+        break;
+    }
   };
 
   /**

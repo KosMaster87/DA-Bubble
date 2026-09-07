@@ -7,42 +7,57 @@
   --black: #000;
   --white: #fff;
 
-  /* Primary Colors */
+  /* Semantic colour system: components should consume these tokens, never raw colours. */
+  --surface-canvas: #eceefe;
+  --surface-base: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f5f6ff;
+  --surface-hover: #e4e7fb;
+  --text-primary: #1f1f2b;
+  --text-secondary: #686878;
+  --text-on-accent: #ffffff;
+  --border-subtle: #d4d6ef;
+  --border-strong: #adb0d9;
+  --focus-ring: #444df2;
+  --accent-subtle: rgba(68, 77, 242, 0.12);
+  --overlay-backdrop: rgba(20, 20, 30, 0.5);
+  --status-warning: #d99012;
+  --status-danger: #dc4c4c;
+
+  /* Brand and state colours */
   --primary-color: #444df2;
   --secondary-color: #535af1;
   --link-color: #797ef3;
   --link-hover-color: #444df2;
   --link-hover-bg: #eceefe;
-  --text-color: #000;
-  --text-color-light: #fff;
-  --text-primary: #000000;
-  --text-secondary: #686868;
-  --background-color: #eceefe;
-  --container-bg: #fff;
+  --text-color: var(--text-primary);
+  --text-color-light: var(--text-on-accent);
+  --background-color: var(--surface-canvas);
+  --container-bg: var(--surface-raised);
   --container-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  --card-bg: #fff;
-  --border-color: #adb0d9;
+  --card-bg: var(--surface-raised);
+  --border-color: var(--border-strong);
   --error-color: #e74c3c;
 
   /* Input */
-  --input-bg: #eceefe;
-  --input-bg-focus: #eceefe;
+  --input-bg: var(--surface-sunken);
+  --input-bg-focus: var(--surface-base);
   --input-border-color: transparent;
   --input-border-width: 1px;
-  --input-border-hover: #686868;
-  --input-border-focus: #535af1;
+  --input-border-hover: var(--border-strong);
+  --input-border-focus: var(--focus-ring);
   --input-border-radius: 6.25rem;
   --input-padding: clamp(0.75rem, 2vw, 1rem) clamp(0.8rem, 3vw, 2rem);
   --input-height: clamp(0.8rem, 10vw + 1rem, 3.13rem);
   --input-font-size: clamp(0.875rem, 1.5vw, 1rem);
-  --input-icon-color: #686868;
-  --input-icon-color-hover: #000000;
+  --input-icon-color: var(--text-secondary);
+  --input-icon-color-hover: var(--text-primary);
   --input-icon-opacity: 0.6;
   --input-icon-size: clamp(1.4rem, 1vw + 0.2rem, 1.6rem);
   --input-icon-filter: brightness(0) saturate(100%);
-  --input-text-color: #000000;
-  --input-placeholder-color: var(--text-color);
-  --input-caret-color: #000000;
+  --input-text-color: var(--text-primary);
+  --input-placeholder-color: var(--text-secondary);
+  --input-caret-color: var(--text-primary);
   --input-gap: clamp(0.5rem, 2vw, 1rem);
 
   /* Button */
@@ -80,16 +95,16 @@
   --dabubble-logo-text-color: var(--primary-color);
 
   // Workspace specific
-  --workspace-bg: #fff;
-  --workspace-item-content-bg: #eceefe;
-  --workspace-item-content-text-default: #000;
+  --workspace-bg: var(--surface-base);
+  --workspace-item-content-bg: var(--surface-sunken);
+  --workspace-item-content-text-default: var(--text-primary);
   --workspace-item-content-text-hover: #535af1;
   --workspace-item-content-text-active: #535af1;
   --workspace-item-content-icon-default: none; // black (#000)
 
   // Workspace-toggle specific
   --workspace-bg-menu-toggle: var(--workspace-bg);
-  --workspace-bg-menu-border: #adb0d9;
+  --workspace-bg-menu-border: var(--border-strong);
 
   // New-Message specific
   --new-message-bg: var(--workspace-bg);
@@ -101,9 +116,9 @@
     rgba(68, 77, 242, 0.05) 0%,
     rgba(121, 126, 243, 0.05) 100%
   );
-  --channel-welcome-bg-card-info: #fff;
+  --channel-welcome-bg-card-info: var(--surface-raised);
   --channel-welcome-bg-card-announcement: #f8f9ff;
-  --channel-welcome-bg-card-stats: #fff;
+  --channel-welcome-bg-card-stats: var(--surface-raised);
   --channel-welcome-bg-card-tips: #fffbf0;
   --channel-welcome-kbd-bg: #f4f4f5;
   --channel-welcome-kbd-text: #18181b;
@@ -113,16 +128,16 @@
   // Channel-conversation specific
   --channel-conversation-bg: var(--workspace-bg);
   --channel-conversation-header-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.1);
-  --conversation-message-wrapper-hover-bg: #eceefe;
-  --conversation-message-border: #adb0d9;
+  --conversation-message-wrapper-hover-bg: var(--surface-hover);
+  --conversation-message-border: var(--border-strong);
   --conversation-message-border-hover: #535bf131;
   --conversation-message-bg-own: #535af1;
   --conversation-message-bg-own-color: #fff;
   --conversation-message-bg-other: transparent;
 
   // Reaction-bar specific
-  --reaction-bar-bg: #ffffff;
-  --reaction-bar-bg-hover: #eceefe;
+  --reaction-bar-bg: var(--surface-raised);
+  --reaction-bar-bg-hover: var(--surface-hover);
   --reaction-bar-icon-filter: none;
 
   // Chat-private specific
@@ -130,22 +145,22 @@
 
   // Thread specific
   --thread-bg: var(--workspace-bg);
-  --thread-parent-bg: #f8f9fa;
+  --thread-parent-bg: var(--surface-sunken);
 
   // Channel-mailbox specific
   --channel-mailbox-bg: var(--workspace-bg);
-  --channel-mailbox-message-bg: #fff;
-  --channel-mailbox-message-bg-hover: #eceefe;
+  --channel-mailbox-message-bg: var(--surface-raised);
+  --channel-mailbox-message-bg-hover: var(--surface-hover);
   --channel-mailbox-message-bg--unread: #adb0d9;
   --channel-mailbox-message-bg--unread-hover: #797ef3;
-  --channel-mailbox-message-from-color: #000;
-  --channel-mailbox-message-from-color-hover: #000;
-  --channel-mailbox-message-subject-color: #000;
-  --channel-mailbox-message-subject-color-hover: #000;
-  --channel-mailbox-message-preview-color: #000;
-  --channel-mailbox-message-preview-color-hover: #000;
-  --channel-mailbox-decline-text-color: #000;
-  --channel-mailbox-decline-text-color-hover: #000;
+  --channel-mailbox-message-from-color: var(--text-primary);
+  --channel-mailbox-message-from-color-hover: var(--text-primary);
+  --channel-mailbox-message-subject-color: var(--text-primary);
+  --channel-mailbox-message-subject-color-hover: var(--text-primary);
+  --channel-mailbox-message-preview-color: var(--text-secondary);
+  --channel-mailbox-message-preview-color-hover: var(--text-primary);
+  --channel-mailbox-decline-text-color: var(--text-primary);
+  --channel-mailbox-decline-text-color-hover: var(--text-primary);
   --channel-mailbox-message-decline-border: rgba(231, 76, 60);
   --channel-mailbox-message-decline-border-hover: rgba(231, 76, 60, 0.1);
 
@@ -153,21 +168,32 @@
   --legal-overview-bg: var(--workspace-bg);
   --legal-card-bg: var(--workspace-bg);
   --legal-card-bg-hover: var(--workspace-bg);
-  --legal-card-border: var(--color-border);
-  --legal-card-border-hover: var(--color-primary);
+  --legal-card-border: var(--border-color);
+  --legal-card-border-hover: var(--primary-color);
   --legal-card-shadow: var(--shadow-lg);
   --legal-card-shadow-hover: var(--shadow-lg);
 
   // Settings specific
   --settings-bg: var(--workspace-bg);
-  --settings-card-bg: #eceefe;
-  --settings-card-bg-hover: #3b5f6d;
-  --settings-card-border: #7c7c7c;
-  --settings-card-border-hover: #7c7c7c;
-  --settings-card-primary-btn: #797ef3;
-  --settings-card-primary-btn-hover: #444df2;
-  --settings-card-secondary-btn: #ffffff;
-  --settings-card-secondary-btn-hover: #7c7c7c;
+  --settings-card-bg: var(--card-bg);
+  --settings-card-bg-hover: var(--hover-bg);
+  --settings-card-border: var(--border-color);
+  --settings-card-border-hover: var(--secondary-color);
+  --settings-card-primary-btn: var(--primary-color);
+  --settings-card-primary-btn-hover: var(--secondary-color);
+  --settings-card-secondary-btn: var(--container-bg);
+  --settings-card-secondary-btn-hover: var(--hover-bg);
+  --settings-card-icon-bg: var(--background-color);
+
+  // Notification specific (semantic tokens for notification-container)
+  --notification-bg: var(--surface-raised);
+  --notification-text: var(--text-primary);
+  --notification-shadow: 0 10px 30px rgba(31, 31, 43, 0.14);
+  --notification-success-border: #22a06b;
+  --notification-error-border: #dc4c4c;
+  --notification-info-border: #3b82f6;
+  --notification-warning-border: #d99012;
+  --notification-close-hover-bg: var(--surface-hover);
 
   // Member views specific
   --member-view-bg-hover: var(--background-color);
@@ -186,9 +212,9 @@
   --list-item-hover-icon-filter: brightness(0) saturate(100%) invert(35%) sepia(89%) saturate(2315%)
     hue-rotate(228deg) brightness(98%) contrast(92%);
   --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --popup-bg: #fff;
-  --hover-bg: #f5f5f5;
-  --input-disabled-bg: #f0f0f0;
+  --popup-bg: var(--surface-raised);
+  --hover-bg: var(--surface-hover);
+  --input-disabled-bg: var(--surface-sunken);
   --sheet-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
 
   /* Spacing System (BEM Framework) */
@@ -319,56 +345,67 @@
    DARK THEME OVERRIDES
    ======================================================================== */
 :root[data-theme='dark'] {
-  // Just color
+  color-scheme: dark;
+  /* Dark palette: neutral indigo surfaces keep the product recognisable without grey-on-grey drift. */
   --black: #000;
   --white: #fff;
+  --surface-canvas: #18181f;
+  --surface-base: #1f2029;
+  --surface-raised: #282936;
+  --surface-sunken: #30313f;
+  --surface-hover: #393b4b;
+  --text-primary: #f4f4f8;
+  --text-secondary: #b7b8c8;
+  --text-on-accent: #ffffff;
+  --border-subtle: #383a4b;
+  --border-strong: #4a4c60;
+  --focus-ring: #8b91ff;
+  --accent-subtle: rgba(133, 140, 255, 0.2);
+  --overlay-backdrop: rgba(5, 5, 10, 0.7);
+  --status-warning: #fbbf24;
+  --status-danger: #f87171;
 
   /* Primary Colors - Dark Mode */
-  --primary-color: #6b73ff;
-  --secondary-color: #7d84ff;
-  --link-color: #8f95ff;
-  --link-hover-color: #6b73ff;
-  --link-hover-bg: #2a2d3a;
-  --text-color: #e4e4e7;
-  --text-color-light: #fff;
-  --text-primary: #e4e4e7;
-  --text-secondary: var(--text-color-light);
-  --background-color: #2b3230;
-  // --background-color: #71717a;
-  // --background-color: var(--workspace-bg);
-  --container-bg: #3f3f4675;
-  --container-shadow: 0 2px 10px rgba(104, 25, 25, 0.5);
-  --card-bg: #2a2d3a;
-  --border-color: #3f3f46;
+  --primary-color: #858cff;
+  --secondary-color: #9ba0ff;
+  --link-color: #aeb2ff;
+  --link-hover-color: #c1c4ff;
+  --link-hover-bg: var(--surface-hover);
+  --text-color: var(--text-primary);
+  --text-color-light: var(--text-on-accent);
+  --background-color: var(--surface-canvas);
+  --container-bg: var(--surface-raised);
+  --container-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --card-bg: var(--surface-raised);
+  --border-color: var(--border-strong);
   --error-color: #f87171;
 
   /* Input - Dark Mode */
-  --input-bg: #2a2d3a;
-  --input-bg-focus: #2a2d3a;
+  --input-bg: var(--surface-sunken);
+  --input-bg-focus: var(--surface-raised);
   --input-border-color: transparent;
-  --input-border-hover: #a1a1aa;
-  --input-border-focus: #6b73ff;
-  --input-icon-color: #a1a1aa;
-  --input-icon-color-hover: #e4e4e7;
+  --input-border-hover: var(--border-strong);
+  --input-border-focus: var(--focus-ring);
+  --input-icon-color: var(--text-secondary);
+  --input-icon-color-hover: var(--text-primary);
   --input-icon-filter: brightness(0) invert(1);
-  --input-text-color: #e4e4e7;
-  --input-placeholder-color: var(--text-color);
-  // --input-placeholder-color: #686868;
-  --input-caret-color: #e4e4e7;
+  --input-text-color: var(--text-primary);
+  --input-placeholder-color: var(--text-secondary);
+  --input-caret-color: var(--text-primary);
 
   /* Button - Dark Mode */
-  --button-bg: #6b73ff;
-  --button-bg-hover: #5a62e6;
-  --button-bg-disabled: #3f3f46;
+  --button-bg: var(--primary-color);
+  --button-bg-hover: #737af4;
+  --button-bg-disabled: var(--surface-sunken);
   --button-text-color: #ffffff;
   --button-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
 
   /* Back Button - Dark Mode */
   --back-button-bg: transparent;
-  --back-button-bg-hover: #a1a1aa;
-  --back-button-bg-disabled: #3f3f46;
-  --back-button-icon-color: #e4e4e7;
-  --back-button-icon-color-hover: #6b73ff;
+  --back-button-bg-hover: var(--surface-hover);
+  --back-button-bg-disabled: var(--surface-sunken);
+  --back-button-icon-color: var(--text-primary);
+  --back-button-icon-color-hover: var(--primary-color);
 
   /* Cancel Button - Dark Mode */
   --cancel-button-bg: transparent;
@@ -379,25 +416,25 @@
   --cancel-button-border-hover: 2px solid #fca5a5;
 
   /* Checkbox - Dark Mode */
-  --checkbox-border: #a1a1aa;
-  --checkbox-border-hover: #8f95ff;
-  --checkbox-wrapper-hover-bg: rgba(161, 161, 170, 0.2);
-  --checkbox-check-color: #8f95ff;
+  --checkbox-border: var(--border-strong);
+  --checkbox-border-hover: var(--primary-color);
+  --checkbox-wrapper-hover-bg: var(--surface-hover);
+  --checkbox-check-color: var(--primary-color);
 
   // Header specific
-  --dabubble-logo-text-color: #fff;
+  --dabubble-logo-text-color: var(--text-primary);
 
   // Workspace specific
-  --workspace-bg: #404040;
-  --workspace-item-content-bg: #6b73ff;
-  --workspace-item-content-text-default: #fff;
-  --workspace-item-content-text-hover: #fff;
-  --workspace-item-content-text-active: #fff;
+  --workspace-bg: var(--surface-base);
+  --workspace-item-content-bg: var(--surface-sunken);
+  --workspace-item-content-text-default: var(--text-primary);
+  --workspace-item-content-text-hover: var(--text-primary);
+  --workspace-item-content-text-active: var(--text-primary);
   --workspace-item-content-icon-default: brightness(0) invert(1); // white
 
   // Workspace-toggle specific
-  --workspace-bg-menu-toggle: #404040;
-  --workspace-bg-menu-border: #7c7c7c;
+  --workspace-bg-menu-toggle: var(--surface-base);
+  --workspace-bg-menu-border: var(--border-strong);
 
   // New-message specific
   --new-message-bg: var(--workspace-bg);
@@ -405,29 +442,29 @@
   // Channel-welcome specific
   --channel-welcome-bg: var(--workspace-bg);
   // --channel-welcome-bg: #3f3f46; --- ALTERNATIVE ---
-  --channel-welcome-bg-card-greeting: rgb(94 66 66);
-  --channel-welcome-bg-card-info: #5f68ac;
-  --channel-welcome-bg-card-announcement: #2b6b3d;
-  --channel-welcome-bg-card-stats: #3b5f6d;
-  --channel-welcome-bg-card-tips: #5a4712;
-  --channel-welcome-kbd-bg: #27272a;
-  --channel-welcome-kbd-text: #fafafa;
-  --channel-welcome-kbd-border: #52525b;
-  --channel-welcome-bg-card-cta: linear-gradient(135deg, #535af1 0%, #797ef3 100%);
+  --channel-welcome-bg-card-greeting: #30314b;
+  --channel-welcome-bg-card-info: #30314b;
+  --channel-welcome-bg-card-announcement: #263d37;
+  --channel-welcome-bg-card-stats: #293b4b;
+  --channel-welcome-bg-card-tips: #463b25;
+  --channel-welcome-kbd-bg: var(--surface-sunken);
+  --channel-welcome-kbd-text: var(--text-primary);
+  --channel-welcome-kbd-border: var(--border-strong);
+  --channel-welcome-bg-card-cta: linear-gradient(135deg, var(--primary-color) 0%, #a0a5ff 100%);
 
   // Channel-conversation specific
   --channel-conversation-bg: var(--workspace-bg);
-  --channel-conversation-header-shadow: 0 3px 6px -3px rgba(0, 0, 0, 0.4);
-  --conversation-message-wrapper-hover-bg: #5a5a5a;
-  --conversation-message-border: #7c7c7c;
-  --conversation-message-border-hover: #a8a8a8;
-  --conversation-message-bg-own: #6b73ff;
+  --channel-conversation-header-shadow: 0 3px 10px -3px rgba(0, 0, 0, 0.35);
+  --conversation-message-wrapper-hover-bg: var(--surface-hover);
+  --conversation-message-border: var(--border-strong);
+  --conversation-message-border-hover: var(--primary-color);
+  --conversation-message-bg-own: var(--primary-color);
   --conversation-message-bg-own-color: #fff;
-  --conversation-message-bg-other: #3a3a3a;
+  --conversation-message-bg-other: var(--surface-raised);
 
   // Reaction-bar specific
-  --reaction-bar-bg: #6b73ff;
-  --reaction-bar-bg-hover: #7d84ff;
+  --reaction-bar-bg: var(--surface-raised);
+  --reaction-bar-bg-hover: var(--surface-hover);
   --reaction-bar-icon-filter: brightness(0) invert(1);
 
   // Chat-private specific
@@ -435,22 +472,22 @@
 
   // Thread specific
   --thread-bg: var(--workspace-bg);
-  --thread-parent-bg: #3a3a3a;
+  --thread-parent-bg: var(--surface-sunken);
 
   // Channel-mailbox specific
   --channel-mailbox-bg: var(--workspace-bg);
-  --channel-mailbox-message-bg: #adb0d9;
-  --channel-mailbox-message-bg-hover: #eceefe;
-  --channel-mailbox-message-bg--unread: #adb0d9;
-  --channel-mailbox-message-bg--unread-hover: #797ef3;
-  --channel-mailbox-message-from-color: #e4e4e7;
-  --channel-mailbox-message-from-color-hover: var(--black);
-  --channel-mailbox-message-subject-color: #e4e4e7;
-  --channel-mailbox-message-subject-color-hover: var(--black);
-  --channel-mailbox-message-preview-color: #686868;
-  --channel-mailbox-message-preview-color-hover: var(--black);
-  --channel-mailbox-decline-text-color: var(--black);
-  --channel-mailbox-decline-text-color-hover: var(--black);
+  --channel-mailbox-message-bg: var(--surface-raised);
+  --channel-mailbox-message-bg-hover: var(--surface-hover);
+  --channel-mailbox-message-bg--unread: #34365a;
+  --channel-mailbox-message-bg--unread-hover: #414477;
+  --channel-mailbox-message-from-color: var(--text-primary);
+  --channel-mailbox-message-from-color-hover: var(--text-primary);
+  --channel-mailbox-message-subject-color: var(--text-primary);
+  --channel-mailbox-message-subject-color-hover: var(--text-primary);
+  --channel-mailbox-message-preview-color: var(--text-secondary);
+  --channel-mailbox-message-preview-color-hover: var(--text-primary);
+  --channel-mailbox-decline-text-color: var(--text-primary);
+  --channel-mailbox-decline-text-color-hover: var(--text-primary);
   --channel-mailbox-message-decline-border: rgba(231, 76, 60);
   --channel-mailbox-message-decline-border-hover: rgba(231, 76, 60, 0.1);
 
@@ -458,26 +495,37 @@
   --legal-overview-bg: var(--workspace-bg);
   --legal-card-bg: var(--workspace-bg);
   --legal-card-bg-hover: var(--workspace-bg);
-  --legal-card-border: var(--color-border);
-  --legal-card-border-hover: var(--color-primary);
+  --legal-card-border: var(--border-color);
+  --legal-card-border-hover: var(--primary-color);
   --legal-card-shadow: var(--shadow-lg);
   --legal-card-shadow-hover: var(--shadow-lg);
 
   // Settings specific
   --settings-bg: var(--workspace-bg);
-  --settings-card-bg: #5f68ac;
-  --settings-card-bg-hover: #3b5f6d;
-  --settings-card-border: #7c7c7c;
-  --settings-card-border-hover: #7c7c7c;
-  --settings-card-primary-btn: #797ef3;
-  --settings-card-primary-btn-hover: #5a62e6;
-  --settings-card-secondary-btn: #ffffff;
-  --settings-card-secondary-btn-hover: #7c7c7c;
+  --settings-card-bg: var(--card-bg);
+  --settings-card-bg-hover: var(--hover-bg);
+  --settings-card-border: var(--border-color);
+  --settings-card-border-hover: var(--secondary-color);
+  --settings-card-primary-btn: var(--primary-color);
+  --settings-card-primary-btn-hover: var(--secondary-color);
+  --settings-card-secondary-btn: var(--container-bg);
+  --settings-card-secondary-btn-hover: var(--hover-bg);
+  --settings-card-icon-bg: var(--background-color);
+
+  // Notification specific (semantic tokens for notification-container)
+  --notification-bg: var(--surface-raised);
+  --notification-text: var(--text-primary);
+  --notification-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
+  --notification-success-border: #4ade80;
+  --notification-error-border: #f87171;
+  --notification-info-border: #60a5fa;
+  --notification-warning-border: #fbbf24;
+  --notification-close-hover-bg: var(--surface-hover);
 
   // Member views specific
-  --member-view-bg-hover: var(--background-color);
-  --user-list-item-bg-hover: #27272a;
-  --profile-view-email-color: #fff;
+  --member-view-bg-hover: var(--surface-hover);
+  --user-list-item-bg-hover: var(--surface-hover);
+  --profile-view-email-color: var(--link-color);
 
   // Mention-chip specific
   --mention-chip-bg: #2d3057;
@@ -486,14 +534,14 @@
   --mention-chip-border-hover: #4d5490;
 
   // Channel-list-item specific
-  --channel-list-item-hover-bg: #2a2d3a;
-  --list-item-hover-text-color: #6b73ff;
+  --channel-list-item-hover-bg: var(--surface-hover);
+  --list-item-hover-text-color: var(--primary-color);
   --list-item-hover-icon-filter: brightness(0) saturate(100%) invert(55%) sepia(89%) saturate(600%)
     hue-rotate(210deg) brightness(110%) contrast(95%);
-  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --popup-bg: #2d2f3e;
-  --hover-bg: #3a3d4a;
-  --input-disabled-bg: #313340;
+  --dropdown-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  --popup-bg: var(--surface-raised);
+  --hover-bg: var(--surface-hover);
+  --input-disabled-bg: var(--surface-sunken);
   --sheet-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 
   /* Shadows - Dark Mode (lighter shadows for dark backgrounds) */
@@ -503,4 +551,8 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }

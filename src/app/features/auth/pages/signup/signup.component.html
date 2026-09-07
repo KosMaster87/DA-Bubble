@@ -1,77 +1,57 @@
 <div class="signup">
   <div class="signup__container">
-    <!-- Header -->
     <header class="signup__header">
       <div class="signup__back">
-        <app-back-button label="Back" (clicked)="goBack()" />
+        <app-back-button (clicked)="goBack()" />
       </div>
-      <h1 class="signup__title">Create Account</h1>
-      <p class="signup__subtitle">
-        You can create your new DABubble account using your name and email address.
-      </p>
+      <h1 class="signup__title">{{ 'AUTH.CREATE_ACCOUNT' | t }}</h1>
+      <p class="signup__subtitle">{{ 'AUTH.SIGNUP_SUBTITLE' | t }}</p>
     </header>
 
-    <!-- Signup Form -->
     <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup__form">
-      <!-- Name Input -->
       <app-input-field
         [control]="$any(signupForm.controls['name'])"
         id="name"
         type="text"
-        placeholder="Your full name"
+        [placeholder]="'AUTH.NAME_PLACEHOLDER' | t"
         icon="/img/formfield/person-default.svg"
-        [errorMessages]="{
-          required: 'Name is required.',
-          minlength: 'Name must be at least 2 characters.',
-        }"
+        [errorMessages]="nameErrors()"
       />
 
-      <!-- Email Input -->
       <app-input-field
         [control]="$any(signupForm.controls['email'])"
         id="email"
         type="email"
-        placeholder="example@email.com"
+        [placeholder]="'AUTH.EMAIL_EXAMPLE_PLACEHOLDER' | t"
         icon="/img/formfield/mail-default.svg"
-        [errorMessages]="{
-          required: 'Email is required.',
-          email: 'Please enter a valid email address.',
-        }"
+        [errorMessages]="emailErrors()"
       />
 
-      <!-- Password Input -->
       <app-input-field
         [control]="$any(signupForm.controls['password'])"
         id="password"
         type="password"
-        placeholder="At least 6 characters"
+        [placeholder]="'AUTH.AT_LEAST_CHARS' | t"
         icon="/img/formfield/lock-default.svg"
-        [errorMessages]="{
-          required: 'Password is required.',
-          minlength: 'Password must be at least 6 characters.',
-        }"
+        [errorMessages]="passwordErrors()"
       />
 
-      <!-- Privacy Checkbox -->
       <app-checkbox-field
         [control]="$any(signupForm.controls['privacy'])"
         id="privacy"
-        [errorMessages]="{
-          required: 'Please accept the privacy policy.',
-          requiredTrue: 'Please accept the privacy policy.',
-        }"
+        [errorMessages]="privacyErrors()"
       >
-        <span class="signup__checkbox-text">I agree to the</span>
+        <span class="signup__checkbox-text">{{ 'AUTH.PRIVACY_PREFIX' | t }}</span>
         <button type="button" class="signup__link" [routerLink]="'/privacy-policy'">
-          Privacy policy.
+          {{ 'AUTH.PRIVACY_LINK' | t }}
         </button>
+        <span>{{ 'AUTH.PRIVACY_SUFFIX' | t }}</span>
       </app-checkbox-field>
 
-      <!-- Submit Button -->
       <div class="signup__button-wrapper">
         <app-primary-button
           type="submit"
-          label="Continue"
+          [label]="'AUTH.CONTINUE' | t"
           [disabled]="signupForm.invalid || isSubmitting()"
           [loading]="isSubmitting()"
         />

@@ -1,12 +1,12 @@
 .thread-unread-popup {
   position: fixed;
-  background: white;
-  border: 1px solid #adb0d9;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   min-width: 320px;
   max-width: 400px;
-  z-index: 1000;
+  z-index: var(--z-popup-stacked);
   overflow: hidden;
 
   &__header {
@@ -14,19 +14,19 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #eceefe;
-    background: #f8f9fe;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-sunken);
   }
 
   &__title {
     font-weight: 700;
     font-size: 16px;
-    color: #000;
+    color: var(--text-primary);
   }
 
   &__count {
-    background: #ff9500;
-    color: white;
+    background: var(--status-warning);
+    color: var(--text-on-accent);
     font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
@@ -45,7 +45,7 @@
   &__empty {
     padding: 32px 20px;
     text-align: center;
-    color: #686868;
+    color: var(--text-secondary);
     font-size: 14px;
   }
 
@@ -54,15 +54,15 @@
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    background-color: var(--bg-color);
-    border: 1px solid #adb0d9;
+    background-color: var(--surface-base);
+    border: 1px solid var(--border-subtle);
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-      background-color: var(--bg-color-hover);
-      border-color: #535af1;
+      background-color: var(--surface-hover);
+      border-color: var(--primary-color);
       transform: scale(1.02);
     }
 
@@ -82,7 +82,7 @@
   &__message {
     flex: 1;
     font-size: 13px;
-    color: #000;
+    color: var(--text-primary);
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
@@ -102,14 +102,14 @@
     align-items: center;
     gap: 4px;
     padding: 4px 8px;
-    background: #535af1;
-    color: white;
+    background: var(--primary-color);
+    color: var(--text-on-accent);
     font-weight: 600;
     border-radius: 12px;
     font-size: 11px;
   }
 
   &__time {
-    color: #686868;
+    color: var(--text-secondary);
   }
 }

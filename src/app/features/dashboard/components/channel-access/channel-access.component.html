@@ -3,37 +3,43 @@
     <!-- PRIVATE CHANNEL: Access Denied -->
     <div class="channel-access__private">
       <div class="channel-access__icon">
-        <img src="/img/icon/channel-bar/lock.svg" alt="Private Channel" />
+        <img src="/img/icon/channel-bar/lock.svg" alt="{{ 'CHANNELS.PRIVATE' | t }}" />
       </div>
 
-      <h1 class="channel-access__title">Private Channel: #{{ channelInfo().channelName }}</h1>
+      <h1 class="channel-access__title">
+        {{ 'CHANNELS.PRIVATE_CHANNEL_TITLE' | t: { name: channelInfo().channelName } }}
+      </h1>
 
-      <p class="channel-access__message">This channel is private and only accessible to members.</p>
+      <p class="channel-access__message">{{ 'CHANNELS.PRIVATE_MESSAGE' | t }}</p>
 
       <div class="channel-access__info">
         <p>
-          <strong>You are not a member of this channel.</strong>
+          <strong>{{ 'CHANNELS.NOT_MEMBER' | t }}</strong>
         </p>
-        <p>To gain access, please contact:</p>
+        <p>{{ 'CHANNELS.CONTACT_FOR_ACCESS' | t }}</p>
         <ul>
-          <li>The channel owner</li>
-          <li>An administrator</li>
-          <li>An existing member who can invite you</li>
+          <li>{{ 'CHANNELS.CONTACT_OWNER' | t }}</li>
+          <li>{{ 'CHANNELS.CONTACT_ADMIN' | t }}</li>
+          <li>{{ 'CHANNELS.CONTACT_MEMBER' | t }}</li>
         </ul>
       </div>
 
       <div class="channel-access__note">
-        <p>💡 <strong>Note:</strong> Channel members can invite you via the mailbox.</p>
+        <p>
+          💡 <strong>{{ 'COMMON.NOTE' | t }}:</strong> {{ 'CHANNELS.INVITE_VIA_MAILBOX' | t }}
+        </p>
       </div>
     </div>
   } @else {
     <!-- PUBLIC CHANNEL: Welcome Screen -->
     <div class="channel-access__public">
       <div class="channel-access__icon">
-        <img src="/img/icon/channel-bar/tag-default.svg" alt="Public Channel" />
+        <img src="/img/icon/channel-bar/tag-default.svg" alt="{{ 'CHANNELS.PUBLIC' | t }}" />
       </div>
 
-      <h1 class="channel-access__title">Welcome to #{{ channelInfo().channelName }}</h1>
+      <h1 class="channel-access__title">
+        {{ 'CHANNELS.WELCOME_TO' | t: { name: channelInfo().channelName } }}
+      </h1>
 
       @if (channelInfo().description) {
         <p class="channel-access__description">
@@ -42,7 +48,7 @@
       }
 
       <div class="channel-access__rules">
-        <h2>Channel Rules</h2>
+        <h2>{{ 'CHANNELS.RULES_TITLE' | t }}</h2>
 
         @if (channelInfo().rules && channelInfo().rules!.length > 0) {
           <ul>
@@ -52,26 +58,23 @@
           </ul>
         } @else {
           <ul>
-            <li>Be respectful and courteous to other members</li>
-            <li>Stay on topic for this channel</li>
-            <li>No spam or inappropriate content</li>
-            <li>Use threads for detailed discussions</li>
-            <li>Mark important messages with reactions</li>
+            <li>{{ 'CHANNELS.RULE_1' | t }}</li>
+            <li>{{ 'CHANNELS.RULE_2' | t }}</li>
+            <li>{{ 'CHANNELS.RULE_3' | t }}</li>
+            <li>{{ 'CHANNELS.RULE_4' | t }}</li>
+            <li>{{ 'CHANNELS.RULE_5' | t }}</li>
           </ul>
         }
       </div>
 
       <div class="channel-access__actions">
         <button class="channel-access__accept-btn" (click)="acceptAndJoin()">
-          Accept rules and join channel
+          {{ 'CHANNELS.ACCEPT_AND_JOIN' | t }}
         </button>
       </div>
 
       <div class="channel-access__note">
-        <p>
-          ℹ️ By joining, you confirm that you have read the channel rules and agree to abide by
-          them.
-        </p>
+        <p>ℹ️ {{ 'CHANNELS.ACCEPT_RULES_TEXT' | t }}</p>
       </div>
     </div>
   }

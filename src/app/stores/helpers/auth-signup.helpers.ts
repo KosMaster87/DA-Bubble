@@ -32,6 +32,7 @@ export async function createSignupFirestoreUser(
     createdAt: new Date(),
     updatedAt: new Date(),
     scrollState: {},
+    role: 'member',
   };
 
   if (credential.user.photoURL) {

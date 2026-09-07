@@ -200,7 +200,7 @@
     }
 
     &--system {
-      border-left: 4px solid #ff6b6b;
+      border-left: 4px solid var(--status-danger);
     }
   }
 
@@ -328,12 +328,11 @@
     }
 
     &--accept {
-      color: white;
-      background-color: #535af1;
+      color: var(--text-on-accent);
+      background-color: var(--primary-color);
 
       &:hover {
-        background-color: #444bc7;
-        transform: translateY(-1px);
+        background-color: var(--secondary-color);
         box-shadow: 0 2px 8px rgba(83, 90, 241, 0.3);
       }
     }
@@ -344,7 +343,7 @@
       border: 1px solid var(--channel-mailbox-message-decline-border);
 
       &:hover {
-        background-color: #f8f8f8;
+        background-color: var(--surface-hover);
         border-color: var(--channel-mailbox-message-decline-border-hover);
         color: var(--channel-mailbox-decline-text-color-hover);
       }
@@ -359,11 +358,24 @@
   }
 
   &__error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     margin: var(--space-4) var(--space-6);
     padding: var(--space-3) var(--space-4);
     border-radius: 0.5rem;
-    background-color: var(--color-error-bg, #fef2f2);
-    color: var(--color-error, #dc2626);
+    border-left: 4px solid var(--status-danger);
+    background-color: var(--surface-sunken);
+    color: var(--status-danger);
     font-size: 0.9375rem;
+
+    &-icon {
+      flex-shrink: 0;
+      font-size: 1.125rem;
+    }
+
+    p {
+      margin: 0;
+    }
   }
 }

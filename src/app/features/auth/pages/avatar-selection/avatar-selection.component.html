@@ -1,26 +1,23 @@
 <div class="avatar-selection">
   <div class="avatar-selection__container">
-    <!-- Header -->
     <header class="avatar-selection__header">
       <div class="avatar-selection__back">
-        <app-back-button label="Back" (clicked)="goBack()" />
+        <app-back-button (clicked)="goBack()" />
       </div>
-      <h1 class="avatar-selection__title">Choose Your Avatar</h1>
+      <h1 class="avatar-selection__title">{{ 'AUTH.AVATAR_TITLE' | t }}</h1>
     </header>
 
-    <!-- Selected Avatar Preview -->
     <section class="avatar-selection__preview">
       <img
         class="avatar-selection__preview-img"
         [src]="selectedAvatarSrc()"
-        alt="Selected Avatar"
+        [alt]="'PROFILE.AVATAR' | t"
       />
       <h2 class="avatar-selection__preview-name">{{ userName() }}</h2>
     </section>
 
-    <!-- Avatar Grid -->
     <section class="avatar-selection__grid-section">
-      <h3 class="avatar-selection__grid-title">Choose one</h3>
+      <h3 class="avatar-selection__grid-title">{{ 'AUTH.AVATAR_CHOOSE' | t }}</h3>
 
       <div class="avatar-selection__grid">
         @for (avatar of avatars; track avatar.id) {
@@ -35,10 +32,9 @@
       </div>
     </section>
 
-    <!-- Footer with Confirm Button -->
     <footer class="avatar-selection__footer">
       <app-primary-button
-        label="Continue"
+        [label]="'AUTH.CONTINUE' | t"
         (clicked)="confirmSelection()"
         [disabled]="!selectedAvatar() || isSubmitting()"
         [loading]="isSubmitting()"

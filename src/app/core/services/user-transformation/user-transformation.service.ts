@@ -35,9 +35,13 @@ export class UserTransformationService {
    * Transform user to ProfileUser format
    * @description Maps the internal User model to the ProfileUser view-model so profile display components remain decoupled from the store shape.
    * @param {string | null} userId - User ID to transform
+   * @param {string[]} [channelAdminUids] - The open channel's admins[], when a channel
+   * context exists. When provided, isAdmin reflects channel-admin status; otherwise it
+   * falls back to the user's platform-wide role (the only signal available in
+   * channel-agnostic contexts like DM/thread profile views).
    * @returns {ProfileUser | null} Transformed profile user or null if user not found
    */
-  toProfileUser = (userId: string | null): ProfileUser | null => {
+  toProfileUser = (userId: string | null, channelAdminUids?: string[]): ProfileUser | null => {
     if (!userId) return null;
 
     const user = this.userStore.getUserById()(userId);
@@ -49,7 +53,9 @@ export class UserTransformationService {
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
       status: user.isOnline ? 'online' : 'offline',
-      isAdmin: false,
+      isAdmin: channelAdminUids
+        ? channelAdminUids.includes(user.uid)
+        : user.role === 'admin' || user.role === 'owner',
     };
   };
 
@@ -57,9 +63,13 @@ export class UserTransformationService {
    * Transform user to EditProfileUser format
    * @description Strips status and admin read-only fields so the edit form only receives mutable properties.
    * @param {string | null} userId - User ID to transform
+   * @param {string[]} [channelAdminUids] - See toProfileUser's channelAdminUids.
    * @returns {EditProfileUser | null} Transformed edit profile user or null if user not found
    */
-  toEditProfileUser = (userId: string | null): EditProfileUser | null => {
+  toEditProfileUser = (
+    userId: string | null,
+    channelAdminUids?: string[],
+  ): EditProfileUser | null => {
     if (!userId) return null;
 
     const user = this.userStore.getUserById()(userId);
@@ -70,7 +80,9 @@ export class UserTransformationService {
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL || '/img/profile/profile-0.svg',
-      isAdmin: false,
+      isAdmin: channelAdminUids
+        ? channelAdminUids.includes(user.uid)
+        : user.role === 'admin' || user.role === 'owner',
     };
   };
 

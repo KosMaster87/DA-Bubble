@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["dev"],
+  "timezone": "America/Asuncion",
+  "dependencyDashboard": true,
+  "minimumReleaseAge": "14 days",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "automerge": false
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["major-update", "manual-review"]
+    },
+    {
+      "description": "Angular-Pakete nur gemeinsam heben. Einzelne MRs erzeugen inkonsistente Stände (CLI 21 mit Core 20). Major-Sprünge laufen über 'ng update', nicht über Renovate.",
+      "matchPackageNames": ["@angular/**"],
+      "groupName": "angular",
+      "automerge": false,
+      "labels": ["major-update", "manual-review"]
+    }
+  ]
+}

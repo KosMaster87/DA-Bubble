@@ -36,6 +36,7 @@ export async function createLoginFirestoreUser(
     createdAt: new Date(),
     updatedAt: new Date(),
     scrollState: {},
+    role: 'member',
   };
 
   await setDoc(doc(firestore, 'users', userId), userDoc);

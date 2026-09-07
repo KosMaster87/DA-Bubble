@@ -21,7 +21,9 @@ import { ProfileEditComponent } from '@shared/dashboard-components/profile-edit/
 import { ProfileViewComponent } from '@shared/dashboard-components/profile-view/profile-view.component';
 import { UserListItemComponent } from '@shared/dashboard-components/user-list-item/user-list-item.component';
 import { AuthStore } from '@stores/auth';
-import { ChannelStore, DirectMessageStore } from '@stores/index';
+import { ChannelStore } from '@stores/channels/channel.store';
+import { DirectMessageStore } from '@stores/direct-messages';
+import { TranslatePipe } from '@core/services/i18n/translate.pipe';
 
 export interface DMInfo {
   conversationId: string;
@@ -39,6 +41,7 @@ export interface DMInfo {
     ProfileEditComponent,
     UserListItemComponent,
     ChannelViewComponent,
+    TranslatePipe,
   ],
   templateUrl: './chat-private.component.html',
   styleUrl: './chat-private.component.scss',

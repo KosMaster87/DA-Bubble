@@ -8,6 +8,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from '@core/guards/auth.guard';
 import { noAuthGuard } from '@core/guards/no-auth.guard';
 import { avatarSelectionGuard } from '@core/guards/avatar-selection.guard';
+import { adminGuard } from '@core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -158,6 +159,14 @@ export const routes: Routes = [
         (m) => m.DashboardComponent,
       ),
     canActivate: [authGuard],
+  },
+  {
+    path: 'dashboard/admin',
+    loadComponent: () =>
+      import('./features/dashboard/pages/main/dashboard.component').then(
+        (m) => m.DashboardComponent,
+      ),
+    canActivate: [authGuard, adminGuard],
   },
 
   // Wildcard - catch all unknown routes

@@ -8,14 +8,19 @@
     "shell": "pnpm run build && firebase functions:shell",
     "start": "pnpm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "set-admin": "node scripts/set-admin-role.js"
   },
   "engines": {
     "node": "24"
   },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["@firebase/util", "protobufjs", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "protobufjs",
+      "unrs-resolver"
+    ]
   },
   "main": "lib/index.js",
   "dependencies": {

@@ -3,14 +3,17 @@
   <div class="thread__header">
     <div class="thread__header-info">
       <div class="thread__title-wrapper">
-        <h1 class="thread__title">Thread</h1>
+        <h1 class="thread__title">{{ 'CHAT.THREAD_TITLE' | t }}</h1>
         <p class="thread__subtitle"># {{ threadInfo().channelName }}</p>
       </div>
-      <p class="thread__reply-count">
-        {{ replyCount() }} {{ replyCount() === 1 ? 'Answer' : 'Answer' }}
-      </p>
+      <p class="thread__reply-count">{{ replyCount() }} {{ replyCountLabel() }}</p>
     </div>
-    <button class="thread__close-btn" type="button" (click)="onClose()" aria-label="Close thread">
+    <button
+      class="thread__close-btn"
+      type="button"
+      (click)="onClose()"
+      [attr.aria-label]="'CHAT.CLOSE_THREAD' | t"
+    >
       <img src="/img/icon/window/close-default.svg" alt="" class="thread__close-icon" />
     </button>
   </div>
@@ -20,7 +23,7 @@
     <!-- Parent Message -->
     @if (threadInfo().parentMessage) {
       <div class="thread__parent">
-        <div class="thread__parent-label">Originalnachricht</div>
+        <div class="thread__parent-label">{{ 'CHAT.ORIGINAL_MESSAGE' | t }}</div>
         <div class="thread__parent-message">
           <img
             [src]="threadInfo().parentMessage!.senderAvatar"

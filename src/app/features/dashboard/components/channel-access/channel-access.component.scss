@@ -45,6 +45,7 @@
       width: 80px;
       height: 80px;
       opacity: 0.6;
+      filter: var(--input-icon-filter);
 
       @media screen and (max-width: 768px) {
         width: 50px;
@@ -179,7 +180,8 @@
   }
 
   &__rules {
-    background-color: #eceefe;
+    background-color: var(--surface-sunken);
+    border: 1px solid var(--border-subtle);
     border-radius: 1rem;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -199,7 +201,7 @@
     h2 {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #444df2;
+      color: var(--primary-color);
       margin-bottom: 1rem;
 
       @media screen and (max-width: 768px) {
@@ -221,7 +223,7 @@
         padding: 0.75rem 0;
         padding-left: 2rem;
         position: relative;
-        color: #535353;
+        color: var(--text-secondary);
         line-height: 1.6;
 
         @media screen and (max-width: 768px) {
@@ -281,12 +283,7 @@
 
     &:hover {
       background-color: #535af1;
-      transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(68, 77, 242, 0.3);
-    }
-
-    &:active {
-      transform: translateY(0);
     }
   }
 
