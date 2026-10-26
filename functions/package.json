@@ -14,7 +14,7 @@
   "engines": {
     "node": "24"
   },
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.34.7",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@firebase/util",
