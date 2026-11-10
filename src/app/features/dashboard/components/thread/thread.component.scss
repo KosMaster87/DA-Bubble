@@ -61,6 +61,10 @@
       font-size: 1.125rem;
     }
 
+    @media screen and (max-width: 480px) {
+      font-size: 1rem;
+    }
+
     // Reduce font size when sidebar is collapsed (768px - 1440px)
     @media screen and (min-width: 769px) and (max-width: 1440px) {
       font-size: 1.25rem;
@@ -92,6 +96,10 @@
     @media screen and (max-width: 768px) {
       font-size: 0.75rem;
     }
+
+    @media screen and (max-width: 480px) {
+      font-size: 0.6875rem;
+    }
   }
 
   &__reply-count {
@@ -101,6 +109,10 @@
 
     @media screen and (max-width: 768px) {
       font-size: 0.75rem;
+    }
+
+    @media screen and (max-width: 480px) {
+      font-size: 0.6875rem;
     }
   }
 
@@ -152,6 +164,10 @@
 
     @media screen and (max-width: 768px) {
       padding: var(--space-3) var(--space-2);
+    }
+
+    @media screen and (max-width: 480px) {
+      padding: var(--space-2) var(--space-1-5);
     }
 
     // // Reduce padding when sidebar is collapsed (768px - 1440px)
@@ -212,6 +228,11 @@
       height: 32px;
     }
 
+    @media screen and (max-width: 480px) {
+      width: 28px;
+      height: 28px;
+    }
+
     @media screen and (min-width: 769px) and (max-width: 1440px) {
       width: 36px;
       height: 36px;
@@ -232,6 +253,10 @@
       gap: var(--space-1);
       margin-bottom: var(--space-0);
     }
+
+    @media screen and (max-width: 480px) {
+      gap: var(--space-0-5);
+    }
   }
 
   &__parent-name {
@@ -248,6 +273,10 @@
       font-size: 0.75rem;
     }
 
+    @media screen and (max-width: 480px) {
+      font-size: 0.6875rem;
+    }
+
     &:hover {
       color: var(--primary-color, #444df2);
     }
@@ -259,6 +288,10 @@
 
     @media screen and (max-width: 768px) {
       font-size: 0.6875rem;
+    }
+
+    @media screen and (max-width: 480px) {
+      font-size: 0.625rem;
     }
   }
 
@@ -276,6 +309,12 @@
       padding: var(--space-2);
     }
 
+    @media screen and (max-width: 480px) {
+      font-size: 0.8125rem;
+      padding: var(--space-1-5);
+      border-radius: 0.75rem;
+    }
+
     @media screen and (min-width: 769px) and (max-width: 1440px) {
       font-size: 0.875rem;
       padding: var(--space-2);
@@ -290,6 +329,10 @@
     @media screen and (max-width: 768px) {
       margin-top: var(--space-2);
     }
+
+    @media screen and (max-width: 480px) {
+      margin-top: var(--space-1-5);
+    }
   }
 
   &__footer {
@@ -297,6 +340,10 @@
 
     @media screen and (max-width: 768px) {
       padding: var(--space-1) var(--space-1);
+    }
+
+    @media screen and (max-width: 480px) {
+      padding: var(--space-1) var(--space-1-5);
     }
 
     // Reduce padding when sidebar is collapsed (768px - 1440px)

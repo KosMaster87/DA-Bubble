@@ -13,6 +13,7 @@
   &__popup-signup {
     // Visible on mobile, hidden on desktop
     display: block;
+    width: 100%;
     @include mix.tablet {
       display: none;
     }
