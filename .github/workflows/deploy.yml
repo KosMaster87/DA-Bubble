@@ -15,8 +15,8 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v7
         with:
-          node-version-file: ".nvmrc"
-          cache: "pnpm"
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm run format:check
 
@@ -127,3 +127,20 @@ jobs:
           curl -sf -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" -H "Content-Type: application/json" \
             --data '{"purge_everything":true}'
+
+  # After a successful production deploy: tag the merged release PR on dev and publish the
+  # GitHub release with the changelog notes. Does nothing if no release PR is pending.
+  github-release:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          target-branch: dev
+          skip-github-pull-request: true
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
