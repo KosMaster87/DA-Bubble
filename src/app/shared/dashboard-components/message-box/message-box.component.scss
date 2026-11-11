@@ -49,10 +49,17 @@
     transition: border-color 0.2s;
 
     @media screen and (max-width: 768px) {
-      min-height: 60px;
-      // padding: var(--space-2);
+      min-height: 56px;
+      padding: var(--space-2);
       font-size: 0.875rem;
       border-radius: 1rem;
+    }
+
+    @media screen and (max-width: 480px) {
+      min-height: 52px;
+      padding: var(--space-1-5);
+      font-size: 0.8125rem;
+      border-radius: 0.75rem;
     }
 
     // Reduce padding for smaller threads (768px-1440px)
@@ -174,8 +181,13 @@
     position: relative;
 
     @media screen and (max-width: 768px) {
-      width: 30px;
-      height: 30px;
+      width: 36px;
+      height: 36px;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 32px;
+      height: 32px;
     }
 
     &:hover {
@@ -195,6 +207,11 @@
     @media screen and (max-width: 768px) {
       width: 16px;
       height: 16px;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 14px;
+      height: 14px;
     }
 
     // Hover state (not when active)
@@ -227,8 +244,13 @@
     position: relative;
 
     @media screen and (max-width: 768px) {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 32px;
+      height: 32px;
     }
 
     &:disabled {
@@ -254,6 +276,11 @@
     transform: translate(-50%, -50%);
 
     @media screen and (max-width: 768px) {
+      width: 18px;
+      height: 18px;
+    }
+
+    @media screen and (max-width: 480px) {
       width: 16px;
       height: 16px;
     }

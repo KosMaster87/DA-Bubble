@@ -76,9 +76,10 @@
     padding: var(--space-4);
     flex-shrink: 0;
 
-    // Hide on mobile
+    // Mobile: Show compact header when sidebar is visible
     @media screen and (max-width: 768px) {
-      display: none;
+      padding: var(--space-2) var(--space-3);
+      min-height: 44px; // Touch-friendly minimum height
     }
 
     // @include mix.tablet-landscape {
@@ -90,18 +91,37 @@
     @include mix.flex(row, flex-start, center);
     gap: var(--space-2);
     flex: 1;
+    min-width: 0; // Allow text truncation
+
+    @media screen and (max-width: 768px) {
+      gap: var(--space-1-5);
+    }
   }
 
   &__logo {
     width: 32px;
     height: 32px;
     object-fit: contain;
+    flex-shrink: 0;
+
+    @media screen and (max-width: 768px) {
+      width: 28px;
+      height: 28px;
+    }
   }
 
   &__workspace-name {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary, #000);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+
+    @media screen and (max-width: 768px) {
+      font-size: 1rem;
+    }
   }
 
   &__multi-edit-btn {
@@ -115,6 +135,11 @@
     transition: background-color 0.2s;
     position: relative;
     flex-shrink: 0;
+
+    @media screen and (max-width: 768px) {
+      width: 40px;
+      height: 40px; // Touch-friendly minimum 44x44, 40x40 is acceptable with padding
+    }
 
     &:hover:not(&--active) {
       background-color: var(--conversation-message-wrapper-hover-bg);

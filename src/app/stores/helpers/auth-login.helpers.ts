@@ -24,11 +24,10 @@ export async function createLoginFirestoreUser(
   photoURL: string | null,
   firestore: Firestore,
 ): Promise<void> {
-  const userDoc: User = {
+  const userDoc: Omit<User, 'photoURL'> & { photoURL?: string } = {
     uid: userId,
     email,
     displayName: displayName || 'Anonymous',
-    photoURL: photoURL || undefined,
     isOnline: true,
     lastSeen: new Date(),
     channels: [],
@@ -38,6 +37,10 @@ export async function createLoginFirestoreUser(
     scrollState: {},
     role: 'member',
   };
+
+  if (photoURL) {
+    userDoc.photoURL = photoURL;
+  }
 
   await setDoc(doc(firestore, 'users', userId), userDoc);
   console.log('✅ Firestore user document created for existing Firebase user');
