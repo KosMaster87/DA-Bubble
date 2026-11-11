@@ -63,3 +63,20 @@ Angular 21.2 chat workspace for DA-Bubble.
 - For multi-file work, first identify impacted routes, stores, services, templates, rules, and tests.
 - Conventional commits only: `type(scope): message`, imperative mood, no emojis, max 72 chars.
 - Use `/copilot-project` for the complete DA-Bubble project context before larger tasks.
+
+## Branch And Release Rules
+
+The GitHub rulesets on `dev`, `staging` and `main` enforce these rules. Follow them even if your account could bypass them.
+
+- Branch flow: `feature/*` or `fix/*` from `dev` → PR into `dev` → release PR `dev` → `staging` → release PR `staging` → `main`.
+- Never push directly to `dev`, `staging` or `main`. Every change goes through a pull request with a green `quality` check.
+- Never force-push or delete `dev`, `staging` or `main`.
+- `dev` keeps a linear history: merge feature PRs with "Squash and merge" or "Rebase and merge".
+- Release PRs into `staging` and `main` use "Create a merge commit". The merge commit documents when a release happened. It is expected that `staging` and `main` show as "ahead of dev"; do not back-merge into `dev` to align the counters.
+- A push to `staging` deploys staging, a push to `main` deploys production (`.github/workflows/deploy.yml`). Merge into `main` only after staging has been checked.
+- Renovate PRs target `dev` and follow the same rules. Close updates whose CI fails instead of forcing them.
+
+### Collaborator and admin
+
+- Collaborators (write role) work only through pull requests as described above.
+- The repository admin may bypass the rulesets, but only when a pull request cannot solve the problem (for example a broken pipeline or a blocked emergency fix). A bypass must be named in the PR or commit description, and any hotfix on `main` must be brought back afterwards: into `staging` by merge commit, into `dev` by cherry-pick through a PR (because `dev` keeps a linear history).
