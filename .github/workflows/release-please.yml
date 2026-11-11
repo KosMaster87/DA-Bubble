@@ -1,0 +1,28 @@
+name: Release Please
+
+# Keeps one open release PR against dev that collects all feat/fix commits since the last
+# release, bumps package.json and writes CHANGELOG.md. Merging that PR into dev marks the
+# release; the tag and GitHub release are created later by deploy.yml after production.
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          # PRs opened with GITHUB_TOKEN do not trigger the quality check. A personal
+          # access token in RELEASE_PLEASE_TOKEN fixes that; without it, close and reopen
+          # the release PR once to start the check.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          target-branch: dev
+          skip-github-release: true
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
