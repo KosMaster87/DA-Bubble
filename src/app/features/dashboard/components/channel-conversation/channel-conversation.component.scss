@@ -31,6 +31,10 @@
       padding: var(--space-2) var(--space-3);
     }
 
+    @media screen and (max-width: 480px) {
+      padding: var(--space-1-5) var(--space-2);
+    }
+
     // @include mix.tablet-landscape {
     //   padding: var(--space-5) var(--space-6);
     // }
@@ -53,6 +57,10 @@
       @media screen and (max-width: 768px) {
         gap: 0;
       }
+
+      @media screen and (max-width: 480px) {
+        gap: var(--space-0-5);
+      }
     }
   }
 
@@ -73,6 +81,11 @@
       font-size: 1.125rem;
       gap: var(--space-1);
       max-width: calc(100% - var(--space-4));
+    }
+
+    @media screen and (max-width: 480px) {
+      font-size: 1rem;
+      max-width: calc(100% - var(--space-2));
     }
 
     &:hover {
@@ -304,6 +317,16 @@
     padding: var(--space-4) var(--space-6);
     border-top: 1px solid var(--border-color);
     flex-shrink: 0;
+
+    @media screen and (max-width: 768px) {
+      padding: var(--space-3) var(--space-3);
+      padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+    }
+
+    @media screen and (max-width: 480px) {
+      padding: var(--space-2) var(--space-2);
+      padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+    }
   }
 
   &__input-wrapper {
@@ -312,6 +335,18 @@
     padding: var(--space-3);
     background-color: var(--input-bg);
     border-radius: 1.5rem;
+
+    @media screen and (max-width: 768px) {
+      gap: var(--space-2);
+      padding: var(--space-2);
+      border-radius: 1rem;
+    }
+
+    @media screen and (max-width: 480px) {
+      gap: var(--space-1-5);
+      padding: var(--space-1-5);
+      border-radius: 0.75rem;
+    }
   }
 
   &__input {
@@ -321,6 +356,14 @@
     font-size: 1rem;
     color: var(--text-primary);
     outline: none;
+
+    @media screen and (max-width: 768px) {
+      font-size: 0.875rem;
+    }
+
+    @media screen and (max-width: 480px) {
+      font-size: 0.8125rem;
+    }
 
     &::placeholder {
       color: var(--text-secondary);
@@ -337,6 +380,16 @@
     cursor: pointer;
     transition: background-color 0.2s;
 
+    @media screen and (max-width: 768px) {
+      width: 36px;
+      height: 36px;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 32px;
+      height: 32px;
+    }
+
     &:hover:not(:disabled) {
       background-color: var(--secondary-color);
     }
@@ -351,6 +404,16 @@
     width: 20px;
     height: 20px;
     filter: brightness(0) invert(1);
+
+    @media screen and (max-width: 768px) {
+      width: 18px;
+      height: 18px;
+    }
+
+    @media screen and (max-width: 480px) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   &__footer {

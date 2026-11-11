@@ -20,7 +20,11 @@
     position: relative;
 
     @media screen and (max-width: 768px) {
-      padding: var(--space-0) var(--space-1);
+      padding: var(--space-2) var(--space-2);
+    }
+
+    @media screen and (max-width: 480px) {
+      padding: var(--space-1-5) var(--space-1-5);
     }
 
     // @include mix.tablet-landscape {
@@ -69,7 +73,13 @@
     flex-shrink: 0;
 
     @media screen and (max-width: 768px) {
-      padding: var(--space-1) var(--space-1);
+      padding: var(--space-2) var(--space-2);
+      padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+    }
+
+    @media screen and (max-width: 480px) {
+      padding: var(--space-1-5) var(--space-1-5);
+      padding-bottom: max(var(--space-1-5), env(safe-area-inset-bottom));
     }
   }
 
